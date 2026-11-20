@@ -3,8 +3,9 @@
 ; that every line is what its world holds: that each statement is the
 ; event of the world with that name, and each line of program text the
 ; definition or the attachment that the world holds.  The reading and the
-; comparison are written here from the specification, and use neither the
-; printer of checks/canon.lsp nor anything of export/export.lsp.
+; comparison are written here from the specification, and use nothing of
+; the exporter (export/core.lisp, export/export.lsp) and nothing of the
+; printer but to print the results.
 ;
 ; Load this file, from the root of the repository, into the session in
 ; which the world to be checked is in place, and only after the number of
@@ -1123,42 +1124,13 @@
 
 ;;; 8. Writing the results
 
-; A line of the format whose data are strings and natural numbers.  ACC
-; holds characters in reverse order.
-
-(defun rb-hex-chars (k)
-  (list (char "0123456789ABCDEF" (floor k 16))
-        (char "0123456789ABCDEF" (mod k 16))))
-
-(defun rb-string-chars (chars acc)
-  (cond ((endp chars) acc)
-        (t (let ((k (char-code (car chars))))
-             (rb-string-chars
-              (cdr chars)
-              (if (and (<= 32 k) (<= k 126) (not (eql k 34)) (not (eql k 92)))
-                  (cons (car chars) acc)
-                (revappend (cons #\\ (rb-hex-chars k)) acc)))))))
-
-(defun rb-args-chars (args acc)
-  (cond ((endp args) acc)
-        ((stringp (car args))
-         (rb-args-chars (cdr args)
-                        (cons #\" (rb-string-chars (coerce (car args) 'list)
-                                                   (list* #\" #\Space acc)))))
-        (t (rb-args-chars (cdr args)
-                          (revappend (explode-nonnegative-integer (car args) 10 nil)
-                                     (cons #\Space acc))))))
-
-(defun rb-text-line (word args)
-  (coerce (reverse (cons #\) (rb-args-chars args
-                                            (revappend (coerce word 'list)
-                                                       (list #\()))))
-          'string))
+; Each line of results is printed by BM-LINE, the printer of the formats
+; (checks/canon.lisp), which export/book.sh includes before this file.
 
 (defun rb-mismatch-lines (file bad)
   (if (endp bad)
       nil
-    (cons (rb-text-line "mismatch" (list file (car (car bad)) (cdr (car bad))))
+    (cons (bm-line "mismatch" (list file (car (car bad)) (cdr (car bad))))
           (rb-mismatch-lines file (cdr bad)))))
 
 (defun rb-write-lines (lines chan state)
@@ -1242,23 +1214,23 @@
               (let* ((pk (rb-complete-packages packages kind itab '(0 . 0)))
                      (lines
                       (append
-                       (list (rb-text-line "readback"
+                       (list (bm-line "readback"
                                            (list "statements" (or s-count 0) s-ok))
-                             (rb-text-line "readback"
+                             (bm-line "readback"
                                            (list "program" (or p-count 0) p-ok)))
                        (rb-mismatch-lines "statements" s-bad)
                        (rb-mismatch-lines "program" p-bad)
                        (list
-                        (rb-text-line "complete" (list "functions in logic mode"
+                        (bm-line "complete" (list "functions in logic mode"
                                                        (car fns) (cdr fns)))
-                        (rb-text-line "complete" (list "theorems and axioms"
+                        (bm-line "complete" (list "theorems and axioms"
                                                        (car thms) (cdr thms)))
-                        (rb-text-line "complete" (list "package declarations"
+                        (bm-line "complete" (list "package declarations"
                                                        (car pk) (cdr pk)))
-                        (rb-text-line "complete" (list "reserved names"
+                        (bm-line "complete" (list "reserved names"
                                                        (car names) (cdr names))))
                        (if (eq kind :library)
-                           (list (rb-text-line "complete"
+                           (list (bm-line "complete"
                                                (cons "attachments in force"
                                                      attached)))
                          nil))))

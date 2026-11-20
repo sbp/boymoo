@@ -4,7 +4,7 @@ This document defines the language that Boymoo checks, which this repository cal
 
 **ACL2 is the definition of ACL2.** Wherever ACL2 decides something, by its axioms, by its evaluator or by the tests it makes before it admits an event, ACL2 Core decides the same, and a check confirms it against ACL2. `EDGE-CASES.md`, at the root of the repository, lists every place where what ACL2 does goes beyond, falls short of or differs from what its axioms say, what ACL2 Core does there, and the places where ACL2 Core cannot follow. [`logic.md`](logic.md) gives the axioms and the rules of proof, and [`formats.md`](formats.md) gives the text in which statements and proofs are written.
 
-Statements about ACL2 in this document are confirmed against ACL2 8.7 by `sh checks/run.sh`, run from the root of the repository. It was last run on 2026-11-20 and printed `all checks passed`. `README.md` says what each check covers. The files `language.md`, `logic.md`, `formats.md` and `ground.txt` are in the directory `spec/`; every other path is given from the root of the repository.
+Statements about ACL2 in this document are confirmed against ACL2 8.7 by `sh checks/run.sh`, run from the root of the repository. It was last run on 2026-11-20 and printed `all checks passed`. `DETAILS.md` says what each check covers. The files `language.md`, `logic.md`, `formats.md` and `ground.txt` are in the directory `spec/`; every other path is given from the root of the repository.
 
 ## 1. Data
 

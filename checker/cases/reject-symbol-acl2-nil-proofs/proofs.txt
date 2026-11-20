@@ -1,0 +1,3 @@
+(theorem ACL2::HOST)
+(fact "non-nil-true")
+(instantiate 1 ((ACL2::X ACL2::NIL)))

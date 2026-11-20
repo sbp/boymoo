@@ -137,7 +137,7 @@
 ; one, and otherwise the symbol of PKG of that name.
 (defun intern-sym (name pkg w)
   (let ((found (trie-get name (prec-trie (trie-get pkg (w-pkgs w))))))
-    (if found found (make-sym pkg name))))
+    (if found (car found) (make-sym pkg name))))
 
 ; ---------------------------------------------------------------------------
 ; Variables (spec/language.md, section 5)
@@ -155,7 +155,7 @@
             (if (and (consp name) (equal (car name) #\&))
                 nil
               (if (equal pkg *cl-chars*)
-                  (and (equal (trie-get name (w-acl2 w)) s)
+                  (and (equal (car (trie-get name (w-acl2 w))) s)
                        (not (trie-get (sym-text s) (w-specials w))))
                 t)))))
     nil))

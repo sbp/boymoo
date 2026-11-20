@@ -12,7 +12,7 @@ These rules bind every change, whether a person or an agent makes it.
 
 - **No absolute path** appears anywhere: not in a document, a script, a makefile, a test, or any file that is kept.
 - **No path points outside the repository**, whether by `..`, by a home directory, or by a location particular to one machine.
-- A tool the work needs, such as ACL2, is found by its name on the `PATH` or is given as an argument. `README.md` lists every such tool.
+- A tool the work needs, such as ACL2, is found by its name on the `PATH` or is given as an argument. `DETAILS.md` lists every such tool.
 
 ## 3. Everything is fit to publish
 

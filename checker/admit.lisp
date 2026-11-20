@@ -89,10 +89,13 @@
         (if (and (< 96 n) (< n 123)) t (lower-case-in-p (cdr cs))))
     nil))
 
+; The trie of IMPORTS by NAMES, their names.  The value of each name is the
+; list of its import, never NIL, so that the import COMMON-LISP::NIL, which
+; the checker holds as NIL, is found (read.lisp).
 (defun import-trie (imports names node)
   (if (consp imports)
       (import-trie (cdr imports) (cdr names)
-                   (trie-put (car names) (car imports) node))
+                   (trie-put (car names) (list (car imports)) node))
     node))
 
 ; Conditions 2 to 6 of a package statement, on the name as characters and

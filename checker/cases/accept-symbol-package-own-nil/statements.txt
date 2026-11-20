@@ -1,0 +1,2 @@
+(package "BM" (COMMON-LISP::T))
+(theorem ACL2::A (COMMON-LISP::EQUAL BM::NIL BM::NIL))

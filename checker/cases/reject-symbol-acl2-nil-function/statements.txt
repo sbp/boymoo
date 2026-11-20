@@ -1,0 +1,1 @@
+(define COMMON-LISP::NIL (ACL2::NIL (ACL2::X) ACL2::X))

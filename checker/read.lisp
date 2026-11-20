@@ -25,7 +25,10 @@
 ;
 ; The table of packages is a trie from the characters of a package's name to
 ; its record: its imports, a trie from the characters of each import's name
-; to the import, whether it is hidden, and the lines that declared it.
+; to the list of that import, whether it is hidden, and the lines that
+; declared it.  The value in the trie of imports is a list, never NIL, so
+; that an import held as NIL, COMMON-LISP::NIL, is found as present: a
+; package that imports it has no symbol named NIL of its own.
 
 (defmacro prec-imports (r) `(car ,r))
 (defmacro prec-trie (r) `(car (cdr ,r)))

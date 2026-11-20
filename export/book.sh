@@ -10,11 +10,16 @@
 # build/ (a name that begins with build/).  It writes, for a book, the
 # files build/export/books/NAME.statements, .program, .aids, .notes,
 # .readback and .log, and for the library build/export/library.* in the
-# same way.  It needs build/export/ground-fns.lsp, which export/run.sh
+# same way.  It runs export/certify.sh first.  It needs build/export/ground-fns.lsp, which export/run.sh
 # writes.  Under any version of ACL2 but the one that checks/version.lsp
 # names, it stops at once with status 3 and writes nothing else.
 
 name=$1
+
+# The books of the printer and of the core, certified into
+# build/export/acl2/ if they are not already.
+sh export/certify.sh || exit $?
+
 case $name in
     :library) out=build/export/library ;;
     *) out=build/export/books/$name ;;
@@ -40,12 +45,18 @@ esac
     echo "$include"
     echo '(assign bx-hi (max-absolute-event-number (w state)))'
     echo '(ld "build/export/ground-fns.lsp")'
-    echo '(ld "checks/canon.lsp")'
+    echo '(include-book "build/export/acl2/canon")'
+    echo '(include-book "build/export/acl2/core")'
     echo '(ld "export/export.lsp")'
     echo '(set-inhibit-output-lst nil)'
+    # The core is in logic mode with its guards not verified; guard
+    # checking is off while it runs, as for a program, and on again for
+    # the read-back check.
+    echo '(set-guard-checking :none)'
     case $name in
         :library)
             echo "(bx-export-library (@ bx-ground-fns) (@ bx-hi) \"$out\" state)"
+            echo '(set-guard-checking t)'
             echo '(ld "export/readback.lsp")'
             echo "(rb-readback \"$out\" :library 0 (@ bx-hi) (@ bx-ground-fns) state)" ;;
         *)
@@ -55,6 +66,7 @@ esac
                       (bx-export-book (@ bx-ground-fns) (@ bx-boot-hi) (@ bx-boot-hi)
                                       (@ bx-hi) \"$out\" state)
                     (value :not-included))"
+            echo '(set-guard-checking t)'
             echo '(ld "export/readback.lsp")'
             echo "(if (< (@ bx-boot-hi) (@ bx-hi))
                       (rb-readback \"$out\" :book (@ bx-boot-hi) (@ bx-hi) (@ bx-ground-fns) state)
