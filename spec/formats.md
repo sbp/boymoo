@@ -47,6 +47,7 @@ Each datum has exactly one text, and each text is the text of one datum. A reade
 | The ground theory | `package`, `specials`, `primitive`, `define`, `clause` |
 | The library and the statements | `package`, `hidden-package`, `define`, `constrain`, `choose`, `theorem`, `axiom`, `reserve` |
 | Program text, for a runner | `define`, `attach` |
+| The prover's aids, beside a book | `local`, `hints`, `instructions`, `measure` |
 | The proofs: entries | `define`, `lemma`, `theorem`, `measure`, `witness`, `skip` |
 | The proofs: steps | `fact`, `instantiate`, `subsume`, `cut`, `substitute`, `beta`, `compute`, `induct`, `qed` |
 
@@ -93,7 +94,16 @@ Any of the three may be empty.
 
 A given statement must still be well formed and admissible in every way that needs no proof (`logic.md`, section 6). What is not asked of it is a proof.
 
-**Program text** is no input of a checker. It is what a runner reads (`language.md`, section 4): a file of `define` lines, in the form of the statement, of which a runner uses the definitions and not the ruler-extenders; and of lines `(attach F G)`, two symbols, which say that the runner runs the function `G` in place of the function `F`.
+**Program text** is no input of a checker. It is what a runner reads (`language.md`, section 4): a file of `define` lines, in the form of the statement, of which a runner uses the definitions and not the ruler-extenders; and of lines `(attach F G)`, two symbols, which say that the runner runs the function `G` in place of the function `F`. The program text of a book is read after that of the library, and where two `attach` lines name the same `F`, the later one is in force.
+
+**The prover's aids** are no input of a checker either. They are what a book gave ACL2's prover and has no logical content (`PLAN.md`, step 2), written beside the book's statements for a prover to use as it sees fit:
+
+| Line | Data |
+|---|---|
+| `(local BOOK EVENT)` | `BOOK` is a string, the name of a book. `EVENT` is a local event of that book, as its source writes it. |
+| `(hints NAME HINTS)` | `NAME` is the name that an event introduced, and `HINTS` the hints that the event gives. |
+| `(instructions NAME INSTRUCTIONS)` | The same, for the instructions that an event gives to ACL2's proof builder. |
+| `(measure F M REL HOW)` | `F` is a function that calls itself, `M` the measure and `REL` the well-founded relation that ACL2 stores for it, and `HOW` the string `"declared"` if the event that defined `F` declares a measure, and `"default"` if ACL2 chose it. |
 
 ## 6. The proofs
 

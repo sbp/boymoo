@@ -37,9 +37,23 @@ acl2 < checks/facts.lsp > build/facts.log 2>&1
 cmp -s build/facts.txt checks/expected/facts.txt
 report $? "checks/expected/facts.txt is what ACL2 says"
 
+# 2a. What ACL2 says on each entry of EDGE-CASES.md.  ACL2 certifies a
+#     book that gives it a symbol of the hidden package; a second book is
+#     copied and never certified.
+rm -f build/edge.txt build/edge-hidden.* build/edge-false.*
+cp checks/edge-hidden.lisp build/edge-hidden.lisp
+cp checks/edge-false.lisp build/edge-false.lisp
+acl2 < checks/edge-hidden.lsp > build/edge-hidden.log 2>&1
+[ -f build/edge-hidden.cert ]
+report $? "ACL2 certifies the book of a symbol of the hidden package"
+acl2 < checks/edge.lsp > build/edge.log 2>&1
+cmp -s build/edge.txt checks/expected/edge.txt
+report $? "checks/expected/edge.txt is what ACL2 says on each entry of EDGE-CASES.md"
+
 # 3. The files in the formats of spec/formats.md are read by a reader
 #    written from that document, and written back unchanged.
 python3 checks/reader.py spec/ground.txt checks/expected/facts.txt \
+    checks/expected/edge.txt \
     spec/example/statements.txt spec/example/proofs.txt > build/reader.txt
 report $? "the reader reads the files of the repository"
 sed 's/^/   /' build/reader.txt

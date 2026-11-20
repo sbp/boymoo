@@ -10,6 +10,10 @@ The exit status is 0 only if every file is read.
 
 import sys
 
+# The reader recurses once for each level of nesting, and the terms that
+# ACL2 writes can nest more than a thousand levels deep.
+sys.setrecursionlimit(100000)
+
 PLAIN = set(b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-+*/<=>!?$%&_^~.@")
 HEX = b"0123456789ABCDEF"
 

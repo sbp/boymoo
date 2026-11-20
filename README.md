@@ -23,21 +23,23 @@ ACL2 says what a book states and is used to cross-check. It takes no part in fin
 
 ## What is in the repository
 
-The repository holds the specification, and the checks that compare it with ACL2. No checker has been written yet; [`PLAN.md`](PLAN.md) gives the order of the work.
+The repository holds the specification, the checks that compare it with ACL2, and the exporter, by which ACL2 writes its library and its books in the formats. No checker has been written yet; [`PLAN.md`](PLAN.md) gives the order of the work.
 
 | Path | What it is |
 |---|---|
 | [`spec/language.md`](spec/language.md) | The language: data, the 32 primitive functions and their value on every input, running and attachments, terms, names, the eight kinds of statement, and what each kind of ACL2 event becomes. |
-| [`spec/logic.md`](spec/logic.md) | The logic: the axioms, the eight rules with the argument that each is sound, how each statement is admitted and what must be proved for it, what a verdict means, with the argument for it, and where ACL2 Core follows ACL2 and where it cannot. |
+| [`spec/logic.md`](spec/logic.md) | The logic: the axioms, the eight rules with the argument that each is sound, how each statement is admitted and what must be proved for it, what a verdict means, with the argument for it, and the facts beyond ACL2's axioms that ACL2 itself reasons with. |
+| [`EDGE-CASES.md`](EDGE-CASES.md) | Every place found where what ACL2 does goes beyond, falls short of or differs from what its axioms say, with an example of each that the checks run, what ACL2 Core does there, and why where it does not follow ACL2. |
 | [`spec/formats.md`](spec/formats.md) | The interchange formats: the text of data, statements and proofs, the order of checking, the budgets, and the three verdict lines. |
 | [`spec/ground.txt`](spec/ground.txt) | The ground theory that every checker holds: ACL2's packages, primitives and axioms, and the definitions they mention, as data. ACL2 writes it. |
 | [`spec/example/`](spec/example) | One theorem and its proof in seven steps, in the formats. |
-| [`checks/`](checks) | The checks: scripts and two small books for ACL2, a reader for the formats, the expected results, and `run.sh`, which runs them all. |
+| [`checks/`](checks) | The checks: scripts and four small books for ACL2, a reader for the formats, the expected results, and `run.sh`, which runs them all. |
+| [`export/`](export) | The exporter: a program run by ACL2 that writes its built-in library and its books as statements, program text and the prover's aids (`export.lsp`), a check by which ACL2 reads each file back (`readback.lsp`), the books chosen (`books.txt`) with a small book of two cases of its own (`choice.lisp`), and `run.sh`, which runs it all. |
 | [`LICENSE`](LICENSE) | The licence. |
 | [`PLAN.md`](PLAN.md) | The steps of the work, what each gains, and how each is judged finished. |
 | [`AGENTS.md`](AGENTS.md) | The rules that bind every change to this repository. |
 
-A reader new to the project should read `spec/language.md`, then sections 1, 5, 6, 9 and 10 of `spec/logic.md`, then `spec/formats.md`.
+A reader new to the project should read `spec/language.md`, then sections 1, 5, 6, 9 and 10 of `spec/logic.md`, then `spec/formats.md`, and then `EDGE-CASES.md` for where ACL2 and its axioms part.
 
 ## Tools
 
@@ -45,9 +47,10 @@ Every tool is found by its name on the `PATH`.
 
 | Tool | Used for |
 |---|---|
-| `acl2` | ACL2 version 8.6, with the books that are distributed with it, of which `projects/apply/top` must be certified. The checks ask ACL2 what it holds, have it prove the facts that the specification adds to its axioms, and have it certify two small books of their own in `build/`. |
-| `python3` | Python 3.5 or later, for `checks/reader.py`, the reader of the formats. |
-| `sh`, `cmp`, `cp`, `grep`, `sed`, `tr`, `paste`, `rm`, `mkdir` | The usual POSIX tools, for `checks/run.sh`. |
+| `acl2` | ACL2 version 8.6, with the books that are distributed with it, of which `projects/apply/top` must be certified. The checks ask ACL2 what it holds, have it prove the facts that the specification adds to its axioms, and have it certify three small books of their own in `build/`. |
+| `python3` | Python 3.5 or later, for `checks/reader.py`, the reader of the formats, and `export/measure.py`, which counts and measures what the exporter writes. |
+| `sh`, `cmp`, `cp`, `grep`, `sed`, `tr`, `paste`, `rm`, `mkdir`, `date`, `cat` | The usual POSIX tools, for `checks/run.sh` and `export/run.sh`. |
+| `timeout`, `xargs` | For `export/run.sh`: `timeout` (of GNU coreutils) stops a run of ACL2 on one book after 30 minutes, and `xargs`, with its option `-P`, runs two at a time. |
 
 ## The checks
 
@@ -64,8 +67,20 @@ It writes its working files into `build/`, prints one line for each check, and e
 | `checks/ground.lsp` | `spec/ground.txt` is, byte for byte, what ACL2 writes from its own world: its 32 primitive functions and the number of arguments of each; its 84 axioms, four of them as packages; the 122 symbols it refuses as variables; and its definitions of the 36 functions that the ground theory defines, each with the ruler-extenders ACL2 stores. ACL2 proves each of the 41 facts that the specification adds, and a fact that ACL2 did not prove would not be written. |
 | `checks/facts.lsp` | `checks/expected/facts.txt` is, byte for byte, what ACL2 says. It holds: ACL2's list of 41 kinds of event; its value for 157 calls of the primitive functions, inside and outside their guards; which names, variables, axioms and packages it refuses; that the rule of the specification for a variable agrees with ACL2's on 3,594 objects; that the walk of the specification records the calls and tests of ACL2's termination machine for all 523 definitions that call themselves in the world ACL2 starts with; ACL2's conjectures for a definition admitted with another well-founded relation, and that the obligations of the specification follow from them; how ACL2 runs an attachment and that it uses none in a proof; how it treats a hidden package; the form of the axiom it stores for a function introduced by choice; the constraint it stores for an `encapsulate`; that it proves the conclusion of every step of the example proof; and counts over the world it starts with. |
 | `checks/hidden.lsp`, `checks/outer.lsp` | ACL2 certifies the two small books `checks/hidden.lisp` and `checks/outer.lisp`, copied into `build/`, which give `checks/facts.lsp` a package that ACL2 keeps hidden. |
+| `checks/edge.lsp` | `checks/expected/edge.txt` is, byte for byte, what ACL2 says on each entry of `EDGE-CASES.md`: its value for each example, under the setting of guard checking named, or that it gives none; whether it accepts or refuses each event and proof; what it stores for definitions, constraints, packages and the marks of skipped proofs, trust tags and redefinition; what its reader makes of 68 texts; and counts over the world it starts with. Each line other than a value or a reading is labelled with the number of its entry. |
+| `checks/edge-hidden.lsp`, `checks/edge-false.lisp` | ACL2 certifies `checks/edge-hidden.lisp`, copied into `build/`, which gives `checks/edge.lsp` a symbol of the hidden package; `checks/edge-false.lisp`, copied into `build/`, is never certified. |
 | `checks/reader.py` | A reader written from `spec/formats.md` reads every file of the repository that is in the format and writes each back unchanged. |
 | The counts in `checks/run.sh` | The numbers that the documents give for the ground theory and for the kinds of event are those of the files, every fact of the ground theory is named in `spec/logic.md`, and that document lists the definitions of the ground theory in the order of the file. |
+
+## The exporter
+
+ACL2 writes its built-in library, and each book that `export/books.txt` names, in the formats of `spec/formats.md`: the statements, the program text for a runner, and, beside each book, the prover's aids. ACL2 reads each file back and confirms each line against its world, and `checks/reader.py` reads every file. One command does all of it, from the root of the repository:
+
+```
+sh export/run.sh
+```
+
+It writes its files into `build/export/`, and ends by writing `build/export/summary.txt`: the number of statements of each kind, the size in bytes of each file, and which books were exported and confirmed. A book is exported only if it has a valid certificate. `PLAN.md`, step 2, records the result of its last run.
 
 ## Licence
 
