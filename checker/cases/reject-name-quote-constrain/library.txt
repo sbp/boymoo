@@ -1,0 +1,1 @@
+(constrain ((COMMON-LISP::QUOTE 2)) COMMON-LISP::NIL)

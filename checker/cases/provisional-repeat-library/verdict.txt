@@ -1,0 +1,1 @@
+provisional skipped 0 assumed 1 given-definitions 0 given-facts 1

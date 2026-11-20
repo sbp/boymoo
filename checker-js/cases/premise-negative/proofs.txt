@@ -1,0 +1,4 @@
+(theorem ACL2::C-GOAL)
+(fact "non-nil-true")
+(instantiate -1 COMMON-LISP::NIL)
+(qed)

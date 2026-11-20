@@ -661,6 +661,20 @@
           (declare (xargs :mode :logic :guard (integerp x)))
           (if (integerp x) (= x 0) t)))
 
+; 6.2 A definition whose only call of itself is in the executable half of
+; an mbe.
+
+(defun bm-mbe-self (x)
+  (declare (xargs :verify-guards nil))
+  (mbe :logic x :exec (bm-mbe-self x)))
+
+(bm-stored "6.2 whether ACL2 holds BM-MBE-SELF as recursive"
+           (if (getpropc 'bm-mbe-self 'recursivep nil (w state)) t nil))
+(bm-stored "6.2 whether ACL2 stores a justification for BM-MBE-SELF"
+           (if (getpropc 'bm-mbe-self 'justification nil (w state)) t nil))
+(bm-stored "6.2 whether ACL2 holds its own STRING-APPEND as recursive"
+           (if (getpropc 'string-append 'recursivep nil (w state)) t nil))
+
 ; 6.3 Measures that ACL2 guesses.
 
 (defun bm-guess (x y) (if (consp y) (bm-guess x (cdr y)) x))
@@ -781,6 +795,12 @@
 
 (bm-stored "7.1 the axiom ACL2 holds for the package ACL2-USER"
            (if (getpropc 'acl2-user-package 'theorem nil (w state)) t nil))
+(bm-try "7.1 declare the package KEYWORD again, with no imports"
+        (defpkg "KEYWORD" nil))
+(bm-try "7.1 declare the package COMMON-LISP again, with no imports"
+        (defpkg "COMMON-LISP" nil))
+(bm-try "7.1 a theorem named COMMON-LISP-PACKAGE"
+        (defthm common-lisp-package t :rule-classes nil))
 
 (defpkg "BM-A::B" nil)
 (defpkg "BM A" nil)

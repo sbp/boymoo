@@ -1,0 +1,7 @@
+(measure ACL2::BM-M (ACL2::ACL2-COUNT ACL2::X))
+(fact ACL2::G1)
+(qed)
+(fact ACL2::G3)
+(instantiate 1 ((ACL2::Y (COMMON-LISP::CDR ACL2::X))))
+(subsume 2 (COMMON-LISP::NOT (COMMON-LISP::CONSP ACL2::X)) (ACL2::O< (ACL2::ACL2-COUNT (COMMON-LISP::CDR ACL2::X)) (ACL2::ACL2-COUNT ACL2::X)))
+(qed)

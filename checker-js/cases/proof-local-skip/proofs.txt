@@ -1,0 +1,5 @@
+(define COMMON-LISP::NIL (ACL2::C-LOCAL-REC (ACL2::X) (ACL2::C-LOCAL-REC ACL2::X)))
+(skip ACL2::C-LOCAL-REC)
+(theorem ACL2::C-GOAL)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE 0)))
+(qed)

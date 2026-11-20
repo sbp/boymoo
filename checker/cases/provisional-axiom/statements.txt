@@ -1,0 +1,1 @@
+(axiom ACL2::AX (COMMON-LISP::EQUAL ACL2::Y ACL2::Y))

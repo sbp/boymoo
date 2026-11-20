@@ -1,0 +1,3 @@
+(theorem ACL2::C-GOAL)
+(induct 1 1 ACL2::X ACL2::X)
+(qed)

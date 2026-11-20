@@ -1,0 +1,2 @@
+(measure ACL2::C-FN ACL2::X)
+(fact ACL2::C-FN)

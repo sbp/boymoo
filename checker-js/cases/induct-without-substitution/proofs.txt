@@ -1,0 +1,5 @@
+(theorem ACL2::C-GOAL)
+(fact ACL2::C-ORDINAL)
+(fact ACL2::C-PHI)
+(induct 1 2 (COMMON-LISP::EQUAL ACL2::X ACL2::X) ACL2::X COMMON-LISP::NIL)
+(qed)

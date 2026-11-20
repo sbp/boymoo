@@ -1,0 +1,4 @@
+(theorem ACL2::B)
+(fact ACL2::A)
+(instantiate 1 ((ACL2::X ACL2::Y)))
+(qed)

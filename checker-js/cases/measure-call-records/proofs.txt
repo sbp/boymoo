@@ -1,0 +1,6 @@
+(measure ACL2::C-FN ACL2::X)
+(fact ACL2::C-ORDINAL)
+(qed)
+(fact ACL2::C-LOW)
+(instantiate 1 ((ACL2::Y (COMMON-LISP::CAR ACL2::X))))
+(qed)

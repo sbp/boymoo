@@ -1,0 +1,3 @@
+(theorem ACL2::C-GOAL)
+(instantiate 0 COMMON-LISP::NIL)
+(qed)

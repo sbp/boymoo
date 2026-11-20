@@ -1,0 +1,2 @@
+(package "P\E9" (ACL2::|a| ACL2::|\80| ACL2::|\FF|))
+(theorem ACL2::C-GOAL (COMMON-LISP::EQUAL (ACL2::PKG-IMPORTS (COMMON-LISP::QUOTE "P\E9")) (COMMON-LISP::QUOTE (ACL2::|a| ACL2::|\80| ACL2::|\FF|))))

@@ -1,0 +1,2 @@
+(theorem ACL2::C-GOAL)
+(instantiate 0)

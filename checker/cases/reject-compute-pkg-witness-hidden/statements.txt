@@ -1,0 +1,2 @@
+(hidden-package "BM" COMMON-LISP::NIL)
+(theorem ACL2::HOST (COMMON-LISP::EQUAL ACL2::X ACL2::X))

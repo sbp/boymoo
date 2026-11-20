@@ -1,0 +1,1 @@
+(theorem ACL2::BINARY-+ (COMMON-LISP::EQUAL ACL2::X ACL2::X))

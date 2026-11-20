@@ -1,0 +1,2 @@
+(theorem ACL2::C-GOAL)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE 0)))

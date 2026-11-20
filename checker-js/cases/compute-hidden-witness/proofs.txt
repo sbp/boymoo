@@ -1,0 +1,3 @@
+(theorem ACL2::C-GOAL)
+(compute (ACL2::PKG-WITNESS (COMMON-LISP::QUOTE "C-PKG")))
+(qed)

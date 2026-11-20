@@ -1,0 +1,2 @@
+(reserve BM::A)
+(package "BM" COMMON-LISP::NIL)

@@ -87,7 +87,7 @@ In the third column, "Yes" means that ACL2 Core gives ACL2's answer; "Yes, and a
 | 6.12 Tests that leave nothing in a statement | 6 | No |
 | 6.13 Single-threaded objects in the logic | 6 | Yes |
 | 6.14 `loop$` and lambda objects | 6 | Not yet |
-| 7.1 The packages ACL2 starts with | 7 | Yes |
+| 7.1 The packages ACL2 starts with | 7 | Not yet |
 | 7.2 The names of packages | 7 | Yes, except for the host Lisp: not yet |
 | 7.3 Imports are sorted and have no repeats | 7 | Yes |
 | 7.4 `defpkg` only at the top level | 7 | Yes |
@@ -417,10 +417,10 @@ The kinds, with the number of entries of each: 1, the axioms leave a value open 
 ### 6.2 The termination machine and ruler-extenders
 
 - **The axioms.** The definitional principle asks that a measure decrease at each recursive call, under the tests that rule it.
-- **ACL2.** Its termination machine decides which tests rule a call, by the ruler-extenders of the definition, and does not measure the executable half of an `mbe`.
-- **Example.** ACL2 refuses `bm-r0`, whose recursion is ruled only by a test inside an argument of `cons`, and admits the same body with the ruler-extenders `:all`.
-- **ACL2 Core.** Asks for exactly ACL2's measure conjectures, by the walk of [`spec/logic.md`](spec/logic.md), section 6, which records the calls and tests of ACL2's machine for all 523 definitions that call themselves in the world ACL2 starts with.
-- **Check.** The lines `agrees`, `rulers`, `obligation` and the corresponding lines `refused` of `checks/expected/facts.txt`.
+- **ACL2.** Its termination machine decides which tests rule a call, by the ruler-extenders of the definition, and does not measure the executable half of an `mbe`. A definition whose only call of itself is in that half is not recursive: ACL2 asks no measure of it and stores no justification.
+- **Example.** ACL2 refuses `bm-r0`, whose recursion is ruled only by a test inside an argument of `cons`, and admits the same body with the ruler-extenders `:all`. It holds `bm-mbe-self`, defined as `(mbe :logic x :exec (bm-mbe-self x))`, and its own `string-append`, which calls itself in the executable half of its `mbe`, as not recursive.
+- **ACL2 Core.** Asks for exactly ACL2's measure conjectures, by the walk of [`spec/logic.md`](spec/logic.md), section 6, which records the calls and tests of ACL2's machine for all 523 definitions that call themselves in the world ACL2 starts with. A call in the executable half of an `mbe` does not make a `define` statement have obligations, as it does not make a definition recursive in ACL2.
+- **Check.** Lines 6.2; the lines `agrees`, `rulers`, `obligation` and the corresponding lines `refused` of `checks/expected/facts.txt`.
 
 ### 6.3 Measures that ACL2 guesses
 
@@ -513,10 +513,10 @@ The kinds, with the number of entries of each: 1, the axioms leave a value open 
 ### 7.1 The packages ACL2 starts with
 
 - **The axioms.** Four `defaxiom` events give the imports of `ACL2`, `KEYWORD`, `ACL2-INPUT-CHANNEL` and `ACL2-OUTPUT-CHANNEL`. `ACL2-USER`, `ACL2-PC` and `BIB` are declared by `defpkg`, which stores an axiom for each. `COMMON-LISP` has none (entry 1.2).
-- **ACL2.** It starts with these eight packages.
-- **Example.** ACL2 holds an axiom named `ACL2-USER-PACKAGE`. The list of packages, and the imports of each, are lines of `checks/expected/facts.txt`.
-- **ACL2 Core.** The ground theory holds the first five; the library holds the other three as `package` statements ([`spec/logic.md`](spec/logic.md), sections 3 and 7).
-- **Check.** The line `stored` labelled 7.1; the lines `packages`, `package` and `imports` of `checks/expected/facts.txt`.
+- **ACL2.** It starts with these eight packages. It accepts a `defpkg` of one of them with its own imports as redundant, and it holds no rule named `COMMON-LISP-PACKAGE`.
+- **Example.** ACL2 holds an axiom named `ACL2-USER-PACKAGE`. The list of packages, and the imports of each, are lines of `checks/expected/facts.txt`. It accepts `(defpkg "KEYWORD" nil)` and `(defpkg "COMMON-LISP" nil)`, each as redundant, and `(defthm common-lisp-package t :rule-classes nil)`.
+- **ACL2 Core.** The ground theory holds the first five; the library holds the other three as `package` statements ([`spec/logic.md`](spec/logic.md), sections 3 and 7). Only the four packages with an axiom give a fact, so `ACL2::COMMON-LISP-PACKAGE` is not in use, as in ACL2. A `package` statement of a package of the ground theory is refused, even one that is, byte for byte, a line of the ground theory, since the ground theory is no input and a package may not be declared twice; ACL2 accepts such a `defpkg` as redundant. Following ACL2 is undecided (`PLAN.md`). No statement that ACL2 writes is affected.
+- **Check.** Lines 7.1; the lines `packages`, `package` and `imports` of `checks/expected/facts.txt`.
 
 ### 7.2 The names of packages
 

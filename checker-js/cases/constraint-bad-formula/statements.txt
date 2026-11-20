@@ -1,0 +1,1 @@
+(constrain ((ACL2::C-FN 0)) ((ACL2::C-FORMULA (ACL2::C-FN ACL2::X))))

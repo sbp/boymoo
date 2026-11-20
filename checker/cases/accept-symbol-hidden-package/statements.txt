@@ -1,0 +1,2 @@
+(hidden-package "BM-H" COMMON-LISP::NIL)
+(reserve BM-H::A)

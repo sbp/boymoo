@@ -1,0 +1,1 @@
+(primitive ACL2::C-FN 0)

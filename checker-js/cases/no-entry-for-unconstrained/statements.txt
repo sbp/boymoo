@@ -1,0 +1,1 @@
+(constrain ((ACL2::C-FN 0)) COMMON-LISP::NIL)

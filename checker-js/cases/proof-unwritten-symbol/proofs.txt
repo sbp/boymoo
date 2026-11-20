@@ -1,0 +1,3 @@
+(theorem ACL2::C-GOAL)
+(fact MISSING::FACT)
+(qed)

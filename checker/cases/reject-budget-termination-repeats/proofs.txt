@@ -1,0 +1,3 @@
+(measure ACL2::BM-C (ACL2::ACL2-COUNT ACL2::X))
+(fact ACL2::G1)
+(qed)

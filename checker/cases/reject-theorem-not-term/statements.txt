@@ -1,0 +1,1 @@
+(theorem ACL2::A (ACL2::BM-NONE ACL2::X))

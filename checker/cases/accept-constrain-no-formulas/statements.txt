@@ -1,0 +1,2 @@
+(constrain ((ACL2::BM-K 1) (ACL2::BM-K2 0)) COMMON-LISP::NIL)
+(theorem ACL2::A (COMMON-LISP::EQUAL (ACL2::BM-K2) (ACL2::BM-K2)))

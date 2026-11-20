@@ -1,0 +1,3 @@
+(theorem ACL2::C-GOAL)
+(compute (ACL2::PKG-IMPORTS (COMMON-LISP::QUOTE "MISSING")))
+(qed)

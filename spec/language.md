@@ -142,7 +142,7 @@ Every list is a true list: its last `cdr` is `NIL`. A function is **in use** fro
 
 So `ACL2::X`, `COMMON-LISP::LIST` and the symbol with the empty name `ACL2::||` are variables; `ACL2::*X*`, `ACL2::&X`, `COMMON-LISP::PI` and every keyword are not. Formals, the variables of a lambda, and the variables of a substitution are variables in this sense, and where several stand together they are distinct.
 
-**`COMMON-LISP::QUOTE` is never the name of a function.** A list that begins with it is a constant. If a function could have that name, a call of it would be read as a constant, and a fact proved of the call would be stated of the constant. Section 6 gives the rest of ACL2's rules for names.
+**`COMMON-LISP::QUOTE` is never the name of a function.** A list that begins with it is a constant. If a function could have that name, a call of it would be read as a constant, and a fact proved of the call would be stated of the constant. `COMMON-LISP::QUOTE` alone may be a variable: by the rule above it is one, since the package `ACL2` imports it and the `specials` line does not hold it, and ACL2's `legal-variablep` agrees (the line `agrees` below). A symbol alone is never read as a constant. Section 6 gives the rest of ACL2's rules for names.
 
 **Checked against ACL2.** The rule for a variable, computed from the two lists of the ground theory, agrees with ACL2's own test `legal-variablep` on 3,613 objects: every import of `ACL2`, every symbol of the `specials` line, every formal of every function ACL2 starts with, and symbols chosen to try each clause. This is a line `agrees` of `checks/expected/facts.txt`. The lines `refused` and `accepted` of that file record ACL2's answer to a definition with each kind of formal.
 
@@ -170,7 +170,7 @@ A **name** is in use from the line that introduces it, and no line may introduce
 - **Every name is a symbol that is not a keyword.**
 - **A function name is not `COMMON-LISP::QUOTE`,** as section 5 says.
 - **In the statements of a book and in the proofs, a function name is not a symbol of the package `COMMON-LISP`.** ACL2 defines functions of that package, such as `not` and `length`, only while it builds itself; the ground theory and the library are that building, and there such names stand. A theorem may be named by a symbol of `COMMON-LISP`.
-- **The names of the ground theory are in use from the start:** its functions, its facts, and `COMMON-LISP::T` and `COMMON-LISP::NIL`, which ACL2 holds as constants.
+- **The names of the ground theory are in use from the start:** its functions, its facts, and `COMMON-LISP::T` and `COMMON-LISP::NIL`, which ACL2 holds as constants. Of its five `package` lines, only the four for which ACL2 has an axiom give a fact; `ACL2::COMMON-LISP-PACKAGE` is not in use (`logic.md`, section 3).
 - **A `package` statement takes the name of its rule.** ACL2 keeps the axiom of the package `NAME` as a rule called `NAME-PACKAGE`. The statement brings into use the symbol that this string names in the package `ACL2`, which is the value of `(intern-in-package-of-symbol "NAME-PACKAGE" 'ACL2::X)`, and its fact has that name (`logic.md`, section 4).
 - **A `reserve` statement holds a name** under which ACL2 has something with no logical content: a macro, a constant, a label, a theory, a single-threaded object. No later line may take it.
 

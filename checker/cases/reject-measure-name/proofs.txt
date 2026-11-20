@@ -1,0 +1,1 @@
+(measure ACL2::BM-G (COMMON-LISP::QUOTE 0))

@@ -1,0 +1,5 @@
+(witness ACL2::BM-K ACL2::FIX)
+(beta ((COMMON-LISP::LAMBDA (ACL2::X) (ACL2::FIX ACL2::X)) ACL2::Y))
+(qed)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE (ACL2::BM-K ACL2::X))))
+(qed)

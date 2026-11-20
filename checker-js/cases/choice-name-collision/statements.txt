@@ -1,0 +1,2 @@
+(reserve ACL2::C-FN)
+(choose ACL2::C-FN (ACL2::X) COMMON-LISP::NIL ACL2::X COMMON-LISP::NIL)

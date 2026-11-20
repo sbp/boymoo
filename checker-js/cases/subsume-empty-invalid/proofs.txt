@@ -1,0 +1,4 @@
+(theorem ACL2::C-GOAL)
+(fact "non-nil-true")
+(subsume 1)
+(qed)

@@ -1,0 +1,342 @@
+; Boymoo, the checker: computing the primitives (spec/language.md, sections
+; 3 and 4) and the eight rules of proof (spec/logic.md, section 5).
+
+(in-package "BOYMOO")
+
+(include-book "terms")
+
+; ---------------------------------------------------------------------------
+; The primitives on data
+;
+; A datum other than a symbol is held as itself, and a symbol as read.lisp
+; says, so that a primitive that does not look into a symbol gives the same
+; result on what holds the data as on the data: there the checker calls it.
+; The others look up the packages.  The result is (VALUE), or NIL where the
+; call is not computed.
+
+(defun prim-value (f args w)
+  (let ((x (car args))
+        (y (car (cdr args))))
+    (cond
+     ((equal f '|ACL2::ACL2-NUMBERP|) (list (acl2-numberp x)))
+     ((equal f '|ACL2::BAD-ATOM<=|) (list nil))
+     ((equal f '|ACL2::BINARY-*|) (list (* x y)))
+     ((equal f '|ACL2::BINARY-+|) (list (+ x y)))
+     ((equal f '|ACL2::UNARY--|) (list (- x)))
+     ((equal f '|ACL2::UNARY-/|) (list (/ x)))
+     ((equal f '|COMMON-LISP::<|) (list (< x y)))
+     ((equal f '|COMMON-LISP::CAR|) (list (car x)))
+     ((equal f '|COMMON-LISP::CDR|) (list (cdr x)))
+     ((equal f '|COMMON-LISP::CHAR-CODE|) (list (char-code x)))
+     ((equal f '|COMMON-LISP::CHARACTERP|) (list (characterp x)))
+     ((equal f '|COMMON-LISP::CODE-CHAR|) (list (code-char x)))
+     ((equal f '|COMMON-LISP::COMPLEX|) (list (complex x y)))
+     ((equal f '|ACL2::COMPLEX-RATIONALP|) (list (complex-rationalp x)))
+     ((equal f '|COMMON-LISP::COERCE|)
+      (list (if (equal y '|COMMON-LISP::LIST|)
+                (coerce x 'list)
+              (coerce x 'string))))
+     ((equal f '|COMMON-LISP::CONS|) (list (cons x y)))
+     ((equal f '|COMMON-LISP::CONSP|) (list (consp x)))
+     ((equal f '|COMMON-LISP::DENOMINATOR|) (list (denominator x)))
+     ((equal f '|COMMON-LISP::EQUAL|) (list (equal x y)))
+     ((equal f '|COMMON-LISP::IF|) (list (if x y (car (cdr (cdr args))))))
+     ((equal f '|COMMON-LISP::IMAGPART|) (list (imagpart x)))
+     ((equal f '|COMMON-LISP::INTEGERP|) (list (integerp x)))
+     ((equal f '|ACL2::INTERN-IN-PACKAGE-OF-SYMBOL|)
+      (list (if (and (stringp x) (symbolp y))
+                (intern-sym (coerce x 'list) (car (sym-parts y)) w)
+              nil)))
+     ((equal f '|COMMON-LISP::NUMERATOR|) (list (numerator x)))
+     ((equal f '|ACL2::PKG-IMPORTS|)
+      (if (stringp x)
+          (let ((rec (trie-get (coerce x 'list) (w-pkgs w))))
+            (if (and rec (not (prec-hidden rec)))
+                (list (prec-imports rec))
+              nil))
+        (list nil)))
+     ((equal f '|ACL2::PKG-WITNESS|)
+      (if (stringp x)
+          (let ((rec (trie-get (coerce x 'list) (w-pkgs w))))
+            (if (and rec (not (prec-hidden rec)))
+                (list (make-sym (coerce x 'list)
+                                (coerce "ACL2-PKG-WITNESS" 'list)))
+              nil))
+        (list '|ACL2::ACL2-PKG-WITNESS|)))
+     ((equal f '|COMMON-LISP::RATIONALP|) (list (rationalp x)))
+     ((equal f '|COMMON-LISP::REALPART|) (list (realpart x)))
+     ((equal f '|COMMON-LISP::STRINGP|) (list (stringp x)))
+     ((equal f '|COMMON-LISP::SYMBOL-NAME|)
+      (list (if (symbolp x) (coerce (sym-name x) 'string) "")))
+     ((equal f '|ACL2::SYMBOL-PACKAGE-NAME|)
+      (if (symbolp x)
+          (let* ((pkg (car (sym-parts x)))
+                 (rec (trie-get pkg (w-pkgs w))))
+            (if (prec-hidden rec)
+                nil
+              (list (coerce pkg 'string))))
+        (list "")))
+     ((equal f '|COMMON-LISP::SYMBOLP|) (list (symbolp x)))
+     (t nil))))
+
+; ---------------------------------------------------------------------------
+; Steps
+;
+; A step is checked against the conclusions of the steps before it in its
+; proof, STEPS, the latest first, of which there are COUNT.  Each function
+; returns the conclusion of the step, a clause with the sizes of its
+; literals, or NIL if the step fails; and it fails if the size of its
+; conclusion is above ROOM, what is left of the budget of the proof.  The
+; size of a conclusion is found before it is built.
+
+(defun premise (p steps count)
+  (if (and (integerp p) (< 0 p) (not (< count p)))
+      (nth-elem (+ 1 (- count p)) steps)
+    nil))
+
+(defun fits (sizes room)
+  (not (< room (sum sizes))))
+
+(defconst *nil-term* '(|COMMON-LISP::QUOTE| nil))
+
+; (fact NAME)
+(defun step-fact (data room w)
+  (if (and (consp data) (equal (cdr data) nil))
+      (let* ((name (car data))
+             (fact (if (stringp name)
+                       (cdr (pair-of name (w-sfacts w)))
+                     (if (symbolp name)
+                         (entry-fact (name-entry name w))
+                       nil))))
+        (if (and fact (fits (cdr fact) room)) fact nil))
+    nil))
+
+; A substitution on a line: a list of lists (V TERM) with distinct
+; variables, as an association list, or :BAD.
+(defun read-subst (s w)
+  (if (consp s)
+      (let ((pair (car s))
+            (rest (read-subst (cdr s) w)))
+        (if (and (consp pair) (consp (cdr pair)) (equal (cdr (cdr pair)) nil)
+                 (variable-p (car pair) w)
+                 (term-p (car (cdr pair)) :any nil w)
+                 (not (equal rest :bad))
+                 (not (pair-of (car pair) rest)))
+            (cons (cons (car pair) (car (cdr pair))) rest)
+          :bad))
+    (if (equal s nil) nil :bad)))
+
+; The association list from the variables of the substitution S to the
+; sizes of their terms.
+(defun subst-size-alist (s)
+  (if (consp s)
+      (cons (cons (car (car s)) (size (cdr (car s))))
+            (subst-size-alist (cdr s)))
+    nil))
+
+; (instantiate P S)
+(defun step-instantiate (data steps count room w)
+  (if (and (consp data) (consp (cdr data)) (equal (cdr (cdr data)) nil))
+      (let ((c (premise (car data) steps count))
+            (s (read-subst (car (cdr data)) w)))
+        (if (and c (not (equal s :bad)))
+            (let ((new-sizes (subst-sizes (car c) (subst-size-alist s))))
+              (if (fits new-sizes room)
+                  (cons (subst-terms (car c) s) new-sizes)
+                nil))
+          nil))
+    nil))
+
+; Every literal of C other than the constant 'nil is among LITS.
+(defun subsumed-p (c lits)
+  (if (consp c)
+      (and (or (equal (car c) *nil-term*) (member-p (car c) lits))
+           (subsumed-p (cdr c) lits))
+    t))
+
+; (subsume P L1 ... Ln)
+(defun step-subsume (data steps count room w)
+  (if (consp data)
+      (let ((c (premise (car data) steps count))
+            (lits (cdr data)))
+        (if (and c (terms-p lits :any nil w) (subsumed-p (car c) lits))
+            (let ((new-sizes (sizes lits)))
+              (if (fits new-sizes room) (cons lits new-sizes) nil))
+          nil))
+    nil))
+
+; (cut P Q)
+(defun step-cut (data steps count room)
+  (if (and (consp data) (consp (cdr data)) (equal (cdr (cdr data)) nil))
+      (let ((c1 (premise (car data) steps count))
+            (c2 (premise (car (cdr data)) steps count)))
+        (if (and c1 c2 (consp (car c1)) (consp (car c2))
+                 (equal (car (car c2))
+                        (list '|COMMON-LISP::NOT| (car (car c1)))))
+            (let ((new-sizes (app (cdr (cdr c1)) (cdr (cdr c2)))))
+              (if (fits new-sizes room)
+                  (cons (app (cdr (car c1)) (cdr (car c2))) new-sizes)
+                nil))
+          nil))
+    nil))
+
+; The term X with the term at the place JS, which must be A, replaced by
+; B; or :FAIL.  Each number of JS picks an argument of a call or an actual
+; of a lambda application, never the function, a constant or the body of a
+; lambda.
+(defun replace-at (x js a b)
+  (if (consp js)
+      (let ((j (car js)))
+        (if (and (consp x)
+                 (not (equal (car x) '|COMMON-LISP::QUOTE|))
+                 (integerp j) (< 0 j) (not (< (len (cdr x)) j)))
+            (let ((new (replace-at (nth-elem j (cdr x)) (cdr js) a b)))
+              (if (equal new :fail)
+                  :fail
+                (cons (car x) (replace-nth j (cdr x) new))))
+          :fail))
+    (if (equal x a) b :fail)))
+
+; (substitute P Q I J1 ... Jk)
+(defun step-substitute (data steps count room)
+  (if (and (consp data) (consp (cdr data)) (consp (cdr (cdr data))))
+      (let ((c1 (premise (car data) steps count))
+            (c2 (premise (car (cdr data)) steps count))
+            (i (car (cdr (cdr data))))
+            (js (cdr (cdr (cdr data)))))
+        (if (and c1 c2 (consp (car c1)) (true-listp js))
+            (let ((eq (car (car c1))))
+              (if (and (consp eq) (equal (car eq) '|COMMON-LISP::EQUAL|)
+                       (consp (cdr eq)) (consp (cdr (cdr eq)))
+                       (equal (cdr (cdr (cdr eq))) nil)
+                       (integerp i) (< 0 i) (not (< (len (car c2)) i)))
+                (let* ((a (car (cdr eq)))
+                       (b (car (cdr (cdr eq))))
+                       (new (replace-at (nth-elem i (car c2)) js a b)))
+                  (if (equal new :fail)
+                      nil
+                    (let ((new-sizes
+                           (app (replace-nth i (cdr c2)
+                                             (+ (nth-elem i (cdr c2))
+                                                (- (size b) (size a))))
+                                (cdr (cdr c1)))))
+                      (if (fits new-sizes room)
+                          (cons (app (replace-nth i (car c2) new) (cdr (car c1)))
+                                new-sizes)
+                        nil))))
+                nil))
+          nil))
+    nil))
+
+(defun lambda-application-p (x)
+  (and (consp x) (consp (car x))))
+
+; (beta TERM)
+(defun step-beta (data room w)
+  (if (and (consp data) (equal (cdr data) nil))
+      (let ((x (car data)))
+        (if (and (term-p x :any nil w) (lambda-application-p x))
+            (let* ((formals (car (cdr (car x))))
+                   (body (car (cdr (cdr (car x)))))
+                   (actuals (cdr x))
+                   (n (+ 5 (size x)
+                         (subst-size body (pair-up formals (sizes actuals))))))
+              (if (fits (list n) room)
+                  (cons (list (list '|COMMON-LISP::EQUAL| x
+                                    (subst-term body (pair-up formals actuals))))
+                        (list n))
+                nil))
+          nil))
+    nil))
+
+(defun quotes-p (xs)
+  (if (consp xs)
+      (and (consp (car xs)) (equal (car (car xs)) '|COMMON-LISP::QUOTE|)
+           (quotes-p (cdr xs)))
+    t))
+
+(defun unquote-all (xs)
+  (if (consp xs)
+      (cons (car (cdr (car xs))) (unquote-all (cdr xs)))
+    nil))
+
+; (compute TERM)
+(defun step-compute (data room w)
+  (if (and (consp data) (equal (cdr data) nil))
+      (let ((x (car data)))
+        (if (and (term-p x :any nil w) (consp x) (symbolp (car x))
+                 (not (equal (car x) '|COMMON-LISP::QUOTE|))
+                 (quotes-p (cdr x)))
+            (let ((v (prim-value (car x) (unquote-all (cdr x)) w)))
+              (if v
+                  (let ((n (+ 9 (size x) (size (car v)))))
+                    (if (fits (list n) room)
+                        (cons (list (list '|COMMON-LISP::EQUAL| x
+                                          (list '|COMMON-LISP::QUOTE| (car v))))
+                              (list n))
+                      nil))
+                nil))
+          nil))
+    nil))
+
+; A list of substitutions on a line, or :BAD.
+(defun read-substs (ss w)
+  (if (consp ss)
+      (let ((s (read-subst (car ss) w))
+            (rest (read-substs (cdr ss) w)))
+        (if (or (equal s :bad) (equal rest :bad)) :bad (cons s rest)))
+    (if (equal ss nil) nil :bad)))
+
+; The sizes of the literals (not (if (o< m/s m) phi/s 't)) of the second
+; premise of induct, found without building them.
+(defun induct-sizes (phi m ss)
+  (if (consp ss)
+      (let ((sa (subst-size-alist (car ss))))
+        (cons (+ 20 (subst-size m sa) (size m) (subst-size phi sa))
+              (induct-sizes phi m (cdr ss))))
+    nil))
+
+(defun induct-lits (phi m ss)
+  (if (consp ss)
+      (cons (list '|COMMON-LISP::NOT|
+                  (list '|COMMON-LISP::IF|
+                        (list '|ACL2::O<| (subst-term m (car ss)) m)
+                        (subst-term phi (car ss))
+                        '(|COMMON-LISP::QUOTE| t)))
+            (induct-lits phi m (cdr ss)))
+    nil))
+
+; (induct P Q PHI M SS)
+(defun step-induct (data steps count room w)
+  (if (and (consp data) (consp (cdr data)) (consp (cdr (cdr data)))
+           (consp (cdr (cdr (cdr data))))
+           (consp (cdr (cdr (cdr (cdr data)))))
+           (equal (cdr (cdr (cdr (cdr (cdr data))))) nil))
+      (let ((c1 (premise (car data) steps count))
+            (c2 (premise (car (cdr data)) steps count))
+            (phi (car (cdr (cdr data))))
+            (m (car (cdr (cdr (cdr data)))))
+            (ss (read-substs (car (cdr (cdr (cdr (cdr data))))) w)))
+        (if (and c1 c2 (term-p phi :any nil w) (term-p m :any nil w)
+                 (not (equal ss :bad))
+                 (equal (car c1) (list (list '|ACL2::O-P| m))))
+            (let ((expected (app (induct-sizes phi m ss) (list (size phi)))))
+              (if (and (equal (sum expected) (sum (cdr c2)))
+                       (equal (car c2) (app (induct-lits phi m ss) (list phi)))
+                       (fits (list (size phi)) room))
+                  (cons (list phi) (list (size phi)))
+                nil))
+          nil))
+    nil))
+
+; A step line, by its word.
+(defun check-step (word data steps count room w)
+  (cond ((equal word :fact) (step-fact data room w))
+        ((equal word :instantiate) (step-instantiate data steps count room w))
+        ((equal word :subsume) (step-subsume data steps count room w))
+        ((equal word :cut) (step-cut data steps count room))
+        ((equal word :substitute) (step-substitute data steps count room))
+        ((equal word :beta) (step-beta data room w))
+        ((equal word :compute) (step-compute data room w))
+        ((equal word :induct) (step-induct data steps count room w))
+        (t nil)))

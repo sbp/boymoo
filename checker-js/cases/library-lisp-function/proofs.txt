@@ -1,0 +1,3 @@
+(theorem COMMON-LISP::C-THEOREM)
+(fact COMMON-LISP::C-NEW)
+(qed)

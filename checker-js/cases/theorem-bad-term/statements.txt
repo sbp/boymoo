@@ -1,0 +1,1 @@
+(theorem ACL2::C-GOAL (ACL2::C-LATER))

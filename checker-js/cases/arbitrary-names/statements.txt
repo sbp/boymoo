@@ -1,0 +1,8 @@
+(package "P\00::! \22" COMMON-LISP::NIL)
+(package "." COMMON-LISP::NIL)
+(reserve ACL2::|__proto__|)
+(reserve ACL2::|constructor|)
+(reserve ACL2::|hasOwnProperty|)
+(reserve |P\00::! "|::|\7C|)
+(reserve .::W)
+(theorem ACL2::C-GOAL (COMMON-LISP::EQUAL (COMMON-LISP::SYMBOL-NAME (COMMON-LISP::QUOTE ACL2::||)) (COMMON-LISP::QUOTE "")))

@@ -1,0 +1,3 @@
+(theorem ACL2::C-GOAL)
+(compute (COMMON-LISP::NOT (COMMON-LISP::QUOTE COMMON-LISP::T)))
+(qed)

@@ -1,0 +1,2 @@
+(skip ACL2::C-NEXT)
+(skip ACL2::C-GOAL)

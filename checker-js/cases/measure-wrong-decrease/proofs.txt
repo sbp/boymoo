@@ -1,0 +1,5 @@
+(measure ACL2::C-FN ACL2::X)
+(fact ACL2::C-ORDINAL)
+(qed)
+(fact ACL2::C-ORDINAL)
+(qed)

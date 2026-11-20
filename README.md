@@ -23,7 +23,7 @@ ACL2 says what a book states and is used to cross-check. It takes no part in fin
 
 ## What is in the repository
 
-The repository holds the specification, the checks that compare it with ACL2, the exporter, by which ACL2 writes its library and its books in the formats, and the reference runner, which computes the value of a term from program text. No checker has been written yet; [`PLAN.md`](PLAN.md) gives the order of the work.
+The repository holds the specification, the checks that compare it with ACL2, the exporter, by which ACL2 writes its library and its books in the formats, the reference runner, which computes the value of a term from program text, a checker written in ACL2 Core, which the runner runs, and a second checker, written apart from it in JavaScript. [`PLAN.md`](PLAN.md) gives the order of the work.
 
 | Path | What it is |
 |---|---|
@@ -36,6 +36,8 @@ The repository holds the specification, the checks that compare it with ACL2, th
 | [`checks/`](checks) | The checks: scripts and four small books for ACL2, a reader for the formats, the expected results, and `run.sh`, which runs them all. |
 | [`export/`](export) | The exporter: a program run by ACL2 that writes its built-in library and its books as statements, program text and the prover's aids (`export.lsp`), a check by which ACL2 reads each file back (`readback.lsp`), the books chosen (`books.txt`) with a small book of two cases of its own (`choice.lisp`), and `run.sh`, which runs it all. |
 | [`runner/`](runner) | The reference runner: a program in ISO C99 that reads program text and computes the value of a term (`runner/README.md`), its `Makefile`, its tests against ACL2 (`test.sh`, with the files of `runner/test/`), and its benchmarks against ACL2 (`bench.sh`, with the books of `runner/bench/`). |
+| [`checker/`](checker) | The checker of `spec/logic.md`, in ACL2 Core: six ACL2 books in the package of `package.lsp`, which read the three inputs as strings and give the verdict (`base.lisp`, `read.lisp`, `terms.lisp`, `rules.lisp`, `admit.lisp`, `check.lisp`); `build.sh`, which has ACL2 certify them and the exporter export them; `check.sh`, which runs the checker on the runner, with the shell functions of `quote.sh`; `acl2-check.sh`, with `acl2-run.lsp`, which runs the same functions inside ACL2; its tests, `test.sh`, with the cases of `checker/cases/` and the tools `closed.py` and `skips.py`; `books.sh`, which runs it on the books of `export/books.txt`; and `size.sh`. |
+| [`checker-js/`](checker-js) | The second checker of `PLAN.md`, step 4, written from the specification alone in ECMAScript 5.1 (`check.js`), with adapters for several JavaScript engines and a browser, its cases (`checker-js/cases/`), its tests and its tools; [`checker-js/README.md`](checker-js/README.md) gives its commands. |
 | [`LICENSE`](LICENSE) | The licence. |
 | [`PLAN.md`](PLAN.md) | The steps of the work, what each gains, and how each is judged finished. |
 | [`AGENTS.md`](AGENTS.md) | The rules that bind every change to this repository. |
@@ -49,11 +51,13 @@ Every tool is found by its name on the `PATH`.
 | Tool | Used for |
 |---|---|
 | `acl2` | ACL2 version 8.7, with the books that are distributed with it, of which `projects/apply/top` must be certified. The checks ask ACL2 what it holds, have it prove the facts that the specification adds to its axioms, and have it certify three small books of their own in `build/`. The checks and the exporter run under this version only: they read properties of ACL2's world, which can change from one version to the next without notice, so that another version could give a wrong answer and report no error. ACL2 loads [`checks/version.lsp`](checks/version.lsp), the one place that names the version, at the start of the first run of `checks/run.sh` and of every run of `export/book.sh`; under any other version it ends at once, and the script prints the version it found and stops with status 3. |
-| `python3` | Python 3.5 or later, for `checks/reader.py`, the reader of the formats, `export/measure.py`, which counts and measures what the exporter writes, and the files of `runner/test/` that write the runner's test cases. |
+| `python3` | Python 3.5 or later, for `checks/reader.py`, the reader of the formats, `export/measure.py`, which counts and measures what the exporter writes, the files of `runner/test/` that write the runner's test cases, and the test tools `checker/closed.py` and `checker/skips.py`. |
 | `make`, `c99` | The `make` and the C compiler of POSIX, to build the runner (`runner/Makefile`); the compiler may be named otherwise with `CC`. Nothing else is needed to build or run the runner. |
 | `sh`, `cmp`, `cp`, `grep`, `sed`, `tr`, `paste`, `rm`, `mkdir`, `date`, `cat` | The usual POSIX tools, for `checks/run.sh` and `export/run.sh`. |
 | `timeout`, `xargs` | For `export/run.sh`: `timeout` (of GNU coreutils) stops a run of ACL2 on one book after 30 minutes, and `xargs`, with its option `-P`, runs two at a time. |
 | `awk`, `env`, `time`, `sort`, `paste`, `head`, `cut`, `mv` | The POSIX tools that `runner/test.sh` and `runner/bench.sh` use besides those above. |
+| `node`, or `duk`, `qjs`, `jsc` | A JavaScript engine, for the second checker (`checker-js/README.md`); `checks/agree.sh` uses `node` unless another is named, and `node` for the tool that writes the second checker's skips. |
+| `od`, `basename`, `dirname`, `diff` | The POSIX tools that the scripts of `checker/` use besides those above: `od` writes the bytes of an input as numbers, from which `awk` writes the string the checker reads. |
 
 ## The checks
 
@@ -95,6 +99,30 @@ sh runner/test.sh
 ```
 
 It prints one line for each set of cases and ends with `all runner tests passed` or `some runner tests failed`. `sh runner/bench.sh` times it against ACL2; `PLAN.md`, step 3, records both.
+
+## The checker
+
+The checker of `PLAN.md`, step 4, is in `checker/`. It is written in ACL2 Core: every function it defines calls only the 32 primitives, the 36 functions of the ground theory and its own, so that the runner can run it from its program text and it can later be given its own statements. ACL2 certifies its books, which proves that each of its functions terminates, and the exporter writes their program text. It reads each input as a string of bytes and does all the reading itself. From the root of the repository,
+
+```
+sh checker/check.sh LIBRARY STATEMENTS PROOFS
+```
+
+builds what it needs and prints the verdict of `spec/formats.md`, section 9, as its first line. Its tests, run by
+
+```
+sh checker/test.sh
+```
+
+compare it, on the runner, with `spec/example` and with the expected verdict of every case of [`checker/cases/`](checker/cases), whose README lists the conditions of the specification that each case tests; confirm that it is written in ACL2 Core; and compute every verdict again inside ACL2. `sh checker/books.sh` runs it on the books of `export/books.txt`, with every obligation skipped.
+
+The second checker, in `checker-js/`, is written from the specification alone, in JavaScript, and is run with `sh checker-js/check.sh LIBRARY STATEMENTS PROOFS [ENGINE]`. One command shows whether the two agree, as `PLAN.md`, step 4, asks:
+
+```
+sh checks/agree.sh [ENGINE]
+```
+
+Both must give `accepted` on `spec/example` and the expected verdict on every case of `checker/cases/` and of `checker-js/cases/`; and on each book of `export/books.txt`, the two tools that write a skip for each obligation must write the same file, and the two checkers give the same verdict on it. It prints a line for each set and ends with `the two checkers agree` or `the two checkers do NOT agree`. `PLAN.md`, step 4, records the results.
 
 ## Licence
 

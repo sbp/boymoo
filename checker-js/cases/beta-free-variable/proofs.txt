@@ -1,0 +1,3 @@
+(theorem ACL2::C-GOAL)
+(beta ((COMMON-LISP::LAMBDA (ACL2::X) ACL2::Y) ACL2::X))
+(qed)

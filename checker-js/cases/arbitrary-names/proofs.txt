@@ -1,0 +1,3 @@
+(theorem ACL2::C-GOAL)
+(compute (COMMON-LISP::SYMBOL-NAME (COMMON-LISP::QUOTE ACL2::||)))
+(qed)

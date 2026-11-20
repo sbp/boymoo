@@ -1,0 +1,6 @@
+(package "BM-ORDER" (KEYWORD::APPLE COMMON-LISP::CAR ACL2::ZEBRA))
+(package "BM-PRE" (ACL2::BM-A ACL2::BM-AB))
+(hidden-package "BM-H" COMMON-LISP::NIL)
+(package "BM-H" COMMON-LISP::NIL)
+(reserve BM-ORDER::CDR)
+(package "BM-A::B" COMMON-LISP::NIL)

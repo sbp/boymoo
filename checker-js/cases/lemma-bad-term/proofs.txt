@@ -1,0 +1,1 @@
+(lemma ACL2::C-LOCAL COMMON-LISP::T)

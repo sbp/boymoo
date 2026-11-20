@@ -1,0 +1,1 @@
+(define 5 (ACL2::BM-F (ACL2::X) ACL2::X))

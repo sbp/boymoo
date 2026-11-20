@@ -1,0 +1,3 @@
+(lemma ACL2::L (COMMON-LISP::EQUAL ACL2::X ACL2::X))
+(fact "equal-same")
+(instantiate 2 COMMON-LISP::NIL)

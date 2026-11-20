@@ -1,0 +1,2 @@
+(hidden-package "C-PKG" (COMMON-LISP::CAR))
+(package "C-PKG" COMMON-LISP::NIL)

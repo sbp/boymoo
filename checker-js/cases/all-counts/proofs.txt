@@ -1,0 +1,3 @@
+(skip ACL2::C-GOAL)
+(skip ACL2::C-SKIP-WITNESS)
+(skip ACL2::C-SKIP-RECURSIVE)

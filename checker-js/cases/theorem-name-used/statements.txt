@@ -1,0 +1,2 @@
+(reserve ACL2::X)
+(theorem ACL2::X (COMMON-LISP::QUOTE COMMON-LISP::T))

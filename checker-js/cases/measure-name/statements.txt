@@ -1,0 +1,2 @@
+(define COMMON-LISP::NIL (ACL2::C-FN (ACL2::X) (ACL2::C-FN ACL2::X)))
+(define COMMON-LISP::NIL (ACL2::C-FN (ACL2::X) (ACL2::C-FN ACL2::X)))

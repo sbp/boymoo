@@ -1,0 +1,3 @@
+(theorem ACL2::A)
+(fact ACL2::BM-W)
+(qed)

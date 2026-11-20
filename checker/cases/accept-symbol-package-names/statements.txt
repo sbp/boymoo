@@ -1,0 +1,3 @@
+(package "BM A" COMMON-LISP::NIL)
+(reserve |BM A|::|x y|)
+(reserve ACL2::|BM A-PACKAGE-X|)

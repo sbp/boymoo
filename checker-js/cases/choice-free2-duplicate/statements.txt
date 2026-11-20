@@ -1,0 +1,1 @@
+(choose ACL2::C-FN (ACL2::X) (ACL2::Y ACL2::Z) ACL2::X (ACL2::W ACL2::W))

@@ -1,0 +1,1 @@
+(attach ACL2::X ACL2::Y)

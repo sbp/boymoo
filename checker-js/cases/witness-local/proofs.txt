@@ -1,0 +1,7 @@
+(define COMMON-LISP::NIL (ACL2::C-WITNESS (ACL2::X) ACL2::X))
+(witness ACL2::C-FN ACL2::C-WITNESS)
+(fact ACL2::C-WITNESS)
+(qed)
+(theorem ACL2::C-GOAL)
+(fact ACL2::C-CLAUSE)
+(qed)

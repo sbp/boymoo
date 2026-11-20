@@ -1,0 +1,1 @@
+(constrain ((ACL2::C-FN 1)) ((ACL2::C-CLAUSE (COMMON-LISP::EQUAL (ACL2::C-FN ACL2::X) ACL2::X))))

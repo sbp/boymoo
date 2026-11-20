@@ -1,0 +1,2 @@
+(measure ACL2::BM-LEN (ACL2::ACL2-COUNT ACL2::X))
+(fact ACL2::BM-LEN)

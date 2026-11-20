@@ -1,0 +1,2 @@
+(theorem ACL2::C-GOAL)
+(fact ACL2::C-PKG-PACKAGE)

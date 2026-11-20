@@ -1,0 +1,5 @@
+(witness ACL2::C-FN COMMON-LISP::CAR)
+(fact ACL2::C-A)
+(qed)
+(fact ACL2::C-B)
+(qed)

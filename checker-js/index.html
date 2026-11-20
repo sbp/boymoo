@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boymoo proof checker</title>
+</head>
+<body>
+  <h1>Boymoo proof checker</h1>
+  <form id="inputs">
+    <p><label>Ground theory (spec/ground.txt) <input type="file" id="ground" required></label></p>
+    <p><label>Library <input type="file" id="library"></label></p>
+    <p><label>Statements <input type="file" id="statements"></label></p>
+    <p><label>Proofs <input type="file" id="proofs"></label></p>
+    <p><button type="submit" id="check">Check</button></p>
+  </form>
+  <pre id="verdict" role="status"></pre>
+  <script src="check.js"></script>
+  <script src="check-page.js"></script>
+</body>
+</html>

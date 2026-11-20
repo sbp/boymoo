@@ -1,0 +1,6 @@
+(lemma ACL2::C-LOCAL ACL2::X (COMMON-LISP::EQUAL ACL2::X (COMMON-LISP::QUOTE COMMON-LISP::NIL)))
+(fact "non-nil-true")
+(qed)
+(theorem ACL2::C-GOAL)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE 0)))
+(qed)

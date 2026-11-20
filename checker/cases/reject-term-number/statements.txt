@@ -1,0 +1,1 @@
+(theorem ACL2::A (COMMON-LISP::EQUAL 5 ACL2::X))

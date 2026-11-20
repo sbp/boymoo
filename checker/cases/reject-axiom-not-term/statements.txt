@@ -1,0 +1,1 @@
+(axiom ACL2::A (COMMON-LISP::CAR))

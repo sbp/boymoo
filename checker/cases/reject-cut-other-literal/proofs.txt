@@ -1,0 +1,4 @@
+(lemma ACL2::L ACL2::X)
+(fact "non-nil-true")
+(fact ACL2::AX)
+(cut 1 2)

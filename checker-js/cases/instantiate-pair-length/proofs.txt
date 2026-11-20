@@ -1,0 +1,4 @@
+(theorem ACL2::C-GOAL)
+(fact "non-nil-true")
+(instantiate 1 ((ACL2::X ACL2::Y ACL2::Z)))
+(qed)

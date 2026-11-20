@@ -1,0 +1,2 @@
+(reserve ACL2::A)
+(theorem ACL2::B (COMMON-LISP::EQUAL (ACL2::A ACL2::X) (ACL2::A ACL2::X)))

@@ -1,0 +1,1 @@
+(theorem ACL2::A (COMMON-LISP::EQUAL (COMMON-LISP::QUOTE (0 -12 -1/3 #C(1/2 -1) #\0A #\FF "a\22b\5Cc\0A" ACL2::|a"\7C\5C| ACL2::|| (1 . 2) (COMMON-LISP::T . #\41))) (COMMON-LISP::QUOTE (0 -12 -1/3 #C(1/2 -1) #\0A #\FF "a\22b\5Cc\0A" ACL2::|a"\7C\5C| ACL2::|| (1 . 2) (COMMON-LISP::T . #\41)))))

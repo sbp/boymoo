@@ -1,0 +1,1 @@
+(constrain ((ACL2::BM-K 1)) ((ACL2::BM-K (COMMON-LISP::EQUAL ACL2::X ACL2::X))))

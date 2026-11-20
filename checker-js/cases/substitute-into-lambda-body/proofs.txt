@@ -1,0 +1,5 @@
+(theorem ACL2::C-GOAL)
+(fact ACL2::C-A)
+(fact ACL2::C-B)
+(substitute 1 2 1 1 1)
+(qed)

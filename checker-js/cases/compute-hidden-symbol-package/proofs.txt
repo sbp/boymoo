@@ -1,0 +1,3 @@
+(theorem ACL2::C-GOAL)
+(compute (ACL2::SYMBOL-PACKAGE-NAME (COMMON-LISP::QUOTE C-PKG::X)))
+(qed)
