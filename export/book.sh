@@ -11,7 +11,8 @@
 # files build/export/books/NAME.statements, .program, .aids, .notes,
 # .readback and .log, and for the library build/export/library.* in the
 # same way.  It needs build/export/ground-fns.lsp, which export/run.sh
-# writes.
+# writes.  Under any version of ACL2 but the one that checks/version.lsp
+# names, it stops at once with status 3 and writes nothing else.
 
 name=$1
 case $name in
@@ -33,6 +34,7 @@ esac
 
 {
     echo '(in-package "ACL2")'
+    echo '(ld "checks/version.lsp")'
     echo "(set-inhibit-output-lst '(warning warning! observation prove proof-tree event summary history))"
     echo '(assign bx-boot-hi (max-absolute-event-number (w state)))'
     echo "$include"
@@ -61,5 +63,11 @@ esac
     echo '(good-bye)'
 } | timeout 1800 acl2 > "$out.log" 2>&1
 status=$?
+# checks/version.lsp ends ACL2 with status 3 under any version but the
+# one it names.
+if [ $status -eq 3 ]; then
+    echo "export/book.sh stopped: $(sed -n 's/^version: //p' "$out.log")" >&2
+    exit 3
+fi
 if [ $status -ne 0 ]; then echo "(exit $status)" >> "$out.log"; fi
 exit 0

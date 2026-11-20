@@ -4,9 +4,10 @@
 #     sh checks/run.sh
 #
 # It needs acl2 (ACL2 8.7, with its distributed books), python3 and the
-# usual POSIX tools on the PATH.  It writes into build/ and prints one
-# line for each check, "ok" or "FAIL", and then "all checks passed" or
-# "some checks failed".
+# usual POSIX tools on the PATH, and stops at once under any other
+# version of ACL2 (checks/version.lsp).  It writes into build/ and
+# prints one line for each check, "ok" or "FAIL", and then "all checks
+# passed" or "some checks failed".
 
 status=0
 mkdir -p build
@@ -17,8 +18,14 @@ report() {
 }
 
 # 1. The ground theory is what ACL2 holds, and ACL2 proves every fact
-#    of it that is not one of ACL2's axioms.
+#    of it that is not one of ACL2's axioms.  ACL2 first loads
+#    checks/version.lsp, which ends it with status 3 under any version
+#    but the one it names; then nothing else is run.
 acl2 < checks/ground.lsp > build/ground.log 2>&1
+if [ $? -eq 3 ]; then
+    echo "checks/run.sh stopped: $(sed -n 's/^version: //p' build/ground.log)" >&2
+    exit 3
+fi
 cmp -s build/ground.txt spec/ground.txt
 report $? "spec/ground.txt is the ground theory that ACL2 writes"
 grep -a 'ground: ' build/ground.log | sed 's/^.*ground: /   ground: /'

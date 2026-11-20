@@ -23,6 +23,7 @@
 
 (in-package "ACL2")
 
+(ld "checks/version.lsp")
 (ld "checks/canon.lsp")
 
 ; (bm-clause "name" lit ...) asks ACL2 to prove (or lit ...), and then

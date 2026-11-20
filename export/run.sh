@@ -5,7 +5,8 @@
 #     sh export/run.sh BOOK ...   the library and the books named
 #
 # It needs acl2 (ACL2 8.7 with its distributed books), python3, timeout,
-# xargs and the usual POSIX tools on the PATH.  For ACL2's built-in
+# xargs and the usual POSIX tools on the PATH, and stops at once under
+# any other version of ACL2 (checks/version.lsp).  For ACL2's built-in
 # library and for each book it writes, under build/export/, the
 # statements, the program text, the prover's aids and the notes, has ACL2
 # read each file back (export/readback.lsp), has checks/reader.py read
@@ -28,6 +29,12 @@ else
     sed 's/#.*//; s/[[:space:]]*$//; /^$/d' export/books.txt > build/export/books.list
 fi
 
+# The library is exported first.  Under any version of ACL2 but the one
+# that checks/version.lsp names, export/book.sh stops at once with status
+# 3, and so does this script.
+start=$(date +%s)
+sh export/book.sh :library || exit $?
+
 # The book build/outer, of checks/run.sh, includes a book locally and so
 # holds a package that ACL2 keeps hidden.  It is certified here as there.
 if grep -q '^build/outer$' build/export/books.list; then
@@ -47,8 +54,6 @@ if grep -q '^build/choice$' build/export/books.list; then
         timeout 600 acl2 > build/choice.log 2>&1
 fi
 
-start=$(date +%s)
-sh export/book.sh :library
 xargs -n 1 -P 2 sh export/book.sh < build/export/books.list
 end=$(date +%s)
 

@@ -10,7 +10,7 @@ A step is finished when its test passes by one documented command, with the date
 |---|---|---|
 | 1 | The specification | Written; under review |
 | 2 | The exporter, inside ACL2 | Written; its test passes |
-| 3 | The reference runner, in C | Not begun |
+| 3 | The reference runner, in C | Written; its test passes |
 | 4 | The checker, in ACL2 Core, and a second checker beside it | Not begun |
 | 5 | Review: testing against ACL2, then the system on its own source | Not begun |
 | 6 | The prover | Not begun |
@@ -54,6 +54,28 @@ It takes each statement from ACL2's world, after ACL2 has processed the book: th
 **What it gains.** The durable base: a checker written in ACL2 Core can be run with nothing but a C compiler, and later with no C compiler at all (step 7). It is not trusted for any proof; it is trusted to compute, and it is small enough to read.
 
 **Finished when** it gives ACL2's value on the calls of `checks/expected/facts.txt` that ACL2 Core computes and on a set of programs taken from ACL2's library, compared with ACL2 by one command; and when its size in lines is recorded.
+
+**Where it stands.** The runner is in `runner/`: 2,309 lines of C that are neither blank nor wholly comment (`sh runner/size.sh`, 2026-11-20), in ISO C99 with nothing beyond the library of C, built by a `Makefile` for the `make` of POSIX. `runner/README.md` says how to build, run and test it, what it conforms to, and what it does at each stop. It needs the packages as well as the program text, and `spec/formats.md`, section 5, now says where it takes them from, and which of two `define` lines for one function is in force.
+
+- **The test.** `sh runner/test.sh`, run on 2026-11-20 with ACL2 8.7, printed `all runner tests passed`, both for the build of the `Makefile` and for a build with the address and undefined-behaviour sanitizers. The runner gave ACL2's value on the 153 calls of `checks/expected/facts.txt` that ACL2 computes and stopped at the 4 that it refuses; did the same on the 75 and the 1 of `checks/expected/edge.txt`; on the 18 calls of `runner/test/book.lisp`, a book of stops (11 values, 7 stops); on 2,150 calls of 86 functions of ACL2's library, run from its program text; and on 4,000 calls of the arithmetic primitives on large integers, fractions and complex rationals. It ran a recursion a million calls deep, read and wrote a datum nested a million levels deep and numbers of a million digits, stopped cleanly where memory ran out and on text that is not in the format, and read and compiled every definition of the library and of the 460 books of step 2.
+- **Loading.** The library's program text is 48 MB. Indexing it and compiling each definition at its first call takes 0.08 seconds and a peak of 66 MB, most of it the text; compiling all 6,187 definitions at once takes 0.35 seconds and 224 MB. The runner does the first (`runner/README.md`).
+- **Against ACL2 8.7 on SBCL.** `sh runner/bench.sh`, run on 2026-11-20, certified the eleven books of `runner/bench/`, whose guards are verified, and timed the same call in ACL2 and in the runner. Times are seconds of elapsed time, medians of three runs. ACL2's time for the call is that of twenty calls divided by twenty; its process starts ACL2, includes the book and makes the call. The runner's process reads the program text of the library and of the book and makes the call; the time to read the text alone is shown apart. The peak is the runner's memory. Every value was ACL2's.
+
+  | Book | ACL2, the call | ACL2, the process | Runner, the process | Runner, reading only | Runner's peak (MB) |
+  |---|---:|---:|---:|---:|---:|
+  | `fib`: recursion on integers | 0.0130 | 0.14 | 0.27 | 0.08 | 67 |
+  | `loop`: a loop in the last position | 0.1415 | 0.27 | 0.82 | 0.08 | 67 |
+  | `lists`: building and walking lists | 0.0415 | 0.17 | 0.56 | 0.08 | 69 |
+  | `sort`: a merge sort | 0.0475 | 0.19 | 0.60 | 0.08 | 72 |
+  | `alist`: association lists | 0.0125 | 0.15 | 0.34 | 0.08 | 67 |
+  | `fact`: the factorial of 6,000 | 0.0020 | 0.24 | 0.11 | 0.08 | 68 |
+  | `power`: 7 to the power 40,000 | 0.0270 | 0.47 | 0.46 | 0.08 | 70 |
+  | `fractions`: a harmonic sum | 0.0020 | 0.13 | 0.08 | 0.08 | 68 |
+  | `chars`: characters and strings | 0.0685 | 0.21 | 0.49 | 0.08 | 93 |
+  | `symbols`: making and sorting symbols | 0.0305 | 0.17 | 0.23 | 0.08 | 68 |
+  | `library`: functions of ACL2's library | 0.0830 | 0.22 | 1.01 | 0.08 | 68 |
+
+  The runner's time for the call, its process less its reading, is 5 to 21 times ACL2's compiled code, and is below the resolution of the measure for `fractions`. Its whole process takes less time than ACL2's for `fact` and `fractions`, about as much for `power`, and up to 4.6 times as much for the others.
 
 ### 4. The checker, and a second checker
 
@@ -110,3 +132,4 @@ These matters are not settled, and the specification says so where they arise.
 - **How the library's own definitions are proved.** A book may not define a function whose name is a symbol of `COMMON-LISP`, as in ACL2, and ACL2's library defines 94 of them. So the library cannot simply be moved to the second input of a checker to be proved. One way is a fourth input that holds proofs for the library.
 - **Whether a symbol may be abbreviated.** Every symbol is written with its package (`spec/formats.md`, section 4). Step 2 measured what that costs: about half the bytes of every statement other than a package line, nearly all of it `ACL2::` and `COMMON-LISP::`; while the package lines are 80% of the bytes of the books' statements, and `gzip -9` leaves 9% to 18% of the size, with the format unchanged.
 - **How a rejection names what failed.** The verdict gives the input and the number of the line (`spec/formats.md`, section 9), not a symbol.
+- **Code of the runner's own for functions of the library.** ACL2 computes `floor`, `mod`, `nonnegative-integer-quotient` and some 280 other functions of its library with code of the Lisp under it (`EDGE-CASES.md`, entry 3.3). The runner runs their definitions, by which `(nonnegative-integer-quotient i j)` subtracts `j` from `i` once for each unit of the quotient, so that `floor` of a large number by a small one does not finish (`runner/README.md`). The runner could hold code of its own for a few such functions; it would then be trusted to compute what their definitions compute.

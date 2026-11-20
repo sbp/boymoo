@@ -23,7 +23,7 @@ ACL2 says what a book states and is used to cross-check. It takes no part in fin
 
 ## What is in the repository
 
-The repository holds the specification, the checks that compare it with ACL2, and the exporter, by which ACL2 writes its library and its books in the formats. No checker has been written yet; [`PLAN.md`](PLAN.md) gives the order of the work.
+The repository holds the specification, the checks that compare it with ACL2, the exporter, by which ACL2 writes its library and its books in the formats, and the reference runner, which computes the value of a term from program text. No checker has been written yet; [`PLAN.md`](PLAN.md) gives the order of the work.
 
 | Path | What it is |
 |---|---|
@@ -35,6 +35,7 @@ The repository holds the specification, the checks that compare it with ACL2, an
 | [`spec/example/`](spec/example) | One theorem and its proof in seven steps, in the formats. |
 | [`checks/`](checks) | The checks: scripts and four small books for ACL2, a reader for the formats, the expected results, and `run.sh`, which runs them all. |
 | [`export/`](export) | The exporter: a program run by ACL2 that writes its built-in library and its books as statements, program text and the prover's aids (`export.lsp`), a check by which ACL2 reads each file back (`readback.lsp`), the books chosen (`books.txt`) with a small book of two cases of its own (`choice.lisp`), and `run.sh`, which runs it all. |
+| [`runner/`](runner) | The reference runner: a program in ISO C99 that reads program text and computes the value of a term (`runner/README.md`), its `Makefile`, its tests against ACL2 (`test.sh`, with the files of `runner/test/`), and its benchmarks against ACL2 (`bench.sh`, with the books of `runner/bench/`). |
 | [`LICENSE`](LICENSE) | The licence. |
 | [`PLAN.md`](PLAN.md) | The steps of the work, what each gains, and how each is judged finished. |
 | [`AGENTS.md`](AGENTS.md) | The rules that bind every change to this repository. |
@@ -47,10 +48,12 @@ Every tool is found by its name on the `PATH`.
 
 | Tool | Used for |
 |---|---|
-| `acl2` | ACL2 version 8.7, with the books that are distributed with it, of which `projects/apply/top` must be certified. The checks ask ACL2 what it holds, have it prove the facts that the specification adds to its axioms, and have it certify three small books of their own in `build/`. |
-| `python3` | Python 3.5 or later, for `checks/reader.py`, the reader of the formats, and `export/measure.py`, which counts and measures what the exporter writes. |
+| `acl2` | ACL2 version 8.7, with the books that are distributed with it, of which `projects/apply/top` must be certified. The checks ask ACL2 what it holds, have it prove the facts that the specification adds to its axioms, and have it certify three small books of their own in `build/`. The checks and the exporter run under this version only: they read properties of ACL2's world, which can change from one version to the next without notice, so that another version could give a wrong answer and report no error. ACL2 loads [`checks/version.lsp`](checks/version.lsp), the one place that names the version, at the start of the first run of `checks/run.sh` and of every run of `export/book.sh`; under any other version it ends at once, and the script prints the version it found and stops with status 3. |
+| `python3` | Python 3.5 or later, for `checks/reader.py`, the reader of the formats, `export/measure.py`, which counts and measures what the exporter writes, and the files of `runner/test/` that write the runner's test cases. |
+| `make`, `c99` | The `make` and the C compiler of POSIX, to build the runner (`runner/Makefile`); the compiler may be named otherwise with `CC`. Nothing else is needed to build or run the runner. |
 | `sh`, `cmp`, `cp`, `grep`, `sed`, `tr`, `paste`, `rm`, `mkdir`, `date`, `cat` | The usual POSIX tools, for `checks/run.sh` and `export/run.sh`. |
 | `timeout`, `xargs` | For `export/run.sh`: `timeout` (of GNU coreutils) stops a run of ACL2 on one book after 30 minutes, and `xargs`, with its option `-P`, runs two at a time. |
+| `awk`, `env`, `time`, `sort`, `paste`, `head`, `cut`, `mv` | The POSIX tools that `runner/test.sh` and `runner/bench.sh` use besides those above. |
 
 ## The checks
 
@@ -64,6 +67,7 @@ It writes its working files into `build/`, prints one line for each check, and e
 
 | Check | What it confirms |
 |---|---|
+| `checks/version.lsp` | The `acl2` on the `PATH` is ACL2 8.7; otherwise `checks/run.sh` stops before any check, with status 3. |
 | `checks/ground.lsp` | `spec/ground.txt` is, byte for byte, what ACL2 writes from its own world: its 32 primitive functions and the number of arguments of each; its 84 axioms, four of them as packages; the 122 symbols it refuses as variables; and its definitions of the 36 functions that the ground theory defines, each with the ruler-extenders ACL2 stores. ACL2 proves each of the 41 facts that the specification adds, and a fact that ACL2 did not prove would not be written. |
 | `checks/facts.lsp` | `checks/expected/facts.txt` is, byte for byte, what ACL2 says. It holds: ACL2's list of 41 kinds of event; its value for 157 calls of the primitive functions, inside and outside their guards; which names, variables, axioms and packages it refuses; that the rule of the specification for a variable agrees with ACL2's on 3,613 objects; that the walk of the specification records the calls and tests of ACL2's termination machine for all 523 definitions that call themselves in the world ACL2 starts with; ACL2's conjectures for a definition admitted with another well-founded relation, and that the obligations of the specification follow from them; how ACL2 runs an attachment and that it uses none in a proof; how it treats a hidden package; the form of the axiom it stores for a function introduced by choice; the constraint it stores for an `encapsulate`; that it proves the conclusion of every step of the example proof; and counts over the world it starts with. |
 | `checks/hidden.lsp`, `checks/outer.lsp` | ACL2 certifies the two small books `checks/hidden.lisp` and `checks/outer.lisp`, copied into `build/`, which give `checks/facts.lsp` a package that ACL2 keeps hidden. |
@@ -81,6 +85,16 @@ sh export/run.sh
 ```
 
 It writes its files into `build/export/`, and ends by writing `build/export/summary.txt`: the number of statements of each kind, the size in bytes of each file, and which books were exported and confirmed. A book is exported only if it has a valid certificate. `PLAN.md`, step 2, records the result of its last run.
+
+## The runner
+
+The reference runner of `PLAN.md`, step 3, is in `runner/`; [`runner/README.md`](runner/README.md) says how to build and run it, what it conforms to and what it does at each stop. One command builds it and compares it with ACL2, from the root of the repository:
+
+```
+sh runner/test.sh
+```
+
+It prints one line for each set of cases and ends with `all runner tests passed` or `some runner tests failed`. `sh runner/bench.sh` times it against ACL2; `PLAN.md`, step 3, records both.
 
 ## Licence
 

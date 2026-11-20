@@ -102,7 +102,7 @@ A checker never computes a call of a function that is not primitive. The value o
 
 ### Running
 
-A **runner** computes the value of a term with no variables. It is given **program text**: `define` lines, and `attach` lines (`formats.md`, section 5). The value is defined by the table of section 3 and the definitions:
+A **runner** computes the value of a term with no variables. It is given **program text**: `define` lines, and `attach` lines; and the packages, which it takes from the ground theory and the statements (`formats.md`, section 5). The value is defined by the table of section 3 and the definitions:
 
 - the value of `(quote c)` is `c`;
 - the value of a call of a primitive is the table's value on the values of its arguments, and where the table gives none the runner stops, as ACL2 does;
