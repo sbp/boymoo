@@ -13,7 +13,8 @@
 ;                ruler-extenders of the stored JUSTIFICATION, or NIL where
 ;                ACL2 stores none because the function does not call itself
 ;   constrain    the functions that share the constraint (SIBLINGS), their
-;                numbers of formals, and the constraint (CONSTRAINT-INFO),
+;                numbers of formals, and the formulas of the constraint
+;                (CONSTRAINT-INFO, from the property CONSTRAINT-LST-ETC),
 ;                each formula named by the event of the encapsulate that
 ;                states it; where ACL2 records no constraint, the
 ;                theorems of the encapsulate about its functions
@@ -89,6 +90,17 @@
       (getpropc sym 'theory nil wrld)
       (getpropc sym 'stobj nil wrld)
       (getpropc sym 'stobj-live-var nil wrld)))
+
+; Whether a function shares the constraint of an encapsulate.  ACL2 holds
+; the constraint as the property CONSTRAINT-LST-ETC, a pair (X . ORIGINS),
+; where X is the list of the formulas, a symbol naming the function that
+; holds them, or a mark of unknown constraints; a function with no such
+; property is defined, or introduced by choice, outside any constraint.
+; This is how ACL2's source reads it (its "Essay on Constraint-lst-etc
+; pairs").
+
+(defun bx-constrained-p (fn wrld)
+  (not (eq (car (getpropc fn 'constraint-lst-etc '(t . nil) wrld)) t)))
 
 (defun bx-programp (fn wrld)
   (eq (getpropc fn 'symbol-class nil wrld) :program))
@@ -177,9 +189,9 @@
 (defun bx-constrainer (ev wrld)
   (and (eq (access-event-tuple-type ev) 'encapsulate)
        (consp (access-event-tuple-namex ev))
-       (mv-let (name lst)
+       (mv-let (name lst origins)
          (constraint-info (car (access-event-tuple-namex ev)) wrld)
-         (declare (ignore lst))
+         (declare (ignore lst origins))
          name)))
 
 ; Each event is paired with the constrainer of the innermost encapsulate
@@ -402,12 +414,12 @@
 
 (defun bx-all-constrained-p (fns wrld)
   (or (endp fns)
-      (and (not (eq (getpropc (car fns) 'constraint-lst t wrld) t))
+      (and (bx-constrained-p (car fns) wrld)
            (bx-all-constrained-p (cdr fns) wrld))))
 
 (defun bx-some-constrained-p (fns wrld)
   (and (consp fns)
-       (or (not (eq (getpropc (car fns) 'constraint-lst t wrld) t))
+       (or (bx-constrained-p (car fns) wrld)
            (bx-some-constrained-p (cdr fns) wrld))))
 
 (defun bx-define-items (fns wrld)
@@ -624,9 +636,9 @@
          (fns (append names
                       (bx-sort-by-event (set-difference-eq siblings names) wrld)))
          (cands (cdr (assoc-eq c pending))))
-    (mv-let (name lst)
+    (mv-let (name lst origins)
       (constraint-info c wrld)
-      (declare (ignore name))
+      (declare (ignore name origins))
       (if (unknown-constraints-p lst)
           (list (bx-note "constraint that ACL2 does not record" fns)
                 (bx-stmt "constrain"
@@ -727,9 +739,9 @@
          (cond
           ((and encl
                 (eq type 'defthm)
-                (mv-let (c lst)
+                (mv-let (c lst origins)
                   (constraint-info encl wrld)
-                  (declare (ignore c))
+                  (declare (ignore c origins))
                   (and (bx-mentions-some formula (getpropc encl 'siblings nil wrld))
                        (or (unknown-constraints-p lst)
                            (not (eq (bx-conjuncts formula lst wrld) :none))))))
@@ -744,7 +756,7 @@
           (t (mv (list (bx-stmt word (list name formula))) pending)))))
       (defchoose
        (let ((fn (car names)))
-         (if (not (eq (getpropc fn 'constraint-lst t wrld) t))
+         (if (bx-constrained-p fn wrld)
              (if encl
                  (mv nil (bx-add-candidates
                           encl

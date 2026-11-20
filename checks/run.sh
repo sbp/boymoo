@@ -3,7 +3,7 @@
 #
 #     sh checks/run.sh
 #
-# It needs acl2 (ACL2 8.6, with its distributed books), python3 and the
+# It needs acl2 (ACL2 8.7, with its distributed books), python3 and the
 # usual POSIX tools on the PATH.  It writes into build/ and prints one
 # line for each check, "ok" or "FAIL", and then "all checks passed" or
 # "some checks failed".

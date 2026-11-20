@@ -693,6 +693,21 @@
         (t (+ (if (getpropc (car fns) prop nil wrld) 1 0)
               (bm-count-prop (cdr fns) prop wrld)))))
 
+; The constraint ACL2 stores for a function introduced by encapsulate:
+; the first part of its property CONSTRAINT-LST-ETC, as the "Essay on
+; Constraint-lst-etc pairs" in ACL2's source file history-management.lisp
+; says.  It is a list of terms; the name of another function of the same
+; encapsulate, which holds the list; the mark :UNKNOWN-CONSTRAINTS and the
+; functions it may mention; or NIL if ACL2 stores none.
+
+(defun bm-constraint (fn wrld)
+  (car (getpropc fn 'constraint-lst-etc nil wrld)))
+
+(defun bm-count-constrained (fns wrld)
+  (cond ((endp fns) 0)
+        (t (+ (if (bm-constraint (car fns) wrld) 1 0)
+              (bm-count-constrained (cdr fns) wrld)))))
+
 (defun bm-programs (fns wrld)
   (cond ((endp fns) nil)
         ((bm-programp (car fns) wrld)
@@ -812,7 +827,7 @@
                     (bm-count-event undefined 'encapsulate wrld))
      (bm-count-line "of those, functions for which ACL2 stores no constraint"
                     (- (len undefined)
-                       (bm-count-prop undefined 'constraint-lst wrld)))
+                       (bm-count-constrained undefined wrld)))
      (bm-count-line "of those, functions with an attachment"
                     (bm-count-prop undefined 'attachment wrld))
      (bm-count-line "functions in program mode" (len programs))
@@ -1105,7 +1120,7 @@
            (bm-line "choose-axiom"
                     (list 'bm-c2 (getpropc 'bm-c2 'defchoose-axiom nil wrld)))
            (bm-line "constraint"
-                    (list 'bm-h (getpropc 'bm-h 'constraint-lst nil wrld))))
+                    (list 'bm-h (bm-constraint 'bm-h wrld))))
      (bm-relation-lines wrld)
      (bm-example-obligation-lines '(bm-r1 bm-r2 bm-g1 bm-l1) wrld)
      (list (bm-line "termination"
@@ -1114,8 +1129,7 @@
            (bm-attachment-line 'apply$-userfn wrld)
            (bm-line "constraint"
                     (list 'doppelganger-apply$-userfn
-                          (getpropc 'doppelganger-apply$-userfn
-                                    'constraint-lst nil wrld)))
+                          (bm-constraint 'doppelganger-apply$-userfn wrld)))
            (bm-hidden-line "BM-HIDDEN" wrld)
            (bm-hidden-line "BM-P4" wrld))
      (bm-value-lines *bm-hidden-calls* "plain" state)

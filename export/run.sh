@@ -4,7 +4,7 @@
 #     sh export/run.sh            the library and every book of export/books.txt
 #     sh export/run.sh BOOK ...   the library and the books named
 #
-# It needs acl2 (ACL2 8.6 with its distributed books), python3, timeout,
+# It needs acl2 (ACL2 8.7 with its distributed books), python3, timeout,
 # xargs and the usual POSIX tools on the PATH.  For ACL2's built-in
 # library and for each book it writes, under build/export/, the
 # statements, the program text, the prover's aids and the notes, has ACL2
@@ -64,7 +64,8 @@ python3 checks/reader.py $files > build/export/reader.txt
 reader=$?
 
 {
-    echo "sh export/run.sh, run on $(date +%Y-%m-%d) in $((end - start)) seconds"
+    version=$(grep -a -m 1 -o 'ACL2 Version [0-9.]*' build/export/library.log)
+    echo "sh export/run.sh, run on $(date +%Y-%m-%d) in $((end - start)) seconds with $version"
     echo
     python3 export/measure.py $(cat build/export/books.list)
     echo

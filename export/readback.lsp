@@ -430,10 +430,23 @@
 ; The name and the list of the constraint that F shares.
 
 (defun rb-constrainer (f wrld)
-  (mv-let (c lst) (constraint-info f wrld) (declare (ignore lst)) c))
+  (mv-let (c lst origins)
+    (constraint-info f wrld)
+    (declare (ignore lst origins))
+    c))
 
 (defun rb-constraint (c wrld)
-  (mv-let (c1 lst) (constraint-info c wrld) (declare (ignore c1)) lst))
+  (mv-let (c1 lst origins)
+    (constraint-info c wrld)
+    (declare (ignore c1 origins))
+    lst))
+
+; Whether F shares the constraint of an encapsulate: ACL2 holds such a
+; constraint as the property CONSTRAINT-LST-ETC, a pair whose first element
+; is T for a function that has none.
+
+(defun rb-constrained-p (f wrld)
+  (not (eq (car (getpropc f 'constraint-lst-etc '(t . nil) wrld)) t)))
 
 ;;; 4. The statements
 
@@ -453,7 +466,7 @@
     (cond ((not (rb-function-p f wrld)) (rb-msg f "is not a function"))
           ((rb-program-p f wrld) (rb-msg f "is in program mode"))
           (range range)
-          ((not (eq (getpropc f 'constraint-lst t wrld) t))
+          ((rb-constrained-p f wrld)
            (rb-msg f "is constrained"))
           ((not (equal (cadr d) (getpropc f 'formals nil wrld)))
            (rb-msg f "has other formals"))
@@ -769,7 +782,7 @@
           ((null axiom) (rb-msg f "has no axiom of choice"))
           ((rb-program-p f wrld) (rb-msg f "is in program mode"))
           (range range)
-          ((not (eq (getpropc f 'constraint-lst t wrld) t))
+          ((rb-constrained-p f wrld)
            (rb-msg f "is constrained"))
           ((not (equal free (getpropc f 'formals nil wrld)))
            (rb-msg f "has other formals"))

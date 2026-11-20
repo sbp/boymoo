@@ -42,6 +42,21 @@
 (defun bm-single (val)
   (if (cdr (car val)) (car (cdr val)) (cdr val)))
 
+; The constraint ACL2 stores for a function introduced by encapsulate:
+; the first part of its property CONSTRAINT-LST-ETC, as the "Essay on
+; Constraint-lst-etc pairs" in ACL2's source file history-management.lisp
+; says.  It is a list of terms; the name of another function of the same
+; encapsulate, which holds the list; the mark :UNKNOWN-CONSTRAINTS and the
+; functions it may mention; or NIL if ACL2 stores none.  The second part
+; of the property, which BM-ORIGINS gives, records where each term of the
+; list came from.
+
+(defun bm-constraint (fn wrld)
+  (car (getpropc fn 'constraint-lst-etc nil wrld)))
+
+(defun bm-origins (fn wrld)
+  (cdr (getpropc fn 'constraint-lst-etc nil wrld)))
+
 ; Whether TRANS-EVAL, or the event or command it evaluated, failed.
 
 (defun bm-triple-erp (erp val)
@@ -243,9 +258,9 @@
 ; 1.4 The character functions whose constraints ACL2 does not record.
 
 (bm-stored "1.4 where ACL2 keeps the constraint of CHAR-UPCASE-NON-STANDARD"
-           (getpropc 'char-upcase-non-standard 'constraint-lst nil (w state)))
+           (bm-constraint 'char-upcase-non-standard (w state)))
 (bm-stored "1.4 the constraint of ALPHA-CHAR-P-NON-STANDARD"
-           (getpropc 'alpha-char-p-non-standard 'constraint-lst nil (w state)))
+           (bm-constraint 'alpha-char-p-non-standard (w state)))
 (bm-stored "1.4 the attachment of CHAR-UPCASE-NON-STANDARD"
            (cdr (attachment-pair 'char-upcase-non-standard (w state))))
 (bm-top "1.4 (char-upcase (code-char 233)), guard checking :none"
@@ -262,7 +277,7 @@
 ; 1.5 Double-floats.
 
 (bm-stored "1.5 the constraint of CONSTRAINED-TO-DF"
-           (getpropc 'constrained-to-df 'constraint-lst nil (w state)))
+           (bm-constraint 'constrained-to-df (w state)))
 (bm-stored "1.5 the body of TO-DF"
            (getpropc 'to-df 'unnormalized-body nil (w state)))
 (bm-top "1.5 (to-dfp 1/3), guard checking :none" (to-dfp 1/3))
@@ -395,6 +410,19 @@
 (bm-top "2.7 (update-bm-arri 1 7 '((0 0 0) 0)), guard checking :none"
         (update-bm-arri 1 7 '((0 0 0) 0)))
 (bm-top "2.7 (resize-bm-arr 5 bm-st), guard checking :none" (resize-bm-arr 5 bm-st))
+(bm-try "2.7 define a function whose body calls CREATE-BM-ST"
+        (defun bm-make-st () (create-bm-st)))
+(bm-try "2.7 prove a theorem that calls CREATE-BM-ST"
+        (thm (equal (bm-fld (create-bm-st)) 0)))
+
+(defstobj bm-s1 (bm-g1 :initially 0))
+(defstobj bm-s2 (bm-g2 :initially 0) :congruent-to bm-s1)
+
+(bm-top "2.7 (mv-let (bm-s1 bm-s2) (swap-stobjs bm-s1 bm-s2) (mv bm-s1 bm-s2)), guard checking :none"
+        (mv-let (bm-s1 bm-s2) (swap-stobjs bm-s1 bm-s2) (mv bm-s1 bm-s2)))
+(bm-try "2.7 prove that SWAP-STOBJS exchanges its two arguments"
+        (thm (equal (mv-let (a b) (swap-stobjs bm-s1 bm-s2) (list a b))
+                    (list bm-s2 bm-s1))))
 (bm-try "2.7 prove (equal (update-nth 5 7 '(0 0 0)) '(0 0 0 nil nil 7))"
         (thm (equal (update-nth 5 7 '(0 0 0)) '(0 0 0 nil nil 7))))
 
@@ -427,6 +455,18 @@
         (apply$ 'car '((1 . 2))))
 (bm-try "3.2 prove (equal (apply$ 'car '((1 . 2))) 1)"
         (thm (equal (apply$ 'car '((1 . 2))) 1)))
+
+; 3.1 An attachment to a function that the recognizer of a
+; single-threaded object calls.
+
+(defstub bm-p (x) t)
+(defstub bm-p2 (x) t)
+(defstobj bm-st3 (bm-f3 :type (or null (satisfies bm-p)) :initially nil))
+
+(bm-try "3.1 attach INTEGERP to BM-P, which the recognizer of BM-ST3 calls"
+        (defattach bm-p integerp))
+(bm-try "3.1 attach INTEGERP to BM-P2, which no recognizer calls"
+        (defattach bm-p2 integerp))
 
 ; 3.4 State, the oracle, time, random numbers and wormholes.
 
@@ -660,11 +700,13 @@
   (defthm bm-k-idempotent (equal (bm-k (bm-k x)) (bm-k x)) :rule-classes nil))
 
 (bm-stored "6.6 the constraint of BM-K"
-           (getpropc 'bm-k 'constraint-lst nil (w state)))
+           (bm-constraint 'bm-k (w state)))
+(bm-stored "6.6 where each formula of the constraint of BM-K comes from"
+           (bm-origins 'bm-k (w state)))
 (bm-stored "6.6 the constraint of BM-K2"
-           (getpropc 'bm-k2 'constraint-lst nil (w state)))
+           (bm-constraint 'bm-k2 (w state)))
 (bm-stored "6.6 the constraint of BM-K3"
-           (getpropc 'bm-k3 'constraint-lst nil (w state)))
+           (bm-constraint 'bm-k3 (w state)))
 (bm-stored "6.6 the siblings of BM-K"
            (getpropc 'bm-k 'siblings nil (w state)))
 (bm-stored "6.6 whether ACL2 stores a body for BM-K3"
@@ -680,9 +722,9 @@
   (defthm bm-q2-car (equal (car (bm-q2 x)) (bm-q x)) :rule-classes nil))
 
 (bm-stored "6.6 the constraint of BM-Q"
-           (getpropc 'bm-q 'constraint-lst nil (w state)))
+           (bm-constraint 'bm-q (w state)))
 (bm-stored "6.6 the constraint of BM-Q2"
-           (getpropc 'bm-q2 'constraint-lst nil (w state)))
+           (bm-constraint 'bm-q2 (w state)))
 
 ; 6.7 Where the constraint is stored.
 
@@ -693,9 +735,11 @@
   (defthm bm-m1-m2 (equal (bm-m1 x) (bm-m2 x)) :rule-classes nil))
 
 (bm-stored "6.7 the constraint of BM-M1"
-           (getpropc 'bm-m1 'constraint-lst nil (w state)))
+           (bm-constraint 'bm-m1 (w state)))
 (bm-stored "6.7 the constraint of BM-M2"
-           (getpropc 'bm-m2 'constraint-lst nil (w state)))
+           (bm-constraint 'bm-m2 (w state)))
+(bm-stored "6.7 where each formula of the constraint of BM-M1 comes from"
+           (bm-origins 'bm-m1 (w state)))
 
 ; 6.9 DEFUN-SK.
 
@@ -704,9 +748,11 @@
 (bm-stored "6.9 the body of BM-EXISTS"
            (getpropc 'bm-exists 'unnormalized-body nil (w state)))
 (bm-stored "6.9 the constraint of BM-EXISTS-WITNESS"
-           (getpropc 'bm-exists-witness 'constraint-lst nil (w state)))
+           (bm-constraint 'bm-exists-witness (w state)))
 (bm-stored "6.9 the constraint of BM-EXISTS"
-           (getpropc 'bm-exists 'constraint-lst nil (w state)))
+           (bm-constraint 'bm-exists (w state)))
+(bm-stored "6.9 where each formula of the constraint of BM-EXISTS-WITNESS comes from"
+           (bm-origins 'bm-exists-witness (w state)))
 (bm-stored "6.9 the axiom of a DEFCHOOSE stored for BM-EXISTS-WITNESS"
            (getpropc 'bm-exists-witness 'defchoose-axiom nil (w state)))
 (bm-stored "6.9 the event that introduced BM-EXISTS-WITNESS"
@@ -968,15 +1014,15 @@
   (cond ((endp fns) nil)
         ((and (not (eq (getpropc (car fns) 'symbol-class nil wrld) :program))
               (getpropc (car fns) 'unnormalized-body nil wrld)
-              (getpropc (car fns) 'constraint-lst nil wrld))
+              (bm-constraint (car fns) wrld))
          (cons (car fns) (bm-defined-in-constraint (cdr fns) wrld)))
         (t (bm-defined-in-constraint (cdr fns) wrld))))
 
 (defun bm-unknown-constraints (fns wrld)
   (cond ((endp fns) nil)
-        ((let* ((c0 (getpropc (car fns) 'constraint-lst nil wrld))
+        ((let* ((c0 (bm-constraint (car fns) wrld))
                 (c (if (and c0 (symbolp c0))
-                       (getpropc c0 'constraint-lst nil wrld)
+                       (bm-constraint c0 wrld)
                      c0)))
            (and (consp c) (eq (car c) :unknown-constraints)))
          (cons (car fns) (bm-unknown-constraints (cdr fns) wrld)))

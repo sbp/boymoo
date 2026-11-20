@@ -1,16 +1,16 @@
 # Edge cases
 
-This document lists every place found where what ACL2 8.6, the program, does goes beyond, falls short of, or differs from what ACL2's axioms say, and every place where a careful reader would fear that the two part. For each place it says what ACL2 Core does, the language of this repository that [`spec/language.md`](spec/language.md) defines.
+This document lists every place found where what ACL2 8.7, the program, does goes beyond, falls short of, or differs from what ACL2's axioms say, and every place where a careful reader would fear that the two part. For each place it says what ACL2 Core does, the language of this repository that [`spec/language.md`](spec/language.md) defines.
 
 ACL2 is the definition of ACL2. Where ACL2 Core differs from ACL2, the entry gives the reason and says whether the difference can be removed. A difference that waits on a decision is listed under "Undecided" in [`PLAN.md`](PLAN.md).
 
-Every example was run in ACL2 8.6. One command confirms every entry, from the root of the repository:
+Every example was run in ACL2 8.7. One command confirms every entry, from the root of the repository:
 
 ```
 sh checks/run.sh
 ```
 
-Its line `checks/expected/edge.txt is what ACL2 says on each entry of EDGE-CASES.md` comes from [`checks/edge.lsp`](checks/edge.lsp), which writes one line for each fact below. The label of each line begins with the number of its entry, except that the lines `value`, `no-value`, `read` and `no-read` name the call or the text instead. Some entries also rest on lines of `checks/expected/facts.txt`, which [`checks/facts.lsp`](checks/facts.lsp) writes. The checks were last run on 2026-11-20, with ACL2 8.6 built on SBCL 2.5.5, and printed `all checks passed`.
+Its line `checks/expected/edge.txt is what ACL2 says on each entry of EDGE-CASES.md` comes from [`checks/edge.lsp`](checks/edge.lsp), which writes one line for each fact below. The label of each line begins with the number of its entry, except that the lines `value`, `no-value`, `read` and `no-read` name the call or the text instead. Some entries also rest on lines of `checks/expected/facts.txt`, which [`checks/facts.lsp`](checks/facts.lsp) writes. The checks were last run on 2026-11-20, with ACL2 8.7 built on SBCL 2.5.5, and printed `all checks passed`.
 
 ## Terms
 
@@ -35,7 +35,7 @@ Each entry has five parts.
 
 - **The axioms**: what they say or leave open, with the axiom or the section of the specification.
 - **ACL2**: what the program does.
-- **Example**: the smallest input that shows it, and exactly what ACL2 8.6 answers. Values are written as ACL2 prints them; a character with code `n` is written `(code-char n)`.
+- **Example**: the smallest input that shows it, and exactly what ACL2 8.7 answers. Values are written as ACL2 prints them; a character with code `n` is written `(code-char n)`.
 - **ACL2 Core**: what a checker and a runner do, and where the specification says so; if they differ from ACL2, why, and whether that can change.
 - **Check**: the lines that confirm the entry. "Lines 2.4" means the lines of `checks/expected/edge.txt` whose label begins with `2.4`.
 
@@ -146,7 +146,7 @@ The kinds, with the number of entries of each: 1, the axioms leave a value open 
 
 ### 1.5 Double-floats
 
-- **The axioms.** ACL2 8.6 represents a double-float in the logic as a rational. `to-df` rounds a rational to one; it is defined as `constrained-to-df`, whose constraints are unknown, and so are those of the functions behind `df-sqrt`, `df-sin` and the rest. The axioms do not say which rational `(to-df 1/3)` is.
+- **The axioms.** ACL2 8.7 represents a double-float in the logic as a rational. `to-df` rounds a rational to one; it is defined as `constrained-to-df`, whose constraints are unknown, and so are those of the functions behind `df-sqrt`, `df-sin` and the rest. The axioms do not say which rational `(to-df 1/3)` is.
 - **ACL2.** It computes with the floating-point arithmetic of the Lisp under it, and proves theorems by those computations.
 - **Example.** `(to-dfp 1/3)` gives `6004799503160661/18014398509481984`; `(to-dfp 1/10)` gives `3602879701896397/36028797018963968`; `(from-df (df-sqrt (to-df 2)))` gives `6369051672525773/4503599627370496`. ACL2 proves the first and the third as equations.
 - **ACL2 Core.** Cannot follow. A checker cannot prove these theorems, and a runner stops at the constrained functions. To follow ACL2, a checker would have to trust the floating-point code of a host for infinitely many values.
@@ -205,9 +205,9 @@ The kinds, with the number of entries of each: 1, the axioms leave a value open 
 ### 2.7 Single-threaded objects at run time
 
 - **The axioms.** A single-threaded object is a list, and its functions are defined with `nth` and `update-nth`. ACL2 stores the body of `update-bm-arri` as `(update-nth-array '0 i v bm-st)`, which extends a list that is too short: ACL2 proves `(equal (update-nth 5 7 '(0 0 0)) '(0 0 0 nil nil 7))`.
-- **ACL2.** At run time the object is an array of fixed size, of which only one copy exists. ACL2 checks the guards of its functions even under `:none`, it refuses a call of the function that creates the object, it refuses a constant where the object should stand, and it refuses to resize an array not declared resizable.
-- **Example.** With `bm-st` holding an array of three integers, `(update-bm-arri 5 7 bm-st)`, `(create-bm-st)`, `(update-bm-arri 1 7 '((0 0 0) 0))` and `(resize-bm-arr 5 bm-st)` have no value under `:none`.
-- **ACL2 Core.** No term of ACL2 Core names a live object, so no input corresponds. A runner given `(update-bm-arri '1 '7 '((0 0 0) 0))` computes the logical value, where ACL2 refuses the form; to refuse it too, program text would have to say which arguments are single-threaded, which is undecided (`PLAN.md`).
+- **ACL2.** At run time the object is an array of fixed size, of which only one copy exists. ACL2 checks the guards of its functions even under `:none`, it refuses a call of the function that creates the object, at its top level and in the body of a definition that can be run, though not in a theorem, it refuses a constant where the object should stand, it refuses to resize an array not declared resizable, and it refuses a call of `swap-stobjs` at its top level.
+- **Example.** With `bm-st` holding an array of three integers, `(update-bm-arri 5 7 bm-st)`, `(create-bm-st)`, `(update-bm-arri 1 7 '((0 0 0) 0))` and `(resize-bm-arr 5 bm-st)` have no value under `:none`. `(defun bm-make-st () (create-bm-st))` is refused, and ACL2 proves `(equal (bm-fld (create-bm-st)) 0)`. With `bm-s1` and `bm-s2` congruent, `(mv-let (bm-s1 bm-s2) (swap-stobjs bm-s1 bm-s2) (mv bm-s1 bm-s2))` has no value, and ACL2 proves that `swap-stobjs` gives its two arguments in the other order.
+- **ACL2 Core.** No term of ACL2 Core names a live object, so no input corresponds. A runner given `(update-bm-arri '1 '7 '((0 0 0) 0))` computes the logical value, where ACL2 refuses the form; to refuse it too, program text would have to say which arguments are single-threaded, which is undecided (`PLAN.md`). A checker admits a `define` whose body calls `create-bm-st`; ACL2's refusal leaves no event, as in entry 6.12.
 - **Check.** Lines 2.7.
 
 ### 2.8 `pkg-imports` and `pkg-witness` on a name that is no package
@@ -231,10 +231,10 @@ The kinds, with the number of entries of each: 1, the axioms leave a value open 
 ### 3.1 Attachments
 
 - **The axioms.** A function introduced by `defstub` or `encapsulate` has only its constraint.
-- **ACL2.** At its top level it runs the attachment in place of the function. It uses no attachment in a proof or in a `defconst`.
-- **Example.** With `bm-s-impl`, which gives `(cons x x)`, attached to `bm-s`, `(bm-s 3)` gives `(3 . 3)`; ACL2 refuses to prove `(equal (bm-s 3) '(3 . 3))` and refuses `(defconst *bm-s* (bm-s 3))`.
-- **ACL2 Core.** A runner uses the `attach` lines of program text where ACL2 uses attachments, and a checker never reads them ([`spec/language.md`](spec/language.md), section 4).
-- **Check.** The lines `run`, `plain`, `attachment` and the corresponding lines `refused` of `checks/expected/facts.txt`.
+- **ACL2.** At its top level it runs the attachment in place of the function. It uses no attachment in a proof or in a `defconst`. It refuses an attachment to a function that the recognizer of a single-threaded object calls, directly or through other functions, because the attachment could make the recognizer false of the live object.
+- **Example.** With `bm-s-impl`, which gives `(cons x x)`, attached to `bm-s`, `(bm-s 3)` gives `(3 . 3)`; ACL2 refuses to prove `(equal (bm-s 3) '(3 . 3))` and refuses `(defconst *bm-s* (bm-s 3))`. With the recognizer of `bm-st3` calling `bm-p`, `(defattach bm-p integerp)` is refused; the same attachment to `bm-p2`, which no recognizer calls, is accepted.
+- **ACL2 Core.** A runner uses the `attach` lines of program text where ACL2 uses attachments, and a checker never reads them ([`spec/language.md`](spec/language.md), section 4). The `attach` lines are the attachments ACL2 holds, so its restrictions on them carry over.
+- **Check.** Lines 3.1; the lines `run`, `plain`, `attachment` and the corresponding lines `refused` of `checks/expected/facts.txt`.
 
 ### 3.2 `apply$` and warrants
 
@@ -448,15 +448,15 @@ The kinds, with the number of entries of each: 1, the axioms leave a value open 
 
 - **The axioms.** The constraint of an `encapsulate` is what may be assumed of its constrained functions.
 - **ACL2.** A function defined, not locally, inside an `encapsulate` with a signature is usually an ordinary definition. Its equation becomes part of the constraint instead in cases such as these: when a constrained function of the `encapsulate` rules its recursion, or when an exported theorem that mentions a constrained function also mentions it. Such a function keeps its body, and its constraint is that of the `encapsulate`. One function of the world ACL2 starts with is of this kind, `apply$-equivalence`, which `defun-sk` defines in ACL2's source file `boot-strap-pass-2-b.lisp` (entry 6.9).
-- **Example.** In an `encapsulate` constraining `bm-k`, `bm-k2`, which recurs under the test `(consp x)` alone, is an ordinary definition with no constraint. `bm-k3`, which recurs under the test `(bm-k x)`, joins the constraint: the constraint of `bm-k` is its own theorem and the equation of `bm-k3`, the constraint of `bm-k3` is the name `BM-K`, and both are siblings. In an `encapsulate` constraining `bm-q`, `bm-q2` is not recursive, but the exported theorem `(equal (car (bm-q2 x)) (bm-q x))` mentions it, so its equation joins the constraint of `bm-q`.
+- **Example.** In an `encapsulate` constraining `bm-k`, `bm-k2`, which recurs under the test `(consp x)` alone, is an ordinary definition with no constraint. `bm-k3`, which recurs under the test `(bm-k x)`, joins the constraint: the constraint of `bm-k` is its own theorem and the equation of `bm-k3`, whose origins ACL2 records as `(theorem bm-k-idempotent)` and `(defun bm-k3)`; the constraint of `bm-k3` is the name `BM-K`; and both are siblings. In an `encapsulate` constraining `bm-q`, `bm-q2` is not recursive, but the exported theorem `(equal (car (bm-q2 x)) (bm-q x))` mentions it, so its equation joins the constraint of `bm-q`.
 - **ACL2 Core.** Such a function, which ACL2 marks by holding the name of a function of the signature as its constraint, is a function of the `constrain` statement, and its equation is one of the statement's formulas; it has no `define` statement ([`spec/language.md`](spec/language.md), section 7; [`spec/logic.md`](spec/logic.md), section 7). A proof shows the constraint with witnesses, as for any `constrain`.
 - **Check.** Lines 6.6, among them the lines `count` and `stored` for the world ACL2 starts with.
 
 ### 6.7 Where the constraint of an `encapsulate` is stored
 
-- **ACL2.** It stores the constraint on one function of the `encapsulate`; each of the others holds that function's name in its place.
-- **Example.** The constraint of `bm-m1` is `((equal (bm-m1 x) (bm-m2 x)))`, and that of `bm-m2` is `BM-M1`. In entry 1.4, `char-upcase-non-standard` holds `ALPHA-CHAR-P-NON-STANDARD`.
-- **ACL2 Core.** One `constrain` statement holds all the functions and the formulas ([`spec/language.md`](spec/language.md), section 7).
+- **ACL2.** It stores the constraint on one function of the `encapsulate`, in its property `constraint-lst-etc`; each of the others holds that function's name in its place. With the formulas it records the origin of each, such as `(theorem name)` for an exported theorem or `(defun f)` for a definition that joined the constraint.
+- **Example.** The constraint of `bm-m1` is `((equal (bm-m1 x) (bm-m2 x)))`, with the origin `(theorem bm-m1-m2)`, and that of `bm-m2` is `BM-M1`. In entry 1.4, `char-upcase-non-standard` holds `ALPHA-CHAR-P-NON-STANDARD`.
+- **ACL2 Core.** One `constrain` statement holds all the functions and the formulas, each with a name ([`spec/language.md`](spec/language.md), section 7). The origins are no part of the logic.
 - **Check.** Lines 6.7, and the line `stored` of 1.4 for `char-upcase-non-standard`.
 
 ### 6.8 `defchoose` with `:strengthen`
@@ -469,7 +469,7 @@ The kinds, with the number of entries of each: 1, the axioms leave a value open 
 
 - **The axioms.** `(defun-sk bm-exists (x) (exists y (equal y (cons x x))))` defines `bm-exists` by a function that chooses a witness.
 - **ACL2.** It expands to an `encapsulate` whose signature is the witness `bm-exists-witness`. Inside, a local `defchoose` makes the witness. Exported are the definition of `bm-exists`, which is not executable and joins the constraint (entry 6.6), and the theorem `bm-exists-suff`. So ACL2 stores no `defchoose` axiom for the witness; the constraint holds the equation of `bm-exists` and `(implies (equal y (cons x x)) (bm-exists x))`.
-- **Example.** The event that introduced `bm-exists-witness` is an `encapsulate` whose `defchoose` is inside `local`, followed by `defun-nx bm-exists` and `defthm bm-exists-suff`; ACL2 stores no `defchoose` axiom for the witness; the constraint of `bm-exists` is the name `BM-EXISTS-WITNESS`; the body of `bm-exists` begins with `throw-nonexec-error` (entry 2.3).
+- **Example.** The event that introduced `bm-exists-witness` is an `encapsulate` whose `defchoose` is inside `local`, followed by `defun-nx bm-exists` and `defthm bm-exists-suff`; ACL2 stores no `defchoose` axiom for the witness; the constraint of `bm-exists` is the name `BM-EXISTS-WITNESS`; the origins of the two formulas are `(defun bm-exists)` and `(theorem bm-exists-suff)`; the body of `bm-exists` begins with `throw-nonexec-error` (entry 2.3).
 - **ACL2 Core.** The event is one `constrain` statement, of the witness and of the function, with the two formulas. Its proof needs witnesses that satisfy them, and in general the only such witness is a choice function. A proof may define functions but may not introduce one by choice, so such a constraint can only be skipped. This can be followed if a proof may hold a `choose` entry, which would also change [`spec/formats.md`](spec/formats.md); that is undecided (`PLAN.md`).
 - **Check.** Lines 6.9.
 
@@ -654,6 +654,6 @@ The kinds, with the number of entries of each: 1, the axioms leave a value open 
 
 ### 10.3 Functions in program mode with Common Lisp code only
 
-- **ACL2.** It lists 105 of the functions in program mode it starts with as having Common Lisp code that differs from their definitions, to be run only as that code.
+- **ACL2.** It lists 106 of the functions in program mode it starts with as having Common Lisp code that differs from their definitions, to be run only as that code.
 - **ACL2 Core.** No program text exists for them, and a runner refuses a call of them ([`spec/language.md`](spec/language.md), section 7). This cannot be followed without that code.
 - **Example and check.** The line `count` "of those, functions that ACL2 lists as having raw code" of `checks/expected/facts.txt`.
