@@ -8,18 +8,25 @@
 ;   - the symbols of the package COMMON-LISP that ACL2 refuses as
 ;     variables, its constant *COMMON-LISP-SPECIALS-AND-CONSTANTS*;
 ;   - every axiom ACL2 has (each defaxiom event of its world);
-;   - ACL2's definition of every function that an axiom, or a fact
-;     below, mentions, of O-P, O< and NOT, of TRUE-LISTP and MV-NTH,
+;   - ACL2's built-in clauses, the value of its constant
+;     *INITIAL-BUILT-IN-CLAUSES*: the clauses about ACL2-COUNT that its
+;     prover holds as true with no proof;
+;   - ACL2's definition of every function that an axiom, a built-in
+;     clause, or a fact below, mentions, of O-P, O< and NOT, of
+;     TRUE-LISTP and MV-NTH,
 ;     which the axiom of a function introduced by choice may mention,
 ;     of ACL2-COUNT, the measure of the size of an object, and of every
 ;     function those definitions call.  Each definition is written with
 ;     the ruler-extenders ACL2 stores for it, or NIL if it stores none
 ;     because the function does not call itself.
 ;
-; What it asks ACL2 to prove: each fact stated below with BM-CLAUSE.
-; These are the facts about the primitives that ACL2 has no axiom for,
+; What it asks ACL2 to prove: each fact stated below with BM-CLAUSE, and
+; each built-in clause.  These are the facts that ACL2 has no axiom for,
 ; because they are part of its prover.  A fact reaches the output only
-; if ACL2 proves it.
+; if ACL2 proves it.  That ACL2 proves a built-in clause here shows only
+; that ACL2 holds the clause as true: its prover has these clauses built
+; in, with no proof, and what else it knows of ACL2-COUNT rests on a
+; definition that it admitted with the proof of termination skipped.
 
 (in-package "ACL2")
 
@@ -110,6 +117,25 @@
 (bm-clause "char-code-non-negative" (not (< (char-code x) '0)))
 (bm-clause "stringp-coerce"
            (implies (not (equal y 'list)) (stringp (coerce x y))))
+
+; ACL2's built-in clauses.  They are taken from ACL2's constant as this
+; script runs, in ACL2's order, with the literals of each in ACL2's
+; order.  ACL2 gives them no names.  Here the clause at place N of the
+; constant, counting from 1, is named "built-in-clause-N".
+
+(defun bm-built-in-events (records n)
+  (declare (xargs :mode :program))
+  (cond ((endp records) nil)
+        (t (cons (list* 'bm-clause
+                        (string-append
+                         "built-in-clause-"
+                         (coerce (explode-nonnegative-integer n 10 nil)
+                                 'string))
+                        (access built-in-clause (car records) :clause))
+                 (bm-built-in-events (cdr records) (+ 1 n))))))
+
+(make-event
+ (cons 'progn (bm-built-in-events *initial-built-in-clauses* 1)))
 
 (program)
 
@@ -238,9 +264,11 @@
 
 (bm-write-file (bm-ground-lines state) "build/ground.txt" state)
 
-(cw "ground: ~x0 axioms of ACL2, ~x1 facts proved, ~x2 lines written~%"
+(cw "ground: ~x0 axioms, ~x1 facts and ~x2 built-in clauses proved, ~x3 lines~%"
     (len (bm-axiom-names (w state) nil))
-    (len (table-alist 'bm-clauses (w state)))
+    (- (len (table-alist 'bm-clauses (w state)))
+       (len *initial-built-in-clauses*))
+    (len *initial-built-in-clauses*)
     (len (bm-ground-lines state)))
 
 (good-bye)

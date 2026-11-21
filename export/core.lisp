@@ -2023,11 +2023,11 @@
 
 ;;; 9. The ground theory, as the check starts from it
 
-; The ground theory declares five packages, its 32 primitives and 36
+; The ground theory declares five packages, its 32 primitives and 37
 ; definitions are functions in use, and its names are in use: those of
 ; the functions, of ACL2's axioms (*BX-GROUND-AXIOMS*), T and NIL.
 ; GROUND-FNS is the list of the functions it defines, read from
-; spec/ground.txt by export/run.sh.  The imports of its packages are
+; spec/ground.txt by export/book.sh.  The imports of its packages are
 ; those that ACL2 holds for them, which are those of its package lines.
 
 (defun bx-add-package-imports (names known table)

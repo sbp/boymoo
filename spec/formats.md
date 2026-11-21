@@ -1,6 +1,6 @@
 # The interchange formats
 
-This document defines the text that a checker reads and the line that it writes. A checker reads three inputs: the **library**, the **statements** of a book, and the **proofs**. All three, and the ground theory that every checker holds, are written in one small format. A reader for it is a few dozen lines: `checks/reader.py` is one, written from this document, and `sh checks/run.sh` confirms that it reads every file of this repository in the format and writes each back byte for byte (run on 2026-11-20; `all checks passed`). The files `language.md`, `logic.md`, `formats.md` and `ground.txt` are in the directory `spec/`; every other path is given from the root of the repository.
+This document defines the text that a checker reads and the line that it writes. A checker reads three inputs: the **library**, the **statements** of a book, and the **proofs**. All three, and the ground theory that every checker holds, are written in one small format. A reader for it is a few dozen lines: `checks/reader.py` is one, written from this document, and `sh checks/run.sh` confirms that it reads every file of this repository in the format and writes each back byte for byte (run on 2026-11-21; `all checks passed`). The files `language.md`, `logic.md`, `formats.md` and `ground.txt` are in the directory `spec/`; every other path is given from the root of the repository.
 
 The terms used here are defined in [`language.md`](language.md) (data, symbols, terms, statements) and [`logic.md`](logic.md) (clauses, facts, rules, obligations).
 

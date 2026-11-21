@@ -175,7 +175,7 @@ def made_names(lines):
 
 def program_counts(path, statements):
     """The define lines of a library's program text that are not
-    statements, after the 36 of the ground theory; the functions they
+    statements, after the 37 of the ground theory; the functions they
     define; and the attach lines."""
     stm = set(open(statements, "rb").read().split(b"\n"))
     lines = open(path, "rb").read().split(b"\n")[:-1]
@@ -183,7 +183,7 @@ def program_counts(path, statements):
     for i, text in enumerate(lines):
         if text.startswith(b"(attach "):
             attach += 1
-        elif i >= 36 and text not in stm:
+        elif i >= 37 and text not in stm:
             prog += 1
             fns += len(reader.Reader(text).line()[1]) - 1
     return prog, fns, attach

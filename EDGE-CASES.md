@@ -10,12 +10,12 @@ Every example was run in ACL2 8.7. One command confirms every entry, from the ro
 sh checks/run.sh
 ```
 
-Its line `checks/expected/edge.txt is what ACL2 says on each entry of EDGE-CASES.md` comes from [`checks/edge.lsp`](checks/edge.lsp), which writes one line for each fact below. The label of each line begins with the number of its entry, except that the lines `value`, `no-value`, `read` and `no-read` name the call or the text instead. Some entries also rest on lines of `checks/expected/facts.txt`, which [`checks/facts.lsp`](checks/facts.lsp) writes. The checks were last run on 2026-11-20, with ACL2 8.7 built on SBCL 2.5.5, and printed `all checks passed`.
+Its line `checks/expected/edge.txt is what ACL2 says on each entry of EDGE-CASES.md` comes from [`checks/edge.lsp`](checks/edge.lsp), which writes one line for each fact below. The label of each line begins with the number of its entry, except that the lines `value`, `no-value`, `read` and `no-read` name the call or the text instead. Some entries also rest on lines of `checks/expected/facts.txt`, which [`checks/facts.lsp`](checks/facts.lsp) writes. The checks were last run on 2026-11-21, with ACL2 8.7 built on SBCL 2.5.5, and printed `all checks passed`.
 
 ## Terms
 
 - **Axiom.** A formula that ACL2 takes as true without proof. ACL2's own axioms are the 84 `defaxiom` events of its source file `axioms.lisp`. Beside them stand its **principles**: the rules by which a definition, a constraint, a choice or an induction adds to what is true. Together these are what this document calls "the axioms".
-- **Ground theory.** What every checker holds before it reads anything: ACL2's axioms, its 32 primitive functions, 36 of its definitions, and 41 facts that ACL2 proves although no axiom states them. It is the file [`spec/ground.txt`](spec/ground.txt) ([`spec/logic.md`](spec/logic.md), section 3).
+- **Ground theory.** What every checker holds before it reads anything: ACL2's axioms, its 32 primitive functions, 37 of its definitions, 41 facts that ACL2 proves although no axiom states them, and the 23 clauses about `acl2-count` that ACL2's prover takes as true with no proof (entry 9.6). It is the file [`spec/ground.txt`](spec/ground.txt) ([`spec/logic.md`](spec/logic.md), section 3).
 - **Primitive.** One of the 32 functions with no definition, such as `car` and `binary-+`, whose meaning only the axioms give.
 - **Completion.** The value that an axiom gives to a primitive on arguments it was not meant for, such as `(car 7)`. ACL2's axioms of this kind are named `completion-of-...`.
 - **The Lisp under ACL2.** ACL2 is a Common Lisp program. Each function it defines is also compiled as Common Lisp code, which ACL2 runs to compute values. ACL2's documentation calls this "raw Lisp". For some functions that code is not the function's definition.
@@ -104,11 +104,12 @@ In the third column, "Yes" means that ACL2 Core gives ACL2's answer; "Yes, and a
 | 9.3 Functional instantiation | 9 | No rule; the same theorems |
 | 9.4 Choice | 9 | Yes |
 | 9.5 Proof by evaluation | 9 | Yes, except 1.4, 1.5 and 8.4 |
+| 9.6 The built-in clauses about `acl2-count` | 9 | Yes |
 | 10.1 `mbe` in program mode | 10 | Yes |
 | 10.2 Primitives outside their guards in program mode | 10 | Yes, as under `:none` |
 | 10.3 Functions in program mode with Common Lisp code only | 10 | No |
 
-The kinds, with the number of entries of each: 1, the axioms leave a value open and ACL2 computes one (5); 2, the axioms give a value and ACL2 computes none (9); 3, ACL2 computes a value that the axioms do not prove (5); 4, the values the axioms give to arguments outside the guards (2); 5, data (7); 6, admission, where ACL2's tests are not the logic's (14); 7, packages (6); 8, ways a session leaves the axioms (6); 9, where the logic is not a set of axioms (5); 10, program mode (3). That is 62 entries.
+The kinds, with the number of entries of each: 1, the axioms leave a value open and ACL2 computes one (5); 2, the axioms give a value and ACL2 computes none (9); 3, ACL2 computes a value that the axioms do not prove (5); 4, the values the axioms give to arguments outside the guards (2); 5, data (7); 6, admission, where ACL2's tests are not the logic's (14); 7, packages (6); 8, ways a session leaves the axioms (6); 9, where the logic is not a set of axioms (6); 10, program mode (3). That is 63 entries.
 
 ## 1. The axioms leave a value open and ACL2 computes one
 
@@ -634,6 +635,14 @@ The kinds, with the number of entries of each: 1, the axioms leave a value open 
 - **ACL2.** Its prover replaces a call on constants by the value its evaluator gives, and the evaluator may run a function's Common Lisp code: entry 8.4 shows the prover using code that differs from the definition. So a theorem proved by evaluation rests on that code.
 - **ACL2 Core.** A checker computes only the primitives, by the table of [`spec/language.md`](spec/language.md), section 3; every other evaluation is a proof by the rules. It follows ACL2 except in entries 1.4, 1.5 and 8.4, where ACL2's evaluation goes beyond what the definitions and constraints give.
 - **Check.** The lines of those entries.
+
+### 9.6 The built-in clauses about `acl2-count`
+
+- **The axioms.** None of the 84 says that the conses are well founded, and neither does the equation of `acl2-count`. The axioms and the equations of the ground theory are all true of a universe with an endless chain of conses, each the `cdr` of the one before, on which `acl2-count` is negative. So they do not give that `acl2-count` is an ordinal, nor that it is smaller on the `cdr` of a cons.
+- **ACL2.** Its prover starts with 23 built-in clauses that say so: `(o-p (acl2-count x))`, and that `car`, `cdr`, one less than a positive integer, `realpart` and `imagpart` have a smaller `acl2-count`, each under the tests ACL2 recognizes. They are the constant `*initial-built-in-clauses*` of its source file `simplify.lisp`. ACL2 takes them as true with no proof: each carries the same rule name, which names no rule, and ACL2 admits `acl2-count` itself with its proof of termination skipped. A measure conjecture that an instance of one of them subsumes counts as proved.
+- **Example.** ACL2 proves `(o-p (acl2-count x))` and `(implies (consp x) (o< (acl2-count (cdr x)) (acl2-count x)))`, and it admits `(defun bm-cdrs (x) (if (consp x) (bm-cdrs (cdr x)) x))` with no measure given. The rule name it holds for all 23 clauses is `(:fake-rune-for-anonymous-enabled-rule nil)`, and the event by which it admits `acl2-count` is `(verify-termination-boot-strap :skip-proofs acl2-count (declare (xargs :mode :logic)))`.
+- **ACL2 Core.** The ground theory holds the 23 clauses as facts, `"built-in-clause-1"` to `"built-in-clause-23"`, in ACL2's words and ACL2's order ([`spec/logic.md`](spec/logic.md), section 3). They are assumptions of ACL2's, which ACL2 Core shares: together they say that the conses are well founded. A proof of termination cites them as it cites an axiom. [`spec/logic.md`](spec/logic.md), sections 1 and 10, names this among the things that stand beside ACL2's axioms.
+- **Check.** Lines 9.6; `checks/ground.lsp`, which takes the clauses from ACL2's constant as it runs and has ACL2 prove each.
 
 ## 10. Program mode
 

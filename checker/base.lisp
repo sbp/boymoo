@@ -1,7 +1,7 @@
 ; Boymoo, the checker: lists, tries and decimal numbers.
 ;
 ; The checker is written in ACL2 Core: every function it defines calls only
-; the 32 primitive functions, the 36 functions that the ground theory
+; the 32 primitive functions, the 37 functions that the ground theory
 ; defines (spec/logic.md, section 3) and functions defined in these books.
 ; So it uses none of the list functions of ACL2's library, and defines the
 ; few it needs here.
@@ -13,20 +13,24 @@
 
 ; The elements of X in reverse order, followed by ACC.
 (defun rev-onto (x acc)
+  (declare (xargs :guard t))
   (if (consp x)
       (rev-onto (cdr x) (cons (car x) acc))
     acc))
 
 (defun rev (x)
+  (declare (xargs :guard t))
   (rev-onto x nil))
 
 ; X followed by Y.
 (defun app (x y)
+  (declare (xargs :guard t))
   (if (consp x)
       (cons (car x) (app (cdr x) y))
     y))
 
 (defun member-p (x l)
+  (declare (xargs :guard t))
   (if (consp l)
       (if (equal x (car l))
           t
@@ -35,6 +39,7 @@
 
 ; The first pair of the association list AL whose car is K, or NIL.
 (defun pair-of (k al)
+  (declare (xargs :guard t))
   (if (consp al)
       (if (and (consp (car al)) (equal k (car (car al))))
           (car al)
@@ -43,6 +48,7 @@
 
 ; No element of L stands twice in it.
 (defun distinct-p (l)
+  (declare (xargs :guard t))
   (if (consp l)
       (if (member-p (car l) (cdr l))
           nil
@@ -51,6 +57,7 @@
 
 ; No element of X is an element of Y.
 (defun disjoint-p (x y)
+  (declare (xargs :guard t))
   (if (consp x)
       (if (member-p (car x) y)
           nil
@@ -59,6 +66,7 @@
 
 ; The element of L at position N, counted from 1.
 (defun nth-elem (n l)
+  (declare (xargs :guard (natp n)))
   (if (consp l)
       (if (zp n)
           nil
@@ -69,6 +77,7 @@
 
 ; L with its element at position N, counted from 1, replaced by X.
 (defun replace-nth (n l x)
+  (declare (xargs :guard (natp n)))
   (if (consp l)
       (if (zp n)
           l
@@ -79,6 +88,7 @@
 
 ; The last element of L.
 (defun last-elem (l)
+  (declare (xargs :guard t))
   (if (consp l)
       (if (consp (cdr l))
           (last-elem (cdr l))
@@ -87,6 +97,7 @@
 
 ; L begins with the elements of P.
 (defun prefix-p (p l)
+  (declare (xargs :guard t))
   (if (consp p)
       (if (consp l)
           (if (equal (car p) (car l))
@@ -95,10 +106,57 @@
         nil)
     t))
 
+; These accessors retain ACL2's value on atoms and use a guarded
+; projection in the executable half.
+(defmacro total-car (x)
+  `(mbe :logic (car ,x)
+        :exec (let ((value ,x))
+                (if (consp value) (car value) nil))))
+
+(defmacro total-cdr (x)
+  `(mbe :logic (cdr ,x)
+        :exec (let ((value ,x))
+                (if (consp value) (cdr value) nil))))
+
+; ACL2 arithmetic gives an absent size the value zero.
+(defmacro total-add (x y)
+  `(mbe :logic (+ ,x ,y)
+        :exec (+ (fix ,x) (fix ,y))))
+
+(defun size-value-p (x)
+  (declare (xargs :guard t))
+  (or (integerp x) (equal x nil)))
+
+(defun size-list-p (xs)
+  (declare (xargs :guard t))
+  (if (consp xs)
+      (and (size-value-p (car xs)) (size-list-p (cdr xs)))
+    (equal xs nil)))
+
+(defun cons-list-p (xs)
+  (declare (xargs :guard t))
+  (if (consp xs)
+      (and (consp (car xs)) (cons-list-p (cdr xs)))
+    (equal xs nil)))
+
+(defun guard-natural-list-p (xs)
+  (declare (xargs :guard t))
+  (if (consp xs)
+      (and (natp (car xs)) (guard-natural-list-p (cdr xs)))
+    (equal xs nil)))
+
+(defun guard-character-lists-p (xs)
+  (declare (xargs :guard t))
+  (if (consp xs)
+      (and (character-listp (car xs)) (guard-character-lists-p (cdr xs)))
+    (equal xs nil)))
+
 ; The sum of the numbers of L.
 (defun sum (l)
+  (declare (xargs :guard (size-list-p l)
+                  :verify-guards nil))
   (if (consp l)
-      (+ (car l) (sum (cdr l)))
+      (total-add (car l) (sum (cdr l)))
     0))
 
 ; ---------------------------------------------------------------------------
@@ -111,6 +169,7 @@
 ; checker finds a name by walking the characters of its text.
 
 (defun trie-child (c kids)
+  (declare (xargs :guard t))
   (if (consp kids)
       (if (and (consp (car kids)) (equal c (car (car kids))))
           (cdr (car kids))
@@ -119,6 +178,7 @@
 
 ; The value of KEY in the trie NODE, or NIL.
 (defun trie-get (key node)
+  (declare (xargs :guard t))
   (if (consp node)
       (if (consp key)
           (trie-get (cdr key) (trie-child (car key) (cdr node)))
@@ -126,6 +186,7 @@
     nil))
 
 (defun trie-drop (c kids)
+  (declare (xargs :guard t))
   (if (consp kids)
       (if (and (consp (car kids)) (equal c (car (car kids))))
           (cdr kids)
@@ -135,6 +196,7 @@
 ; The trie NODE with the value of KEY made VAL.  The child changed is put
 ; first, so that the names used most recently are found soonest.
 (defun trie-put (key val node)
+  (declare (xargs :guard t))
   (if (consp key)
       (cons (if (consp node) (car node) nil)
             (cons (cons (car key)
@@ -151,19 +213,27 @@
 
 ; The powers of ten that are not above N, the largest first, before ACC.
 (defun tens-up-to (n p acc)
-  (declare (xargs :measure (nfix (- (+ 1 (nfix n)) (nfix p)))))
+  (declare (xargs :guard t
+                  :measure (nfix (- (+ 1 (nfix n)) (nfix p)))))
   (if (and (integerp n) (integerp p) (< 0 p) (not (< n p)))
       (tens-up-to n (* 10 p) (cons p acc))
     acc))
 
 ; The number of times, at most 9, that P can be taken from N.
 (defun digit-count (n p d)
-  (declare (xargs :measure (nfix (- 9 (nfix d)))))
+  (declare (xargs :guard t
+                  :measure (nfix (- 9 (nfix d)))))
   (if (and (natp d) (< d 9) (integerp n) (integerp p) (< 0 p) (not (< n p)))
       (digit-count (- n p) p (+ 1 d))
     d))
 
 (defun decimal-digits (n ps)
+  (declare (xargs :guard (and (integerp n)
+                             (or (equal ps nil)
+                                 (and (consp ps)
+                                      (integerp (car ps))
+                                      (equal ps (tens-up-to (car ps) 1 nil)))))
+                  :verify-guards nil))
   (if (consp ps)
       (let ((d (digit-count n (car ps) 0)))
         (cons (code-char (+ 48 d))
@@ -172,6 +242,8 @@
 
 ; The characters of the decimal numeral of the natural number N.
 (defun decimal (n)
+  (declare (xargs :guard t
+                  :verify-guards nil))
   (if (and (integerp n) (< 0 n))
       (decimal-digits n (tens-up-to n 1 nil))
     (list #\0)))

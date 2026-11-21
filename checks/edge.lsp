@@ -986,6 +986,28 @@
 (bm-guarded-top "10.2 (bm-pcar 7), guard checking t" "(bm-pcar 7)")
 (set-guard-checking :none)
 
+; 9.6 The built-in clauses.  Each record of ACL2's constant holds a clause
+; and, where a proved rule would have its name, a rune.
+
+(defun bm-built-in-runes (records)
+  (declare (xargs :mode :program))
+  (cond ((endp records) nil)
+        (t (add-to-set-equal (access built-in-clause (car records) :rune)
+                             (bm-built-in-runes (cdr records))))))
+
+(bm-stored "9.6 how many built-in clauses ACL2's prover starts with"
+           (len *initial-built-in-clauses*))
+(bm-stored "9.6 the rule names that ACL2 holds for those clauses"
+           (bm-built-in-runes *initial-built-in-clauses*))
+(bm-stored "9.6 the event by which ACL2 admits ACL2-COUNT"
+           (get-event 'acl2-count (w state)))
+(bm-try "9.6 prove (o-p (acl2-count x))"
+        (thm (o-p (acl2-count x))))
+(bm-try "9.6 prove (implies (consp x) (o< (acl2-count (cdr x)) (acl2-count x)))"
+        (thm (implies (consp x) (o< (acl2-count (cdr x)) (acl2-count x)))))
+(bm-try "9.6 define BM-CDRS, a recursion on the cdr of a cons, with no measure given"
+        (defun bm-cdrs (x) (if (consp x) (bm-cdrs (cdr x)) x)))
+
 ; ----------------------------------------------------------------------
 ; The lines.
 

@@ -17,21 +17,17 @@
 
 mkdir -p build/export/books
 
-# The functions that the ground theory defines, which the library leaves
-# out.  They are read from spec/ground.txt.
-names=$(sed -n 's/^(define [^ (][^ ]* (\([^ ]*\) .*/\1/p; s/^(define ([^()]*) (\([^ ]*\) .*/\1/p' spec/ground.txt |
-            tr '\n' ' ')
-echo "(assign bx-ground-fns '($names))" > build/export/ground-fns.lsp
-
 if [ $# -gt 0 ]; then
     printf '%s\n' "$@" > build/export/books.list
 else
     sed 's/#.*//; s/[[:space:]]*$//; /^$/d' export/books.txt > build/export/books.list
 fi
 
-# The library is exported first.  Under any version of ACL2 but the one
-# that checks/version.lsp names, export/book.sh stops at once with status
-# 3, and so does this script.
+# The library is exported first, and export/book.sh writes
+# build/export/ground-fns.lsp, the functions that the ground theory
+# defines, before any book is exported.  Under any version of ACL2 but the
+# one that checks/version.lsp names, export/book.sh stops at once with
+# status 3, and so does this script.
 start=$(date +%s)
 sh export/book.sh :library || exit $?
 

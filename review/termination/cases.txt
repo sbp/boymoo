@@ -1,0 +1,13 @@
+# The class that each definition of review/termination/cases.lisp must
+# have in the comparison: the text of its first function, and its class
+# as build/termination/books/build/termination/cases.txt gives it (the
+# fifth word of a define line, or "uncovered" and its reason).  None of
+# them is "differ".
+ACL2::BM-REPEAT agree-repeats
+ACL2::BM-IMPLIED agree-tidy
+ACL2::BM-EVEN agree-tidy
+ACL2::BM-W relation
+ACL2::BM-L1 uncovered loop$
+ACL2::BM-INSIDE refused
+ACL2::BM-OUTSIDE agree
+ACL2::BM-SUB uncovered subversive

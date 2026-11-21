@@ -10,15 +10,31 @@
 # build/ (a name that begins with build/).  It writes, for a book, the
 # files build/export/books/NAME.statements, .program, .aids, .notes,
 # .readback and .log, and for the library build/export/library.* in the
-# same way.  It runs export/certify.sh first.  It needs build/export/ground-fns.lsp, which export/run.sh
-# writes.  Under any version of ACL2 but the one that checks/version.lsp
-# names, it stops at once with status 3 and writes nothing else.
+# same way.  It runs export/certify.sh first, and writes
+# build/export/ground-fns.lsp, the functions that the ground theory
+# defines, from spec/ground.txt, when it is missing or older than
+# spec/ground.txt.
+# Under any version of ACL2 but the one that checks/version.lsp names, it
+# stops at once with status 3.
 
 name=$1
 
 # The printer, core and guard proofs, certified into
 # build/export/acl2/ if they are not already.
 sh export/certify.sh --guards || exit $?
+
+# The functions that the ground theory defines, which the library leaves
+# out, read from spec/ground.txt.  The file is written under another name
+# and then moved into place, so that a run beside this one never reads
+# half of it.
+ground=build/export/ground-fns.lsp
+if [ ! -f "$ground" ] || [ spec/ground.txt -nt "$ground" ]; then
+    mkdir -p build/export || exit 1
+    names=$(sed -n 's/^(define [^ (][^ ]* (\([^ ]*\) .*/\1/p; s/^(define ([^()]*) (\([^ ]*\) .*/\1/p' spec/ground.txt |
+                tr '\n' ' ')
+    echo "(assign bx-ground-fns '($names))" > "$ground.$$" &&
+        mv "$ground.$$" "$ground" || exit 1
+fi
 
 case $name in
     :library) out=build/export/library ;;

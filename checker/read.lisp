@@ -35,11 +35,63 @@
 (defmacro prec-hidden (r) `(car (cdr (cdr ,r))))
 (defmacro prec-lines (r) `(car (cdr (cdr (cdr ,r)))))
 
+(defun guard-sized-clause-p (c)
+  (declare (xargs :guard t))
+  (and (consp c)
+       (true-listp (car c))
+       (guard-natural-list-p (cdr c))
+       (equal (len (car c)) (len (cdr c)))))
+
+(defun guard-name-record-p (entry)
+  (declare (xargs :guard t))
+  (and (true-listp entry)
+       (equal (len entry) 3)
+       (or (not (car entry)) (natp (car entry)))
+       (or (not (cadr entry)) (guard-sized-clause-p (cadr entry)))
+       (true-listp (caddr entry))))
+
+(mutual-recursion
+ (defun guard-trie-p (node kind)
+   (declare (xargs :guard t :measure (acl2-count node)))
+   (if (consp node)
+       (and (guard-trie-value-p (car node) kind)
+            (guard-trie-kids-p (cdr node) kind))
+     (equal node nil)))
+
+ (defun guard-trie-kids-p (kids kind)
+   (declare (xargs :guard t :measure (acl2-count kids)))
+   (if (consp kids)
+       (and (consp (car kids))
+            (characterp (car (car kids)))
+            (guard-trie-p (cdr (car kids)) kind)
+            (guard-trie-kids-p (cdr kids) kind))
+     (equal kids nil)))
+
+ (defun guard-trie-value-p (value kind)
+   (declare (xargs :guard t :measure (acl2-count value)))
+   (or (equal value nil)
+       (case kind
+         (:import
+          (and (consp value) (symbolp (car value)) (equal (cdr value) nil)))
+         (:package
+          (and (consp value)
+               (consp (cdr value))
+               (true-listp value)
+               (equal (len value) 4)
+               (symbol-listp (prec-imports value))
+               (guard-trie-p (prec-trie value) :import)
+               (booleanp (prec-hidden value))
+               (true-listp (prec-lines value))))
+         (:name (guard-name-record-p value))
+         (:special (equal value t))
+         (otherwise nil)))))
+
 (defconst *nil-text* (coerce "COMMON-LISP::NIL" 'list))
 (defconst *t-text* (coerce "COMMON-LISP::T" 'list))
 
 ; The symbol that holds the symbol whose text is TEXT.
 (defun text-symbol (text)
+  (declare (xargs :guard (character-listp text)))
   (if (equal text *nil-text*)
       nil
     (if (equal text *t-text*)
@@ -48,6 +100,7 @@
 
 ; The text of the symbol that S holds.
 (defun sym-text (s)
+  (declare (xargs :guard (symbolp s)))
   (if (equal s nil)
       *nil-text*
     (if (equal s t)
@@ -59,6 +112,7 @@
 
 ; A plain character: A to Z, a digit, or one of -+*/<=>!?$%&_^~.@
 (defun plain-char-p (c)
+  (declare (xargs :guard t))
   (if (characterp c)
       (let ((n (char-code c)))
         (if (< n 65)
@@ -69,12 +123,14 @@
     nil))
 
 (defun all-plain-p (cs)
+  (declare (xargs :guard t))
   (if (consp cs)
       (if (plain-char-p (car cs)) (all-plain-p (cdr cs)) nil)
     t))
 
 ; The value of a hexadecimal digit, 0 to 9 or A to F, or NIL.
 (defun hex-value (c)
+  (declare (xargs :guard t))
   (if (characterp c)
       (let ((n (char-code c)))
         (if (and (< 47 n) (< n 58))
@@ -91,6 +147,7 @@
 ; The longest run of plain characters at the start of CS: (RUN . REST),
 ; RUN reversed onto ACC.
 (defun lex-plain (cs acc)
+  (declare (xargs :guard t))
   (if (and (consp cs) (plain-char-p (car cs)))
       (lex-plain (cdr cs) (cons (car cs) acc))
     (cons acc cs)))
@@ -102,6 +159,7 @@
 ; itself; any other is written as a backslash and two hexadecimal digits,
 ; and one that can stand for itself never is.
 (defun lex-quoted (cs close dec raw)
+  (declare (xargs :guard (characterp close)))
   (if (consp cs)
       (let ((c (car cs)))
         (if (equal c close)
@@ -140,6 +198,8 @@
 ; written plain.  The result is (DEC RAW . REST), with DEC the characters
 ; of the part and RAW its text.
 (defun lex-part (cs)
+  (declare (xargs :guard t
+                  :verify-guards nil))
   (if (consp cs)
       (if (equal (car cs) #\|)
           (let ((r (lex-quoted (cdr cs) #\| nil nil)))
@@ -161,6 +221,11 @@
 ; After the package part P, a result of LEX-PART: the two colons, the name,
 ; and the symbol, which must exist.  The result is (SYMBOL . REST).
 (defun lex-symbol-rest (p pkgs)
+  (declare (xargs :guard (and (consp p)
+                             (consp (cdr p))
+                             (character-listp (car (cdr p)))
+                             (true-listp (trie-get (car p) pkgs)))
+                  :verify-guards nil))
   (let ((rest (cdr (cdr p))))
     (if (and (consp rest) (equal (car rest) #\:)
              (consp (cdr rest)) (equal (car (cdr rest)) #\:))
@@ -181,6 +246,7 @@
 
 ; The value of a run of digits after N, or NIL if a character is no digit.
 (defun digits-value (cs n)
+  (declare (xargs :guard (integerp n)))
   (if (consp cs)
       (if (characterp (car cs))
           (let ((c (char-code (car cs))))
@@ -192,12 +258,14 @@
 
 ; A positive number: a digit from 1 to 9, then digits.
 (defun positive-value (cs)
+  (declare (xargs :guard t))
   (if (and (consp cs) (not (equal (car cs) #\0)))
       (digits-value cs 0)
     nil))
 
 ; An integer: 0, a positive number, or - and a positive number.
 (defun integer-value (cs)
+  (declare (xargs :guard t))
   (if (equal cs '(#\0))
       0
     (if (and (consp cs) (equal (car cs) #\-))
@@ -207,6 +275,7 @@
 
 ; (BEFORE . AFTER) at the first slash of CS, or (CS . :NONE).
 (defun split-slash (cs acc)
+  (declare (xargs :guard t))
   (if (consp cs)
       (if (equal (car cs) #\/)
           (cons (rev acc) (cdr cs))
@@ -218,6 +287,8 @@
 ; above 1, with no common factor: so its denominator in lowest terms is the
 ; one written, which the primitives compute without a division here.
 (defun number-value (run)
+  (declare (xargs :guard t
+                  :verify-guards nil))
   (let ((s (split-slash run nil)))
     (if (equal (cdr s) :none)
         (let ((v (integer-value run)))
@@ -232,6 +303,8 @@
 ; After #: a character, #\ and two hexadecimal digits, or a complex
 ; rational, #C( a rational, a space, a rational other than 0, and ).
 (defun lex-sharp (cs)
+  (declare (xargs :guard t
+                  :verify-guards nil))
   (if (and (consp cs) (equal (car cs) #\\)
            (consp (cdr cs)) (consp (cdr (cdr cs))))
       (let ((h1 (hex-value (car (cdr cs))))
@@ -263,6 +336,9 @@
 ; characters is a package name if two colons follow it, and otherwise an
 ; integer or a fraction.  The result is (ATOM . REST).
 (defun lex-atom (cs pkgs)
+  (declare (xargs :guard (let ((p (lex-part cs)))
+                          (or (not p) (true-listp (trie-get (car p) pkgs))))
+                  :verify-guards nil))
   (if (consp cs)
       (let ((c (car cs)))
         (if (equal c #\")
@@ -341,13 +417,26 @@
 ; ---------------------------------------------------------------------------
 ; Lines
 
+(defun guard-reader-frames-p (stack)
+  (declare (xargs :guard t))
+  (if (consp stack)
+      (and (true-listp (car stack))
+           (guard-reader-frames-p (cdr stack)))
+    (equal stack nil)))
+
+(defun guard-reader-stack-p (stack)
+  (declare (xargs :guard t))
+  (and (consp stack) (guard-reader-frames-p stack)))
+
 ; The data of a line after its word.  STACK holds a frame for each list
 ; still open, the elements read so far in reverse, and last the frame of the
 ; line itself, which holds the word.  ELEM says that an element must come
 ; next; otherwise one has just been read.  The result is (ELEMENTS . REST)
 ; when the line closes, where REST must be what follows its line feed.
 (defun parse-loop (cs stack elem pkgs)
-  (declare (xargs :measure (len cs)))
+  (declare (xargs :guard (and (guard-reader-stack-p stack) (guard-trie-p pkgs :package))
+                  :verify-guards nil
+                  :measure (len cs)))
   (if (consp cs)
       (if elem
           (if (equal (car cs) #\()
@@ -388,6 +477,7 @@
 ; A word: one or more of the letters a to z and the hyphen.  The result is
 ; (WORD . REST), the word reversed onto ACC.
 (defun lex-word (cs acc)
+  (declare (xargs :guard t))
   (if (and (consp cs) (characterp (car cs))
            (let ((n (char-code (car cs))))
              (if (equal n 45) t (and (< 96 n) (< n 123)))))
@@ -399,6 +489,8 @@
 ; association list from the characters of each word that may stand here to
 ; the keyword that names it.
 (defun parse-line (cs words pkgs)
+  (declare (xargs :guard (guard-trie-p pkgs :package)
+                  :verify-guards nil))
   (if (and (consp cs) (equal (car cs) #\())
       (let* ((r (lex-word (cdr cs) nil))
              (w (pair-of (rev (car r)) words)))
@@ -411,6 +503,7 @@
 ; The lines of the characters CS, each with its line feed, and last, if CS
 ; does not end with a line feed, what follows the last one.
 (defun split-lines (cs cur acc)
+  (declare (xargs :guard t))
   (if (consp cs)
       (if (equal (car cs) #\Newline)
           (split-lines (cdr cs) nil (cons (rev-onto cur (list #\Newline)) acc))

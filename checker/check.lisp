@@ -13,7 +13,15 @@
 ; ---------------------------------------------------------------------------
 ; Words
 
+(defun strings-p (xs)
+  (declare (xargs :guard t))
+  (if (consp xs)
+      (and (stringp (car xs)) (strings-p (cdr xs)))
+    (equal xs nil)))
+
 (defun word-table (strings keywords)
+  (declare (xargs :guard (and (strings-p strings)
+                              (true-listp keywords))))
   (if (consp strings)
       (cons (cons (coerce (car strings) 'list) (car keywords))
             (word-table (cdr strings) (cdr keywords)))
@@ -47,15 +55,19 @@
 ; The ground theory (spec/logic.md, section 3)
 
 (defun set-sfacts (v w)
+  (declare (xargs :guard (true-listp w)))
   (make-world (w-pkgs w) (w-names w) v (w-specials w) (w-counts w) (w-acl2 w)))
 
 (defun set-specials (v w)
+  (declare (xargs :guard (true-listp w)))
   (make-world (w-pkgs w) (w-names w) (w-sfacts w) v (w-counts w) (w-acl2 w)))
 
 (defun set-acl2 (v w)
+  (declare (xargs :guard (true-listp w)))
   (make-world (w-pkgs w) (w-names w) (w-sfacts w) (w-specials w) (w-counts w) v))
 
 (defun specials-trie (l node)
+  (declare (xargs :guard (symbol-listp l)))
   (if (consp l)
       (specials-trie (cdr l) (trie-put (sym-text (car l)) t node))
     node))
@@ -63,16 +75,34 @@
 ; Before the ground theory, the package COMMON-LISP, which its first line
 ; names, and the names T and NIL.
 (defun initial-world ()
+  (declare (xargs :guard t
+                  :verify-guards nil))
   (put-entry t (list nil nil nil)
              (put-entry nil (list nil nil nil)
                         (declare-package *cl-chars* nil nil nil
                                          (make-world nil nil nil nil
                                                      (list 0 0 0 0) nil)))))
 
+(defun guard-ground-line-p (line)
+  (declare (xargs :guard t))
+  (and (true-listp line)
+       (let ((data (cdr line)))
+         (case (car line)
+           (:package (and (stringp (car data)) (symbol-listp (cadr data))))
+           (:specials (symbol-listp (car data)))
+           (:primitive (and (symbolp (car data)) (natp (cadr data))))
+           (:define (and (true-listp (cadr data)) (symbolp (car (cadr data)))))
+           (:clause (or (symbolp (car data)) (stringp (car data))))
+           (otherwise t)))))
+
 ; The ground theory is part of the specification and is taken as it
 ; stands.  Its packages bring the names of their rules into use, all but
 ; COMMON-LISP, for which ACL2 has no axiom (spec/logic.md, section 4).
 (defun ground-line (line w)
+  (declare (xargs :guard
+                  (and (guard-ground-line-p line)
+                       (guard-world-p w))
+                  :verify-guards nil))
   (let ((word (car line))
         (data (cdr line)))
     (cond
@@ -109,9 +139,11 @@
      (t w))))
 
 (defun load-ground (lines w)
+  (declare (xargs :guard (guard-world-p w)
+                  :verify-guards nil))
   (if (consp lines)
       (let ((line (parse-line (car lines) *ground-words* (w-pkgs w))))
-        (if line
+        (if (and line (guard-ground-line-p line))
             (load-ground (cdr lines) (ground-line line w))
           :bad))
     w))
@@ -120,15 +152,20 @@
 ; Rejections
 
 (defun rejection (input n reason)
+  (declare (xargs :guard t))
   (list :rejected input n reason))
 
 (defun rejected-p (x)
+  (declare (xargs :guard t))
   (and (consp x) (equal (car x) :rejected)))
 
 ; ---------------------------------------------------------------------------
 ; The library (spec/formats.md, section 7, step 2)
 
 (defun check-library (lines n w)
+  (declare (xargs :guard (and (natp n)
+                              (guard-world-p w))
+                  :verify-guards nil))
   (if (consp lines)
       (let ((line (parse-line (car lines) *statement-words* (w-pkgs w))))
         (if line
@@ -162,7 +199,48 @@
 ; DEFS), (:CONSTRAIN FNS FORMULAS) or (:LEMMA NAME FACT).  Each function
 ; below gives (CONTEXT . W), or a string if the line fails.
 
+(defun guard-pending-p (p)
+  (declare (xargs :guard t))
+  (and (true-listp p)
+       (case (car p)
+         (:theorem (symbolp (cadr p)))
+         (:define (guard-definition-list-p (caddr p)))
+         (:constrain (and (guard-function-arities-p (cadr p))
+                          (formulas-shape-p (caddr p))
+                          (symbol-listp (formula-names (caddr p)))))
+         (:lemma (and (symbolp (cadr p)) (guard-sized-clause-p (caddr p))))
+         (otherwise nil))))
+
+; A proof in progress has proper goal and clause lists and numeric
+; counters, and the context to resume is itself well shaped.
+(defun guard-proof-context-p (ctx)
+  (declare (xargs :guard t :measure (acl2-count ctx)))
+  (and (true-listp ctx)
+       (if (consp ctx)
+           (case (car ctx)
+             (:entry (guard-pending-p (cadr ctx)))
+             (:define-entry (and (guard-pending-p (cadr ctx))
+                                 (guard-pending-p (caddr ctx))))
+             (:proof (let ((steps-and-counts (cddddr ctx)))
+                       (and (true-listp (cadr ctx))
+                            (guard-pending-p (caddr ctx))
+                            (guard-proof-context-p (cadddr ctx))
+                            (proof-clauses-p (car steps-and-counts))
+                            (natp (cadr steps-and-counts))
+                            (integerp (caddr steps-and-counts)))))
+             (otherwise nil))
+         t)))
+
 (defun pending-name (p)
+  (declare (xargs :guard
+                  (and (true-listp p)
+                       (cond ((equal (car p) :define)
+                              (defs-shape-p (caddr p)))
+                             ((equal (car p) :constrain)
+                              (let ((fns (cadr p)))
+                                (and (or (consp fns) (equal fns nil))
+                                     (or (consp (car fns)) (equal (car fns) nil)))))
+                             (t t)))))
   (let ((kind (car p)))
     (cond ((equal kind :define) (car (car (car (cdr (cdr p))))))
           ((equal kind :constrain) (car (car (car (cdr p)))))
@@ -170,6 +248,9 @@
 
 ; The facts of P become facts, and its functions are in use.
 (defun finish (p w)
+  (declare (xargs :guard (and (guard-pending-p p)
+                              (guard-world-p w))
+                  :verify-guards nil))
   (let ((kind (car p)))
     (cond ((equal kind :theorem)
            (add-facts (list (car (cdr p))) (list (unit-fact (car (cdr (cdr p))))) w))
@@ -182,10 +263,15 @@
           (t w))))
 
 (defun start-proofs (goals p back w)
+  (declare (xargs :guard (true-listp w)))
   (cons (list :proof goals p back nil 0 0) w))
 
 ; (measure F M1 ... Mk), for the pending definition P.
 (defun measure-entry (data p back w)
+  (declare (xargs :guard (and (guard-pending-p p)
+                              (equal (car p) :define)
+                              (guard-world-p w))
+                  :verify-guards nil))
   (let ((defs (car (cdr (cdr p)))))
     (if (and (consp data)
              (equal (car data) (pending-name p))
@@ -198,6 +284,10 @@
 
 ; (witness F G1 ... Gk), for the pending constraint P.
 (defun witness-entry (data p back w)
+  (declare (xargs :guard (and (guard-pending-p p)
+                              (equal (car p) :constrain)
+                              (guard-world-p w))
+                  :verify-guards nil))
   (let ((fns (car (cdr p)))
         (formulas (car (cdr (cdr p)))))
     (if (and (consp data)
@@ -210,6 +300,10 @@
 
 ; The entry of the pending statement or define entry P.
 (defun pending-entry (line p back w)
+  (declare (xargs :guard (and (true-listp line)
+                              (guard-pending-p p)
+                              (guard-world-p w))
+                  :verify-guards nil))
   (let ((word (car line))
         (data (cdr line))
         (kind (car p)))
@@ -231,6 +325,8 @@
 
 ; (lemma NAME L1 ... Ln), while P is pending.
 (defun lemma-head (data p w)
+  (declare (xargs :guard (guard-world-p w)
+                  :verify-guards nil))
   (if (and (consp data) (consp (cdr data))
            (new-name-p (car data) w)
            (terms-p (cdr data) :any nil w))
@@ -242,6 +338,10 @@
     "a lemma that may not be admitted"))
 
 (defun entry-head (line p w)
+  (declare (xargs :guard (and (true-listp line)
+                              (guard-pending-p p)
+                              (guard-world-p w))
+                  :verify-guards nil))
   (let ((word (car line)))
     (cond ((equal word :define)
            (let ((r (admit line :proofs w)))
@@ -255,6 +355,11 @@
           (t (pending-entry line p nil w)))))
 
 (defun proof-step (line ctx w)
+  (declare (xargs :guard (and (true-listp line)
+                              (guard-proof-context-p ctx)
+                              (equal (car ctx) :proof)
+                              (guard-world-p w))
+                  :verify-guards nil))
   (let ((word (car line))
         (data (cdr line))
         (goals (car (cdr ctx)))
@@ -281,6 +386,11 @@
         "a head line inside a proof"))))
 
 (defun proof-line (line ctx w)
+  (declare (xargs :guard (and (true-listp line)
+                              (guard-proof-context-p ctx)
+                              (consp ctx)
+                              (guard-world-p w))
+                  :verify-guards nil))
   (let ((kind (car ctx)))
     (cond ((equal kind :entry) (entry-head line (car (cdr ctx)) w))
           ((equal kind :define-entry)
@@ -295,7 +405,12 @@
 ; 4).  SN and PN are the numbers of the lines of each input read so far.
 
 (defun run (slines sn plines pn ctx w)
-  (declare (xargs :measure (+ (len slines) (len plines))))
+  (declare (xargs :guard (and (natp sn)
+                              (natp pn)
+                              (guard-proof-context-p ctx)
+                              (guard-world-p w))
+                  :verify-guards nil
+                  :measure (+ (len slines) (len plines))))
   (if (equal ctx nil)
       (if (consp slines)
           (let ((line (parse-line (car slines) *statement-words* (w-pkgs w))))
@@ -324,6 +439,8 @@
 ; The verdict (spec/formats.md, section 9)
 
 (defun verdict (w)
+  (declare (xargs :guard (and (true-listp w) (true-listp (w-counts w)))
+                  :verify-guards nil))
   (let* ((c (w-counts w))
          (s (car c))
          (a (car (cdr c)))
@@ -342,6 +459,8 @@
               'string))))
 
 (defun rejection-verdict (r)
+  (declare (xargs :guard (and (true-listp r) (stringp (car (cdr r))))
+                  :verify-guards nil))
   (list (coerce (app (coerce "rejected " 'list)
                      (app (coerce (car (cdr r)) 'list)
                           (cons #\Space (decimal (car (cdr (cdr r)))))))
@@ -349,9 +468,13 @@
         (car (cdr (cdr (cdr r))))))
 
 (defun lines-of (string)
+  (declare (xargs :guard (stringp string)))
   (split-lines (coerce string 'list) nil nil))
 
 (defun check (ground library statements proofs)
+  (declare (xargs :guard (and (stringp ground) (stringp library)
+                             (stringp statements) (stringp proofs))
+                  :verify-guards nil))
   (let ((g (load-ground (lines-of ground) (initial-world))))
     (if (equal g :bad)
         (list "the ground theory could not be read" "")

@@ -69,9 +69,10 @@ sed 's/^/   /' build/reader.txt
 count() { grep -a -c "$1" spec/ground.txt; }
 [ "$(count '^(package ')" = 5 ] && [ "$(count '^(specials ')" = 1 ] &&
     [ "$(count '^(primitive ')" = 32 ] &&
-    [ "$(count '^(define ')" = 36 ] && [ "$(count '^(clause "')" = 41 ] &&
+    [ "$(count '^(define ')" = 37 ] && [ "$(count '^(clause "')" = 64 ] &&
+    [ "$(count '^(clause "built-in-clause-')" = 23 ] &&
     [ "$(count '^(clause [A-Z]')" = 80 ]
-report $? "the ground theory has 5 packages, 1 list of specials, 32 primitives, 36 definitions, 41 and 80 clauses"
+report $? "the ground theory has 5 packages, 1 list of specials, 32 primitives, 37 definitions, 41, 23 and 80 clauses"
 [ "$(grep -a -c '^(event ' checks/expected/facts.txt)" = 41 ]
 report $? "ACL2 lists 41 kinds of event"
 [ "$(grep -a -c '^(value \|^(no-value ' checks/expected/facts.txt)" = 157 ]
