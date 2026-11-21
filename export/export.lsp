@@ -1,7 +1,7 @@
 ; The shell of the exporter of PLAN.md, step 2.  export/book.sh loads it
 ; into ACL2 after the world to be exported is in place and after the books
-; build/export/acl2/canon and build/export/acl2/core, which export/certify.sh
-; certifies from checks/canon.lisp and export/core.lisp, and calls
+; build/export/acl2/canon and build/export/acl2/guards, which
+; export/certify.sh certifies, and calls
 ; BX-EXPORT-LIBRARY or BX-EXPORT-BOOK.  The core decides every line that
 ; is written; the shell does what needs the state of the session:
 ;
@@ -15,7 +15,8 @@
 ;   - it prints each line with BM-LINE of checks/canon.lisp and writes the
 ;     files.
 ;
-; It is in program mode, and nothing in it is proved.
+; The shell is in program mode. EC-CALL checks a core entry's guard
+; before running its guard-verified Lisp code.
 
 (in-package "ACL2")
 
@@ -122,11 +123,13 @@
   (cond ((endp files) (mv (reverse lines) (reverse notes) state))
         (t (mv-let (forms state)
              (bx-book-forms (car files) state)
-             (let ((name (bx-book-name (car files) (system-books-dir state)
-                                       (cbd))))
+             (let ((name (ec-call
+                          (bx-book-name (car files) (system-books-dir state)
+                                        (cbd)))))
                (if (eq forms :error)
                    (bx-local-lines (cdr files) lines
-                                   (cons (bx-note "source of a book not read" name)
+                                   (cons (ec-call
+                                          (bx-note "source of a book not read" name))
                                          notes)
                                    state)
                  (bx-local-lines (cdr files)
@@ -164,10 +167,10 @@
 
 (defun bx-export-library (ground-fns hi prefix state)
   (let* ((wrld (w state))
-         (translations (bx-translations (bx-translation-requests 0 hi wrld)
+         (translations (bx-translations (ec-call (bx-translation-requests 0 hi wrld))
                                         wrld)))
     (mv-let (stmts progs notes)
-      (bx-library-lines ground-fns hi translations wrld)
+      (ec-call (bx-library-lines ground-fns hi translations wrld))
       (pprogn
        (bx-write-file stmts (concatenate 'string prefix ".statements") state)
        (bx-write-file progs (concatenate 'string prefix ".program") state)
@@ -181,20 +184,22 @@
 
 (defun bx-export-book (ground-fns boot-hi lo hi prefix state)
   (let* ((wrld (w state))
-         (translations (bx-translations (bx-translation-requests lo hi wrld)
+         (translations (bx-translations (ec-call (bx-translation-requests lo hi wrld))
                                         wrld)))
     (mv-let (locals local-notes state)
       (bx-local-lines (remove-duplicates-equal
-                       (bx-book-files (bx-events wrld lo hi nil)))
+                       (ec-call (bx-book-files (ec-call (bx-events wrld lo hi nil)))))
                       nil nil state)
       (mv-let (stmts progs notes aids)
-        (bx-book-lines ground-fns boot-hi lo hi translations
-                       (system-books-dir state) (cbd) wrld)
+        (ec-call (bx-book-lines ground-fns boot-hi lo hi translations
+                                (system-books-dir state) (cbd) wrld))
         (pprogn
          (bx-write-file (append locals aids)
                         (concatenate 'string prefix ".aids") state)
          (bx-write-file stmts (concatenate 'string prefix ".statements") state)
          (bx-write-file progs (concatenate 'string prefix ".program") state)
-         (bx-write-file (append notes (bx-note-lines (bx-select :note local-notes)))
+         (bx-write-file (append notes
+                                (ec-call
+                                 (bx-note-lines (ec-call (bx-select :note local-notes)))))
                         (concatenate 'string prefix ".notes") state)
          (value (list (len stmts) (len notes) (+ (len locals) (len aids)))))))))
