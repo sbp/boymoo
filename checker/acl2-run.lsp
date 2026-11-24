@@ -1,6 +1,6 @@
 ; Runs the checker inside ACL2, for development and as a cross-check of the
 ; runner: checker/acl2-check.sh includes the book build/checker/acl2/check,
-; loads this file, and then calls RUN-CASE once for each case.  It is no
+; loads this file, and then calls RUN-CASE-FOUR for each case.  It is no
 ; part of the checker.
 
 (in-package "ACL2")
@@ -27,18 +27,26 @@
           (mv string state))))))
 
 ; Prints the line "verdict NAME<tab>VERDICT".
-(defun run-case (name library statements proofs state)
+(defun run-case-four (name library statements proofs library-proofs state)
   (declare (xargs :mode :program :stobjs state))
   (mv-let (g state) (bm-file-string "spec/ground.txt" state)
     (mv-let (l state) (bm-file-string library state)
       (mv-let (s state) (bm-file-string statements state)
         (mv-let (p state) (bm-file-string proofs state)
-          (let ((v (if (and g l s p)
-                       (boymoo::check g l s p)
-                     (list "a file could not be read" ""))))
-            (prog2$ (cw "~%verdict ~s0~s1~s2~%" name
-                        (coerce (list (code-char 9)) 'string) (car v))
-                    (value :done))))))))
+          (mv-let (lp state)
+            (if (equal library-proofs "")
+                (mv "" state)
+              (bm-file-string library-proofs state))
+            (let ((v (if (and g l s p lp)
+                         (boymoo::check-four g l s p lp)
+                       (list "a file could not be read" ""))))
+              (prog2$ (cw "~%verdict ~s0~s1~s2~%" name
+                          (coerce (list (code-char 9)) 'string) (car v))
+                      (value :done)))))))))
+
+(defun run-case (name library statements proofs state)
+  (declare (xargs :mode :program :stobjs state))
+  (run-case-four name library statements proofs "" state))
 
 (set-guard-checking :none)
 

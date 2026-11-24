@@ -22,19 +22,18 @@ Completed:
 
 * Book exporter (**ACL2**): converts ACL2 books to ACL2 Core.
 * Bootstrap runner (**C**): small, and about 10x slower than ACL2 using SBCL. See "Compiler" below for a planned faster runner.
+* Fast runner (**C**): large, and compiles to C, but faster than the Bootstrap runner. Only intended for development of the "Prover", below.
 * Checker (**ACL2 Core**): checks proofs of ACL2 Core.
 * Independent checker (**JavaScript**): checks proofs of ACL2 Core.
+* Prover (**ACL2 Core**): assists with building proofs of ACL2 Core conjectures.
 
 Yet to do:
 
-* Prover (**ACL2 Core**): assists with building proofs of ACL2 Core conjectures.
 * Compiler (**ACL2 Core**): compiles an ACL2 Core program into machine code. Platform support is tentatively planned for WASM, aarch64, RV64I + Zmmul, and x64, depending on how much effort each takes.
 
 The components that are implemented in ACL2 or ACL2 Core can have proofs written to prove certain correctness properties about them. These are in varying states of completion; see the rest of the repository for details.
 
 ## Limitations
-
-Because the prover is not yet complete, you currently have to write ACL2 Core proofs by hand, much as you would do in other proof systems without automated proof search strategies. When the prover is complete, it will assist you in writing proofs.
 
 Because the book exporter is written in ACL2, not in ACL2 Core, it requires ACL2 and Common Lisp to run it. The book exporter is a way to bridge existing definitions and theorems written in ACL2 with Boymoo, by converting them to ACL2 Core format.
 

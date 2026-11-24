@@ -1,6 +1,6 @@
 # The interchange formats
 
-This document defines the text that a checker reads and the line that it writes. A checker reads three inputs: the **library**, the **statements** of a book, and the **proofs**. All three, and the ground theory that every checker holds, are written in one small format. A reader for it is a few dozen lines: `checks/reader.py` is one, written from this document, and `sh checks/run.sh` confirms that it reads every file of this repository in the format and writes each back byte for byte (run on 2026-11-21; `all checks passed`). The files `language.md`, `logic.md`, `formats.md` and `ground.txt` are in the directory `spec/`; every other path is given from the root of the repository.
+This document defines the text that a checker reads and the line that it writes. A checker reads four inputs: the **library**, the **statements** of a book, the **proofs**, and the **library's proofs**. All four, and the ground theory that every checker holds, are written in one small format. A reader for it is a few dozen lines: `checks/reader.py` is one, written from this document, and `sh checks/run.sh` confirms that it reads every file of this repository in the format and writes each back byte for byte (run on 2026-11-21; `all checks passed`). The files `language.md`, `logic.md`, `formats.md` and `ground.txt` are in the directory `spec/`; every other path is given from the root of the repository.
 
 The terms used here are defined in [`language.md`](language.md) (data, symbols, terms, statements) and [`logic.md`](logic.md) (clauses, facts, rules, obligations).
 
@@ -48,8 +48,8 @@ Each datum has exactly one text, and each text is the text of one datum. A reade
 | The library and the statements | `package`, `hidden-package`, `define`, `constrain`, `choose`, `theorem`, `axiom`, `reserve` |
 | Program text, for a runner | `define`, `attach` |
 | The prover's aids, beside a book | `local`, `hints`, `instructions`, `measure` |
-| The proofs: entries | `define`, `lemma`, `theorem`, `measure`, `witness`, `skip` |
-| The proofs: steps | `fact`, `instantiate`, `subsume`, `cut`, `substitute`, `beta`, `compute`, `induct`, `qed` |
+| The proofs and the library's proofs: entries | `define`, `lemma`, `choose`, `theorem`, `measure`, `witness`, `skip` |
+| The proofs and the library's proofs: steps | `fact`, `instantiate`, `subsume`, `cut`, `substitute`, `beta`, `compute`, `induct`, `qed` |
 
 A line whose word is not one that may stand where the line stands is rejected.
 
@@ -80,19 +80,20 @@ Its ruler-extenders are `NIL`, the empty list: ACL2 stores none for a function t
 
 **Every line costs something to write in full.** A symbol always carries its package, so the line above is 155 bytes with its line feed (`grep -a '^(define COMMON-LISP::NIL (COMMON-LISP::NOT ' spec/ground.txt | wc -c`, 2026-11-20), where ACL2 prints the same body as `(IF P 'NIL 'T)`. What that buys is a reader with no table of packages and no state, one text for each datum, and files that two exporters can compare with `cmp`. `PLAN.md` measures the cost in its second step.
 
-## 5. The three inputs
+## 5. The four inputs
 
-A checker is a function of three sequences of bytes, given to it apart:
+A checker is a function of four sequences of bytes, given to it apart:
 
-1. **the library**: statements that are taken as given;
+1. **the library**: statements that are taken as given, except those that the fourth input proves;
 2. **the statements**: the statements of the book, and of the books it includes, each once and in order;
-3. **the proofs**: the proofs of the obligations of the statements.
+3. **the proofs**: the proofs of the obligations of the statements;
+4. **the library's proofs**: proofs of obligations of statements of the library.
 
-Any of the three may be empty.
+Any of the four may be empty.
 
-**What is given is decided by the input a line arrives on, and by nothing else.** A statement is given exactly when it is a line of the first input. No word, no name, no flag and no position inside the second or third input marks a statement as given, so a book cannot place its own statements in the library: whoever runs the checker chooses the first input, and the book is the second. The verdict counts what was given, so that a library with more in it than ACL2's own shows in the count.
+**What is given is decided by the first and the fourth input, and by nothing else.** A statement is given exactly when it is a line of the first input that has obligations and the fourth input does not prove it: its entry there is a `skip`, or the fourth input ends before the checker reaches it (section 7). With the fourth input empty, that is every such line of the first. No word, no name, no flag and no position inside the second or third input marks a statement as given or as proved, so a book cannot place its own statements in the library, and a proof of the book's cannot stand for a proof of the library's: whoever runs the checker chooses the first and the fourth input, and the book is the second. The verdict counts what was given, so that a library with more in it than ACL2's own, or with less of it proved, shows in the count.
 
-A given statement must still be well formed and admissible in every way that needs no proof (`logic.md`, section 6). What is not asked of it is a proof.
+A statement of the library must be well formed and admissible in every way that needs no proof (`logic.md`, section 6), whether it is given or proved. What is not asked of a given statement is a proof.
 
 **Program text** is no input of a checker. It is what a runner reads (`language.md`, section 4): a file of `define` lines, in the form of the statement, of which a runner uses the definitions and not the ruler-extenders; and of lines `(attach F G)`, two symbols, which say that the runner runs the function `G` in place of the function `F`. The program text of a book is read after that of the library, and where two `attach` lines name the same `F`, the later one is in force; so is the later of two `define` lines that define the same function, as where a book moves a function of the library from program mode into logic mode with `verify-termination` and its program text defines the function again. A runner also needs the packages, for `intern-in-package-of-symbol`, `pkg-imports`, `pkg-witness` and `symbol-package-name` (`language.md`, section 3): it takes them from the `package` and `hidden-package` lines of the ground theory, of the library and of the book's statements, and reads no other line of those files.
 
@@ -107,7 +108,7 @@ A given statement must still be well formed and admissible in every way that nee
 
 ## 6. The proofs
 
-The third input is a sequence of **entries**. An entry is a head line, and then the proofs that the head calls for. A **proof** is one or more step lines and then the line `(qed)`.
+The third input is a sequence of **entries**, and so is the fourth. An entry is a head line, and then the proofs that the head calls for. A **proof** is one or more step lines and then the line `(qed)`.
 
 | Head line | What it is for | Proofs that follow |
 |---|---|---|
@@ -117,8 +118,11 @@ The third input is a sequence of **entries**. An entry is a head line, and then 
 | `(skip NAME)` | A `theorem`, `define` or `constrain` statement, or the `define` entry just before it: `NAME` is the theorem's name or the first function's. | None. It is admitted without proof, and the verdict counts it. |
 | `(define RULERS D1 ... Dk)` | A definition of the proof's own, in the form of a `define` statement. | None. If some body calls a function of the entry, the next entry is its `measure` or its `skip`. |
 | `(lemma NAME L1 ... Ln)` | A fact of the proof's own: the clause of the literals `L1` to `Ln`, one or more terms. `NAME` is a symbol. | One, of that clause. |
+| `(choose F BOUND FREE BODY FREE2)` | A function of the proof's own that is introduced by choice, in the form of a `choose` statement. | None. |
 
-A statement **has obligations** if it is a `theorem`, a `define` in which some body calls a function of the same statement, or a `constrain` with at least one formula. A call in the executable half of an `mbe`, `a` in `(return-last 'mbe1-raw a b)`, and a list inside a constant are not calls for this test (`logic.md`, section 6). Every statement of the second input that has obligations has exactly one entry, and the entries stand in the order of the statements. A statement with no obligations has no entry. Before the entry of a statement, the proofs may hold any number of `define` and `lemma` entries, which are admitted and checked exactly as they stand, in order. They are how a proof states what a book wrote as local events, and anything else it needs.
+A statement **has obligations** if it is a `theorem`, a `define` in which some body calls a function of the same statement, or a `constrain` with at least one formula. A call in the executable half of an `mbe`, `a` in `(return-last 'mbe1-raw a b)`, and a list inside a constant are not calls for this test (`logic.md`, section 6). Every statement of the second input that has obligations has exactly one entry in the third, and the entries stand in the order of the statements. A statement with no obligations has no entry. Before the entry of a statement, the proofs may hold any number of `define`, `lemma` and `choose` entries, which are admitted and checked exactly as they stand, in order. They are how a proof states what a book wrote as local events, and anything else it needs.
+
+**The library's proofs** are read against the library exactly as the proofs are read against the statements, with two differences. A statement of the library whose entry is a `skip` is given: the verdict counts it among the given, not among the skipped. And the library's proofs may end early: a statement of the library that the checker reaches when no line of them remains needs no entry and is given, so an empty fourth input gives every statement of the library that has obligations, and one that stops after the entry of some statement gives all such statements that follow it.
 
 **Steps.** A step line names a rule and gives what the rule takes. The steps of a proof are numbered from 1 in the order they stand, and a premise is the number of an earlier step of the same proof. `logic.md`, section 5, defines the rules.
 
@@ -142,17 +146,22 @@ The conclusion of a step is not written: the checker computes it. A proof proves
 A checker does exactly this, and stops at the first line that fails.
 
 1. It starts with the ground theory: its packages, functions and facts.
-2. It takes the lines of the library in order. Each must be a line of the format, every symbol on it must exist (`language.md`, section 2), and it must be a statement that meets every condition of its kind except the obligations (`logic.md`, sections 6 and 7). Nothing is read from the proofs.
-3. It takes the lines of the statements in order. Each must pass the same tests, with the one more that a book may not define a function whose name is a symbol of `COMMON-LISP` (`language.md`, section 6). If the statement has obligations, the checker then reads the proofs from where it stopped:
-   - while the next head line is a `define` or a `lemma`, it admits or checks that entry;
+2. It takes the lines of the library in order. Each must be a line of the format, every symbol on it must exist (`language.md`, section 2), and it must be a statement that meets every condition of its kind except the obligations (`logic.md`, sections 6 and 7). If the statement has obligations and no line of the library's proofs remains, the statement is **given**. If it has obligations and a line remains, the checker reads the library's proofs from where it stopped (bytes that remain with no line feed after them are a line, which fails when it is read):
+   - while the next head line is a `define`, a `lemma` or a `choose`, it admits or checks that entry;
+   - the next head line must then be the entry of this statement: `theorem`, `measure`, `witness` or `skip`, with this statement's name. With a `skip` the statement is **given**. With one of the others the checker checks the proofs of that entry, and the statement is **proved**.
+3. When the library is done, its proofs must be done too. Nothing is read from the proofs until then.
+4. It takes the lines of the statements in order. Each must pass the same tests as a line of the library, with the one more that a book may not define a function whose name is a symbol of `COMMON-LISP` (`language.md`, section 6). If the statement has obligations, the checker then reads the proofs from where it stopped:
+   - while the next head line is a `define`, a `lemma` or a `choose`, it admits or checks that entry;
    - the next head line must then be the entry of this statement: `theorem`, `measure`, `witness` or `skip`, with this statement's name. It checks the proofs of that entry.
-4. When the statements are done, the proofs must be done too.
+5. When the statements are done, the proofs must be done too.
 
 A line of the library or of the statements that is, byte for byte, an earlier line of either is not tested again: it is admitted, adds nothing and takes no entry (`language.md`, section 6).
 
-A line **fails** when it is not a line of the format, when a symbol on it does not exist, when its word may not stand there, when it does not have the data of its kind, when a condition of `logic.md` on it does not hold, or when a budget of section 8 is passed. A `(qed)` line fails when the proof it ends has no step or does not prove its clause. When the proofs end before a statement with obligations has everything it calls for, the statement's line fails. That is so wherever they end: before the head line of the statement's entry; after `define` or `lemma` entries that stand before it; inside a proof, after its head or after some of its steps; between the proofs of one entry; or after a `define` entry that still waits for its `measure` or `skip`. No line of the proofs fails because the proofs end. When the statements are done and a line of the proofs remains, that line fails.
+A line **fails** when it is not a line of the format, when a symbol on it does not exist, when its word may not stand there, when it does not have the data of its kind, when a condition of `logic.md` on it does not hold, or when a budget of section 8 is passed. A `(qed)` line fails when the proof it ends has no step or does not prove its clause. When the proofs end before a statement of the second input with obligations has everything it calls for, the statement's line fails. That is so wherever they end: before the head line of the statement's entry; after `define`, `lemma` or `choose` entries that stand before it; inside a proof, after its head or after some of its steps; between the proofs of one entry; or after a `define` entry that still waits for its `measure` or `skip`. No line of the proofs fails because the proofs end. When the statements are done and a line of the proofs remains, that line fails.
 
-Each test of a line uses only the lines before it, so the first line that fails is the same for every checker, whether it reads each input whole before it starts or one line at a time.
+All of this holds of the library's proofs and the statements of the library, with one difference: a statement of the library that the checker reaches when no line of the library's proofs remains is given, and no line fails. If a line remains then, and the library's proofs end before the statement has everything it calls for, the statement's line fails, wherever they end: after `define`, `lemma` or `choose` entries that stand before its entry, inside a proof, between the proofs of one entry, or after a `define` entry that still waits for its `measure` or `skip`. When the library is done and a line of its proofs remains, that line fails.
+
+Each test of a line uses only the lines that the order above puts before it, so the first line that fails is the same for every checker, whether it reads each input whole before it starts or one line at a time.
 
 ## 8. Budgets
 
@@ -181,12 +190,12 @@ rejected INPUT N
 
 - **`accepted`**: every line was admitted, every obligation was proved, and all four counts below are 0.
 - **`provisional ...`**: every line was admitted and every proof given was checked, and at least one count is not 0. Each count is written in decimal with no leading zero.
-  - `S`, **skipped**: the entries `(skip NAME)` in the proofs.
+  - `S`, **skipped**: the entries `(skip NAME)` in the proofs, and those in the library's proofs that follow a `define` entry and are for it.
   - `A`, **assumed**: the `axiom` statements among the statements.
-  - `D`, **given definitions**: the statements of the library that have obligations and are a `define` or a `constrain`. Their termination, or their witness, was not shown.
-  - `F`, **given facts**: the `theorem` and `axiom` statements of the library.
-- **`rejected INPUT N`**: `INPUT` is `library`, `statements` or `proofs`, and `N` is the number, counted from 1 and written in decimal, of the first line of that input that fails, in the order of section 7. The place is the name of what failed: a line holds one statement, one head or one step.
+  - `D`, **given definitions**: the statements of the library that are given and are a `define` or a `constrain`. Their termination, or their witness, was not shown.
+  - `F`, **given facts**: the `theorem` statements of the library that are given, and the `axiom` statements of the library.
+- **`rejected INPUT N`**: `INPUT` is `library`, `statements`, `proofs` or `library-proofs`, and `N` is the number, counted from 1 and written in decimal, of the first line of that input that fails, in the order of section 7. The place is the name of what failed: a line holds one statement, one head or one step.
 
-Nothing is accepted by default. A statement with obligations and no entry is a rejection; a proof with no step is a rejection; a skipped proof, an assumed axiom and a given statement each add to a count, and any count that is not 0 makes the verdict provisional.
+Nothing is accepted by default. A statement of the second input with obligations and no entry is a rejection; a proof with no step is a rejection; a skipped proof, an assumed axiom and a given statement each add to a count, and any count that is not 0 makes the verdict provisional.
 
 A checker may write more lines after the first, to say what it found. They are not specified, and nothing may be concluded from them.

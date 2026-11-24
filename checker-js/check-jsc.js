@@ -1,8 +1,12 @@
 (function (paths) {
     "use strict";
 
-    var inputs = [], path, bytes, parts, offset;
-    for (path = 0; path < 4; path += 1) {
+    var inputs = [], count = paths.length, timed = paths[count - 1] === "--timed";
+    var path, bytes, parts, offset;
+    if (timed) {
+        count -= 1;
+    }
+    for (path = 0; path < count; path += 1) {
         bytes = readFile(paths[path], "binary");
         if (!(bytes instanceof Uint8Array)) {
             bytes = new Uint8Array(bytes);
@@ -17,7 +21,7 @@
     var verdict = checkBoymoo.apply(null, inputs);
     var elapsed = Date.now() - start;
     print(verdict.slice(0, -1));
-    if (paths[4] === "--timed") {
+    if (timed) {
         print(elapsed);
     }
 }(arguments));

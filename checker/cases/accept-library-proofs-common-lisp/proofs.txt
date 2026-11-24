@@ -1,0 +1,3 @@
+(theorem ACL2::NTH-EQUATION)
+(fact COMMON-LISP::NTH)
+(qed)

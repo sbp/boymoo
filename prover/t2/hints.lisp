@@ -1,0 +1,218 @@
+(in-package "BOYMOO-PROVER")
+(set-verify-guards-eagerness 0)
+
+(defun t2-hints-arguments-walk (items keyword)
+  (declare (xargs :measure (acl2-count items)))
+  (if (endp items)
+      nil
+    (let ((item (car items)))
+      (append (cond ((and (equal item keyword) (consp (cdr items)))
+                     (list (cadr items)))
+                    ((and (consp item)
+                          (proof-compound item)
+                          (not (proof-is-call item *proof-quote*)))
+                     (t2-hints-arguments-walk item keyword))
+                    (t nil))
+              (t2-hints-arguments-walk (cdr items) keyword)))))
+
+(defun t2-hints-arguments (hint key)
+  (if (and (proof-compound hint) (not (proof-is-call hint *proof-quote*)))
+      (t2-hints-arguments-walk hint (proof-sym key "KEYWORD"))
+    nil))
+
+(defun t2-hints-escape-string (chars)
+  (if (endp chars)
+      nil
+    (if (member-equal (car chars) '(#\\ #\"))
+        (list* #\\ (car chars) (t2-hints-escape-string (cdr chars)))
+      (cons (car chars) (t2-hints-escape-string (cdr chars))))))
+
+(mutual-recursion
+ (defun t2-hints-set-key (value)
+   (declare (xargs :measure (1+ (* 2 (acl2-count value)))))
+   (cond ((not value) "nil")
+         ((eq value t) "t")
+         ((integerp value) (decimal-text value))
+         ((rationalp value)
+          (concatenate 'string (decimal-text (numerator value)) "/" (decimal-text (denominator value))))
+         ((stringp value)
+          (concatenate 'string "\"" (coerce (t2-hints-escape-string (coerce value 'list)) 'string)
+                       "\""))
+         ((consp value)
+          (concatenate 'string "(" (text-join " " (t2-hints-set-keys value)) ")"))
+         (t "")))
+
+ (defun t2-hints-set-keys (values)
+   (declare (xargs :measure (* 2 (acl2-count values))))
+   (if (endp values)
+       nil
+     (cons (t2-hints-set-key (car values))
+           (t2-hints-set-keys (cdr values))))))
+
+(defun t2-hints-adjoin (value key ordered)
+  (cond ((endp ordered) (list (cons key value)))
+        ((equal value (cdar ordered)) ordered)
+        ((string< key (caar ordered)) (cons (cons key value) ordered))
+        (t (cons (car ordered)
+                 (t2-hints-adjoin value key (cdr ordered))))))
+
+(defun t2-hints-expanded-calls (calls ordered)
+  (if (endp calls)
+      ordered
+    (let ((call (car calls)))
+      (t2-hints-expanded-calls
+       (cdr calls)
+       (if (and (consp call)
+                (proof-compound call)
+                (not (proof-compound (car call))))
+           (t2-hints-adjoin (car call) (t2-hints-set-key (car call)) ordered)
+         ordered)))))
+
+(defun t2-hints-expanded-items (items ordered)
+  (if (endp items)
+      ordered
+    (t2-hints-expanded-items (cdr items)
+                             (if (proof-compound (car items))
+                                 (t2-hints-expanded-calls (car items) ordered)
+                               ordered))))
+
+(defun t2-hints-expanded-functions (hint)
+  (table-values (t2-hints-expanded-items (t2-hints-arguments hint "EXPAND") nil)))
+
+(defun t2-hints-enabled-parts (parts ordered)
+  (if (endp parts)
+      ordered
+    (t2-hints-enabled-parts (cdr parts)
+                            (if (proof-compound (car parts))
+                                ordered
+                              (t2-hints-adjoin (car parts)
+                                               (t2-hints-set-key (car parts))
+                                               ordered)))))
+
+(defun t2-hints-enabled-items (items ordered)
+  (if (endp items)
+      ordered
+    (let ((item (car items)))
+      (cond ((proof-is-call item (proof-sym "ENABLE" "ACL2"))
+             (t2-hints-enabled-items (cdr items)
+                                     (t2-hints-enabled-parts (cdr item) ordered)))
+            ((proof-is-call item (proof-sym "E/D" "ACL2"))
+             (proof-with-checked-results ((enabled (proof-term-at item 1)))
+               (t2-hints-enabled-items (cdr items)
+                                       (if (proof-compound enabled)
+                                           (t2-hints-enabled-parts enabled ordered)
+                                         ordered))))
+            (t (t2-hints-enabled-items (cdr items) ordered))))))
+
+(defun t2-hints-enabled-functions (hint)
+  (proof-with-checked-results
+      ((ordered (t2-hints-enabled-items (t2-hints-arguments hint "IN-THEORY") nil)))
+    (table-values ordered)))
+
+(defun t2-hints-translate-fold (operator backwards result)
+  (if (endp backwards)
+      result
+    (let* ((arg (car backwards))
+           (next (cond ((equal operator (proof-cl "AND")) (proof-ite arg result *proof-false*))
+                       ((equal operator (proof-cl "OR")) (proof-ite arg arg result))
+                       (t (list operator arg result)))))
+      (t2-hints-translate-fold operator (cdr backwards) next))))
+
+(defun t2-hints-translate-application (lib operator args)
+  (let ((proof (library-library-proof lib)))
+    (cond
+     ((and (consp (cdr args)) (member-equal operator (list (proof-cl "+") (proof-cl "*"))))
+      (let ((backwards (reverse args))
+            (head (if (equal operator (proof-cl "+")) *proof-plus* *proof-times*)))
+        (t2-hints-translate-fold head (cdr backwards) (car backwards))))
+     ((and (equal operator (proof-cl "-")) (<= 1 (len args)) (<= (len args) 2))
+      (if (endp (cdr args))
+          (library-minus (car args))
+        (library-plus (car args) (library-minus (cadr args)))))
+     ((and (equal operator (proof-cl "/")) (<= 1 (len args)) (<= (len args) 2))
+      (let ((reciprocal (list (proof-sym "UNARY-/" "ACL2") (car (last args)))))
+        (if (endp (cdr args))
+            reciprocal
+          (list *proof-times* (car args) reciprocal))))
+     ((equal operator (proof-cl "LIST"))
+      (t2-hints-translate-fold *proof-cons* (reverse args) *proof-false*))
+     ((member-equal operator (list (proof-cl "AND") (proof-cl "OR")))
+      (if (endp args)
+          (if (equal operator (proof-cl "AND")) *proof-true* *proof-false*)
+        (let ((backwards (reverse args)))
+          (t2-hints-translate-fold operator (cdr backwards) (car backwards)))))
+     ((or (equal operator *proof-if*)
+          (assoc-equal operator (proof-proof-definitions proof))
+          (member-equal operator (proof-proof-primitives proof)))
+      (cons operator args))
+     (t '(:failure "RecipeMismatch" "")))))
+
+(mutual-recursion
+ (defun t2-hints-translate (lib term)
+   (declare (xargs :measure (acl2-count term)))
+   (cond ((or (equal term *proof-t*) (equal term *proof-nil*) (integerp term) (eq term t))
+          (proof-quote term))
+         ((not (proof-compound term))
+          (if (and (consp term) (member-equal (car term) '("ratio" "str" "char" "complex")))
+              (proof-quote term)
+            term))
+         ((proof-is-call term *proof-quote*) term)
+         ((endp term) '(:failure "MissingTermPart" ""))
+         (t (proof-with-checked-results ((args (t2-hints-translate-arguments lib (cdr term))))
+              (t2-hints-translate-application lib (car term) args)))))
+
+ (defun t2-hints-translate-arguments (lib terms)
+   (declare (xargs :measure (acl2-count terms)))
+   (if (endp terms)
+       nil
+     (proof-with-checked-results ((first (t2-hints-translate lib (car terms)))
+                                  (rest (t2-hints-translate-arguments lib (cdr terms))))
+       (cons first rest)))))
+
+(defun t2-hints-instance-bindings (lib pairs)
+  (if (endp pairs)
+      nil
+    (proof-with-checked-results ((pair (proof-list-of-length (car pairs) 2))
+                                 (term (t2-hints-translate lib (cadr pair)))
+                                 (rest (t2-hints-instance-bindings lib (cdr pairs))))
+      (cons (list (car pair) term) rest))))
+
+(defun t2-hints-discard-instance-p (result)
+  (and (failure-p result)
+       (member-equal (cadr result) '("RecipeMismatch" "MissingTermPart" "assertion" "value" "index"))))
+
+(defun t2-hints-instance (lib name pairs)
+  (let ((result (proof-with-checked-results ((bindings (t2-hints-instance-bindings lib pairs)))
+                  (proof-proof-fact (library-library-proof lib) name bindings))))
+    (cond ((t2-hints-discard-instance-p result) nil)
+          ((failure-p result) result)
+          ((equal (len (proof-step-clause result)) 1) result)
+          (t nil))))
+
+(defun t2-hints-instances-claims (lib claims keyword)
+  (if (endp claims)
+      nil
+    (let ((claim (car claims)))
+      (proof-with-checked-results
+          ((instance (if (proof-is-call claim keyword)
+                         (proof-with-checked-results ((name (proof-term-at claim 1)))
+                           (if (assoc-equal name (proof-proof-facts (library-library-proof lib)))
+                               (t2-hints-instance lib name (cddr claim))
+                             nil))
+                       nil))
+           (rest (t2-hints-instances-claims lib (cdr claims) keyword)))
+        (if instance (cons instance rest) rest)))))
+
+(defun t2-hints-instances-parts (lib parts keyword)
+  (if (endp parts)
+      nil
+    (let* ((part (car parts))
+           (claims (if (or (proof-is-call part keyword) (not (proof-compound part)))
+                       (list part)
+                     part)))
+      (proof-with-checked-results ((first (t2-hints-instances-claims lib claims keyword))
+                                   (rest (t2-hints-instances-parts lib (cdr parts) keyword)))
+        (append first rest)))))
+
+(defun t2-hints-instances (lib hints)
+  (t2-hints-instances-parts lib (t2-hints-arguments hints "USE") (proof-sym "INSTANCE" "KEYWORD")))

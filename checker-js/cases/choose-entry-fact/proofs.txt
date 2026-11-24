@@ -1,0 +1,7 @@
+(choose ACL2::C-CHOICE (ACL2::X ACL2::Z) (ACL2::Y) (COMMON-LISP::EQUAL (COMMON-LISP::CONS ACL2::X ACL2::Z) ACL2::Y) (ACL2::W))
+(theorem ACL2::C-FIRST)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE 0)))
+(qed)
+(theorem ACL2::C-GOAL)
+(fact ACL2::C-CHOICE)
+(qed)

@@ -1,0 +1,5 @@
+input	proved	obligations	verdict
+spec/example	1	1	accepted
+std/strings/strsplit	4	10	provisional skipped 6 assumed 0 given-definitions 502 given-facts 371
+xdoc/names	53	74	provisional skipped 21 assumed 0 given-definitions 502 given-facts 371
+arithmetic-5/lib/floor-mod/floor-mod-basic	6	58	provisional skipped 52 assumed 0 given-definitions 502 given-facts 371

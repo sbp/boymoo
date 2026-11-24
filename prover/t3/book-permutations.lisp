@@ -1,0 +1,650 @@
+(in-package "BOYMOO-PROVER")
+(set-verify-guards-eagerness 0)
+
+(defconst *t3-book-permutations-theorem* (proof-sym "PERM-IS-AN-EQUIVALENCE" "ACL2"))
+(defconst *t3-book-permutations-perm* (proof-sym "PERM" "ACL2"))
+(defconst *t3-book-permutations-member* (proof-sym "MEMB" "ACL2"))
+(defconst *t3-book-permutations-remove* (proof-sym "RM" "ACL2"))
+(defconst *t3-book-permutations-a* (proof-sym "A" "ACL2"))
+(defconst *t3-book-permutations-b* (proof-sym "B" "ACL2"))
+
+(defun t3-book-permutations-conjunction (lib first second)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((left (proof-step-first first))
+         (right (proof-step-first second))
+         (selected (proof-proof-select proof (proof-ite left right *proof-false*) first)))
+      (proof-proof-transport proof second selected))))
+
+(defun t3-book-permutations-consequence (lib contradiction goal)
+  (proof-proof-subsume (library-library-proof lib) contradiction
+                      (proof-unique (cons goal (proof-step-clause contradiction)))))
+
+(defun t3-book-permutations-reverse-denial (lib denial)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((literal (proof-step-first denial))
+         (equality (proof-term-at literal 1))
+         (parts (proof-list-of-length equality 3)))
+      (let ((term (proof-eq (caddr parts) (cadr parts))))
+        (proof-with-checked-results
+            ((assumed (proof-proof-assume proof term t))
+             (reversed (proof-proof-symmetric proof assumed))
+             (contradiction (proof-proof-cut proof reversed denial)))
+          (proof-proof-front proof contradiction (proof-neg term)))))))
+
+(defun t3-book-permutations-permutations-init (lib)
+  (let* ((proof (library-library-proof lib))
+         (test (list *proof-consp* *library-x*)))
+    (proof-with-checked-results
+        ((cons-proof (proof-proof-assume proof test t))
+         (atom-proof (proof-proof-assume proof test nil)))
+      (let ((head (list *library-car* *library-x*))
+            (tail (list *library-cdr* *library-x*)))
+        (list :t3-permutations lib cons-proof atom-proof head tail
+              (list *t3-book-permutations-remove* head *library-y*)
+              (list *t3-book-permutations-remove* head *library-z*))))))
+
+(defun t3-book-permutations-permutations-lib (tactic)
+  (cadr tactic))
+
+(defun t3-book-permutations-permutations-cons (tactic)
+  (caddr tactic))
+
+(defun t3-book-permutations-permutations-atom (tactic)
+  (cadddr tactic))
+
+(defun t3-book-permutations-permutations-head (tactic)
+  (nth 4 tactic))
+
+(defun t3-book-permutations-permutations-tail (tactic)
+  (nth 5 tactic))
+
+(defun t3-book-permutations-permutations-after-y (tactic)
+  (nth 6 tactic))
+
+(defun t3-book-permutations-permutations-after-z (tactic)
+  (nth 7 tactic))
+
+(defun t3-book-permutations-permutations-with-lib (tactic lib)
+  (list* :t3-permutations lib (cddr tactic)))
+
+(defun t3-book-permutations-permutations-lemma (tactic name proof)
+  (proof-with-checked-results
+      ((claim (proof-step-first proof))
+       (lib (library-library-lemma (t3-book-permutations-permutations-lib tactic)
+                                   (concatenate 'string "T3-PERM-" name)
+                                   claim proof nil)))
+    (cons proof (t3-book-permutations-permutations-with-lib tactic lib))))
+
+(defun t3-book-permutations-permutations-cite (tactic name bindings)
+  (proof-proof-fact
+   (library-library-proof (t3-book-permutations-permutations-lib tactic))
+   (proof-sym (concatenate 'string "SELF-T3-PERM-" name) "ACL2") bindings))
+
+(defun t3-book-permutations-permutations-hypothesis (tactic formula pairs)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib))
+         (tail (t3-book-permutations-permutations-tail tactic))
+         (smaller (list *proof-ordinal-less* (list *library-count* tail)
+                        (list *library-count* *library-x*))))
+    (proof-with-checked-results
+        ((substituted (proof-subst formula (proof-bindings-table pairs nil)))
+         (assumed (proof-proof-assume proof (proof-ite smaller substituted *proof-true*) t))
+         (decrease (library-library-builtin lib 3 *library-x*)))
+      (proof-proof-prove-if proof assumed decrease))))
+
+(defun t3-book-permutations-permutations-induct (tactic formula pairs step base)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((case-proof (proof-proof-cases proof (list *proof-consp* *library-x*) step base))
+         (consequent (if (proof-is-call formula *library-implies*)
+                         (t3-book-lemmas-implication lib formula case-proof)
+                       case-proof))
+         (ordinal (library-library-builtin lib 1 *library-x*)))
+      (proof-proof-induct proof ordinal consequent formula
+                          (list *library-count* *library-x*) (list pairs)))))
+
+(defun t3-book-permutations-permutations-open-perm (tactic call cons-proof)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((opened (proof-proof-unfold proof call))
+         (body (proof-rewritten-term opened))
+         (selected (proof-proof-select proof body cons-proof))
+         (equation (proof-proof-chain proof opened (list selected)))
+         (literal (proof-step-first cons-proof))
+         (head (proof-term-at literal 0)))
+      (if (equal head *proof-consp*)
+          (proof-with-checked-results
+              ((value (proof-rewritten-term equation))
+               (normalized (t3-book-spines-constructor-form lib value nil
+                                                            *t3-book-spines-guards*)))
+            (proof-proof-chain proof equation (list normalized)))
+        equation))))
+
+(defun t3-book-permutations-permutations-perm-parts (tactic step cons-proof)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((call (proof-step-first step))
+         (equation (t3-book-permutations-permutations-open-perm tactic call cons-proof))
+         (rewritten (proof-proof-rewrite proof step equation '(1)))
+         (opened (proof-proof-tidy proof rewritten))
+         (literal (proof-step-first cons-proof))
+         (head (proof-term-at literal 0)))
+      (if (equal head *proof-consp*)
+          (proof-proof-conjunct proof opened)
+        opened))))
+
+(defun t3-book-permutations-permutations-perm-from-tail
+    (tactic call cons-proof present tail results)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((opened (t3-book-permutations-permutations-open-perm tactic call cons-proof))
+         (value (proof-rewritten-term opened))
+         (selected (proof-proof-select proof value present))
+         (taken (proof-proof-chain proof opened (list selected)))
+         (equation (t3-book-spines-replace-value lib taken results)))
+      (proof-proof-transport proof tail equation))))
+
+(defun t3-book-permutations-permutations-different-member (tactic)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (a *t3-book-permutations-a*)
+         (b *t3-book-permutations-b*)
+         (x *library-x*)
+         (member *t3-book-permutations-member*)
+         (original (list member a x))
+         (formula (list *library-implies* (proof-neg (proof-eq a b))
+                        (proof-eq (list member a (list *t3-book-permutations-remove* b x))
+                                  original))))
+    (proof-with-checked-results ((step (t3-book-spines-different-key lib formula)))
+      (if step
+          (proof-with-checked-results
+              ((added (t3-book-permutations-permutations-lemma tactic "OTHER-MEMBER" step)))
+            (cdr added))
+        '(:failure "Unproved" "")))))
+
+(defun t3-book-permutations-permutations-other-member (tactic a b sequence different)
+  (let ((proof (library-library-proof (t3-book-permutations-permutations-lib tactic))))
+    (proof-with-checked-results
+        ((known (t3-book-permutations-permutations-cite
+                 tactic "OTHER-MEMBER" (list (list *t3-book-permutations-a* a)
+                                             (list *t3-book-permutations-b* b)
+                                             (list *library-x* sequence)))))
+      (proof-proof-modus-ponens proof known different))))
+
+(defun t3-book-permutations-permutations-commute-removal-compose
+    (term inner evidence lib tail)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((reflexive (proof-proof-reflexive proof term))
+         (opened (t3-book-spines-shallow lib inner evidence))
+         (result (t3-book-spines-replace-value lib reflexive (list opened)))
+         (value (proof-rewritten-term result))
+         (sequence (proof-term-at value 2)))
+      (if (equal sequence tail)
+          result
+        (proof-with-checked-results ((normalized (t3-book-spines-shallow lib value evidence)))
+          (proof-proof-chain proof result (list normalized)))))))
+
+(defun t3-book-permutations-permutations-commute-removal-case
+    (hit-a hit-b tactic key-a key-b left right induction)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib))
+         (tail (t3-book-permutations-permutations-tail tactic)))
+    (proof-with-checked-results
+        ((a (proof-proof-assume proof key-a hit-a))
+         (b (proof-proof-assume proof key-b hit-b)))
+      (let ((evidence (list (t3-book-permutations-permutations-cons tactic) a b)))
+        (proof-with-checked-results
+            ((left-inner (proof-term-at left 2))
+             (left-result (t3-book-permutations-permutations-commute-removal-compose
+                           left left-inner evidence lib tail))
+             (right-inner (proof-term-at right 2))
+             (right-result (t3-book-permutations-permutations-commute-removal-compose
+                            right right-inner evidence lib tail))
+             (left-result
+              (cond ((and hit-a hit-b)
+                     (proof-with-checked-results
+                         ((reversed (proof-proof-symmetric proof b))
+                          (same (proof-proof-chain proof a (list reversed))))
+                       (t3-book-spines-replace-value lib left-result (list same))))
+                    ((and (not hit-a) (not hit-b))
+                     (t3-book-spines-replace-value lib left-result (list induction)))
+                    (t left-result)))
+             (reverse-right (proof-proof-symmetric proof right-result)))
+          (proof-proof-chain proof left-result (list reverse-right)))))))
+
+(defun t3-book-permutations-permutations-commute-removal (tactic)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib))
+         (head (t3-book-permutations-permutations-head tactic))
+         (tail (t3-book-permutations-permutations-tail tactic))
+         (atom-proof (t3-book-permutations-permutations-atom tactic))
+         (remove *t3-book-permutations-remove*)
+         (a *t3-book-permutations-a*)
+         (b *t3-book-permutations-b*)
+         (remove-a (list remove a *library-x*))
+         (remove-b (list remove b *library-x*))
+         (left (list remove a remove-b))
+         (right (list remove b remove-a))
+         (formula (proof-eq left right))
+         (pairs (list (list *library-x* tail)))
+         (key-a (proof-eq a head))
+         (key-b (proof-eq b head)))
+    (proof-with-checked-results
+        ((induction (t3-book-permutations-permutations-hypothesis tactic formula pairs))
+         (lbase (t3-book-permutations-permutations-commute-removal-compose
+                 left remove-b (list atom-proof) lib tail))
+         (rbase (t3-book-permutations-permutations-commute-removal-compose
+                 right remove-a (list atom-proof) lib tail))
+         (reverse-base (proof-proof-symmetric proof rbase))
+         (base (proof-proof-chain proof lbase (list reverse-base)))
+         (both (t3-book-permutations-permutations-commute-removal-case
+                t t tactic key-a key-b left right induction))
+         (just-a (t3-book-permutations-permutations-commute-removal-case
+                  t nil tactic key-a key-b left right induction))
+         (yes (proof-proof-cases proof key-b both just-a))
+         (just-b (t3-book-permutations-permutations-commute-removal-case
+                  nil t tactic key-a key-b left right induction))
+         (neither (t3-book-permutations-permutations-commute-removal-case
+                   nil nil tactic key-a key-b left right induction))
+         (no (proof-proof-cases proof key-b just-b neither))
+         (step (proof-proof-cases proof key-a yes no))
+         (concluded (t3-book-permutations-permutations-induct tactic formula pairs step base))
+         (added (t3-book-permutations-permutations-lemma tactic "REMOVE-COMMUTES" concluded)))
+      (cdr added))))
+
+(defun t3-book-permutations-permutations-perm-cons-case
+    (hits tactic test left right guard membership formula pairs)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib))
+         (head (t3-book-permutations-permutations-head tactic))
+         (tail (t3-book-permutations-permutations-tail tactic))
+         (cons-proof (t3-book-permutations-permutations-cons tactic))
+         (a *t3-book-permutations-a*)
+         (remove *t3-book-permutations-remove*)
+         (cons-a-y (list *proof-cons* a *library-y*)))
+    (proof-with-checked-results
+        ((comparison (proof-proof-assume proof test hits))
+         (reversed-test (if hits (proof-proof-symmetric proof comparison)
+                          (t3-book-permutations-reverse-denial lib comparison)))
+         (source (t3-book-permutations-permutations-open-perm tactic left cons-proof))
+         (present (t3-book-spines-shallow lib (list *t3-book-permutations-member* head cons-a-y)
+                                         (list reversed-test)))
+         (removed (t3-book-spines-shallow lib (list remove head cons-a-y) (list reversed-test)))
+         (source (t3-book-spines-replace-value lib source (list present removed)))
+         (rm-x (t3-book-spines-shallow lib (list remove a *library-x*) (list cons-proof comparison)))
+         (right-reflexive (proof-proof-reflexive proof right))
+         (target (t3-book-spines-replace-value lib right-reflexive (list rm-x))))
+      (if hits
+          (proof-with-checked-results
+              ((value (proof-rewritten-term source))
+               (selected (proof-proof-select proof value reversed-test))
+               (source (proof-proof-chain proof source (list selected)))
+               (reversed-target (proof-proof-symmetric proof target)))
+            (proof-proof-chain proof source (list reversed-target)))
+        (proof-with-checked-results
+            ((reduced (t3-book-spines-shallow lib guard (list cons-proof comparison)))
+             (rewritten (proof-proof-rewrite proof membership reduced '(1)))
+             (recurring (proof-proof-tidy proof rewritten))
+             (hypothesis (t3-book-permutations-permutations-hypothesis tactic formula pairs))
+             (step (proof-proof-modus-ponens proof hypothesis recurring))
+             (source (t3-book-spines-replace-value lib source (list step)))
+             (new-cons (proof-proof-fact proof "consp-cons"
+                                         (list (list *library-x* head)
+                                               (list *library-y* (list remove a tail)))))
+             (value (proof-rewritten-term target))
+             (opened-target (t3-book-permutations-permutations-open-perm tactic value new-cons))
+             (target (proof-proof-chain proof target (list opened-target)))
+             (reversed-target (proof-proof-symmetric proof target)))
+          (proof-proof-chain proof source (list reversed-target)))))))
+
+(defun t3-book-permutations-permutations-perm-cons (tactic)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib))
+         (a *t3-book-permutations-a*)
+         (perm *t3-book-permutations-perm*)
+         (guard (list *t3-book-permutations-member* a *library-x*))
+         (left (list perm *library-x* (list *proof-cons* a *library-y*)))
+         (right (list perm (list *t3-book-permutations-remove* a *library-x*) *library-y*))
+         (goal (proof-eq left right))
+         (formula (list *library-implies* guard goal))
+         (pairs (list (list *library-x* (t3-book-permutations-permutations-tail tactic))
+                      (list *library-y* (t3-book-permutations-permutations-after-y tactic))))
+         (test (proof-eq a (t3-book-permutations-permutations-head tactic))))
+    (proof-with-checked-results
+        ((membership (proof-proof-assume proof guard t))
+         (empty (t3-book-spines-shallow lib guard
+                                        (list (t3-book-permutations-permutations-atom tactic))))
+         (rewritten (proof-proof-rewrite proof membership empty '(1)))
+         (impossible (proof-proof-tidy proof rewritten))
+         (base (t3-book-permutations-consequence lib impossible goal))
+         (yes (t3-book-permutations-permutations-perm-cons-case
+               t tactic test left right guard membership formula pairs))
+         (no (t3-book-permutations-permutations-perm-cons-case
+              nil tactic test left right guard membership formula pairs))
+         (step (proof-proof-cases proof test yes no))
+         (concluded (t3-book-permutations-permutations-induct tactic formula pairs step base))
+         (added (t3-book-permutations-permutations-lemma tactic "CONS" concluded)))
+      (cdr added))))
+
+(defun t3-book-permutations-permutations-reflexive (tactic)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib))
+         (x *library-x*)
+         (head (t3-book-permutations-permutations-head tactic))
+         (tail (t3-book-permutations-permutations-tail tactic))
+         (cons-proof (t3-book-permutations-permutations-cons tactic))
+         (atom-proof (t3-book-permutations-permutations-atom tactic))
+         (formula (list *t3-book-permutations-perm* x x))
+         (pairs (list (list x tail))))
+    (proof-with-checked-results
+        ((induction (t3-book-permutations-permutations-hypothesis tactic formula pairs))
+         (membership (t3-book-spines-shallow lib (list *t3-book-permutations-member* head x)
+                                             (list cons-proof)))
+         (present (proof-proof-true-from-eq proof membership))
+         (dropped (t3-book-spines-shallow lib (list *t3-book-permutations-remove* head x)
+                                          (list cons-proof)))
+         (step (t3-book-permutations-permutations-perm-from-tail
+                tactic formula cons-proof present induction (list dropped)))
+         (empty (t3-book-permutations-permutations-open-perm tactic formula atom-proof))
+         (base (proof-proof-transport proof atom-proof empty)))
+      (t3-book-permutations-permutations-induct tactic formula pairs step base))))
+
+(defun t3-book-permutations-boolean-open (lib opened)
+  (proof-with-checked-results
+      ((body (proof-rewritten-term opened))
+       (requests (t3-logic-libraryproofs-by-value-leaves lib body nil)))
+    (list requests opened body)))
+
+(defun t3-book-permutations-boolean-plan (lib value induction)
+  (cond
+   ((proof-is-call value *t3-book-permutations-perm*) (list nil nil induction))
+   ((or (equal value *proof-false*) (equal value *proof-true*))
+    (let ((booleanp *t3-book-lemmas-booleanp*))
+      (list nil nil
+            (t3-logic-libraryproofs-prove lib (list booleanp value) nil
+                                          (list booleanp (proof-cl "EQ"))))))
+   (t
+    (proof-with-checked-results ((opened (proof-proof-unfold (library-library-proof lib) value)))
+      (t3-book-permutations-boolean-open lib opened)))))
+
+(defun t3-book-permutations-boolean-requests (plan)
+  (and (not (failure-p plan)) (car plan)))
+
+(defun t3-book-permutations-boolean-finish (lib plan answers)
+  (cond
+   ((failure-p plan) plan)
+   ((not (cadr plan)) (caddr plan))
+   ((failure-p answers) answers)
+   (t
+    (proof-with-checked-results
+        ((step (t3-logic-libraryproofs-by-value
+                lib (caddr plan) (list *t3-book-lemmas-booleanp* *proof-result*) answers nil)))
+      (library-library-transport-argument lib step (cadr plan) 1)))))
+
+(mutual-recursion
+ (defun t3-book-permutations-permutations-boolean-leaf (n value tests lib induction)
+   (declare (ignore tests) (xargs :measure (nfix n)))
+   (if (zp n)
+       '(:failure "Fuel" "t3-book-permutations-permutations-boolean-leaf")
+     (let* ((plan (t3-book-permutations-boolean-plan lib value induction))
+            (answers (t3-book-permutations-permutations-boolean-leaves
+                      (1- n) (t3-book-permutations-boolean-requests plan) lib induction)))
+       (t3-book-permutations-boolean-finish lib plan answers))))
+
+ (defun t3-book-permutations-permutations-boolean-leaves (n requests lib induction)
+   (declare (xargs :measure (nfix n)))
+   (cond
+    ((endp requests) nil)
+    ((zp n) '(:failure "Fuel" "t3-book-permutations-permutations-boolean-leaves"))
+    (t
+     (let* ((request (car requests))
+            (answer (t3-book-permutations-permutations-boolean-leaf
+                     (1- n) (car request) (cadr request) lib induction))
+            (remaining (and (not (failure-p answer)) (cdr requests)))
+            (rest (t3-book-permutations-permutations-boolean-leaves
+                   (1- n) remaining lib induction)))
+       (if (failure-p rest)
+           rest
+         (cons (cons request answer) rest)))))))
+
+(defun t3-book-permutations-permutations-boolean-branch (guard tactic call induction)
+  (let ((lib (t3-book-permutations-permutations-lib tactic)))
+    (proof-with-checked-results
+        ((opened (t3-book-permutations-permutations-open-perm tactic call guard))
+         (plan (t3-book-permutations-boolean-open lib opened))
+         (answers (t3-book-permutations-permutations-boolean-leaves
+                   1000000 (t3-book-permutations-boolean-requests plan) lib induction)))
+      (t3-book-permutations-boolean-finish lib plan answers))))
+
+(defun t3-book-permutations-permutations-boolean (tactic)
+  (let* ((call (list *t3-book-permutations-perm* *library-x* *library-y*))
+         (formula (list *t3-book-lemmas-booleanp* call))
+         (pairs (list (list *library-x* (t3-book-permutations-permutations-tail tactic))
+                      (list *library-y* (t3-book-permutations-permutations-after-y tactic)))))
+    (proof-with-checked-results
+        ((induction (t3-book-permutations-permutations-hypothesis tactic formula pairs))
+         (step (t3-book-permutations-permutations-boolean-branch
+                (t3-book-permutations-permutations-cons tactic) tactic call induction))
+         (base (t3-book-permutations-permutations-boolean-branch
+                (t3-book-permutations-permutations-atom tactic) tactic call induction)))
+      (t3-book-permutations-permutations-induct tactic formula pairs step base))))
+
+(defun t3-book-permutations-permutations-symmetry (tactic)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib))
+         (x *library-x*)
+         (y *library-y*)
+         (perm *t3-book-permutations-perm*)
+         (cons-proof (t3-book-permutations-permutations-cons tactic))
+         (atom-proof (t3-book-permutations-permutations-atom tactic))
+         (head (t3-book-permutations-permutations-head tactic))
+         (tail (t3-book-permutations-permutations-tail tactic))
+         (premise (list perm x y))
+         (goal (list perm y x))
+         (formula (list *library-implies* premise goal))
+         (pairs (list (list x tail)
+                      (list y (t3-book-permutations-permutations-after-y tactic)))))
+    (proof-with-checked-results
+        ((assumed (proof-proof-assume proof premise t))
+         (absent-y (t3-book-permutations-permutations-perm-parts tactic assumed atom-proof))
+         (empty (t3-book-permutations-permutations-open-perm tactic goal absent-y))
+         (base (proof-proof-transport proof atom-proof empty))
+         (parts (t3-book-permutations-permutations-perm-parts tactic assumed cons-proof))
+         (parts (proof-list-of-length parts 2))
+         (hyp (t3-book-permutations-permutations-hypothesis tactic formula pairs))
+         (reversed-tail (proof-proof-modus-ponens proof hyp (cadr parts)))
+         (add-head (t3-book-permutations-permutations-cite
+                    tactic "CONS" (list (list *t3-book-permutations-a* head)
+                                        (list x y) (list y tail))))
+         (equation (proof-proof-modus-ponens proof add-head (car parts)))
+         (step (proof-proof-transport proof reversed-tail equation))
+         (car-cdr-elim (library-library-axiom lib "CAR-CDR-ELIM" (list x)))
+         (reconstructed (proof-proof-modus-ponens proof car-cdr-elim cons-proof))
+         (rewritten (proof-proof-rewrite proof step reconstructed '(1 2)))
+         (step (proof-proof-tidy proof rewritten))
+         (concluded (t3-book-permutations-permutations-induct tactic formula pairs step base)))
+      (t3-book-permutations-permutations-lemma tactic "SYMMETRY" concluded))))
+
+(defun t3-book-permutations-permutations-preserves-member (tactic)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib))
+         (x *library-x*)
+         (y *library-y*)
+         (a *t3-book-permutations-a*)
+         (member *t3-book-permutations-member*)
+         (head (t3-book-permutations-permutations-head tactic))
+         (tail (t3-book-permutations-permutations-tail tactic))
+         (cons-proof (t3-book-permutations-permutations-cons tactic))
+         (atom-proof (t3-book-permutations-permutations-atom tactic))
+         (left (list member a x))
+         (right (list member a y))
+         (condition (proof-ite (list *t3-book-permutations-perm* x y) left *proof-false*))
+         (formula (list *library-implies* condition right))
+         (comparison (proof-eq a head))
+         (pairs (list (list x tail)
+                      (list y (t3-book-permutations-permutations-after-y tactic)))))
+    (proof-with-checked-results
+        ((assumed (proof-proof-assume proof condition t))
+         (conjuncts (proof-proof-conjunct proof assumed))
+         (empty-equation (t3-book-spines-shallow lib left (list atom-proof)))
+         (rewritten (proof-proof-rewrite proof (cadr conjuncts) empty-equation '(1)))
+         (empty (proof-proof-tidy proof rewritten))
+         (base (t3-book-permutations-consequence lib empty right))
+         (parts (t3-book-permutations-permutations-perm-parts
+                 tactic (car conjuncts) cons-proof))
+         (parts (proof-list-of-length parts 2))
+         (equal-head (proof-proof-assume proof comparison t))
+         (reversed (proof-proof-symmetric proof equal-head))
+         (hit-step (proof-proof-rewrite proof (car parts) reversed '(1 1)))
+         (hit (proof-proof-tidy proof hit-step))
+         (absent (proof-proof-assume proof comparison nil))
+         (tail-equation (t3-book-spines-shallow lib left (list cons-proof absent)))
+         (rewritten (proof-proof-rewrite proof (cadr conjuncts) tail-equation '(1)))
+         (member-tail (proof-proof-tidy proof rewritten))
+         (hypothesis (t3-book-permutations-permutations-hypothesis tactic formula pairs))
+         (evidence (t3-book-permutations-conjunction lib (cadr parts) member-tail))
+         (result (proof-proof-modus-ponens proof hypothesis evidence))
+         (other (t3-book-permutations-permutations-other-member tactic a head y absent))
+         (rewritten (proof-proof-rewrite proof result other '(1)))
+         (miss (proof-proof-tidy proof rewritten))
+         (step (proof-proof-cases proof comparison hit miss))
+         (concluded (t3-book-permutations-permutations-induct tactic formula pairs step base))
+         (added (t3-book-permutations-permutations-lemma tactic "MEMBER" concluded)))
+      (cdr added))))
+
+(defun t3-book-permutations-permutations-preserves-removal (tactic)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib))
+         (x *library-x*)
+         (y *library-y*)
+         (a *t3-book-permutations-a*)
+         (b *t3-book-permutations-b*)
+         (perm *t3-book-permutations-perm*)
+         (remove *t3-book-permutations-remove*)
+         (head (t3-book-permutations-permutations-head tactic))
+         (tail (t3-book-permutations-permutations-tail tactic))
+         (cons-proof (t3-book-permutations-permutations-cons tactic))
+         (atom-proof (t3-book-permutations-permutations-atom tactic))
+         (given (list perm x y))
+         (left (list remove a x))
+         (right (list remove a y))
+         (goal (list perm left right))
+         (formula (list *library-implies* given goal))
+         (comparison (proof-eq a head))
+         (pairs (list (list x tail)
+                      (list y (t3-book-permutations-permutations-after-y tactic)))))
+    (proof-with-checked-results
+        ((assumed (proof-proof-assume proof given t))
+         (absent-y (t3-book-permutations-permutations-perm-parts tactic assumed atom-proof))
+         (reflexive (proof-proof-reflexive proof goal))
+         (empty-left (t3-book-spines-shallow lib left (list atom-proof)))
+         (empty-right (t3-book-spines-shallow lib right (list absent-y)))
+         (nils (t3-book-spines-replace-value lib reflexive (list empty-left empty-right)))
+         (base-proof (t3-logic-libraryproofs-prove lib (list perm *proof-false* *proof-false*)
+                                                  nil (list perm *proof-not*)))
+         (base (proof-proof-transport proof base-proof nils))
+         (parts (t3-book-permutations-permutations-perm-parts tactic assumed cons-proof))
+         (parts (proof-list-of-length parts 2))
+         (equal-head (proof-proof-assume proof comparison t))
+         (reflexive (proof-proof-reflexive proof goal))
+         (reduced (t3-book-spines-shallow lib left (list cons-proof equal-head)))
+         (drops (t3-book-spines-replace-value lib reflexive (list reduced)))
+         (right-reflexive (proof-proof-reflexive proof right))
+         (substitute (t3-book-spines-replace-value lib right-reflexive (list equal-head)))
+         (rewritten (t3-book-spines-replace-value lib drops (list substitute)))
+         (hit (proof-proof-transport proof (cadr parts) rewritten))
+         (different (proof-proof-assume proof comparison nil))
+         (mapped (t3-book-spines-shallow lib left (list cons-proof different)))
+         (reflexive (proof-proof-reflexive proof goal))
+         (applied (t3-book-spines-replace-value lib reflexive (list mapped)))
+         (new-cons (proof-proof-fact proof "consp-cons"
+                                     (list (list x head) (list y (list remove a tail)))))
+         (denial (t3-book-permutations-reverse-denial lib different))
+         (other (t3-book-permutations-permutations-other-member tactic head a y denial))
+         (member (proof-proof-transport proof (car parts) other))
+         (commuted (t3-book-permutations-permutations-cite
+                    tactic "REMOVE-COMMUTES" (list (list a head) (list b a) (list x y))))
+         (hypothesis (t3-book-permutations-permutations-hypothesis tactic formula pairs))
+         (next-result (proof-proof-modus-ponens proof hypothesis (cadr parts)))
+         (value (proof-rewritten-term applied))
+         (unfolded (t3-book-permutations-permutations-perm-from-tail
+                    tactic value new-cons member next-result (list commuted)))
+         (miss (proof-proof-transport proof unfolded applied))
+         (step (proof-proof-cases proof comparison hit miss))
+         (concluded (t3-book-permutations-permutations-induct tactic formula pairs step base))
+         (added (t3-book-permutations-permutations-lemma tactic "REMOVAL" concluded)))
+      (cdr added))))
+
+(defun t3-book-permutations-permutations-transitive (tactic)
+  (let* ((lib (t3-book-permutations-permutations-lib tactic))
+         (proof (library-library-proof lib))
+         (x *library-x*)
+         (y *library-y*)
+         (z *library-z*)
+         (a *t3-book-permutations-a*)
+         (perm *t3-book-permutations-perm*)
+         (head (t3-book-permutations-permutations-head tactic))
+         (tail (t3-book-permutations-permutations-tail tactic))
+         (cons-proof (t3-book-permutations-permutations-cons tactic))
+         (atom-proof (t3-book-permutations-permutations-atom tactic))
+         (condition (proof-ite (list perm x y) (list perm y z) *proof-false*))
+         (goal (list perm x z))
+         (formula (list *library-implies* condition goal))
+         (bindings (list (list a head) (list x y) (list y z)))
+         (pairs (list (list x tail)
+                      (list y (t3-book-permutations-permutations-after-y tactic))
+                      (list z (t3-book-permutations-permutations-after-z tactic)))))
+    (proof-with-checked-results
+        ((assumed (proof-proof-assume proof condition t))
+         (conjuncts (proof-proof-conjunct proof assumed))
+         (absent-y (t3-book-permutations-permutations-perm-parts
+                    tactic (car conjuncts) atom-proof))
+         (absent-z (t3-book-permutations-permutations-perm-parts
+                    tactic (cadr conjuncts) absent-y))
+         (empty (t3-book-permutations-permutations-open-perm tactic goal atom-proof))
+         (base (proof-proof-transport proof absent-z empty))
+         (parts (t3-book-permutations-permutations-perm-parts
+                 tactic (car conjuncts) cons-proof))
+         (parts (proof-list-of-length parts 2))
+         (keeps-member (t3-book-permutations-permutations-cite tactic "MEMBER" bindings))
+         (present-y (t3-book-permutations-conjunction lib (cadr conjuncts) (car parts)))
+         (member-z (proof-proof-modus-ponens proof keeps-member present-y))
+         (keeps-removal (t3-book-permutations-permutations-cite tactic "REMOVAL" bindings))
+         (next-yz (proof-proof-modus-ponens proof keeps-removal (cadr conjuncts)))
+         (hypothesis (t3-book-permutations-permutations-hypothesis tactic formula pairs))
+         (tails (t3-book-permutations-conjunction lib (cadr parts) next-yz))
+         (next-xz (proof-proof-modus-ponens proof hypothesis tails))
+         (step (t3-book-permutations-permutations-perm-from-tail
+                tactic goal cons-proof member-z next-xz nil)))
+      (t3-book-permutations-permutations-induct tactic formula pairs step base))))
+
+(defun t3-book-permutations-equivalence (lib name formula)
+  (proof-with-checked-results
+      ((tactic (t3-book-permutations-permutations-init lib))
+       (tactic (t3-book-permutations-permutations-different-member tactic))
+       (tactic (t3-book-permutations-permutations-commute-removal tactic))
+       (tactic (t3-book-permutations-permutations-perm-cons tactic))
+       (symmetry (t3-book-permutations-permutations-symmetry tactic))
+       (tactic (t3-book-permutations-permutations-preserves-member (cdr symmetry)))
+       (tactic (t3-book-permutations-permutations-preserves-removal tactic)))
+    (let ((lib (t3-book-permutations-permutations-lib tactic)))
+      (proof-with-checked-results
+          ((boolean (t3-book-permutations-permutations-boolean tactic))
+           (reflexive (t3-book-permutations-permutations-reflexive tactic))
+           (transitive (t3-book-permutations-permutations-transitive tactic))
+           (symmetric-and-transitive (t3-book-permutations-conjunction
+                                      lib (car symmetry) transitive))
+           (laws (t3-book-permutations-conjunction lib reflexive symmetric-and-transitive))
+           (result (t3-book-permutations-conjunction lib boolean laws))
+           (conclusion (proof-step-first result)))
+        (if (equal conclusion formula)
+            (proof-with-checked-results
+                ((entry (proof-proof-entry "theorem" name (list name) (list result))))
+              (cons entry lib))
+          '(:failure "Unproved" ""))))))

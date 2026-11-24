@@ -1,0 +1,2 @@
+(choose ACL2::C-CHOICE (ACL2::Y) (ACL2::X) (ACL2::C-FN ACL2::X) COMMON-LISP::NIL)
+(skip ACL2::C-FN)

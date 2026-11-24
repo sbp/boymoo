@@ -81,7 +81,7 @@ In the third column, "Yes" means that ACL2 Core gives ACL2's answer; "Yes, and a
 | 6.6 Definitions that join the constraint of an `encapsulate` | 6 | Yes |
 | 6.7 Where the constraint of an `encapsulate` is stored | 6 | Yes |
 | 6.8 `defchoose` with `:strengthen` | 6 | Yes |
-| 6.9 `defun-sk` | 6 | Not yet |
+| 6.9 `defun-sk` | 6 | Yes |
 | 6.10 Redundant events | 6 | Yes |
 | 6.11 `local` | 6 | Yes |
 | 6.12 Tests that leave nothing in a statement | 6 | No |
@@ -471,7 +471,7 @@ The kinds, with the number of entries of each: 1, the axioms leave a value open 
 - **The axioms.** `(defun-sk bm-exists (x) (exists y (equal y (cons x x))))` defines `bm-exists` by a function that chooses a witness.
 - **ACL2.** It expands to an `encapsulate` whose signature is the witness `bm-exists-witness`. Inside, a local `defchoose` makes the witness. Exported are the definition of `bm-exists`, which is not executable and joins the constraint (entry 6.6), and the theorem `bm-exists-suff`. So ACL2 stores no `defchoose` axiom for the witness; the constraint holds the equation of `bm-exists` and `(implies (equal y (cons x x)) (bm-exists x))`.
 - **Example.** The event that introduced `bm-exists-witness` is an `encapsulate` whose `defchoose` is inside `local`, followed by `defun-nx bm-exists` and `defthm bm-exists-suff`; ACL2 stores no `defchoose` axiom for the witness; the constraint of `bm-exists` is the name `BM-EXISTS-WITNESS`; the origins of the two formulas are `(defun bm-exists)` and `(theorem bm-exists-suff)`; the body of `bm-exists` begins with `throw-nonexec-error` (entry 2.3).
-- **ACL2 Core.** The event is one `constrain` statement, of the witness and of the function, with the two formulas. Its proof needs witnesses that satisfy them, and in general the only such witness is a choice function. A proof may define functions but may not introduce one by choice, so such a constraint can only be skipped. This can be followed if a proof may hold a `choose` entry, which would also change [`spec/formats.md`](spec/formats.md); that is undecided (`PLAN.md`).
+- **ACL2 Core.** The event is one `constrain` statement, of the witness and of the function, with the two formulas. Its proof needs witnesses that satisfy them, and in general the only such witness is a choice function. A proof introduces one as ACL2 does, by a `choose` entry, which is admitted as a `choose` statement is, and defines the other function from it with a `define` entry ([`spec/logic.md`](spec/logic.md), section 6, "Entries of the proofs").
 - **Check.** Lines 6.9.
 
 ### 6.10 Redundant events

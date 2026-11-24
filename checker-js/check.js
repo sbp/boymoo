@@ -1,6 +1,6 @@
 "use strict";
 
-function checkBoymoo(ground, library, statements, proofs) {
+function checkBoymoo(ground, library, statements, proofs, libraryProofs) {
     var PAIR = 1, SYMBOL = 2, STRING = 3, RATIONAL = 4, COMPLEX = 5, CHARACTER = 6;
     var limit = 67108864, over = limit + 1;
     var maxExact = 9007199254740991;
@@ -1065,7 +1065,8 @@ function checkBoymoo(ground, library, statements, proofs) {
         }
     }
 
-    function admit(line, given, proofInput) {
+    // A statement of the library takes its entry from the library's proofs.
+    function admit(line, proofInput, inLibrary) {
         var data = line.data, statement;
         switch (line.word) {
         case "package":
@@ -1074,23 +1075,23 @@ function checkBoymoo(ground, library, statements, proofs) {
             return;
         case "reserve":
             exactData(line, 1);
-            freshName(data[0], false, given);
+            freshName(data[0], false, false);
             return;
         case "define":
-            statement = prepareDefine(data, given);
+            statement = prepareDefine(data, inLibrary);
             break;
         case "constrain":
-            statement = prepareConstrain(data, given);
+            statement = prepareConstrain(data, inLibrary);
             break;
         case "choose":
-            admitChoose(data, given);
+            admitChoose(data, inLibrary);
             return;
         case "theorem":
         case "axiom":
             exactData(line, 2);
-            freshName(data[0], false, given);
+            freshName(data[0], false, false);
             checkTerm(data[1], null, null, false);
-            if (given) {
+            if (line.word === "axiom" && inLibrary) {
                 givenFacts += 1;
             } else if (line.word === "axiom") {
                 assumed += 1;
@@ -1101,13 +1102,11 @@ function checkBoymoo(ground, library, statements, proofs) {
         default:
             reject("Word is not a statement");
         }
-        if (statement.entry) {
-            if (given) {
-                if (statement.entry !== "theorem") {
-                    givenDefinitions += 1;
-                }
+        if (statement.entry && !checkStatementEntry(statement, proofInput, inLibrary)) {
+            if (statement.entry === "theorem") {
+                givenFacts += 1;
             } else {
-                checkStatementEntry(statement, proofInput);
+                givenDefinitions += 1;
             }
         }
         establish(statement);
@@ -1543,14 +1542,16 @@ function checkBoymoo(ground, library, statements, proofs) {
         }
     }
 
+    // Returns true for a skip, which the caller counts.
     function finishEntry(definition, line, readProofLine) {
         var data = line.data;
         need((line.word === definition.entry || line.word === "skip") && data[0] === definition.head,
             "Expected " + definition.entry + " or skip for the pending statement");
         if (line.word === "skip") {
             exactData(line, 1);
-            skipped += 1;
-        } else if (line.word === "theorem") {
+            return true;
+        }
+        if (line.word === "theorem") {
             exactData(line, 1);
             prove(readProofLine, definition.facts[0][1]);
         } else {
@@ -1561,13 +1562,16 @@ function checkBoymoo(ground, library, statements, proofs) {
                 witness(definition, data.slice(1), readProofLine);
             }
         }
+        return false;
     }
 
     function localDefinition(line, readProofLine) {
         var definition = prepareDefine(line.data, false), head;
         if (definition.entry) {
             head = readProofLine("Recursive proof definition needs a measure or skip");
-            finishEntry(definition, head, readProofLine);
+            if (finishEntry(definition, head, readProofLine)) {
+                skipped += 1;
+            }
         }
         establish(definition);
     }
@@ -1583,17 +1587,29 @@ function checkBoymoo(ground, library, statements, proofs) {
         facts[name.id] = literals;
     }
 
-    function checkStatementEntry(definition, proofInput) {
+    // A statement of the library is given when no line of its proofs remains
+    // or when its entry is a skip; it then returns false.
+    function checkStatementEntry(definition, proofInput, inLibrary) {
         var statementPlace = place, head;
+        if (inLibrary && proofInput.start === proofInput.source.length) {
+            return false;
+        }
         while (true) {
             head = readProofLine("Missing entry for a statement with obligations");
             if (head.word === "define") {
                 localDefinition(head, readProofLine);
             } else if (head.word === "lemma") {
                 lemma(head, readProofLine);
+            } else if (head.word === "choose") {
+                admitChoose(head.data, false);
             } else {
-                finishEntry(definition, head, readProofLine);
-                return;
+                if (finishEntry(definition, head, readProofLine)) {
+                    if (inLibrary) {
+                        return false;
+                    }
+                    skipped += 1;
+                }
+                return true;
             }
         }
 
@@ -1605,20 +1621,26 @@ function checkBoymoo(ground, library, statements, proofs) {
         }
     }
 
+    function finished(source) {
+        locate(source, source.number + 1);
+        need(source.start === source.source.length, "Proof input remains after the last statement");
+    }
+
     try {
         loadGround(input("ground", ground));
         var libraryInput = input("library", library);
         var statementInput = input("statements", statements);
         var proofInput = input("proofs", proofs);
+        var libraryProofInput = input("library-proofs", libraryProofs || "");
         var line;
         while ((line = nextLine(libraryInput, seen))) {
-            admit(line, true);
+            admit(line, libraryProofInput, true);
         }
+        finished(libraryProofInput);
         while ((line = nextLine(statementInput, seen))) {
-            admit(line, false, proofInput);
+            admit(line, proofInput, false);
         }
-        locate(proofInput, proofInput.number + 1);
-        need(proofInput.start === proofs.length, "Proof input remains after the last statement");
+        finished(proofInput);
         if (skipped || assumed || givenDefinitions || givenFacts) {
             return "provisional skipped " + skipped + " assumed " + assumed +
                 " given-definitions " + givenDefinitions + " given-facts " + givenFacts + "\n";

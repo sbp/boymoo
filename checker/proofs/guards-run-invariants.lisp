@@ -13,6 +13,11 @@
   (implies (and (guard-world-p w) (guard-pending-p p))
            (guard-world-p (finish p w))))
 
+(defthm cg-give-statement-keeps-world
+  (implies (and (guard-world-p w) (guard-pending-p p))
+           (guard-world-p (give-statement p w)))
+  :hints (("Goal" :in-theory (disable finish))))
+
 (local
  (defthm cg-start-proofs-keeps-state
    (implies (and (guard-world-p w)
@@ -24,7 +29,7 @@
                    (guard-world-p (cdr r)))))))
 
 (local
- (in-theory (disable finish start-proofs)))
+ (in-theory (disable finish give-statement start-proofs)))
 
 (local
  (defthm cg-measure-entry-keeps-state
@@ -55,8 +60,8 @@
    (implies (and (guard-world-p w)
                  (guard-pending-p p)
                  (guard-proof-context-p back)
-                 (not (stringp (pending-entry line p back w))))
-            (let ((r (pending-entry line p back w)))
+                 (not (stringp (pending-entry line p back give-on-skip w))))
+            (let ((r (pending-entry line p back give-on-skip w)))
               (and (guard-proof-context-p (car r))
                    (guard-world-p (cdr r)))))))
 
@@ -76,11 +81,11 @@
    (implies (and (guard-world-p w)
                  (guard-pending-p p)
                  (true-listp line)
-                 (not (stringp (entry-head line p w))))
-            (let ((r (entry-head line p w)))
+                 (not (stringp (entry-head line p library w))))
+            (let ((r (entry-head line p library w)))
               (and (guard-proof-context-p (car r))
                    (guard-world-p (cdr r)))))
-   :hints (("Goal" :in-theory (disable admit lemma-head pending-entry)))))
+   :hints (("Goal" :in-theory (disable prepare-statement lemma-head pending-entry)))))
 
 (local
  (defthm cg-check-step-total-size
@@ -107,8 +112,8 @@
                 (guard-proof-context-p ctx)
                 (consp ctx)
                 (true-listp line)
-                (not (stringp (proof-line line ctx w))))
-           (let ((r (proof-line line ctx w)))
+                (not (stringp (proof-line line ctx library w))))
+           (let ((r (proof-line line ctx library w)))
              (and (guard-proof-context-p (car r))
                   (guard-world-p (cdr r)))))
   :hints (("Goal" :expand ((guard-proof-context-p ctx))
@@ -136,10 +141,8 @@
 (defthm cg-run-keeps-world
   (implies (and (guard-world-p w)
                 (guard-proof-context-p ctx)
-                (not (rejected-p (run slines sn plines pn ctx w))))
-           (guard-world-p (run slines sn plines pn ctx w)))
-  :hints (("Goal" :induct (run slines sn plines pn ctx w)
-           :expand ((run slines sn plines pn ctx w)
-                    (run slines sn plines pn nil w))
-           :in-theory (disable (:definition run) admit parse-line proof-line
+                (not (rejected-p (run slines sn plines pn ctx input w))))
+           (guard-world-p (run slines sn plines pn ctx input w)))
+  :hints (("Goal" :induct (run slines sn plines pn ctx input w)
+           :in-theory (disable prepare-statement parse-line proof-line
                                guard-proof-context-p rejected-p rejection))))

@@ -1,0 +1,6 @@
+(theorem ACL2::C-SECOND)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE 0)))
+(qed)
+(theorem ACL2::C-FIRST)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE 0)))
+(qed)

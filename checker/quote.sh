@@ -15,16 +15,18 @@ quote() {
     printf '")'
 }
 
-# Runs the checker's function CHECK on the runner $RUNNER, on the four
-# quoted constants given as files: $1 for spec/ground.txt, then the
-# library, the statements and the proofs; and prints the value, a list of
-# two strings, as two lines: the verdict and a few words on what failed.
+# Runs CHECK-FOUR on the runner $RUNNER. The quoted constants are files
+# for spec/ground.txt, the library, the statements, the proofs and the
+# library's proofs. An omitted fifth file gives an empty string. The two
+# output lines give the verdict and a few words on what failed.
 run_check() {
-    out=$({ printf '(BOYMOO::CHECK '
+    out=$({ printf '(BOYMOO::CHECK-FOUR '
             cat "$1"; printf ' '
             cat "$2"; printf ' '
             cat "$3"; printf ' '
-            cat "$4"; printf ')\n'; } |
+            cat "$4"; printf ' '
+            if [ -n "${5-}" ]; then cat "$5"; else printf '(COMMON-LISP::QUOTE "")'; fi
+            printf ')\n'; } |
           "$RUNNER" -p spec/ground.txt -p build/checker/checker.statements \
               build/checker/ground.program build/checker/checker.program)
     status=$?

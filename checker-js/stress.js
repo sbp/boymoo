@@ -76,6 +76,8 @@ const check = context.checkBoymoo;
 assert.strictEqual(check(ground, "", '(package "DYNAMIC" COMMON-LISP::NIL)\n', ""), "accepted\n");
 assert.match(check(ground, "", "(reserve DYNAMIC::X)\n", ""), /^rejected statements 1\n/);
 assert.strictEqual(check(ground, "", "", ""), "accepted\n");
+assert.strictEqual(check(ground, "", "", "", ""), "accepted\n");
+assert.match(check(ground, "", "", "", "(skip ACL2::X)\n"), /^rejected library-proofs 1\n/);
 assert.throws(() => check("", "", "", ""), /Invalid ground theory/);
 
 async function browserAdapter() {
@@ -86,7 +88,8 @@ async function browserAdapter() {
         ground: {files: [fs.readFileSync("spec/ground.txt")]},
         library: {files: []},
         statements: {files: [fs.readFileSync("spec/example/statements.txt")]},
-        proofs: {files: [fs.readFileSync("spec/example/proofs.txt")]}
+        proofs: {files: [fs.readFileSync("spec/example/proofs.txt")]},
+        "library-proofs": {files: []}
     };
     class FileReader {
         readAsArrayBuffer(bytes) {

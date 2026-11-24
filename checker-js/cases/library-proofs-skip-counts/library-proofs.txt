@@ -1,0 +1,3 @@
+(define COMMON-LISP::NIL (ACL2::C-LOCAL (ACL2::X) (ACL2::C-LOCAL ACL2::X)))
+(skip ACL2::C-LOCAL)
+(skip ACL2::C-GOAL)

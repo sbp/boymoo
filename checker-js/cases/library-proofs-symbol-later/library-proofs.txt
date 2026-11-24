@@ -1,0 +1,4 @@
+(skip ACL2::C-GIVEN)
+(theorem C-PKG::C-PROVED)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE 0)))
+(qed)

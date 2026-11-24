@@ -1,0 +1,3 @@
+(theorem ACL2::PROVED-FACT)
+(fact ACL2::PROVED-FACT)
+(qed)

@@ -19,6 +19,7 @@ VERSION = '(ld "checks/version.lsp")'
 QUIET = "(set-inhibit-output-lst '(warning warning! observation prove proof-tree event))"
 STRICT = ":uncertified-okp nil :defaxioms-okp nil :skip-proofs-okp nil :ttags nil"
 STEP = re.compile(rb"^\((" + b"|".join(rule.encode("ascii") for rule in RULES) + rb") ")
+PROOF_INPUTS = ("proofs", "library-proofs")
 
 
 def acl2(forms, log, timeout=120):
@@ -86,7 +87,7 @@ class Case:
 
     @classmethod
     def specimen(cls, directory, expected):
-        paths = [directory / (name + ".txt") for name in ("library", "statements", "proofs")]
+        paths = [directory / (name + ".txt") for name in ("library", "statements", *PROOF_INPUTS)]
         return cls(str(directory), [p if p.is_file() else EMPTY for p in paths], expected)
 
 
@@ -97,9 +98,11 @@ def specimens():
             expected = verdict.read_bytes().splitlines()[0].decode("ascii")
             if expected == "accepted" or expected.startswith("provisional "):
                 case = Case.specimen(verdict.parent, expected)
-                with case.inputs[2].open("rb") as proofs:
-                    if any(STEP.match(line) for line in proofs):
-                        yield case
+                for path in case.inputs[2:]:
+                    with path.open("rb") as proofs:
+                        if any(STEP.match(line) for line in proofs):
+                            yield case
+                            break
 
 
 def self_input():
@@ -112,7 +115,7 @@ def self_input():
                                     stderr=subprocess.STDOUT)
         if result.returncode:
             raise RuntimeError(f"Could not build the checker's source proof. See {log}.")
-    return Case("self", [EMPTY, statements, proofs], "accepted")
+    return Case("self", [EMPTY, statements, proofs, EMPTY], "accepted")
 
 
 def collect(cases, log):
@@ -185,10 +188,11 @@ def statement_refusal(book, message):
 
 def proof_lines(book, failure=None, unavailable=None):
     counts = Counter()
-    for kind, name, first, qed, steps in book.proofs:
-        reasons = list(dict.fromkeys(book.uncertified[n] for n in range(first, qed)
-                                    if n in book.uncertified))
-        omitted = sum(n in book.uncertified for n in range(first, qed))
+    for proof_input, kind, name, first, qed, steps in book.proofs:
+        missing = [book.uncertified[proof_input, n] for n in range(first, qed)
+                   if (proof_input, n) in book.uncertified]
+        reasons = list(dict.fromkeys(missing))
+        omitted = len(missing)
         if unavailable:
             reasons = [unavailable]
             omitted = steps
@@ -210,7 +214,7 @@ def proof_lines(book, failure=None, unavailable=None):
         count = f"{certified}/{steps}" if certified != steps else str(steps)
         explanation = " - " + ". ".join(reasons) if reasons else ""
         print(f"{status} {book.directory.relative_to(BUILD)} {kind} {native_symbol(name)} "
-              f"proofs:{first}-{qed} ({count} steps certified){explanation}", flush=True)
+              f"{proof_input}:{first}-{qed} ({count} steps certified){explanation}", flush=True)
     for source, reason in book.omitted.items():
         if not any(r == reason for r in book.uncertified.values()):
             print(f"unadmitted {book.directory.relative_to(BUILD)} {reason}", flush=True)
@@ -222,18 +226,22 @@ def proof_lines(book, failure=None, unavailable=None):
 
 
 def certify_input(case, records, nodes):
-    with case.inputs[2].open("rb") as proofs:
-        expected_proofs = expected_steps = 0
-        for line in proofs:
-            expected_proofs += line == b"(qed)\n"
-            expected_steps += bool(STEP.match(line))
+    expected = {}
+    for proof_input, path in zip(PROOF_INPUTS, case.inputs[2:]):
+        with path.open("rb") as proofs:
+            expected_proofs = expected_steps = 0
+            for line in proofs:
+                expected_proofs += line == b"(qed)\n"
+                expected_steps += bool(STEP.match(line))
+        expected[proof_input] = expected_proofs, expected_steps
     refused = {}
     while True:
         book = Book(case.out, records, nodes, refused)
         book.render()
-        if (len(book.proofs) != expected_proofs
-                or sum(proof[4] for proof in book.proofs) != expected_steps):
-            raise RuntimeError("The generated book did not account for every input proof and step.")
+        for proof_input, counts in expected.items():
+            step_counts = [steps for source, *_, steps in book.proofs if source == proof_input]
+            if (len(step_counts), sum(step_counts)) != counts:
+                raise RuntimeError(f"The generated book did not account for every proof and step in {proof_input}.")
         packages = book.write()
         failure = certify_case(case, book, packages)
         if not failure:
@@ -282,11 +290,14 @@ def report(label, totals, elapsed):
 
 def main(arguments):
     start = perf_counter()
-    if len(arguments) not in (0, 3):
-        sys.exit("Usage: sh review/steps/run.sh [LIBRARY STATEMENTS PROOFS]")
+    if len(arguments) not in (0, 3, 4):
+        sys.exit("Usage: sh review/steps/run.sh [LIBRARY STATEMENTS PROOFS [LIBRARY-PROOFS]]")
     build_tools()
     if arguments:
-        totals = replay([Case("input", [Path(p) for p in arguments])], BUILD / "trace.log")
+        inputs = [Path(p) for p in arguments]
+        if len(inputs) == 3:
+            inputs.append(EMPTY)
+        totals = replay([Case("input", inputs)], BUILD / "trace.log")
     else:
         group_start = perf_counter()
         totals = replay(list(specimens()), BUILD / "trace.log")

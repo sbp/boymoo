@@ -161,6 +161,9 @@ class Book:
     def name(self, suffix):
         return self.prefix + str(suffix)
 
+    def proof_name(self, proof_input, suffix):
+        return self.name("LIBRARY-" + suffix if proof_input == "library-proofs" else suffix)
+
     def atom(self, value):
         if isinstance(value, int):
             return str(value)
@@ -292,7 +295,7 @@ class Book:
             self.omit(names, failed)
         return not failed
 
-    def theorem(self, name, formula, *, use=(), extra="", theory=None):
+    def theorem(self, name, formula, *, use=(), extra="", theory=None, library_term=None):
         hints = []
         if use:
             hints.append(":use " + lisp_list(use))
@@ -303,9 +306,15 @@ class Book:
         text = f"(defthm {name} {formula}\n  :rule-classes nil"
         if hints:
             text += '\n  :hints (("Goal" ' + " ".join(hints) + "))"
-        self.emit(text + ")")
+        text += ")"
+        if library_term is not None:
+            stored = f"(getpropc `{name} 'theorem nil world)"
+            matches = f"(equal {stored} `{self.datum(library_term)})"
+            self.reuse_or_admit(text, stored, matches)
+        else:
+            self.emit(text)
 
-    def define(self, args, measures=(), obligations=(), assumption=None, given=False):
+    def define(self, args, measures=(), obligations=(), assumption=None, library=False):
         rulers, *definitions = args
         definitions = [list(elements(definition)) for definition in definitions]
         names = [fn for fn, _, _ in definitions]
@@ -323,7 +332,7 @@ class Book:
                 theory = " :in-theory (theory 'minimal-theory)" if assumption is None else ""
                 decl.append(':hints (("Goal" :use ' + lisp_list(obligations) + theory + "))")
             fn, formal_text, body = self.atom(name), self.datum(formals), self.datum(body)
-            if given:
+            if library:
                 known = f"(function-symbolp `{fn} world)"
                 present.append(known)
                 matches.append(f"(and {known} (not (programp `{fn} world))"
@@ -337,12 +346,12 @@ class Book:
                          f"  (declare (xargs {' '.join(decl)}))\n"
                          f"  {body})")
         text = forms[0] if len(forms) == 1 else "(mutual-recursion\n " + "\n ".join(forms) + ")"
-        if given:
+        if library:
             self.reuse_or_admit(text, lisp_list(["or", *present]), lisp_list(["and", *matches]))
         else:
             self.emit(text)
 
-    def constrain(self, args, witnesses=(), obligations=(), assumption=None, given=False):
+    def constrain(self, args, witnesses=(), obligations=(), assumption=None, library=False):
         signatures, formulas = map(elements, args)
         signatures = [tuple(elements(sig)) for sig in signatures]
         formulas = [list(elements(formula)) for formula in formulas]
@@ -382,7 +391,7 @@ class Book:
             exported.append(f"(defthm {self.atom(name)} {self.term(formula)}"
                             f" :rule-classes nil{hint})")
         event = f"(encapsulate {lisp_list(interface)}\n " + "\n ".join(local + exported) + ")"
-        if given:
+        if library:
             self.reuse_constraint(event, names, signatures, formulas)
         else:
             self.emit(event)
@@ -422,15 +431,15 @@ class Book:
             pass
         return sys.maxsize
 
-    def statement(self, word, args, pending, assumption=None, given=False):
+    def statement(self, word, args, pending, assumption=None, library=False):
         if word in ("package", "hidden-package", "reserve"):
             return
         if pending:
             self.pending = (self.source, word, args)
         elif word == "define":
-            self.define(args, assumption=assumption, given=given)
+            self.define(args, assumption=assumption, library=library)
         elif word == "constrain":
-            self.constrain(args, assumption=assumption, given=given)
+            self.constrain(args, assumption=assumption, library=library)
         elif word == "choose":
             fn, bound, free, body, free2 = args
             if not self.admit([fn], assumption, [body]):
@@ -451,12 +460,7 @@ class Book:
         elif word == "theorem":
             if self.admit(args[:1], assumption, args[1:]):
                 name, formula = self.atom(args[0]), self.term(args[1])
-                if given:
-                    stored = f"(getpropc `{name} 'theorem nil world)"
-                    matches = f"(equal {stored} `{self.datum(args[1])})"
-                    self.reuse_or_admit(f"(defthm {name} {formula} :rule-classes nil)", stored, matches)
-                else:
-                    self.theorem(name, formula)
+                self.theorem(name, formula, library_term=args[1] if library else None)
 
     def instance(self, premise, substitution):
         name, clause, _ = premise
@@ -550,7 +554,7 @@ class Book:
             self.induction(name, args)
         self.current.append((name, clause, None))
 
-    def replay_proof(self, lines, prefix=""):
+    def replay_proof(self, proof_input, lines, prefix=""):
         self.current = []
         for source, number, word, args, clause in lines:
             self.source = source
@@ -565,12 +569,12 @@ class Book:
             if reason:
                 self.current.append((None, clause, reason))
                 if not prefix:
-                    self.uncertified[number] = reason
+                    self.uncertified[proof_input, number] = reason
             else:
-                self.step(self.name(prefix + str(number)), word, args, clause)
+                self.step(self.proof_name(proof_input, prefix + str(number)), word, args, clause)
         return self.current[-1][0]
 
-    def admit_measured(self, args):
+    def admit_measured(self, proof_input, args):
         source, _, definition = self.definition or self.pending
         functions = [(fn, len(list(elements(formals))))
                      for fn, formals, _ in map(elements, definition[1:])]
@@ -582,7 +586,7 @@ class Book:
         mapping = {}
         if any(dependent):
             number = self.measure_proofs[0][0][1]
-            mapping = {fn: symbol("ACL2", self.name(f"ABSTRACT-{number}-{i}"))
+            mapping = {fn: symbol("ACL2", self.proof_name(proof_input, f"ABSTRACT-{number}-{i}"))
                        for i, (fn, _) in enumerate(functions)}
             self.source = source
             self.emit("(local (encapsulate\n ("
@@ -596,7 +600,7 @@ class Book:
             if needs_abstraction:
                 self.function_names = mapping
                 first = len(self.items)
-                last = self.replay_proof(proof, "ABSTRACT-")
+                last = self.replay_proof(proof_input, proof, "ABSTRACT-")
                 self.function_names = {}
                 for i in range(first, len(self.items)):
                     position, event = self.items[i]
@@ -605,40 +609,44 @@ class Book:
                                      for fn, abstract in mapping.items())
                 obligations.append(f"(:functional-instance {last} {bindings[1:-1]})" if last else None)
             else:
-                obligations.append(self.replay_proof(proof))
+                obligations.append(self.replay_proof(proof_input, proof))
         self.source = source
         hint = "some Boymoo termination premises were unavailable" if None in obligations else None
-        self.define(definition, args[1:], [name for name in obligations if name], hint)
+        library = proof_input == "library-proofs" and self.definition is None
+        self.define(definition, args[1:], [name for name in obligations if name], hint, library)
         for proof, needs_abstraction in zip(self.measure_proofs, dependent):
             if needs_abstraction:
-                self.replay_proof(proof)
+                self.replay_proof(proof_input, proof)
         self.measure_proofs = []
 
-    def qed(self, number, source):
+    def qed(self, proof_input, number, source):
         kind, args, remaining = self.entry
         lines, self.proof_steps = self.proof_steps, []
-        self.proofs.append((kind, args[0], lines[0][1], number, len(lines)))
+        self.proofs.append((proof_input, kind, args[0], lines[0][1], number, len(lines)))
         if kind == "measure":
             self.measure_proofs.append(lines)
         else:
-            last = self.replay_proof(lines)
+            last = self.replay_proof(proof_input, lines)
             self.obligations.append(last)
         if remaining > 1:
             self.entry = (kind, args, remaining - 1)
             return
+        library = proof_input == "library-proofs"
         if kind in ("lemma", "theorem"):
             self.source = source
             if last:
                 if self.admit(args[:1]):
-                    self.theorem(self.atom(args[0]), self.clause(lines[-1][-1]), use=(last,))
+                    term = self.pending[2][1] if library and kind == "theorem" else None
+                    self.theorem(self.atom(args[0]), self.clause(lines[-1][-1]),
+                                 use=(last,), library_term=term)
             else:
-                self.omit(args[:1], self.uncertified[lines[-1][1]])
+                self.omit(args[:1], self.uncertified[proof_input, lines[-1][1]])
         elif kind == "witness":
             self.source, _, pending_args = self.pending
             hint = "some Boymoo witness premises were unavailable" if None in self.obligations else None
-            self.constrain(pending_args, args[1:], self.obligations, hint)
+            self.constrain(pending_args, args[1:], self.obligations, hint, library)
         elif kind == "measure":
-            self.admit_measured(args)
+            self.admit_measured(proof_input, args)
         self.obligations = []
         self.entry = None
         if self.definition:
@@ -647,15 +655,19 @@ class Book:
             self.pending = None
         self.source = source
 
-    def read_proofs(self, number, word, args, detail):
+    def read_proofs(self, proof_input, number, word, args, detail):
         if word == "define":
             if detail != NIL:
                 self.definition = (self.source, word, args)
             else:
                 self.define(args)
+        elif word == "choose":
+            self.statement(word, args, False)
         elif word == "skip":
             self.source, kind, pending_args = self.definition or self.pending
-            self.statement(kind, pending_args, False, "Boymoo skipped its obligation")
+            library = proof_input == "library-proofs" and self.definition is None
+            assumption = "Boymoo took it from the library" if library else "Boymoo skipped its obligation"
+            self.statement(kind, pending_args, False, assumption, library)
             if self.definition:
                 self.definition = None
             else:
@@ -663,7 +675,7 @@ class Book:
         elif word in ("theorem", "lemma", "measure", "witness"):
             self.entry = (word, args, len(list(elements(detail))))
         elif word == "qed":
-            self.qed(number, self.source)
+            self.qed(proof_input, number, self.source)
         elif word in RULES:
             self.proof_steps.append((self.source, number, word, args, detail))
 
@@ -674,11 +686,12 @@ class Book:
             word, *args = elements(line)
             word = word[2].decode("ascii").lower()
             self.source = f"{source}:{number} ({word})"
-            if source == "proofs":
-                self.read_proofs(number, word, args, detail)
+            if source in ("proofs", "library-proofs"):
+                self.read_proofs(source, number, word, args, detail)
             else:
-                given = "Boymoo took it from the library" if source == "library" else None
-                self.statement(word, args, detail != NIL, given, source == "library")
+                library = source == "library"
+                assumption = "Boymoo took it from the library" if library else None
+                self.statement(word, args, detail != NIL, assumption, library)
 
     def package_events(self, hidden_open=False):
         events = []

@@ -1,0 +1,1 @@
+(measure ACL2::PROVED-FACT (COMMON-LISP::QUOTE 0))

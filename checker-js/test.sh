@@ -22,11 +22,13 @@ run() {
     library="$directory/library.txt"
     statements="$directory/statements.txt"
     proofs="$directory/proofs.txt"
+    library_proofs="$directory/library-proofs.txt"
     [ -f "$library" ] || library=$empty
     [ -f "$statements" ] || statements=$empty
     [ -f "$proofs" ] || proofs=$empty
+    [ -f "$library_proofs" ] || library_proofs=$empty
     actual=
-    if sh checker-js/check.sh "$library" "$statements" "$proofs" "$engine" > "$scratch/verdict"; then
+    if sh checker-js/check.sh "$library" "$statements" "$proofs" "$library_proofs" "$engine" > "$scratch/verdict"; then
         IFS= read -r actual < "$scratch/verdict" || actual=
     fi
     if [ "$actual" = "$expected" ]; then

@@ -138,10 +138,11 @@ static void load(int file, int packages)
 
 static int usage(void)
 {
-    fputs("usage: boymoo-run [-l] [-v] [-m megabytes] [-p packages] ... program ...\n"
+    fputs("usage: boymoo-run [-l] [-v] [-j] [-m megabytes] [-p packages] ... program ...\n"
           "Reads the packages of each file named by -p and the program text of each\n"
           "other file, in order; then computes the value of the term on each line of\n"
-          "standard input and writes it on a line of standard output.\n", stderr);
+          "standard input and writes it on a line of standard output.  With -j it\n"
+          "starts with the prelude: ash and binary-logxor, defined.\n", stderr);
     return S_INPUT;
 }
 
@@ -158,6 +159,8 @@ int main(int argc, char **argv)
             eager = 1;
         else if (strcmp(argv[i], "-v") == 0)
             stats = 1;
+        else if (strcmp(argv[i], "-j") == 0)
+            prelude = 1;
         else if (strcmp(argv[i], "-m") == 0 && i + 1 < argc) {
             mb = strtoul(argv[++i], &rest, 10);
             if (*rest != '\0' || mb == 0)

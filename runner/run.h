@@ -95,6 +95,8 @@ V num_mul(V a, V b);
 V num_neg(V a);
 V num_inv(V a);
 int num_less(V a, V b);
+V num_ash(V a, V b);        /* the prelude */
+V num_logxor(V a, V b);
 V num_part(V a, int which); /* 0 numerator, 1 denominator, 2 real, 3 imaginary */
 V num_complex(V a, V b);
 V num_read(const unsigned char *s, const unsigned char *e); /* NOV if not canonical */
@@ -140,6 +142,7 @@ enum { P_ACL2_NUMBERP, P_BAD_ATOM_LE, P_TIMES, P_PLUS, P_MINUS, P_RECIP,
        P_NUMERATOR, P_PKG_IMPORTS, P_PKG_WITNESS, P_RATIONALP, P_REALPART,
        P_STRINGP, P_SYMBOL_NAME, P_SYMBOL_PACKAGE_NAME, P_SYMBOLP, NPRIMS };
 extern const char *const prim_pkg[NPRIMS], *const prim_name[NPRIMS];
+extern int prelude;                 /* whether the runner starts with the prelude (-j) */
 void index_define(const unsigned char *p, const unsigned char *e, int file, long line);
 void set_attach(void);              /* two symbols on the stack */
 void build_all(void);

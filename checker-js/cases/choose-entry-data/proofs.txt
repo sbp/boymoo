@@ -1,0 +1,4 @@
+(choose ACL2::C-CHOICE (ACL2::X) COMMON-LISP::NIL ACL2::X)
+(theorem ACL2::C-GOAL)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE 0)))
+(qed)

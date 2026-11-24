@@ -1,0 +1,3 @@
+(theorem ACL2::C-LEN-EQUATION)
+(fact COMMON-LISP::C-LEN)
+(qed)

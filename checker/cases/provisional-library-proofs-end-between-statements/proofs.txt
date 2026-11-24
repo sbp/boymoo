@@ -1,0 +1,6 @@
+(theorem ACL2::BOOK-CDR-OF-ATOM)
+(fact ACL2::CDR-OF-ATOM)
+(qed)
+(theorem ACL2::BOOK-IDENTITY-EQUATION)
+(fact ACL2::LIBRARY-IDENTITY-EQUATION)
+(qed)

@@ -1,0 +1,4 @@
+(define COMMON-LISP::NIL (COMMON-LISP::C-AUX (ACL2::X) ACL2::X))
+(theorem ACL2::C-GOAL)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE 0)))
+(qed)

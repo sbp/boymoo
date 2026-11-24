@@ -1,0 +1,3 @@
+(theorem ACL2::BOOK-FACT)
+(fact ACL2::LOCAL-FACT)
+(qed)

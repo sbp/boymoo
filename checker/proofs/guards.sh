@@ -151,11 +151,15 @@ LISP
         (value (cw "~%guard-core ok~%"))))))
 
 (let ((wrld (w state)))
-  (if (equal (untranslate (guard 'boymoo::check nil wrld) nil wrld)
-             '(and (stringp boymoo::ground) (stringp boymoo::library)
-                   (stringp boymoo::statements) (stringp boymoo::proofs)))
+  (if (and (equal (untranslate (guard 'boymoo::check nil wrld) nil wrld)
+                  '(and (stringp boymoo::ground) (stringp boymoo::library)
+                        (stringp boymoo::statements) (stringp boymoo::proofs)))
+           (equal (untranslate (guard 'boymoo::check-four nil wrld) nil wrld)
+                  '(and (stringp boymoo::ground) (stringp boymoo::library)
+                        (stringp boymoo::statements) (stringp boymoo::proofs)
+                        (stringp boymoo::library-proofs))))
       (value (cw "~%guard-check-entry ok~%"))
-    (er soft 'check "The declared checker guard must require four strings.")))
+    (er soft 'check "The checker entry guards must require strings.")))
 LISP
     echo '(ld "checker/acl2-run.lsp" :ld-error-action :error)'
     echo '(set-guard-checking t)'
@@ -179,6 +183,9 @@ LISP
 LISP
     printf '(run-case "compute-car" "%s/empty" "%s/car.statements" "%s/car.proofs" state)\n' "$cases" "$cases" "$cases"
     printf '(run-case "malformed-definition" "%s/empty" "%s/malformed.statements" "%s/empty" state)\n' "$cases" "$cases" "$cases"
+    library=checker/cases/accept-library-proofs-common-lisp
+    printf '(run-case-four "proved-library" "%s/library.txt" "%s/statements.txt" "%s/proofs.txt" "%s/library-proofs.txt" state)\n' \
+        "$library" "$library" "$library" "$library"
     echo '(good-bye)'
 } | timeout 300 acl2 > "$log" 2>&1 || fail "$log"
 
@@ -189,6 +196,7 @@ grep -Fxq 'guard-ground-world ok' "$log" || fail "$log"
 grep -Fxq 'guard-ground-shape ok' "$log" || fail "$log"
 grep -Fxq "$(printf 'verdict compute-car\taccepted')" "$log" || fail "$log"
 grep -Fxq "$(printf 'verdict malformed-definition\trejected statements 1')" "$log" || fail "$log"
+grep -Fxq "$(printf 'verdict proved-library\taccepted')" "$log" || fail "$log"
 echo 'certificate annotations, ACL2 Core guards, entry guard, ground world and counterexamples ok'
 
 sed -n 's/^guard-unverified //p' "$log" |

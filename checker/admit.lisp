@@ -14,8 +14,8 @@
        (not (keyword-sym-p s))
        (not (name-entry s w))))
 
-; BOOK is true for a line of the statements or of the proofs, where a
-; function may not be named by a symbol of COMMON-LISP.
+; BOOK is true for a line of the statements or an entry of either proofs
+; input, where a function may not be named by a symbol of COMMON-LISP.
 (defun new-fn-name-p (s book w)
   (declare (xargs :guard (true-listp w)))
   (and (new-name-p s w)
@@ -300,7 +300,7 @@
 ; The result of admitting a line is (W . PENDING), where PENDING is NIL or
 ; says what the line's entry in the proofs must show; or a string that says
 ; why the line fails.
-(defun admit-define (data line book library w)
+(defun admit-define (data line book w)
   (declare (xargs :guard (and (true-listp line)
                               (guard-world-p w))
                   :verify-guards nil))
@@ -315,12 +315,10 @@
               (if (and (fn-names-p names book w)
                        (distinct-p names)
                        (defs-terms-p defs extra w))
-                  (let ((recursive (calls-list-p (def-bodies defs) names)))
-                    (if (and recursive (not library))
-                        (cons (put-entries names nil nil line w)
-                              (list :define rulers defs))
-                      (let ((w (add-definitions defs (put-entries names nil nil line w))))
-                        (cons (if recursive (count-one 2 w) w) nil))))
+                  (let ((w (put-entries names nil nil line w)))
+                    (if (calls-list-p (def-bodies defs) names)
+                        (cons w (list :define rulers defs))
+                      (cons (add-definitions defs w) nil)))
                 "a definition that may not be admitted"))
           "a define line needs ruler-extenders and definitions"))
     "a define line needs ruler-extenders and definitions"))
@@ -379,7 +377,7 @@
   (add-facts (formula-names formulas) (unit-facts (formula-terms formulas))
              (enable-fns fns w)))
 
-(defun admit-constrain (data line book library w)
+(defun admit-constrain (data line book w)
   (declare (xargs :guard (and (true-listp line)
                               (guard-world-p w))
                   :verify-guards nil))
@@ -397,10 +395,9 @@
                  (terms-p (formula-terms formulas) :any fns w))
             (let ((w (put-entries names nil nil nil
                                   (put-entries fnames nil nil line w))))
-              (if (and (consp formulas) (not library))
+              (if (consp formulas)
                   (cons w (list :constrain fns formulas))
-                (let ((w (add-constraint fns formulas w)))
-                  (cons (if (consp formulas) (count-one 2 w) w) nil))))
+                (cons (add-constraint fns formulas w) nil)))
           "a constraint that may not be admitted"))
     "a constrain line needs functions and formulas"))
 
@@ -479,7 +476,7 @@
 ; ---------------------------------------------------------------------------
 ; Theorems, axioms and reserved names
 
-(defun admit-theorem (data line library w)
+(defun admit-theorem (data line w)
   (declare (xargs :guard (and (true-listp line)
                               (guard-world-p w))
                   :verify-guards nil))
@@ -487,11 +484,8 @@
       (let ((name (car data))
             (term (car (cdr data))))
         (if (and (new-name-p name w) (term-p term :any nil w))
-            (if library
-                (cons (count-one 3 (put-entry name (list nil (unit-fact term) line) w))
-                      nil)
-              (cons (put-entry name (list nil nil line) w)
-                    (list :theorem name term)))
+            (cons (put-entry name (list nil nil line) w)
+                  (list :theorem name term))
           "a theorem that may not be admitted"))
     "a theorem line needs a name and a term"))
 
@@ -551,26 +545,27 @@
              (equal (entry-line (name-entry name w)) line))))))
 
 ; ---------------------------------------------------------------------------
-; A line of the library (INPUT :LIBRARY), of the statements (:STATEMENTS)
-; or a define entry of the proofs (:PROOFS), whose line is kept nowhere.
+; Check a library line (:LIBRARY), a book statement (:STATEMENTS) or a
+; define or choose entry of either proofs input (:PROOFS). Reserve the
+; names of a statement with obligations. Store only statement lines for
+; the rule of repeated statements.
 
-(defun admit (line input w)
+(defun prepare-statement (line input w)
   (declare (xargs :guard (and (true-listp line)
                               (guard-world-p w))
                   :verify-guards nil))
   (let ((word (car line))
         (data (cdr line))
-        (book (not (equal input :library)))
         (library (equal input :library))
         (stored (if (equal input :proofs) nil line)))
     (if (and stored (repeat-p line w))
         (cons w nil)
       (cond ((equal word :package) (admit-package data stored w))
             ((equal word :hidden-package) (admit-hidden-package data stored w))
-            ((equal word :define) (admit-define data stored book library w))
-            ((equal word :constrain) (admit-constrain data stored book library w))
-            ((equal word :choose) (admit-choose data stored book w))
-            ((equal word :theorem) (admit-theorem data stored library w))
+            ((equal word :define) (admit-define data stored (not library) w))
+            ((equal word :constrain) (admit-constrain data stored (not library) w))
+            ((equal word :choose) (admit-choose data stored (not library) w))
+            ((equal word :theorem) (admit-theorem data stored w))
             ((equal word :axiom) (admit-axiom data stored library w))
             ((equal word :reserve) (admit-reserve data stored w))
             (t "a word that may not stand here")))))

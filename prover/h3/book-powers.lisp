@@ -1,0 +1,974 @@
+(in-package "BOYMOO-PROVER")
+(set-verify-guards-eagerness 0)
+
+(defconst *h3-book-powers-expt* (proof-cl "EXPT"))
+(defconst *h3-book-powers-natural-integral-power* "H3-BOOK-NATURAL-POWER-INTEGRAL")
+(defconst *h3-book-powers-natural-positive-power* "H3-BOOK-NATURAL-POWER-POSITIVE")
+(defconst *h3-book-powers-positive-power* "H3-BOOK-POWER-POSITIVE")
+(defconst *h3-book-powers-natural-power-opposite* "H3-BOOK-NATURAL-POWER-OPPOSITE")
+(defconst *h3-book-powers-power-opposite* "H3-BOOK-POWER-OPPOSITE")
+(defconst *h3-book-powers-power-predecessor* "H3-BOOK-POWER-PREDECESSOR")
+(defconst *h3-book-powers-power-add-natural* "H3-BOOK-POWER-ADD-NATURAL")
+(defconst *h3-book-powers-power-add-integer* "H3-BOOK-POWER-ADD-INTEGER")
+
+(defmacro h3-book-powers-with-library (lib bindings result)
+  (if (endp bindings)
+      result
+    (let* ((binding (car bindings))
+           (name (car binding))
+           (form (cadr binding))
+           (rest (cdr bindings)))
+      (if (eq (caddr binding) :pair)
+          `(let* ((h3-book-powers-binding-result ,form)
+                  (,name (car h3-book-powers-binding-result))
+                  (,lib (cdr h3-book-powers-binding-result)))
+             (if (failure-p ,name)
+                 (cons ,name ,lib)
+               (h3-book-powers-with-library ,lib ,rest ,result)))
+        `(let ((,name ,form))
+           (if (failure-p ,name)
+               (cons ,name ,lib)
+             (h3-book-powers-with-library ,lib ,rest ,result)))))))
+
+(defun h3-book-powers-checked-pair (answer)
+  (if (failure-p (car answer)) (car answer) answer))
+
+(defun h3-book-powers-checked-library (answer)
+  (if (failure-p (car answer)) (car answer) (cdr answer)))
+
+(defun h3-book-powers-step-argument (step position)
+  (proof-with-checked-results ((literal (proof-step-first step)))
+    (proof-term-at literal position)))
+
+(defun h3-book-powers-search (lib)
+  (h3-rewrite-search-init lib nil nil nil 150 nil))
+
+(defun h3-book-powers-prove (lib term)
+  (car (h3-rewrite-search-prove (h3-book-powers-search lib) term nil)))
+
+(defun h3-book-powers-guard-context (lib guard)
+  (proof-with-checked-results
+      ((search (h3-book-powers-search lib))
+       (assumption (proof-proof-assume (library-library-proof lib) guard t)))
+    (h3-rewrite-search-context search (list assumption))))
+
+(defun h3-book-powers-context-step (context term)
+  (let ((entry (assoc-equal term context)))
+    (if entry
+        (cdr entry)
+      '(:failure "failure" ""))))
+
+(defun h3-book-powers-has-lemma-p (lib name)
+  (if (assoc-equal (library-lemma-name name)
+                   (proof-proof-facts (library-library-proof lib)))
+      t nil))
+
+(defun h3-book-powers-register (lib name formula theorem)
+  (if (h3-book-powers-has-lemma-p lib name)
+      ; The entry is appended before the fact name is checked for duplicates.
+      (h3-book-powers-with-library lib
+          ((key (library-lemma-name name))
+           (step (proof-proof-subsume (library-library-proof lib) theorem (list formula)))
+           (entry (proof-proof-entry "lemma" key (list key formula) (list step))))
+        (cons '(:failure "failure" "")
+              (library-library-with-entries
+               lib (append (library-library-entries lib) (list entry)))))
+    (h3-book-powers-with-library lib
+        ((updated (library-library-lemma lib name formula theorem nil)))
+      (cons nil updated))))
+
+(defun h3-book-powers-power (base index)
+  (list *h3-book-powers-expt* base index))
+
+(defun h3-book-powers-power-equation (lib term value evidence)
+  (let* ((proof (library-library-proof lib))
+         (definitions (proof-proof-definitions proof))
+         (zip-name (proof-sym "ZIP" "ACL2"))
+         (fix-name (proof-sym "FIX" "ACL2"))
+         (transparent
+          (append *h3-book-descent-transparent*
+                  (if (assoc-equal zip-name definitions) (list zip-name) nil)
+                  (if (assoc-equal fix-name definitions) (list fix-name) nil))))
+    (proof-with-checked-results
+        ((search (h3-rewrite-search-init lib transparent (list term) nil 150 nil))
+         (context (h3-rewrite-search-context search evidence))
+         (reduction (car (h3-rewrite-search-reduce search term context nil nil))))
+      (if (not reduction)
+          *h3-rewrite-unproved*
+        (proof-with-checked-results
+            ((right (h3-book-powers-step-argument reduction 2))
+             (aligned (h3-book-arithmetic-associative-equal lib right value)))
+          (proof-proof-chain proof reduction (list aligned)))))))
+
+(defun h3-book-powers-unit-index-power (lib base nonzero)
+  (proof-with-checked-results
+      ((b (h3-book-powers-step-argument base 1))
+       (search (h3-book-powers-search lib))
+       (whole-answer (h3-rewrite-search-prove search (list *proof-integerp* *proof-one*) nil))
+       (whole (car whole-answer))
+       (positive-answer (h3-rewrite-search-prove (cdr whole-answer)
+                                                 (library-lt *proof-zero* *proof-one*) nil))
+       (positive (car positive-answer))
+       (nz-index (car (h3-rewrite-search-prove (cdr positive-answer)
+                                              (proof-neg (proof-eq *proof-one* *proof-zero*))
+                                              nil)))
+       (previous (h3-book-powers-power b *proof-zero*))
+       (step (h3-book-powers-power-equation
+              lib (h3-book-powers-power b *proof-one*) (list *proof-times* b previous)
+              (list base nonzero whole positive nz-index)))
+       (at-zero (h3-book-powers-power-equation lib previous *proof-one* nil))
+       (proof (library-library-proof lib))
+       (rewritten (proof-proof-rewrite proof step at-zero '(1 2 2)))
+       (identity (h3-book-arithmetic-one-right lib b)))
+    (proof-proof-chain proof rewritten (list identity))))
+
+(defun h3-book-powers-index-sign-with-library (lib integer sign bound)
+  (h3-book-powers-with-library lib
+      ((rational (h3-book-numerator-as-rational lib integer))
+       (numeric (h3-book-signs-number lib rational)))
+    (h3-book-signs-sign-evidence-with-library lib numeric sign bound)))
+
+(defun h3-book-powers-predecessor-equation-with-library (lib base nonzero index-integer index-positive)
+  (h3-book-powers-with-library lib
+      ((b (h3-book-powers-step-argument base 1))
+       (i (h3-book-powers-step-argument index-integer 1))
+       (signed (h3-book-powers-index-sign-with-library lib index-integer 1 index-positive) :pair)
+       (previous (library-plus *proof-neg-one* i))
+       (step (h3-book-powers-power-equation
+              lib (h3-book-powers-power b i)
+              (list *proof-times* b (h3-book-powers-power b previous))
+              (list base nonzero index-integer index-positive
+                    (h3-book-signs-signs-zero signed)))))
+    (cons step lib)))
+
+(defun h3-book-powers-predecessor-equation (lib base nonzero index-integer index-positive)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-predecessor-equation-with-library lib base nonzero index-integer index-positive)))
+
+(defun h3-book-powers-nonnegative-integer (lib integer positive)
+  (proof-with-checked-results ((term (h3-book-powers-step-argument integer 1)))
+    (library-library-cite lib "POSITIVE-NONNEGATIVE" (list term) (list integer positive))))
+
+(defun h3-book-powers-decrease-index-with-library (lib integer nonnegative positive)
+  (h3-book-powers-with-library lib
+      ((index (h3-book-powers-step-argument integer 1))
+       (child (library-plus *proof-neg-one* index))
+       (whole (library-library-type-of lib child (list integer)))
+       (zero (library-library-axiom lib "INTEGER-0" nil))
+       (gap (h3-book-floor-integer-gap-with-library lib zero integer positive) :pair)
+       (sums (h3-book-sums-book-sums-init lib))
+       (gap-test (h3-book-powers-step-argument gap 1))
+       (lower (h3-book-sums-cancel-comparison
+               lib sums (library-lt child *proof-zero*) gap-test (list integer)))
+       (lower (library-library-transport-argument lib gap lower 1))
+       (positive-one (library-lt *proof-zero* *proof-one*))
+       (less (h3-book-sums-cancel-comparison
+              lib sums (library-lt child index) positive-one (list integer)))
+       (one-order (h3-book-powers-prove lib positive-one))
+       (less (proof-proof-transport (library-library-proof lib) one-order less))
+       (descent (h3-book-floor-natural-decrease
+                 lib child index whole integer lower nonnegative less)))
+    (cons (list whole lower descent) lib)))
+
+(defun h3-book-powers-decrease-index (lib integer nonnegative positive)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-decrease-index-with-library lib integer nonnegative positive)))
+
+(defun h3-book-powers-positive-index-with-library (lib whole nonnegative nonzero)
+  (h3-book-powers-with-library lib
+      ((index (h3-book-powers-step-argument whole 1))
+       (search (h3-book-powers-search lib))
+       (literal (proof-step-first nonzero))
+       (zero (h3-rewrite-search-known search (proof-neg (proof-eq *proof-zero* index))
+                                      (list (cons literal nonzero))))
+       (left (h3-book-arithmetic-typed-number lib *proof-zero*))
+       (rational (h3-book-numerator-as-rational lib whole))
+       (right (h3-book-signs-number lib rational)))
+    (h3-book-floor-strict-from-weak-with-library lib left right nonnegative zero)))
+
+(defun h3-book-powers-positive-index (lib whole nonnegative nonzero)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-positive-index-with-library lib whole nonnegative nonzero)))
+
+(defun h3-book-powers-next-hypothesis (lib formula decreases index child)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((test (proof-step-first decreases))
+         (claim (proof-subst formula (list (cons index child))))
+         (hypothesis (proof-proof-assume proof (proof-ite test claim *proof-true*) t)))
+      (proof-proof-prove-if proof hypothesis decreases))))
+
+(defun h3-book-powers-induct (lib case formula index replacement)
+  (proof-with-checked-results
+      ((ordinal (h3-book-floor-measure-ordinal lib index)))
+    (proof-proof-induct (library-library-proof lib) ordinal case formula
+                       (h3-book-floor-natural-measure index) (list replacement))))
+
+(defun h3-book-powers-natural-exponent-induction-zero (lib whole)
+  (proof-with-checked-results
+      ((index (h3-book-powers-step-argument whole 1))
+       (test (proof-eq index *proof-zero*))
+       (zero (proof-proof-assume (library-library-proof lib) test t)))
+    (list test zero)))
+
+(defun h3-book-powers-natural-exponent-induction-step-with-library
+    (lib premises formula whole nonnegative test)
+  (h3-book-powers-with-library lib
+      ((index (h3-book-powers-step-argument whole 1))
+       (nonzero (proof-proof-assume (library-library-proof lib) test nil))
+       (positive (h3-book-powers-positive-index-with-library lib whole nonnegative nonzero) :pair)
+       (descent (h3-book-powers-decrease-index-with-library lib whole nonnegative positive) :pair)
+       (child (car descent))
+       (child-bound (cadr descent))
+       (child-index (h3-book-powers-step-argument child 1))
+       (replacement (list (list index child-index)))
+       (hypothesis (h3-book-powers-next-hypothesis lib formula (caddr descent) index child-index))
+       (condition (h3-book-floor-conjunct-proof lib (append premises (list child child-bound))))
+       (hypothesis (proof-proof-modus-ponens (library-library-proof lib) hypothesis condition)))
+    (cons (list positive child hypothesis replacement) lib)))
+
+(defun h3-book-powers-natural-exponent-induction-step (lib premises formula whole nonnegative test)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-natural-exponent-induction-step-with-library
+    lib premises formula whole nonnegative test)))
+
+(defun h3-book-powers-natural-exponent-induction (lib formula whole test replacement empty nonempty)
+  (proof-with-checked-results
+      ((empty empty)
+       (nonempty nonempty)
+       (guard (proof-term-at formula 1))
+       (case (proof-proof-cases (library-library-proof lib) test empty nonempty))
+       (case (h3-rewrite-implication lib guard case))
+       (index (h3-book-powers-step-argument whole 1))
+       (step (h3-book-powers-induct lib case formula index replacement)))
+    (cons step lib)))
+
+(defmacro h3-book-powers-with-natural-exponent-induction
+    (lib premises formula whole nonnegative at-zero advance)
+  `(proof-with-checked-results
+       ((powers-initial-library ,lib)
+        (powers-premises ,premises)
+        (powers-formula ,formula)
+        (powers-whole ,whole)
+        (powers-bound ,nonnegative)
+        (powers-zero (h3-book-powers-natural-exponent-induction-zero
+                      powers-initial-library powers-whole))
+        (powers-empty (,(car at-zero) powers-initial-library (cadr powers-zero)
+                       ,@(cdr at-zero)))
+        (powers-step (h3-book-powers-natural-exponent-induction-step
+                      (cdr powers-empty) powers-premises powers-formula
+                      powers-whole powers-bound (car powers-zero)))
+        (powers-nonempty (,(car advance) (cdr powers-step) (caar powers-step)
+                          (cadar powers-step) (caddar powers-step) ,@(cdr advance))))
+     (h3-book-powers-natural-exponent-induction
+      (cdr powers-nonempty) powers-formula powers-whole (car powers-zero)
+      (cadddr (car powers-step)) (car powers-empty) (car powers-nonempty))))
+
+(defun h3-book-powers-integer-terms (terms)
+  (if (endp terms)
+      nil
+    (cons (list *proof-integerp* (car terms))
+          (h3-book-powers-integer-terms (cdr terms)))))
+
+(defun h3-book-powers-power-guard (base indices)
+  (h3-book-floor-conjunction
+   (list* (list *library-numberp* base)
+          (proof-neg (proof-eq base *proof-zero*))
+          (h3-book-powers-integer-terms indices))))
+
+(defun h3-book-powers-positive-base-with-library (lib rational positive)
+  (h3-book-powers-with-library lib
+      ((numeric (h3-book-signs-number lib rational))
+       (signed (h3-book-signs-sign-evidence-with-library lib numeric 1 positive) :pair))
+    (cons (list numeric (h3-book-signs-signs-zero signed)) lib)))
+
+(defun h3-book-powers-positive-base (lib rational positive)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-positive-base-with-library lib rational positive)))
+
+(defun h3-book-powers-successor-equation-with-library (lib base nonzero index negative)
+  (h3-book-powers-with-library lib
+      ((b (h3-book-powers-step-argument base 1))
+       (i (h3-book-powers-step-argument index 1))
+       (sign (h3-book-powers-index-sign-with-library lib index -1 negative) :pair)
+       (previous (list *proof-times* (list *h3-book-arithmetic-divide* b)
+                       (h3-book-powers-power b (library-plus i *proof-one*))))
+       (step (h3-book-powers-power-equation
+              lib (h3-book-powers-power b i) previous
+              (list base nonzero index (h3-book-signs-signs-zero sign)
+                    (h3-book-signs-signs-positive sign)))))
+    (cons step lib)))
+
+(defun h3-book-powers-successor-equation (lib base nonzero index negative)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-successor-equation-with-library lib base nonzero index negative)))
+
+(defun h3-book-powers-rational-power (lib base exponent)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((b (h3-book-powers-step-argument base 1))
+         (source (h3-book-powers-power b exponent))
+         (fact (proof-proof-fact proof (proof-sym "RATIONALP-EXPT-TYPE-PRESCRIPTION" "ACL2")
+                                 (list (list (proof-sym "R" "ACL2") b)
+                                       (list (proof-sym "I" "ACL2") exponent))))
+         (result (proof-proof-modus-ponens proof fact base))
+         (literal (proof-step-first result)))
+      (if (equal literal (list *library-rationalp* source))
+          result
+        '(:failure "failure" "")))))
+
+(defun h3-book-powers-numeric-power-branch (lib body test holds numeric)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((assumed (proof-proof-assume proof test holds))
+         (selected (proof-proof-select proof body assumed)))
+      (library-library-transport-argument lib numeric selected 1))))
+
+(mutual-recursion
+ (defun h3-book-powers-numeric-power-result (body lib)
+   (declare (xargs :measure (acl2-count body)))
+   (if (and (consp body) (equal (car body) *proof-if*))
+       (if (consp (cdr body))
+           (h3-book-powers-numeric-power-branches (cddr body) lib body (cadr body) nil)
+         '(:failure "failure" ""))
+     (h3-book-arithmetic-typed-number lib body)))
+
+ (defun h3-book-powers-numeric-power-branches (values lib body test yes)
+   (declare (xargs :measure (acl2-count values)))
+   (if (consp values)
+       (proof-with-checked-results
+           ((numeric (h3-book-powers-numeric-power-result (car values) lib))
+            (branch (h3-book-powers-numeric-power-branch lib body test (not yes) numeric)))
+         (if yes
+             (proof-proof-cases (library-library-proof lib) test yes branch)
+           (h3-book-powers-numeric-power-branches (cdr values) lib body test branch)))
+     (if yes
+         '(:failure "failure" "")
+       '(:failure "failure" "")))))
+
+(defun h3-book-powers-numeric-power (lib term)
+  (proof-with-checked-results
+      ((opened (proof-proof-unfold (library-library-proof lib) term))
+       (body (h3-book-powers-step-argument opened 2))
+       (typed (h3-book-powers-numeric-power-result body lib)))
+    (library-library-transport-argument lib typed opened 1)))
+
+(defun h3-book-powers-nonzero-power (lib base nonzero exponent)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((b (h3-book-powers-step-argument base 1))
+         (fact (proof-proof-fact proof (proof-sym "EXPT-TYPE-PRESCRIPTION-NON-ZERO-BASE" "ACL2")
+                                 (list (list (proof-sym "R" "ACL2") b)
+                                       (list (proof-sym "I" "ACL2") exponent))))
+         (condition (h3-book-floor-conjunct-proof lib (list base nonzero))))
+      (proof-proof-modus-ponens proof fact condition))))
+
+(defun h3-book-powers-power-inverse-law (lib base nonzero exponent)
+  (proof-with-checked-results
+      ((b (h3-book-powers-step-argument base 1))
+       (term (h3-book-powers-power b exponent))
+       (numeric (h3-book-powers-numeric-power lib term))
+       (nonzero (h3-book-powers-nonzero-power lib base nonzero exponent)))
+    (h3-book-arithmetic-inverse lib term numeric nonzero)))
+
+(defun h3-book-powers-natural-power-integral-case (lib term base index pos step)
+  (h3-book-powers-with-library lib
+      ((rational (h3-book-numerator-as-rational lib base))
+       (b-num (h3-book-signs-number lib rational))
+       (b-test (proof-eq *library-y* *proof-zero*))
+       (nonzero (proof-proof-assume (library-library-proof lib) b-test nil))
+       (step-eq (h3-book-powers-predecessor-equation-with-library lib b-num nonzero index pos) :pair)
+       (product (h3-book-powers-step-argument step-eq 2))
+       (product-int (library-library-type-of lib product (list base step)))
+       (composed (library-library-transport-argument lib product-int step-eq 1))
+       (b-zero (proof-proof-assume (library-library-proof lib) b-test t))
+       (signed (h3-book-powers-index-sign-with-library lib index 1 pos) :pair)
+       (zero (h3-book-powers-power-equation
+              lib term *proof-zero*
+              (list index b-num b-zero pos (h3-book-signs-signs-zero signed))))
+       (zero-int (library-library-axiom lib "INTEGER-0" nil))
+       (empty (library-library-transport-argument lib zero-int zero 1))
+       (result (proof-proof-cases (library-library-proof lib) b-test empty composed)))
+    (cons result lib)))
+
+(defun h3-book-powers-natural-power-positive-case (lib base b-pos index pos child step)
+  (h3-book-powers-with-library lib
+      ((base-data (h3-book-powers-positive-base-with-library lib base b-pos) :pair)
+       (step-eq (h3-book-powers-predecessor-equation-with-library
+                 lib (car base-data) (cadr base-data) index pos) :pair)
+       (child-type (h3-book-powers-rational-power lib base child))
+       (base-number (h3-book-signs-number lib base))
+       (base-sign (h3-book-signs-sign-evidence-with-library lib base-number 1 b-pos) :pair)
+       (child-number (h3-book-signs-number lib child-type))
+       (child-sign (h3-book-signs-sign-evidence-with-library lib child-number 1 step) :pair)
+       (product-sign (h3-book-signs-rational-sign-with-library
+                      lib base child-type base-sign child-sign) :pair)
+       (result (library-library-transport-argument
+                lib (h3-book-signs-signs-positive product-sign) step-eq 2)))
+    (cons result lib)))
+
+(defun h3-book-powers-prove-natural-power-with-library (lib integral)
+  (h3-book-powers-with-library lib
+      ((registered (h3-book-sums-lemmas-with-library lib) :pair)
+       (proof (library-library-proof lib))
+       (term (h3-book-powers-power *library-y* *library-x*))
+       (base-test (list (if integral *proof-integerp* *library-rationalp*) *library-y*))
+       (index-test (list *proof-integerp* *library-x*))
+       (weak-test (library-le *proof-zero* *library-x*))
+       (positive-base-test (library-lt *proof-zero* *library-y*))
+       (premises (if integral (list base-test) (list base-test positive-base-test)))
+       (guard (h3-book-floor-conjunction (append premises (list index-test weak-test))))
+       (conclusion (if integral (list *proof-integerp* term) (library-lt *proof-zero* term)))
+       (formula (list *library-implies* guard conclusion))
+       (context (h3-book-powers-guard-context lib guard))
+       (base (h3-book-powers-context-step context base-test))
+       (index (h3-book-powers-context-step context index-test))
+       (weak (h3-book-powers-context-step context weak-test))
+       (test (proof-eq *library-x* *proof-zero*))
+       (zero (proof-proof-assume proof test t))
+       (eq-zero (h3-book-powers-power-equation lib term *proof-one* (list index zero)))
+       (one-type (if integral
+                     (library-library-axiom lib "INTEGER-1" nil)
+                   (h3-book-powers-prove lib (library-lt *proof-zero* *proof-one*))))
+       (zero-result (library-library-transport-argument lib one-type eq-zero (if integral 1 2)))
+       (nonzero (proof-proof-assume proof test nil))
+       (pos (h3-book-powers-positive-index-with-library lib index weak nonzero) :pair)
+       (descent (h3-book-powers-decrease-index-with-library lib index weak pos) :pair)
+       (child-int (car descent))
+       (child-bound (cadr descent))
+       (child (h3-book-powers-step-argument child-int 1))
+       (replacement (list (list *library-x* child)))
+       (inductive (h3-book-powers-next-hypothesis lib formula (caddr descent) *library-x* child))
+       (b-pos (if integral nil (h3-book-powers-context-step context positive-base-test)))
+       (condition (h3-book-floor-conjunct-proof
+                   lib (append (if integral (list base) (list base b-pos))
+                               (list child-int child-bound))))
+       (step (proof-proof-modus-ponens (library-library-proof lib) inductive condition))
+       (next (if integral
+                 (h3-book-powers-natural-power-integral-case lib term base index pos step)
+               (h3-book-powers-natural-power-positive-case lib base b-pos index pos child step)) :pair)
+       (cases (proof-proof-cases (library-library-proof lib) test zero-result next))
+       (case (h3-rewrite-implication lib guard cases))
+       (theorem (h3-book-powers-induct lib case formula *library-x* replacement)))
+    (h3-book-powers-register
+     lib (if integral *h3-book-powers-natural-integral-power* *h3-book-powers-natural-positive-power*)
+     formula theorem)))
+
+(defun h3-book-powers-prove-natural-power (lib integral)
+  (h3-book-powers-checked-library
+   (h3-book-powers-prove-natural-power-with-library lib integral)))
+
+(defun h3-book-powers-integral-power-natural-with-library (lib base index nonnegative)
+  (h3-book-powers-with-library lib
+      ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-natural-integral-power*)
+                       (cons nil lib)
+                     (h3-book-powers-prove-natural-power-with-library lib t)) :pair)
+       (i (h3-book-powers-step-argument index 1))
+       (b (h3-book-powers-step-argument base 1))
+       (theorem (library-library-cite lib *h3-book-powers-natural-integral-power* (list i b) nil))
+       (condition (h3-book-floor-conjunct-proof lib (list base index nonnegative)))
+       (step (proof-proof-modus-ponens (library-library-proof lib) theorem condition)))
+    (cons step lib)))
+
+(defun h3-book-powers-integral-power-natural (lib base index nonnegative)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-integral-power-natural-with-library lib base index nonnegative)))
+
+(defun h3-book-powers-positive-power-natural-with-library (lib base positive index nonnegative)
+  (h3-book-powers-with-library lib
+      ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-natural-positive-power*)
+                       (cons nil lib)
+                     (h3-book-powers-prove-natural-power-with-library lib nil)) :pair)
+       (i (h3-book-powers-step-argument index 1))
+       (b (h3-book-powers-step-argument base 1))
+       (theorem (library-library-cite lib *h3-book-powers-natural-positive-power* (list i b) nil))
+       (condition (h3-book-floor-conjunct-proof lib (list base positive index nonnegative)))
+       (step (proof-proof-modus-ponens (library-library-proof lib) theorem condition)))
+    (cons step lib)))
+
+(defun h3-book-powers-positive-power-natural (lib base positive index nonnegative)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-positive-power-natural-with-library lib base positive index nonnegative)))
+
+(defun h3-book-powers-natural-power-with-library (lib base positive index nonnegative)
+  (h3-book-powers-with-library lib
+      ((integral (h3-book-powers-integral-power-natural-with-library lib base index nonnegative) :pair)
+       (rational (h3-book-numerator-as-rational lib base))
+       (powered (h3-book-powers-positive-power-natural-with-library
+                 lib rational positive index nonnegative) :pair))
+    (cons (list integral powered) lib)))
+
+(defun h3-book-powers-natural-power (lib base positive index nonnegative)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-natural-power-with-library lib base positive index nonnegative)))
+
+(defun h3-book-powers-prove-natural-power-opposite-with-library (lib)
+  (h3-book-powers-with-library lib
+      ((registered (h3-book-sums-lemmas-with-library lib) :pair)
+       (proof (library-library-proof lib))
+       (base-test (list *library-numberp* *library-y*))
+       (nonzero-test (proof-neg (proof-eq *library-y* *proof-zero*)))
+       (index-test (list *proof-integerp* *library-x*))
+       (bound-test (library-le *proof-zero* *library-x*))
+       (guard (h3-book-floor-conjunction (list base-test nonzero-test index-test bound-test)))
+       (context (h3-book-powers-guard-context lib guard))
+       (base (h3-book-powers-context-step context base-test))
+       (index (h3-book-powers-context-step context index-test))
+       (nonzero (h3-book-powers-context-step context nonzero-test))
+       (bound (h3-book-powers-context-step context bound-test))
+       (p (h3-book-powers-power *library-y* *library-x*))
+       (negative-index (library-minus *library-x*))
+       (n (h3-book-powers-power *library-y* negative-index))
+       (paired (list *proof-times* n p))
+       (formula (list *library-implies* guard (proof-eq paired *proof-one*)))
+       (test (proof-eq *library-x* *proof-zero*))
+       (zero (proof-proof-assume proof test t))
+       (neg-zero (proof-proof-reflexive proof negative-index))
+       (neg-zero (proof-proof-rewrite proof neg-zero zero '(1 2 1)))
+       (minus-zero (proof-proof-compute proof (library-minus *proof-zero*) 0))
+       (neg-zero (proof-proof-chain proof neg-zero (list minus-zero)))
+       (neg-int (library-library-type-of lib negative-index (list index)))
+       (p-zero (h3-book-powers-power-equation lib p *proof-one* (list index zero)))
+       (n-zero (h3-book-powers-power-equation lib n *proof-one* (list neg-int neg-zero)))
+       (first (proof-proof-reflexive proof paired))
+       (first (proof-proof-rewrite proof first p-zero '(1 2 2)))
+       (first (proof-proof-rewrite proof first n-zero '(1 2 1)))
+       (one-times-one (proof-proof-compute proof (list *proof-times* *proof-one* *proof-one*) 1))
+       (first (proof-proof-chain proof first (list one-times-one)))
+       (nonzero-index (proof-proof-assume proof test nil))
+       (pos (h3-book-powers-positive-index-with-library lib index bound nonzero-index) :pair)
+       (descent (h3-book-powers-decrease-index-with-library lib index bound pos) :pair)
+       (child-int (car descent))
+       (child-bound (cadr descent))
+       (child (h3-book-powers-step-argument child-int 1))
+       (replacement (list (list *library-x* child)))
+       (inductive (h3-book-powers-next-hypothesis lib formula (caddr descent) *library-x* child))
+       (condition (h3-book-floor-conjunct-proof lib (list base nonzero child-int child-bound)))
+       (product (proof-proof-modus-ponens (library-library-proof lib) inductive condition))
+       (p-step (h3-book-powers-predecessor-equation-with-library lib base nonzero index pos) :pair)
+       (reflection (h3-book-signs-positive-reflection lib *library-x*))
+       (negative (proof-proof-rewrite (library-library-proof lib) pos reflection '(1)))
+       (n-step (h3-book-powers-successor-equation-with-library lib base nonzero neg-int negative) :pair)
+       (alignment (h3-book-translation-sum-equality-with-library
+                   lib (library-plus negative-index *proof-one*) (library-minus child)
+                   (list index child-int)) :pair)
+       (proof (library-library-proof lib))
+       (n-step (proof-proof-rewrite proof n-step alignment '(1 2 2 2)))
+       (second (proof-proof-reflexive proof paired))
+       (second (proof-proof-rewrite proof second p-step '(1 2 2)))
+       (second (proof-proof-rewrite proof second n-step '(1 2 1)))
+       (product-term (h3-book-powers-step-argument product 1))
+       (grouped (list *proof-times*
+                      (list *proof-times* *library-y* (list *h3-book-arithmetic-divide* *library-y*))
+                      product-term))
+       (second-right (h3-book-powers-step-argument second 2))
+       (association (h3-book-arithmetic-associative-equal lib second-right grouped))
+       (second (proof-proof-chain proof second (list association)))
+       (law (h3-book-arithmetic-inverse lib *library-y* base nonzero))
+       (second (proof-proof-rewrite proof second law '(1 2 1)))
+       (second (proof-proof-rewrite proof second product '(1 2 2)))
+       (one-times-one (proof-proof-compute proof (list *proof-times* *proof-one* *proof-one*) 1))
+       (second (proof-proof-chain proof second (list one-times-one)))
+       (cases (proof-proof-cases proof test first second))
+       (result (h3-rewrite-implication lib guard cases))
+       (theorem (h3-book-powers-induct lib result formula *library-x* replacement)))
+    (h3-book-powers-register lib *h3-book-powers-natural-power-opposite* formula theorem)))
+
+(defun h3-book-powers-prove-natural-power-opposite (lib)
+  (h3-book-powers-checked-library
+   (h3-book-powers-prove-natural-power-opposite-with-library lib)))
+
+(defun h3-book-powers-natural-power-opposite-with-library (lib base nonzero index bound)
+  (h3-book-powers-with-library lib
+      ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-natural-power-opposite*)
+                       (cons nil lib)
+                     (h3-book-powers-prove-natural-power-opposite-with-library lib)) :pair)
+       (proof (library-library-proof lib))
+       (i (h3-book-powers-step-argument index 1))
+       (b (h3-book-powers-step-argument base 1))
+       (product (library-library-cite lib *h3-book-powers-natural-power-opposite* (list i b) nil))
+       (condition (h3-book-floor-conjunct-proof lib (list base nonzero index bound)))
+       (product (proof-proof-modus-ponens proof product condition))
+       (p (h3-book-powers-power b i))
+       (n (h3-book-powers-power b (library-minus i)))
+       (reciprocal (list *h3-book-arithmetic-divide* p))
+       (law (h3-book-powers-power-inverse-law lib base nonzero i))
+       (exchanged (library-library-axiom lib "COMMUTATIVITY-OF-*" (list reciprocal p)))
+       (other (proof-proof-chain proof exchanged (list law)))
+       (opposite (proof-proof-symmetric proof other))
+       (equality (proof-proof-chain proof product (list opposite)))
+       (raw (h3-book-arithmetic-cancel-product lib n reciprocal p law equality))
+       (n-numeric (h3-book-powers-numeric-power lib n))
+       (n-fixed (h3-book-arithmetic-fix-value lib n n-numeric))
+       (raw (proof-proof-rewrite proof raw n-fixed '(1 1)))
+       (reciprocal-numeric (h3-book-arithmetic-typed-number lib reciprocal))
+       (reciprocal-fixed (h3-book-arithmetic-fix-value lib reciprocal reciprocal-numeric))
+       (result (proof-proof-rewrite proof raw reciprocal-fixed '(1 2))))
+    (cons result lib)))
+
+(defun h3-book-powers-natural-power-opposite (lib base nonzero index bound)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-natural-power-opposite-with-library lib base nonzero index bound)))
+
+(defun h3-book-powers-inverse-power-equation-with-library (lib base nonzero index negative)
+  (h3-book-powers-with-library lib
+      ((i (h3-book-powers-step-argument index 1))
+       (opposite (library-library-type-of lib (library-minus i) (list index)))
+       (rational (h3-book-numerator-as-rational lib index))
+       (numeric (h3-book-signs-number lib rational))
+       (reflection (h3-book-signs-negative-reflection-with-library lib numeric) :pair)
+       (sign (proof-proof-rewrite (library-library-proof lib) negative reflection '(1)))
+       (bound (h3-book-powers-nonnegative-integer lib opposite sign))
+       (equation (h3-book-powers-natural-power-opposite-with-library lib base nonzero opposite bound) :pair)
+       (double (h3-book-translation-sum-equality-with-library
+                lib (library-minus (library-minus i)) i (list index)) :pair)
+       (result (proof-proof-rewrite (library-library-proof lib) equation double '(1 1 2))))
+    (cons result lib)))
+
+(defun h3-book-powers-inverse-power-equation (lib base nonzero index negative)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-inverse-power-equation-with-library lib base nonzero index negative)))
+
+(defun h3-book-powers-prove-positive-power-with-library (lib)
+  (h3-book-powers-with-library lib
+      ((base-test (list *library-rationalp* *library-y*))
+       (positive-test (library-lt *proof-zero* *library-y*))
+       (index-test (list *proof-integerp* *library-x*))
+       (guard (h3-book-floor-conjunction (list base-test positive-test index-test)))
+       (context (h3-book-powers-guard-context lib guard))
+       (base (h3-book-powers-context-step context base-test))
+       (index (h3-book-powers-context-step context index-test))
+       (b-pos (h3-book-powers-context-step context positive-test))
+       (term (h3-book-powers-power *library-y* *library-x*))
+       (test (library-lt *library-x* *proof-zero*))
+       (bound (proof-proof-assume (library-library-proof lib) test nil))
+       (nonnegative-case (h3-book-powers-positive-power-natural-with-library
+                          lib base b-pos index bound) :pair)
+       (negative (proof-proof-assume (library-library-proof lib) test t))
+       (opposite-index (library-minus *library-x*))
+       (opposite (library-library-type-of lib opposite-index (list index)))
+       (index-rational (h3-book-numerator-as-rational lib index))
+       (index-numeric (h3-book-signs-number lib index-rational))
+       (reflection (h3-book-signs-negative-reflection-with-library lib index-numeric) :pair)
+       (opposite-positive (proof-proof-rewrite (library-library-proof lib) negative reflection '(1)))
+       (opposite-bound (h3-book-powers-nonnegative-integer lib opposite opposite-positive))
+       (positive (h3-book-powers-positive-power-natural-with-library
+                  lib base b-pos opposite opposite-bound) :pair)
+       (rational (h3-book-powers-rational-power lib base opposite-index))
+       (base-data (h3-book-powers-positive-base-with-library lib base b-pos) :pair)
+       (equation (h3-book-powers-inverse-power-equation-with-library
+                  lib (car base-data) (cadr base-data) index negative) :pair)
+       (inverse-positive (h3-book-numerator-positive-reciprocal-with-library lib rational positive) :pair)
+       (negative-case (library-library-transport-argument lib inverse-positive equation 2))
+       (formula (list *library-implies* guard (library-lt *proof-zero* term)))
+       (cases (proof-proof-cases (library-library-proof lib) test negative-case nonnegative-case))
+       (result (h3-rewrite-implication lib guard cases)))
+    (h3-book-powers-register lib *h3-book-powers-positive-power* formula result)))
+
+(defun h3-book-powers-prove-positive-power (lib)
+  (h3-book-powers-checked-library
+   (h3-book-powers-prove-positive-power-with-library lib)))
+
+(defun h3-book-powers-positive-power-with-library (lib base positive index)
+  (h3-book-powers-with-library lib
+      ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-positive-power*)
+                       (cons nil lib)
+                     (h3-book-powers-prove-positive-power-with-library lib)) :pair)
+       (i (h3-book-powers-step-argument index 1))
+       (b (h3-book-powers-step-argument base 1))
+       (theorem (library-library-cite lib *h3-book-powers-positive-power* (list i b) nil))
+       (condition (h3-book-floor-conjunct-proof lib (list base positive index)))
+       (step (proof-proof-modus-ponens (library-library-proof lib) theorem condition)))
+    (cons step lib)))
+
+(defun h3-book-powers-positive-power (lib base positive index)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-positive-power-with-library lib base positive index)))
+
+(defun h3-book-powers-prove-power-opposite-with-library (lib)
+  (h3-book-powers-with-library lib
+      ((guard (h3-book-powers-power-guard *library-y* (list *library-x*)))
+       (context (h3-book-powers-guard-context lib guard))
+       (base (h3-book-powers-context-step context (list *library-numberp* *library-y*)))
+       (index (h3-book-powers-context-step context (list *proof-integerp* *library-x*)))
+       (nonzero (h3-book-powers-context-step context (proof-neg (proof-eq *library-y* *proof-zero*))))
+       (registered (h3-book-sums-lemmas-with-library lib) :pair)
+       (source (h3-book-powers-power *library-y* *library-x*))
+       (opposite (h3-book-powers-power *library-y* (library-minus *library-x*)))
+       (test (library-lt *library-x* *proof-zero*))
+       (bound (proof-proof-assume (library-library-proof lib) test nil))
+       (nonnegative (h3-book-powers-natural-power-opposite-with-library lib base nonzero index bound) :pair)
+       (below (proof-proof-assume (library-library-proof lib) test t))
+       (equation (h3-book-powers-inverse-power-equation-with-library lib base nonzero index below) :pair)
+       (proof (library-library-proof lib))
+       (inv (list *h3-book-arithmetic-divide* source))
+       (reflexive (proof-proof-reflexive proof inv))
+       (lifted (proof-proof-rewrite proof reflexive equation '(1 2 1)))
+       (double (h3-book-arithmetic-reciprocal-involution lib opposite))
+       (numeric (h3-book-powers-numeric-power lib opposite))
+       (fixed (h3-book-arithmetic-fix-value lib opposite numeric))
+       (negative (proof-proof-chain proof lifted (list double fixed)))
+       (negative (proof-proof-symmetric proof negative))
+       (cases (proof-proof-cases proof test negative nonnegative))
+       (formula (list *library-implies* guard (proof-eq opposite inv)))
+       (theorem (h3-rewrite-implication lib guard cases)))
+    (h3-book-powers-register lib *h3-book-powers-power-opposite* formula theorem)))
+
+(defun h3-book-powers-prove-power-opposite (lib)
+  (h3-book-powers-checked-library
+   (h3-book-powers-prove-power-opposite-with-library lib)))
+
+(defun h3-book-powers-power-opposite-with-library (lib base nonzero index)
+  (h3-book-powers-with-library lib
+      ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-power-opposite*)
+                       (cons nil lib)
+                     (h3-book-powers-prove-power-opposite-with-library lib)) :pair)
+       (i (h3-book-powers-step-argument index 1))
+       (b (h3-book-powers-step-argument base 1))
+       (fact (library-library-cite lib *h3-book-powers-power-opposite* (list i b) nil))
+       (condition (h3-book-floor-conjunct-proof lib (list base nonzero index)))
+       (step (proof-proof-modus-ponens (library-library-proof lib) fact condition)))
+    (cons step lib)))
+
+(defun h3-book-powers-power-opposite (lib base nonzero index)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-power-opposite-with-library lib base nonzero index)))
+
+(defun h3-book-powers-prove-power-predecessor-with-library (lib)
+  (h3-book-powers-with-library lib
+      ((guard (h3-book-powers-power-guard *library-y* (list *library-x*)))
+       (context (h3-book-powers-guard-context lib guard))
+       (base (h3-book-powers-context-step context (list *library-numberp* *library-y*)))
+       (index (h3-book-powers-context-step context (list *proof-integerp* *library-x*)))
+       (nonzero (h3-book-powers-context-step context (proof-neg (proof-eq *library-y* *proof-zero*))))
+       (registered (h3-book-sums-lemmas-with-library lib) :pair)
+       (previous (library-plus *proof-neg-one* *library-x*))
+       (previous-int (library-library-type-of lib previous (list index)))
+       (test (library-lt *proof-zero* *library-x*))
+       (positive (proof-proof-assume (library-library-proof lib) test t))
+       (first (h3-book-powers-predecessor-equation-with-library lib base nonzero index positive) :pair)
+       (nonpositive (proof-proof-assume (library-library-proof lib) test nil))
+       (bounds (h3-book-order-bounds-init lib (list index nonpositive)))
+       (bound (let ((answer (h3-book-order-bounds-bound-with-bounds
+                             bounds (library-lt *library-x* *proof-one*))))
+                (cons (car answer) (h3-book-order-bounds-lib (cdr answer)))) :pair)
+       (sums (h3-book-sums-book-sums-init lib))
+       (bound-test (proof-step-first bound))
+       (comparison (h3-book-sums-cancel-comparison
+                    lib sums (library-lt previous *proof-zero*) bound-test (list index previous-int)))
+       (previous-negative (proof-proof-transport (library-library-proof lib) bound comparison))
+       (recurrence (h3-book-powers-successor-equation-with-library
+                    lib base nonzero previous-int previous-negative) :pair)
+       (alignment (h3-book-translation-sum-equality-with-library
+                   lib (library-plus previous *proof-one*) *library-x*
+                   (list index previous-int)) :pair)
+       (proof (library-library-proof lib))
+       (recurrence (proof-proof-rewrite proof recurrence alignment '(1 2 2 2)))
+       (source (h3-book-powers-power *library-y* *library-x*))
+       (target (list *proof-times* *library-y* (h3-book-powers-power *library-y* previous)))
+       (right (proof-proof-reflexive proof target))
+       (right (proof-proof-rewrite proof right recurrence '(1 2 2)))
+       (product-term (h3-book-powers-step-argument right 2))
+       (law (h3-book-arithmetic-inverse lib *library-y* base nonzero))
+       (product (h3-book-quotient-cancel-inverse-pair lib product-term *library-y* source law))
+       (numeric (h3-book-powers-numeric-power lib source))
+       (fixed (h3-book-arithmetic-fix-value lib source numeric))
+       (second (proof-proof-chain proof right (list product fixed)))
+       (second (proof-proof-symmetric proof second))
+       (formula (list *library-implies* guard (proof-eq source target)))
+       (cases (proof-proof-cases proof test first second))
+       (theorem (h3-rewrite-implication lib guard cases)))
+    (h3-book-powers-register lib *h3-book-powers-power-predecessor* formula theorem)))
+
+(defun h3-book-powers-prove-power-predecessor (lib)
+  (h3-book-powers-checked-library
+   (h3-book-powers-prove-power-predecessor-with-library lib)))
+
+(defun h3-book-powers-power-predecessor-with-library (lib base nonzero index)
+  (h3-book-powers-with-library lib
+      ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-power-predecessor*)
+                       (cons nil lib)
+                     (h3-book-powers-prove-power-predecessor-with-library lib)) :pair)
+       (i (h3-book-powers-step-argument index 1))
+       (b (h3-book-powers-step-argument base 1))
+       (theorem (library-library-cite lib *h3-book-powers-power-predecessor* (list i b) nil))
+       (condition (h3-book-floor-conjunct-proof lib (list base nonzero index)))
+       (step (proof-proof-modus-ponens (library-library-proof lib) theorem condition)))
+    (cons step lib)))
+
+(defun h3-book-powers-power-predecessor (lib base nonzero index)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-power-predecessor-with-library lib base nonzero index)))
+
+(defun h3-book-powers-add-power-conclusion (base first second)
+  (proof-eq (h3-book-powers-power base (library-plus first second))
+            (list *proof-times* (h3-book-powers-power base first) (h3-book-powers-power base second))))
+
+(defun h3-book-powers-prove-power-add-natural-with-library (lib)
+  (h3-book-powers-with-library lib
+      ((registered (h3-book-sums-lemmas-with-library lib) :pair)
+       (proof (library-library-proof lib))
+       (base-test (list *library-numberp* *library-y*))
+       (nonzero-test (proof-neg (proof-eq *library-y* *proof-zero*)))
+       (m-test (list *proof-integerp* *library-z*))
+       (n-test (list *proof-integerp* *library-x*))
+       (bound-test (library-le *proof-zero* *library-x*))
+       (guard (h3-book-floor-conjunction (list base-test nonzero-test m-test n-test bound-test)))
+       (formula (list *library-implies* guard
+                      (h3-book-powers-add-power-conclusion *library-y* *library-z* *library-x*)))
+       (context (h3-book-powers-guard-context lib guard))
+       (base (h3-book-powers-context-step context base-test))
+       (n-int (h3-book-powers-context-step context n-test))
+       (m-int (h3-book-powers-context-step context m-test))
+       (nonzero (h3-book-powers-context-step context nonzero-test))
+       (n-bound (h3-book-powers-context-step context bound-test))
+       (combined (library-plus *library-z* *library-x*))
+       (combined-int (library-library-type-of lib combined (list m-int n-int)))
+       (test (proof-eq *library-x* *proof-zero*))
+       (zero (proof-proof-assume proof test t))
+       (exponent (proof-proof-reflexive proof combined))
+       (exponent (proof-proof-rewrite proof exponent zero '(1 2 2)))
+       (exponent-right (h3-book-powers-step-argument exponent 2))
+       (aligned (h3-book-translation-sum-equality-with-library
+                 lib exponent-right *library-z* (list m-int)) :pair)
+       (proof (library-library-proof lib))
+       (exponent (proof-proof-chain proof exponent (list aligned)))
+       (opened (proof-proof-reflexive proof (h3-book-powers-power *library-y* combined)))
+       (opened (proof-proof-rewrite proof opened exponent '(1 2 2)))
+       (p-z (h3-book-powers-power *library-y* *library-z*))
+       (p-x (h3-book-powers-power *library-y* *library-x*))
+       (product (list *proof-times* p-z p-x))
+       (base-right (proof-proof-reflexive proof product))
+       (value (h3-book-powers-power-equation lib p-x *proof-one* (list n-int zero)))
+       (base-right (proof-proof-rewrite proof base-right value '(1 2 2)))
+       (one-right (h3-book-arithmetic-one-right lib p-z))
+       (numeric (h3-book-powers-numeric-power lib p-z))
+       (fixed (h3-book-arithmetic-fix-value lib p-z numeric))
+       (base-right (proof-proof-chain proof base-right (list one-right fixed)))
+       (base-right (proof-proof-symmetric proof base-right))
+       (base-case (proof-proof-chain proof opened (list base-right)))
+       (n-nonzero (proof-proof-assume proof test nil))
+       (n-pos (h3-book-powers-positive-index-with-library lib n-int n-bound n-nonzero) :pair)
+       (descent (h3-book-powers-decrease-index-with-library lib n-int n-bound n-pos) :pair)
+       (child-int (car descent))
+       (child-bound (cadr descent))
+       (child (h3-book-powers-step-argument child-int 1))
+       (replacement (list (list *library-x* child)))
+       (induction (h3-book-powers-next-hypothesis lib formula (caddr descent) *library-x* child))
+       (condition (h3-book-floor-conjunct-proof lib (list base nonzero m-int child-int child-bound)))
+       (induction (proof-proof-modus-ponens (library-library-proof lib) induction condition))
+       (step (h3-book-powers-power-predecessor-with-library lib base nonzero combined-int) :pair)
+       (alignment (h3-book-translation-sum-equality-with-library
+                   lib (library-plus *proof-neg-one* combined) (library-plus *library-z* child)
+                   (list m-int n-int child-int)) :pair)
+       (proof (library-library-proof lib))
+       (step (proof-proof-rewrite proof step alignment '(1 2 2 2)))
+       (step (proof-proof-rewrite proof step induction '(1 2 2)))
+       (previous (h3-book-powers-power-predecessor-with-library lib base nonzero n-int) :pair)
+       (proof (library-library-proof lib))
+       (step-right (proof-proof-reflexive proof product))
+       (step-right (proof-proof-rewrite proof step-right previous '(1 2 2)))
+       (left-product (h3-book-powers-step-argument step 2))
+       (right-product (h3-book-powers-step-argument step-right 2))
+       (aligned (h3-book-arithmetic-associative-equal lib left-product right-product))
+       (step-right (proof-proof-symmetric proof step-right))
+       (successor-case (proof-proof-chain proof step (list aligned step-right)))
+       (cases (proof-proof-cases proof test base-case successor-case))
+       (case (h3-rewrite-implication lib guard cases))
+       (theorem (h3-book-powers-induct lib case formula *library-x* replacement)))
+    (h3-book-powers-register lib *h3-book-powers-power-add-natural* formula theorem)))
+
+(defun h3-book-powers-prove-power-add-natural (lib)
+  (h3-book-powers-checked-library
+   (h3-book-powers-prove-power-add-natural-with-library lib)))
+
+(defun h3-book-powers-power-add-natural-with-library (lib base nonzero first second nonnegative)
+  (h3-book-powers-with-library lib
+      ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-power-add-natural*)
+                       (cons nil lib)
+                     (h3-book-powers-prove-power-add-natural-with-library lib)) :pair)
+       (n (h3-book-powers-step-argument second 1))
+       (b (h3-book-powers-step-argument base 1))
+       (m (h3-book-powers-step-argument first 1))
+       (fact (library-library-cite lib *h3-book-powers-power-add-natural* (list n b m) nil))
+       (condition (h3-book-floor-conjunct-proof lib (list base nonzero first second nonnegative)))
+       (step (proof-proof-modus-ponens (library-library-proof lib) fact condition)))
+    (cons step lib)))
+
+(defun h3-book-powers-power-add-natural (lib base nonzero first second nonnegative)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-power-add-natural-with-library lib base nonzero first second nonnegative)))
+
+(defun h3-book-powers-prove-power-add-integer-with-library (lib)
+  (h3-book-powers-with-library lib
+      ((registered (h3-book-sums-lemmas-with-library lib) :pair)
+       (guard (h3-book-powers-power-guard *library-y* (list *library-z* *library-x*)))
+       (context (h3-book-powers-guard-context lib guard))
+       (base (h3-book-powers-context-step context (list *library-numberp* *library-y*)))
+       (n-int (h3-book-powers-context-step context (list *proof-integerp* *library-x*)))
+       (m-int (h3-book-powers-context-step context (list *proof-integerp* *library-z*)))
+       (nonzero (h3-book-powers-context-step context (proof-neg (proof-eq *library-y* *proof-zero*))))
+       (test (library-lt *library-x* *proof-zero*))
+       (bound (proof-proof-assume (library-library-proof lib) test nil))
+       (nonnegative (h3-book-powers-power-add-natural-with-library lib base nonzero m-int n-int bound) :pair)
+       (below (proof-proof-assume (library-library-proof lib) test t))
+       (n-inverse (h3-book-powers-inverse-power-equation-with-library lib base nonzero n-int below) :pair)
+       (opposite-index (library-minus *library-x*))
+       (opposite (library-library-type-of lib opposite-index (list n-int)))
+       (assumed (proof-proof-assume (library-library-proof lib) test t))
+       (rational (h3-book-numerator-as-rational lib n-int))
+       (numeric (h3-book-signs-number lib rational))
+       (reflection (h3-book-signs-negative-reflection-with-library lib numeric) :pair)
+       (opp-order (proof-proof-rewrite (library-library-proof lib) assumed reflection '(1)))
+       (opp-bound (h3-book-powers-nonnegative-integer lib opposite opp-order))
+       (combined (library-plus *library-z* *library-x*))
+       (combined-int (library-library-type-of lib combined (list n-int m-int)))
+       (shifted (h3-book-powers-power-add-natural-with-library
+                 lib base nonzero combined-int opposite opp-bound) :pair)
+       (index-eq (h3-book-translation-sum-equality-with-library
+                  lib (library-plus combined opposite-index) *library-z*
+                  (list n-int m-int opposite combined-int)) :pair)
+       (proof (library-library-proof lib))
+       (shifted (proof-proof-rewrite proof shifted index-eq '(1 1 2)))
+       (law (h3-book-powers-power-inverse-law lib base nonzero opposite-index))
+       (p-opposite (h3-book-powers-power *library-y* opposite-index))
+       (reciprocal (list *h3-book-arithmetic-divide* p-opposite))
+       (aligned (proof-proof-reflexive proof
+                                      (list *proof-times* (h3-book-powers-power *library-y* *library-z*)
+                                            reciprocal)))
+       (aligned (proof-proof-rewrite proof aligned shifted '(1 2 1)))
+       (p-sum (h3-book-powers-power *library-y* combined))
+       (product-term (h3-book-powers-step-argument aligned 2))
+       (cancelled (h3-book-quotient-cancel-inverse-pair lib product-term p-opposite p-sum law))
+       (numeric (h3-book-powers-numeric-power lib p-sum))
+       (fixed (h3-book-arithmetic-fix-value lib p-sum numeric))
+       (aligned (proof-proof-chain proof aligned (list cancelled fixed)))
+       (aligned (proof-proof-symmetric proof aligned))
+       (reverse (proof-proof-symmetric proof n-inverse))
+       (negative (proof-proof-rewrite proof aligned reverse '(1 2 2)))
+       (conclusion (h3-book-powers-add-power-conclusion *library-y* *library-z* *library-x*))
+       (formula (list *library-implies* guard conclusion))
+       (cases (proof-proof-cases proof test negative nonnegative))
+       (theorem (h3-rewrite-implication lib guard cases)))
+    (h3-book-powers-register lib *h3-book-powers-power-add-integer* formula theorem)))
+
+(defun h3-book-powers-prove-power-add-integer (lib)
+  (h3-book-powers-checked-library
+   (h3-book-powers-prove-power-add-integer-with-library lib)))
+
+(defun h3-book-powers-power-add-integer-with-library (lib base nonzero first second)
+  (h3-book-powers-with-library lib
+      ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-power-add-integer*)
+                       (cons nil lib)
+                     (h3-book-powers-prove-power-add-integer-with-library lib)) :pair)
+       (n (h3-book-powers-step-argument second 1))
+       (b (h3-book-powers-step-argument base 1))
+       (m (h3-book-powers-step-argument first 1))
+       (fact (library-library-cite lib *h3-book-powers-power-add-integer* (list n b m) nil))
+       (condition (h3-book-floor-conjunct-proof lib (list base nonzero first second)))
+       (step (proof-proof-modus-ponens (library-library-proof lib) fact condition)))
+    (cons step lib)))
+
+(defun h3-book-powers-power-add-integer (lib base nonzero first second)
+  (h3-book-powers-checked-pair
+   (h3-book-powers-power-add-integer-with-library lib base nonzero first second)))

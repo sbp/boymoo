@@ -1,10 +1,12 @@
 # Checker guards
 
-`check` has the guard `(and (stringp ground) (stringp library)
-(stringp statements) (stringp proofs))`. ACL2 proves that under this
-condition every call in the checker satisfies its callee's guard. With
-the guard books included and guard checking enabled, ACL2 can execute
-`check` and its callees in Common Lisp and obtain their logical values.
+`check-four` requires strings for the ground theory and the four inputs.
+`check` takes the ground theory, library, statements and proofs as strings
+and passes an empty string for the library's proofs. ACL2 proves that
+under these guards every call in the checker satisfies its callee's guard.
+With the guard books included and guard checking enabled, ACL2 can
+execute both functions and their callees in Common Lisp and obtain their
+logical values.
 The reference runner evaluates the logical definitions in the exported
 program.
 
@@ -20,6 +22,7 @@ The arguments not listed in the table can be arbitrary ACL2 objects.
 | Function | Guard |
 | --- | --- |
 | `check` | Four strings holding the ground theory, library, statements and proofs. |
+| `check-four` | Five strings holding the ground theory, library, statements, proofs and library's proofs. |
 | `initial-world` | `t`. |
 | `lines-of` | A string. |
 | `lex-atom` | If there is a leading symbol part, its lookup in the package table is a true list. |
@@ -27,7 +30,8 @@ The arguments not listed in the table can be arbitrary ACL2 objects.
 | `parse-line` | A trie of package records. |
 | `ground-line` | A line satisfying `guard-ground-line-p` and a world satisfying `guard-world-p`. |
 | `load-ground` | A world satisfying `guard-world-p`. |
-| `admit` | A true list for the parsed line and a world satisfying `guard-world-p`. |
+| `prepare-statement`, `admit` | A true list for the parsed line and a world satisfying `guard-world-p`. |
+| `give-statement` | A pending statement and a world satisfying `guard-world-p`. |
 | `check-library` | A natural line number and a world satisfying `guard-world-p`. |
 | `run` | Natural line numbers, a context satisfying `guard-proof-context-p` and a world satisfying `guard-world-p`. |
 | `check-step` | A natural step count, a rational budget, a list satisfying `proof-clauses-p` and a world satisfying `guard-world-p`. |
@@ -144,29 +148,30 @@ with the exported definitions. It checks the guard status of each
 function in ACL2 and checks every call in the translated guards
 against the primitives, ground functions and checker functions.
 `checker/closed.py` checks the exported definition bodies. The script
-also checks the declared four-string guard directly in the ACL2 world.
+also checks the declared guards of the two entries directly in the ACL2
+world: four strings for `check` and five for `check-four`.
 
 ## Results
 
-On 2026-11-21 under ACL2 8.7, `sh checker/proofs/guards.sh --require-all`
-reported verified guards for all 217 checker functions. The certificate
+On 2026-11-24 under ACL2 8.7, `sh checker/proofs/guards.sh --require-all`
+reported verified guards for all 220 checker functions. The certificate
 annotation, ACL2 Core, entry guard and ground world checks passed. The
-15 proof books have 2,339 lines and 90,849 bytes by `wc -lc
-checker/proofs/guards*.lisp`. The audit took 20.7 seconds of elapsed time.
-The export from `sh checker/build.sh` had 238 lines and 276,182 bytes by
+15 proof books have 2,335 lines and 90,581 bytes by `wc -lc
+checker/proofs/guards*.lisp`. The audit took 22 seconds of elapsed time.
+The export from `sh checker/build.sh` had 241 lines and 276,691 bytes by
 `wc -lc build/checker/checker.statements`. `checker/skips.py` with an
-empty library found 103 statements with obligations.
+empty library found 102 statements with obligations.
 
-On the same date, `sh checker/test.sh` passed the 319 cases and
-self-containment checks. ACL2 and the runner agreed on all 321 inputs.
+On the same date, `sh checker/test.sh` passed the 382 cases and
+self-containment checks. ACL2 and the runner agreed on all 384 inputs.
 Including `build/checker/acl2/guards-entry`, loading `checker/acl2-run.lsp`
-and enabling guard checking also gave the runner's verdicts for all 321
+and enabling guard checking also gave the runner's verdicts for all 384
 entries in `build/checker/test/list`. `sh export/proofs/round-trip.sh`
 passed with the round-trip books as written.
 
-On 2026-11-21, `sh checks/agree.sh` completed in 23 minutes. Both
+On 2026-11-24, `sh checks/agree.sh` completed in 23 minutes. Both
 checkers accepted the example and gave the expected verdict on all
-646 cases. They gave the same verdict on all 460 books, and the skip
+772 cases. They gave the same verdict on all 460 books, and the skip
 generators produced identical proofs for each book.
 
 ## Timing the largest book

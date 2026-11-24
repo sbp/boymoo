@@ -12,10 +12,14 @@
 # calls of runner/test/book.lisp, a book of stops; calls of functions of
 # ACL2's library, run from its exported program text; and calls of the
 # arithmetic primitives.  runner/test/gen.py writes the last three sets
-# and ACL2 computes their values (runner/test/expect.lsp).  It then runs
+# and ACL2 computes their values (runner/test/expect.lsp), as it does
+# those of calls of the two functions of the prelude (the option -j),
+# which are also given the calls on large integers whose values
+# runner-fast/test/expected/large.txt records.  It then runs
 # cases that concern the runner alone: deep recursion, deep nesting,
-# large numbers, exhaustion of memory and text that is not in the
-# format.  Last, it has the runner read and compile every definition of
+# large numbers, exhaustion of memory, text that is not in the
+# format, and the prelude with and without definitions of its
+# functions.  Last, it has the runner read and compile every definition of
 # the library's program text and of each book that export/run.sh has
 # exported.  It writes into build/runner/test/, prints one line for each
 # set, and ends with "all runner tests passed" or "some runner tests
@@ -99,6 +103,39 @@ fi
 sh export/book.sh build/runner/test/book
 B=build/export/books/build/runner/test/book
 python3 runner/test/gen.py $T || exit 1
+# The calls of the two functions of the prelude (README.md, "The
+# prelude"): on integers at the edges of the runner's representations
+# (2^29, 10^9, 2^32, 10^18, 2^64 and 2^128), on fractions and complex
+# rationals, and on data that are not numbers; ash by up to 200 bits
+# and, for an integer, by more bits than it has.
+awk 'BEGIN {
+    ni = split("0 1 -1 7 -7 536870911 -536870912 536870912 -536870913 999999999 1000000000 -1000000000 " \
+               "4294967295 4294967296 -4294967296 999999999999999999 1000000000000000000 " \
+               "18446744073709551615 -18446744073709551616 340282366920938463463374607431768211455 " \
+               "-340282366920938463463374607431768211457", whole, " ")
+    no = split("3/2|-3/2|7/3|#c(1 2)|#c(0 1)|#c(3/2 -1/2)|\"a\"|x|(1 . 2)|#\\a", odd, "|")
+    ns = split("0 1 -1 2 -2 3 -3 29 30 31 32 33 -29 -30 -31 -32 -33 59 60 61 64 -64 89 90 91 -89 -90 -91 " \
+               "200 -200", shift, " ")
+    for (i = 1; i <= ni; i++) {
+        for (j = 1; j <= ns; j++) print "(ash " whole[i] " " shift[j] ")"
+        print "(ash " whole[i] " -536870912)"
+        print "(ash " whole[i] " -100000000000000000000)"
+        for (j = 1; j <= ni; j++) print "(binary-logxor " whole[i] " " whole[j] ")"
+        for (j = 1; j <= no; j++) {
+            print "(ash " whole[i] " " odd[j] ")"
+            print "(binary-logxor " whole[i] " " odd[j] ")"
+            print "(binary-logxor " odd[j] " " whole[i] ")"
+        }
+    }
+    for (i = 1; i <= no; i++) {
+        for (j = 1; j <= ns; j++) print "(ash " odd[i] " " shift[j] ")"
+        for (j = 1; j <= no; j++) {
+            print "(ash " odd[i] " " odd[j] ")"
+            print "(binary-logxor " odd[i] " " odd[j] ")"
+        }
+    }
+    print "(ash 0 536870911)"
+}' > $T/prelude.calls
 {
     echo '(in-package "ACL2")'
     echo '(ld "checks/version.lsp")'
@@ -109,18 +146,36 @@ python3 runner/test/gen.py $T || exit 1
     # errors of the calls of the book that have no value, ACL2 refuses
     # some calls in program mode that its top level, with guard checking
     # :none, computes.
-    for s in book lib arith; do
+    for s in book lib arith prelude; do
         echo '(set-guard-checking :none)'
         echo "(rt-expect \"$T/$s.calls\" \"$T/$s\" state)"
     done
     echo '(good-bye)'
 } | acl2 > $T/expect.log 2>&1
-for s in book lib arith; do
+for s in book lib arith prelude; do
     if [ -f $T/$s.values ]; then expected $s; else : > $T/$s.terms; : > $T/$s.none; fi
 done
 check book $LIB -p $B.statements $PROG $B.program
 check lib $LIB $PROG
 check arith $LIB $PROG
+
+# The prelude.  A define line is in force in the place of a function of
+# the prelude, so the prelude computes ash and binary-logxor only for
+# program text that does not define them: the library's, less two lines.
+# It is given the calls above, and then the calls of
+# runner-fast/test/gen.awk on integers of up to 200 bits that are of
+# those two functions, with the values that ACL2 gave for them.
+grep -v -e '^(define COMMON-LISP::NIL (COMMON-LISP::ASH ' \
+     -e '^(define COMMON-LISP::NIL (ACL2::BINARY-LOGXOR ' $PROG > $T/library.program
+[ $(($(grep -c . < $PROG) - $(grep -c . < $T/library.program))) -eq 2 ]
+report $? "the library's program text has one define line for each function of the prelude"
+check prelude -j $LIB $T/library.program
+: > $T/large.none
+awk -v set=large -f runner-fast/test/gen.awk | paste - runner-fast/test/expected/large.txt |
+    awk -F '	' -v t=$T/large '
+        $1 ~ /^\((COMMON-LISP::ASH|ACL2::BINARY-LOGXOR) / {
+            print $1 > (t ".terms"); print $2 > (t ".expected") }'
+check large -j $LIB $T/library.program
 
 # 3. Cases that concern the runner alone.  Each line names the case, the
 #    status the runner must end with, and what it must print.
@@ -199,12 +254,36 @@ printf '(define COMMON-LISP::NIL (COMMON-LISP::CAR (ACL2::X) ACL2::X))\n' > $T/c
 s3=$(run $T/case.in $LIB $T/case.program)
 [ $bad -eq 0 ] && [ "$s1" -eq 2 ] && [ "$s2" -eq 2 ] && [ "$s3" -eq 2 ]
 report $? "text that is not in the format, and terms that are not terms, stop with status 2"
+# The functions of the prelude are functions like any other.  Without -j
+# they have no definition.  With it they are called from a term and from
+# a definition, in the last position and not; a define line for one of
+# them is in force in its place and the other stays; and a call with one
+# argument is not a term.
+printf '(define COMMON-LISP::NIL (ACL2::F (ACL2::X) (ACL2::BINARY-+ (COMMON-LISP::ASH ACL2::X (%s 2)) (ACL2::BINARY-LOGXOR ACL2::X (%s 1)))))\n' $Q $Q > $T/case.program
+{
+    echo "(COMMON-LISP::ASH ($Q 1) ($Q 3))"
+    echo "(ACL2::F ($Q 5))"
+} > $T/case.in
+case_ok "without -j the functions of the prelude have no definition" "$(run $T/case.in $LIB $T/case.program)" 1
+printf '8\n24\n' > $T/case.want
+case_ok "with -j they are called from a term and from a definition" "$(run $T/case.in -j $LIB $T/case.program)" 0 $T/case.want
+# By its definition (ash 0 c) is 0 for every c.  The Lisp under ACL2 does
+# not shift by a count this large, and ACL2 aborts on the call.
+echo "(COMMON-LISP::ASH ($Q 0) ($Q 100000000000000000000))" > $T/case0.in
+echo 0 > $T/case.want
+case_ok "with -j, ash of 0 by a count that ACL2 does not compute is 0" "$(run $T/case0.in -j $LIB $T/case.program)" 0 $T/case.want
+printf '(define COMMON-LISP::NIL (COMMON-LISP::ASH (ACL2::I ACL2::C) (%s 77)))\n' $Q >> $T/case.program
+printf '77\n81\n' > $T/case.want
+case_ok "a define line is in force in the place of a function of the prelude" "$(run $T/case.in -j $LIB $T/case.program)" 0 $T/case.want
+echo "(ACL2::BINARY-LOGXOR ($Q 1))" > $T/case.in
+case_ok "a call of a function of the prelude with one argument stops" "$(run $T/case.in -j $LIB $T/case.program)" 2
 
 # 4. Every definition of the library's program text, and of the program
 #    text of each book that export/run.sh has exported, is read and
 #    compiled (the option -l).
 echo "($Q 1)" > $T/case.in
 case_ok "every definition of the library compiles" "$(run $T/case.in -l $LIB $PROG)" 0
+case_ok "every definition of the library compiles after the prelude" "$(run $T/case.in -l -j $LIB $PROG)" 0
 if [ -f build/export/books.list ]; then
     n=0
     bad=0

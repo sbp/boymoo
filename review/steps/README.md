@@ -9,25 +9,27 @@ sh review/steps/run.sh
 
 The command checks `spec/example` and every case in `checker/cases` and
 `checker-js/cases` whose recorded verdict is `accepted` or `provisional`
-and whose proofs contain a step. It compares both checkers' verdicts with
-the recorded verdict. After the cases it checks the checker's own source
-with an empty library, `build/checker/checker.statements` and
-`build/self/checker.proofs`. It runs `sh review/self/run.sh` if either
-source input is missing or empty, with output in `build/steps/self-build.log`.
+and that has a step in `proofs.txt` or `library-proofs.txt`. It compares
+both checkers' verdicts with the recorded verdict. After the cases it
+checks the checker's own source using `build/checker/checker.statements`
+and `build/self/checker.proofs`, with empty library inputs. It runs
+`sh review/self/run.sh` if either source input is missing or empty,
+with output in `build/steps/self-build.log`.
 The source build also uses the tools for the exporter and reference runner
 listed in `DETAILS.md`. Both checkers must give `accepted` for the source.
 
 The script writes a book for each input under `build/steps/`, with the
 source book at `build/steps/self/book.lisp`. It reports each proof by entry
-name and line range, then gives separate totals for the cases and the source
-as well as an overall total.
+name, input and line range, then gives separate totals for the cases and
+the source as well as an overall total.
 The exit status is zero when every replayable proof certifies and every
 exclusion is accounted for. An unexpected ACL2 failure gives a nonzero
 exit status.
 
-The same command takes a library, statements and proofs for a single
-input. It puts the book, its package commands, the certificate and the
-ACL2 log under `build/steps/input/`. An empty file is a valid library.
+The same command takes a library, statements, proofs and an optional
+fourth file for the library's proofs. An omitted fourth file means empty
+library proofs. It puts the book, its package commands, the certificate
+and the ACL2 log under `build/steps/input/`. An empty file is a valid library.
 
 ```sh
 sh review/steps/run.sh build/steps/empty spec/example/statements.txt spec/example/proofs.txt
@@ -41,9 +43,13 @@ proofs and trust tags. The only `defaxiom` events come from explicit input
 
 ## From the checker to the book
 
-`trace.lsp` calls `BOYMOO::CHECK` in ACL2 and replays successful inputs
-through `BOYMOO::ADMIT` and `BOYMOO::PROOF-LINE`. After a step,
-`PROOF-LINE` holds the computed clause at the head of its history.
+`trace.lsp` calls `BOYMOO::CHECK-FOUR` in ACL2 and replays successful
+inputs through `BOYMOO::PREPARE-STATEMENT`, `BOYMOO::ADMIT` and
+`BOYMOO::PROOF-LINE`. It reads the library with its proofs first, then
+uses the resulting world to read the statements with their proofs. A
+library statement with obligations is given at its `skip` or when the
+library's proofs have ended. After a step, `PROOF-LINE` holds the
+computed clause at the head of its history.
 The trace records that clause beside the step's input line. A cons in the
 trace has two references to earlier objects, so repeated subterms keep
 their sharing across lines.
@@ -51,7 +57,8 @@ their sharing across lines.
 `book.py` renders the clauses as ACL2 formulas. The empty clause becomes
 `nil`, a unit clause becomes its literal, and other clauses become
 disjunctions. Each step gets its own `defthm` with `:rule-classes nil`.
-A name such as `BOYMOO-STEP-12` identifies line 12 of the proofs.
+A name such as `BOYMOO-STEP-12` identifies line 12 of the book's proofs.
+`BOYMOO-STEP-LIBRARY-12` identifies line 12 of the library's proofs.
 The prefix is chosen to avoid input names. A repeated subterm in a large
 literal can be bound once with `let*`, as in the proof budget case. Each
 binding denotes the subterm in its original scope.
@@ -68,7 +75,7 @@ code or intern a symbol relative to a hidden package's witness.
 | `hidden-package` | An auxiliary book supplies a package witness. A second book includes the first locally and exports the witness, so ACL2 can intern in the package during certification while keeping it hidden. |
 | `define` | `defun` or `mutual-recursion`, with the stored body and ruler-extenders. Both halves of an `mbe` appear in the translated `return-last` form. For a `measure` entry the definitions use its measures with `o<`, and cite the last steps of the termination proofs. When every obligation is available the hint uses ACL2's minimal theory. A constant true test around a measured body supplies the single result signature when ACL2's translator requires a base branch. |
 | `constrain` | An `encapsulate` with one signature per function. Each local definition calls its witness on the signature's arguments. A multiple-value witness returns its results as a list using `mv-list`. Each exported theorem opens the local definitions and uses the corresponding witness proof. A constraint with no formulas can use constant witnesses. |
-| `choose` | `defchoose` with the given bound and free variables, body and strengthening flag. A fact citation for strengthened choice instantiates ACL2's generated second set of variables with the names in the input. |
+| `choose` | A statement or proof entry becomes `defchoose` with the given bound and free variables, body and strengthening flag. A fact citation for strengthened choice instantiates ACL2's generated second set of variables with the names in the input. |
 | `theorem` and `lemma` | A named `defthm` uses the last step at `qed`. A `define` entry in the proofs is admitted at the point where the checker admits it. |
 | `axiom` | A `defaxiom` for the exact input formula. Proofs that cite it use the supplied assumption. |
 | `reserve` and repeated lines | These contribute no new ACL2 events. |
@@ -82,11 +89,12 @@ original step conclusions with the real function names.
 For library events already in ACL2's world, the book checks the definition
 or theorem against the stored one. For existing constrained functions it
 checks the arities and uses stored theorems or proves the constraint
-formulas with hints from their origins. ACL2 must admit additional library
-events and events with a `skip` entry by ordinary proof. If one is
-unavailable, the replay reports it and certifies steps whose premises and
-functions are available. The refused event and ACL2 log are saved beside
-the book.
+formulas with hints from their origins. For a given constraint without a
+matching native event, the book tries constant `nil` witnesses. ACL2 must
+admit additional library events and events with a `skip` entry by ordinary
+proof. If one is unavailable, the replay reports it and certifies steps
+whose premises and functions are available. The refused event and ACL2
+log are saved beside the book.
 
 ## Step hints
 
@@ -113,30 +121,39 @@ the exact step formula. With no substitutions the second premise gives
 
 ## Results
 
-On 2026-11-21, `sh review/steps/run.sh` with ACL2 8.7 took 50.91 seconds.
-It printed `all replayable proofs passed`. The 86 cases took 29.97
-seconds. The source group took 16.47 seconds, including building the
-source inputs, which were missing at the start of the run. ACL2 reports
-5.65 seconds for certifying the source book in `build/steps/self/book.log`.
+On 2026-11-24, this command with ACL2 8.7 took 65.57 seconds and
+exited with status 0. It printed `all replayable proofs passed`.
+
+```sh
+SBCL_USER_ARGS="--dynamic-space-size 1500" sh review/steps/run.sh
+```
+
+The 106 cases took 46.72 seconds. The source group took 13.01 seconds
+with both source inputs present. ACL2 reports 7.92 seconds for certifying
+the source book in `build/steps/self/book.log`.
 
 | Input | Proofs certified | Steps certified |
 | --- | ---: | ---: |
-| Cases with verdict `accepted` | 121 of 123 | 410 of 412 |
-| Cases with verdict `provisional` | 70 of 80 | 169 of 199 |
-| Checker source with verdict `accepted` | 324 of 324 | 7,832 of 7,832 |
-| All inputs | 515 of 527 | 8,411 of 8,443 |
+| Cases with verdict `accepted` | 139 of 142 | 469 of 472 |
+| Cases with verdict `provisional` | 85 of 99 | 185 of 219 |
+| All cases | 224 of 241 | 654 of 691 |
+| Checker source with verdict `accepted` | 322 of 322 | 7,827 of 7,827 |
+| All inputs | 546 of 563 | 8,481 of 8,518 |
 
-The source certificate covers 264 termination obligations and 60 lemmas.
+Of the 24 library proofs and their 42 steps, 22 proofs and 40 steps
+certified. The source certificate covers 262 termination obligations and
+60 lemmas.
 The source book replays the exported bodies and admits the definitions
 from those proofs in a fresh ACL2 world with the `BOYMOO` package. Its
 certificate has empty annotations for axioms, skipped proofs and trust tags.
 
 | Input | Primary book files | Book bytes | Certificates | Certificate bytes |
 | --- | ---: | ---: | ---: | ---: |
-| Cases | 86 | 1,216,160 | 85 | 1,300,526 |
-| Checker source | 1 | 11,496,299 | 1 | 6,607,610 |
+| Cases | 106 | 1,285,642 | 105 | 1,328,637 |
+| Checker source | 1 | 11,494,031 | 1 | 6,605,784 |
 
-File counts and byte sizes come from this command after the run.
+File counts and byte sizes come from this command after the run on
+2026-11-24.
 
 ```sh
 python3 - <<'PY'
@@ -154,18 +171,29 @@ PY
 
 ### Proofs whose context could not be admitted
 
-Two proofs with verdict `accepted` each have one unavailable step.
+Three proofs of inputs with verdict `accepted` each have one unavailable
+step.
 
-| Case under `checker-js/cases/` | Proof lines | Reason |
+| Case under `checker-js/cases/` | Lines of `proofs.txt` | Reason |
 | --- | --- | --- |
 | `library-lisp-function` | 2–3 | The proof cites the equation of the new `COMMON-LISP::C-NEW` supplied by the library. ACL2 admits functions in the Common Lisp package during bootstrap only. |
+| `library-proofs-lisp-recursive` | 2–3 | The proof cites the equation of the new `COMMON-LISP::C-LEN` supplied by the library. Its two termination proofs certify independently. ACL2 refuses to introduce the function in the Common Lisp package. |
 | `package-code-order` | 2–3 | The step computes the imports of the package named `"P\E9"`. ACL2 on the tested Lisp treats code 233 as lower case and refuses the package declaration. ACL2 Core tests only ASCII lower case. See `EDGE-CASES.md`, entry 7.2. |
+
+Four provisional proofs depend on equations of given identity functions.
+ACL2 fails to admit the constraints because the constant `nil` witnesses
+leave the goal `(equal nil x)` for arbitrary `x`.
+
+| Case under `checker/cases/` | Input and proof lines | Given constraint |
+| --- | --- | --- |
+| `provisional-library-proofs-end-between-statements` | `proofs.txt` 5–6 | `ACL2::LIBRARY-IDENTITY` on line 3 of `library.txt`, given at the end of `library-proofs.txt`. |
+| `provisional-library-proofs-interleaved` | `library-proofs.txt` 6–7 and 9–10, and `proofs.txt` 2–3 | `LIBRARY-EXAMPLE::IDENTITY` on line 3 of `library.txt`, given by `skip` on line 4 of `library-proofs.txt`. |
 
 The following provisional proofs depend on given theorem `ACL2::G3`
 from line 2 of each library. At `X = Y = 0` its formula asks for
 `(o< 0 0)`. The remaining measure proofs in those inputs certify.
 
-| Case under `checker/cases/` | Proof lines |
+| Case under `checker/cases/` | Lines of `proofs.txt` |
 | --- | --- |
 | `provisional-walk-all` | 4–7 |
 | `provisional-walk-default` | 4–7 |
@@ -176,23 +204,31 @@ from line 2 of each library. At `X = Y = 0` its formula asks for
 | `provisional-walk-mutual-repeats` | 4–7 |
 | `provisional-walk-nested` | 4–7 and 8–11 |
 
-The counterinstance is checked by ACL2 8.7 on the same date with this
-command.
+This command confirmed the counterinstance in ACL2 8.7 on 2026-11-24.
 
 ```sh
-acl2 <<'EOF'
+SBCL_USER_ARGS="--dynamic-space-size 1500" acl2 <<'EOF'
 (thm (not (o< (acl2-count 0) (acl2-count 0))))
 (good-bye)
 EOF
 ```
 
+### Other refused events
+
 ACL2 also refused the definitions in `provisional-walk-default`,
 `provisional-walk-mutual` and `provisional-walk-nested` with the available
-termination premises. The skipped local definitions in
-`checker/cases/provisional-entry-define-skip` and
-`checker-js/cases/proof-local-skip` recurse on the same arguments and
-have no base branch. Their proofs certify without those definitions.
-The witness proof in `checker-js/cases/witness-large-arity` certifies.
-Its constraint formula has no calls of the functions in the signatures.
-The signatures are unavailable because their arities start at
-9,007,199,254,740,992, and ACL2 requires a written parameter list.
+termination premises. The cases are under `checker/cases/`.
+
+The following events were also unavailable. Every proof in these cases
+certifies.
+
+| Case | Event and reason |
+| --- | --- |
+| `checker/cases/provisional-entry-define-skip` | The skipped local `BM-L2` recurses on the same argument with no base branch. |
+| `checker/cases/provisional-library-proofs-partial` | The given `LOCAL-LOOP` recurses on the same argument with no base branch. The given constraint on `GIVEN-FN` requires an identity function, and the `nil` witness fails. |
+| `checker/cases/provisional-library-proofs-skip-define` | The skipped local `LOCAL-LOOP` in the library's proofs recurses on the same argument with no base branch. |
+| `checker-js/cases/library-proofs-define-skip` | The skipped local `C-LOCAL` in the library's proofs recurses on the same argument with no base branch. |
+| `checker-js/cases/library-proofs-end-between-statements` | ACL2 refuses the new `COMMON-LISP::C-LEN` given at the end of the library's proofs. |
+| `checker-js/cases/library-proofs-partial` | ACL2 refuses the new `COMMON-LISP::C-LEN`, whose two termination proofs certify. The given `C-GIVEN-REC` recurses on the same argument with no base branch. |
+| `checker-js/cases/proof-local-skip` | The skipped local `C-LOCAL-REC` recurses on the same argument with no base branch. |
+| `checker-js/cases/witness-large-arity` | The two constraints require written parameter lists for arities of at least 9,007,199,254,740,992. The witness proof's formula contains no call of a function in those signatures. |

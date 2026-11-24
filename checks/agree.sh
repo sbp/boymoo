@@ -51,15 +51,18 @@ input() {
     if [ -f "$1" ]; then echo "$1"; else echo "$a/empty"; fi
 }
 
-# The first line that each checker gives on LIBRARY STATEMENTS PROOFS, the
-# first checker's in $one and the second's in $two.  QLIBRARY, if given, is
-# the library already written as a quoted constant.
+# The first line that each checker gives on LIBRARY STATEMENTS PROOFS
+# QLIBRARY LIBRARY-PROOFS, the first checker's in $one and the second's in
+# $two.  QLIBRARY, if not empty, is the library already written as a quoted
+# constant.  LIBRARY-PROOFS, the fourth input of spec/formats.md, section
+# 5, may be left out: it is then empty.
 both() {
     if [ -n "$4" ]; then cp "$4" "$a/q/library"; else quote "$1" > "$a/q/library"; fi
     quote "$2" > "$a/q/statements"
     quote "$3" > "$a/q/proofs"
-    one=$(run_check "$a/q/ground" "$a/q/library" "$a/q/statements" "$a/q/proofs" | sed -n 1p)
-    two=$(sh checker-js/check.sh "$1" "$2" "$3" "$engine" 2> /dev/null | sed -n 1p)
+    quote "${5:-$a/empty}" > "$a/q/library-proofs"
+    one=$(run_check "$a/q/ground" "$a/q/library" "$a/q/statements" "$a/q/proofs" "$a/q/library-proofs" | sed -n 1p)
+    two=$(sh checker-js/check.sh "$1" "$2" "$3" "${5:-$a/empty}" "$engine" 2> /dev/null | sed -n 1p)
 }
 
 # spec/example
@@ -82,7 +85,7 @@ for set in checker/cases checker-js/cases; do
         name=$(basename "$d")
         expected=$(sed -n 1p "$d/verdict.txt")
         both "$(input "$d/library.txt")" "$(input "$d/statements.txt")" \
-             "$(input "$d/proofs.txt")" ""
+             "$(input "$d/proofs.txt")" "" "$(input "$d/library-proofs.txt")"
         echo "$name$tab$expected$tab$one$tab$two" >> "$out"
         n=$((n + 1))
         if [ "$one" != "$expected" ] || [ "$two" != "$expected" ]; then

@@ -37,15 +37,17 @@ failed=0
 tab=$(printf '\t')
 
 # Runs the checker on the runner on a case NAME with inputs LIBRARY,
-# STATEMENTS, PROOFS; records its verdict in $t/runner and the case in
-# $t/list for ACL2; prints the verdict.
+# STATEMENTS, PROOFS and optional LIBRARY-PROOFS. It records the verdict
+# in $t/runner and the inputs in $t/list for ACL2 and prints the verdict.
 run() {
     quote "$2" > "$t/q/library"
     quote "$3" > "$t/q/statements"
     quote "$4" > "$t/q/proofs"
-    v=$(run_check "$t/q/ground" "$t/q/library" "$t/q/statements" "$t/q/proofs" | sed -n 1p)
+    quote "${5:-$t/empty}" > "$t/q/library-proofs"
+    v=$(run_check "$t/q/ground" "$t/q/library" "$t/q/statements" "$t/q/proofs" \
+            "$t/q/library-proofs" | sed -n 1p)
     echo "$1$tab$v" >> "$t/runner"
-    echo "$1 $2 $3 $4" >> "$t/list"
+    echo "$1 $2 $3 $4 ${5:-$t/empty}" >> "$t/list"
     echo "$v"
 }
 
@@ -69,7 +71,7 @@ for d in checker/cases/*/; do
     name=$(basename "$d")
     expected=$(sed -n 1p "$d/verdict.txt")
     v=$(run "$name" "$(input "$d/library.txt")" "$(input "$d/statements.txt")" \
-            "$(input "$d/proofs.txt")")
+            "$(input "$d/proofs.txt")" "$(input "$d/library-proofs.txt")")
     n=$((n + 1))
     if [ "$v" != "$expected" ]; then
         echo "  case $name: expected \"$expected\", gave \"$v\""

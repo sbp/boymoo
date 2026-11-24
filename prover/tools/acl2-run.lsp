@@ -1,0 +1,56 @@
+; Evaluates the runner's canonical input terms and prints their values.
+; Load after the certified prover books, checks/canon.lsp and export/readback.lsp.
+
+(in-package "ACL2")
+
+(program)
+(set-state-ok t)
+(set-guard-checking :none)
+
+(defun prover-run-value (text start end printable pkgs number state)
+  (if (not printable)
+      (prog2$ (cw "~%prover-run: term ~x0 has a non-printable byte~%" number)
+              (mv t nil 0 state))
+    (mv-let (error term next)
+      (rb-datum text start end pkgs)
+      (if (or error (/= next end))
+          (prog2$ (cw "~%prover-run: term ~x0: ~s1~%" number
+                     (or error "extra text after the term"))
+                  (mv t nil 0 state))
+        (mv-let (before state)
+          (read-run-time state)
+          (mv-let (error result state)
+            (trans-eval term 'prover-run-value state t)
+            (mv-let (after state)
+              (read-run-time state)
+              (mv error (cdr result) (- after before) state))))))))
+
+(defun prover-run-lines (text start end pkgs channel number failures cpu state)
+  (if (<= end start)
+      (mv failures cpu state)
+    (mv-let (next printable)
+      (rb-line-end text start end t)
+      (mv-let (error result seconds state)
+        (prover-run-value text start next printable pkgs number state)
+        (let* ((value (if error "no value"
+                        (coerce (reverse (bm-obj result nil)) 'string)))
+               (state (princ$ value channel state))
+               (state (newline channel state)))
+          (prover-run-lines text (1+ next) end pkgs channel (1+ number)
+                          (+ failures (if error 1 0)) (+ cpu seconds) state))))))
+
+(defun prover-run-file (input output state)
+  (let ((text (read-file-into-string input)))
+    (cond ((not (stringp text))
+           (er soft 'prover-run-file "Could not read ~x0." input))
+          (t (mv-let (channel state)
+               (open-output-channel output :character state)
+               (if (null channel)
+                   (er soft 'prover-run-file "Could not write ~x0." output)
+                 (let ((pkgs (rb-witnesses (global-val 'known-package-alist (w state)))))
+                   (mv-let (failures cpu state)
+                     (prover-run-lines text 0 (length text) pkgs channel 1 0 0 state)
+                     (let ((state (close-output-channel channel state)))
+                       (prog2$ (cw "~%prover-run-cpu ~x0~%prover-run-finished ~x1~%"
+                                   cpu failures)
+                               (value failures)))))))))))

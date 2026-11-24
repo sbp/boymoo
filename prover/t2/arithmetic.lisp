@@ -1,0 +1,1660 @@
+(in-package "BOYMOO-PROVER")
+(set-verify-guards-eagerness 0)
+
+(defconst *t2-arithmetic-nfix* (proof-sym "NFIX" "ACL2"))
+(defconst *t2-arithmetic-ifix* (proof-sym "IFIX" "ACL2"))
+(defconst *t2-arithmetic-abs* (proof-sym "INTEGER-ABS" "ACL2"))
+(defconst *t2-arithmetic-length* (proof-cl "LENGTH"))
+(defconst *t2-arithmetic-atom* (proof-cl "ATOM"))
+(defconst *t2-arithmetic-numerator* (proof-cl "NUMERATOR"))
+(defconst *t2-arithmetic-denominator* (proof-cl "DENOMINATOR"))
+
+(defun t2-arithmetic-has-lemma (lib name)
+  (assoc-equal (proof-sym (concatenate 'string "SELF-" name) "ACL2")
+               (proof-proof-facts (library-library-proof lib))))
+
+(defun t2-arithmetic-first-at (step index)
+  (proof-with-checked-results ((first (proof-step-first step)))
+    (proof-term-at first index)))
+
+(defun t2-arithmetic-arithmetic-reflexive (lib term)
+  (if (t2-arithmetic-has-lemma lib "EQUALITY-REFLEXIVE")
+      (library-library-cite lib "EQUALITY-REFLEXIVE" (list term) nil)
+    (proof-proof-reflexive-base (library-library-proof lib) term)))
+
+(defun t2-arithmetic-arithmetic-modus-ponens (lib step evidence)
+  (proof-with-checked-results ((literal (proof-step-first step))
+                               (head (proof-term-at literal 0)))
+    (if (not (equal head *library-implies*))
+        '(:failure "RecipeMismatch" "")
+      (proof-with-checked-results ((premise (proof-term-at literal 1))
+                                   (first (proof-step-first evidence)))
+        (if (equal premise first)
+            (library-library-cite lib "IMPLICATION-CONSEQUENT" (cdr literal)
+                                  (list step evidence))
+          '(:failure "RecipeMismatch" ""))))))
+
+(defun t2-arithmetic-arithmetic-conjunct (lib step)
+  (proof-with-checked-results ((literal (proof-step-first step))
+                               (no (proof-term-at literal 3)))
+    (if (equal no *proof-false*)
+        (let ((args (list (cadr literal) (caddr literal))))
+          (proof-with-checked-results
+              ((first (library-library-cite lib "CONJUNCTION-FIRST" args (list step)))
+               (second (library-library-cite lib "CONJUNCTION-SECOND" args (list step))))
+            (list first second)))
+      '(:failure "RecipeMismatch" ""))))
+
+; Arithmetic uses the base constant rule and the arithmetic reflexivity rule.
+(mutual-recursion
+ (defun t2-arithmetic-simplify-visit (n proof term evidence definitions)
+   (declare (xargs :measure (nfix n)))
+   (let ((head (proof-datum-head term)))
+     (cond
+      ((zp n) '(:failure "Fuel" "t2-arithmetic-simplify-visit"))
+      ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
+      ((endp term) '(:failure "MissingTermPart" ""))
+      ((or (proof-compound head) (member-equal head definitions))
+       (proof-with-checked-results
+           ((expansion (proof-simplify-expansion proof term))
+            (next (t2-arithmetic-simplify-visit (1- n) proof (cadr expansion) evidence definitions)))
+         (proof-proof-chain proof (car expansion) (list next))))
+      ((equal head *proof-if*)
+       (proof-with-checked-results
+           ((test (proof-term-at term 1))
+            (first (t2-arithmetic-simplify-visit (1- n) proof test evidence definitions))
+            (path (proof-simplify-if-path proof term first evidence)))
+         (if (eq (car path) :simplify)
+             (proof-with-checked-results
+                 ((next (t2-arithmetic-simplify-visit (1- n) proof (caddr path) evidence definitions)))
+               (proof-proof-chain proof (cadr path) (list next)))
+           path)))
+      (t (proof-with-checked-results
+             ((result (t2-arithmetic-simplify-arguments (1- n) proof term (cdr term) 1 nil
+                                                evidence definitions))
+              (current (if result (proof-rewritten-term result) term))
+              (constant (proof-proof-constant-base proof current)))
+           (cond ((not constant) result)
+                 (result (proof-proof-chain proof result (list constant)))
+                 (t constant)))))))
+ (defun t2-arithmetic-simplify-arguments (n proof term args index result evidence definitions)
+   (declare (xargs :measure (nfix n)))
+   (cond ((zp n) '(:failure "Fuel" "t2-arithmetic-simplify-arguments"))
+         ((endp args) result)
+         (t (proof-with-checked-results
+                ((equality (t2-arithmetic-simplify-visit (1- n) proof (car args) evidence definitions))
+                 (next (proof-simplify-argument-result proof term index result equality)))
+              (t2-arithmetic-simplify-arguments (1- n) proof term (cdr args) (1+ index) next
+                                        evidence definitions))))))
+
+(defun t2-arithmetic-simplify (proof term evidence definitions)
+  (t2-arithmetic-simplify-visit 1000000 proof term evidence definitions))
+
+(defun t2-arithmetic-simplify-first (proof step evidence definitions)
+  (proof-with-checked-results
+      ((literal (proof-step-first step))
+       (equality (t2-arithmetic-simplify proof literal evidence definitions)))
+    (if equality
+        (proof-with-checked-results ((rewritten (proof-proof-rewrite proof step equality '(1))))
+          (proof-proof-tidy proof rewritten))
+      step)))
+
+(defun t2-arithmetic-prove-visit (n proof term evidence definitions)
+  (declare (xargs :measure (nfix n)))
+  (if (not (o< (nfix (1- n)) (nfix n)))
+      '(:failure "Fuel" "t2-arithmetic-arithmetic-prove")
+    (cond
+     ((equal term *proof-true*)
+      (let ((name (proof-sym "SELF-TRUE" "ACL2")))
+        (if (assoc-equal name (proof-proof-facts proof))
+            (proof-proof-fact proof name nil)
+          (proof-proof-prove proof term evidence definitions))))
+     (t
+      (proof-with-checked-results ((premise (proof-find-evidence evidence (list term))))
+        (if premise
+            premise
+          (proof-with-checked-results
+              ((equality (t2-arithmetic-simplify proof term evidence definitions))
+               (right (and equality (proof-rewritten-term equality))))
+            (cond ((or (not equality) (equal right term)) (proof-prove-unproved-term term))
+                  ((equal right *proof-true*) (proof-proof-true-from-eq proof equality))
+                  (t (proof-with-checked-results
+                         ((step (t2-arithmetic-prove-visit
+                                 (1- n) proof right evidence definitions)))
+                       (proof-proof-transport proof step equality)))))))))))
+
+(defun t2-arithmetic-proof-prove (proof term evidence definitions)
+  (t2-arithmetic-prove-visit 1000000 proof term evidence definitions))
+
+(defun t2-arithmetic-arithmetic-prove (lib term evidence definitions)
+  (t2-arithmetic-proof-prove (library-library-proof lib) term evidence definitions))
+
+(mutual-recursion
+ (defun t2-arithmetic-arithmetic-natural (lib term)
+   (declare (xargs :measure (acl2-count term)))
+   (cond
+    ((proof-is-call term *t2-arithmetic-nfix*)
+     (proof-with-checked-results
+         ((step (library-library-cite lib "NFIX-NATURAL" (cdr term) nil))
+          (equation (library-library-cite lib "LIBRARY-NFIX" (cdr term) nil)))
+       (library-library-transport-argument lib step equation 1)))
+    ((proof-is-call term *t2-arithmetic-length*)
+     (library-library-cite lib "LENGTH-NATURAL" (cdr term) nil))
+    ((proof-is-call term *proof-plus*)
+     (proof-with-checked-results ((steps (t2-arithmetic-natural-arguments lib (cdr term))))
+       (library-library-cite lib "NATURAL-SUM" (cdr term) steps)))
+    ((or (proof-is-call term *library-count*) (proof-is-call term *library-len*))
+     (library-library-natural lib term))
+    (t (t2-arithmetic-arithmetic-prove lib (list *library-natp* term)
+                                       nil (list *library-natp* *proof-not*)))))
+
+ (defun t2-arithmetic-natural-arguments (lib terms)
+   (declare (xargs :measure (acl2-count terms)))
+   (if (endp terms)
+       nil
+     (proof-with-checked-results
+         ((step (t2-arithmetic-arithmetic-natural lib (car terms)))
+          (rest (t2-arithmetic-natural-arguments lib (cdr terms))))
+       (cons step rest)))))
+
+(mutual-recursion
+ (defun t2-arithmetic-arithmetic-type-of (lib term evidence)
+   (declare (xargs :measure (acl2-count term)))
+   (cond
+    ((or (proof-is-call term *t2-arithmetic-nfix*)
+         (proof-is-call term *t2-arithmetic-length*))
+     (proof-with-checked-results ((step (t2-arithmetic-arithmetic-natural lib term)))
+       (library-library-cite lib "NATURAL-INTEGER" (list term) (list step))))
+    ((proof-is-call term *t2-arithmetic-ifix*)
+     (library-library-cite lib "IFIX-INTEGER" (cdr term) nil))
+    (t
+     (let ((literal (library-integer term)))
+       (proof-with-checked-results ((known (library-type-evidence literal evidence)))
+         (cond
+          (known known)
+          ((proof-is-call term *proof-quote*)
+           (proof-with-checked-results ((value (proof-term-at term 1)))
+             (if (or (integerp value) (eq value t))
+                 (t2-arithmetic-arithmetic-prove lib literal nil nil)
+               (library-missing-integer term))))
+          ((or (proof-is-call term *proof-plus*) (proof-is-call term *proof-times*))
+           (proof-with-checked-results
+               ((steps (t2-arithmetic-type-arguments lib (cdr term) evidence)))
+             (library-library-cite lib (if (equal (car term) *proof-plus*)
+                                           "INTEGER-SUM" "INTEGER-PRODUCT")
+                                   (cdr term) steps)))
+          ((proof-is-call term *proof-minus*)
+           (if (endp (cdr term))
+               '(:failure "MissingTermPart" "")
+             (proof-with-checked-results
+                 ((step (t2-arithmetic-arithmetic-type-of lib (cadr term) evidence)))
+               (library-library-cite lib "INTEGER-NEGATION" (cdr term) (list step)))))
+          ((proof-is-call term *library-count*)
+           (library-library-cite lib "COUNT-INTEGER" (cdr term) nil))
+          ((proof-is-call term *library-len*)
+           (library-library-cite lib "LEN-INTEGER" (cdr term) nil))
+          (t (library-missing-integer term))))))))
+
+ (defun t2-arithmetic-type-arguments (lib terms evidence)
+   (declare (xargs :measure (acl2-count terms)))
+   (if (endp terms)
+       nil
+     (proof-with-checked-results
+         ((step (t2-arithmetic-arithmetic-type-of lib (car terms) evidence))
+          (rest (t2-arithmetic-type-arguments lib (cdr terms) evidence)))
+       (cons step rest)))))
+
+(defun t2-arithmetic-rational (lib term evidence)
+  (proof-with-checked-results
+      ((axiom (library-library-axiom lib "INTEGER-IMPLIES-RATIONAL" (list term)))
+       (step (t2-arithmetic-arithmetic-type-of lib term evidence)))
+    (t2-arithmetic-arithmetic-modus-ponens lib axiom step)))
+
+(defun t2-arithmetic-number (lib term evidence)
+  (proof-with-checked-results
+      ((fact (proof-proof-fact (library-library-proof lib) "rationalp-acl2-numberp"
+                               (list (list *library-x* term))))
+       (step (t2-arithmetic-rational lib term evidence)))
+    (t2-arithmetic-arithmetic-modus-ponens lib fact step)))
+
+; Linear forms use the Arithmetic integer rule when removing zero or pushing a minus.
+(defun t2-arithmetic-push-minus (n library term evidence)
+  (declare (xargs :measure (nfix n)))
+  (if (not (o< (nfix (1- n)) (nfix n)))
+      '(:failure "Fuel" "t2-arithmetic-push-minus")
+    (let ((proof (library-library-proof library)))
+      (cond
+       ((proof-is-call term *proof-plus*)
+        (proof-with-checked-results
+         ((result (proof-proof-reflexive proof term))
+          (left (proof-term-at term 1))
+          (left-step (t2-arithmetic-push-minus (1- n) library left evidence))
+          (result (if left-step
+                      (proof-proof-rewrite proof result left-step '(1 2 1))
+                    result))
+          (right (proof-term-at term 2))
+          (right-step (t2-arithmetic-push-minus (1- n) library right evidence))
+          (result (if right-step
+                      (proof-proof-rewrite proof result right-step '(1 2 2))
+                    result))
+          (first (proof-step-first result))
+          (right (proof-term-at first 2)))
+         (if (equal right term) nil result)))
+       ((proof-is-call term *proof-minus*)
+        (proof-with-checked-results ((argument (proof-term-at term 1)))
+          (if (proof-is-call argument *proof-quote*)
+              (proof-proof-constant-base proof term)
+            (let ((facts (proof-proof-facts proof)))
+              (proof-with-checked-results
+               ((result
+                 (cond
+                  ((and (proof-is-call argument *proof-minus*)
+                        (assoc-equal (library-lemma-name "DOUBLE-NEGATION") facts))
+                   (proof-with-checked-results
+                    ((item (proof-term-at argument 1))
+                     (type-step (t2-arithmetic-arithmetic-type-of library item evidence)))
+                    (library-library-cite library "DOUBLE-NEGATION"
+                                          (list item) (list type-step))))
+                  ((and (proof-is-call argument *proof-plus*)
+                        (assoc-equal (library-lemma-name "NEGATE-SUM") facts))
+                   (proof-with-checked-results
+                    ((steps (t2-arithmetic-type-arguments library (cdr argument) evidence)))
+                    (library-library-cite library "NEGATE-SUM" (cdr argument) steps)))
+                  (t nil))))
+               (if (not result)
+                   nil
+                 (proof-with-checked-results
+                  ((first (proof-step-first result))
+                   (right (proof-term-at first 2))
+                   (rest (t2-arithmetic-push-minus (1- n) library right evidence)))
+                  (proof-proof-chain proof result (list rest)))))))))
+       (t nil)))))
+
+(defun t2-arithmetic-linear-remove-zero (library step name term place evidence)
+  (proof-with-checked-results
+   ((type-step (t2-arithmetic-arithmetic-type-of library term evidence))
+    (zero-step (library-library-cite library name (list term) (list type-step))))
+   (proof-proof-rewrite (library-library-proof library) step zero-step place)))
+
+(defun t2-arithmetic-linear-combine (n library step place evidence)
+  (declare (xargs :measure (nfix n)))
+  (if (not (o< (nfix (1- n)) (nfix n)))
+      '(:failure "Fuel" "t2-arithmetic-linear-combine")
+    (proof-with-checked-results
+     ((first (proof-step-first step))
+      (node (library-linear-form-get first (cdr place))))
+     (if (not (proof-is-call node *proof-plus*))
+         (proof-proof-tidy (library-library-proof library) step)
+       (proof-with-checked-results ((pair (proof-list-of-length (cdr node) 2)))
+         (let* ((a (car pair))
+                (rest (cadr pair))
+                (suffix (proof-is-call rest *proof-plus*))
+                (proof (library-library-proof library)))
+           (proof-with-checked-results ((b (if suffix (proof-term-at rest 1) rest)))
+             (cond
+              ((equal a *proof-zero*)
+               (proof-with-checked-results ((step (t2-arithmetic-linear-remove-zero library step "ADD-ZERO-LEFT"
+                                                                rest place evidence)))
+                 (t2-arithmetic-linear-combine (1- n) library step place evidence)))
+              ((and (equal b *proof-zero*) (not suffix))
+               (proof-with-checked-results ((step (t2-arithmetic-linear-remove-zero library step "ADD-ZERO-RIGHT"
+                                                                a place evidence)))
+                 (t2-arithmetic-linear-combine (1- n) library step place evidence)))
+              (t
+               (proof-with-checked-results ((combine (library-linear-combine-pair library a b)))
+                 (if (not combine)
+                     (t2-arithmetic-linear-combine (1- n) library step (append place '(2)) evidence)
+                   (proof-with-checked-results
+                    ((step (if suffix
+                               (proof-with-checked-results
+                                ((tail (proof-term-at rest 2))
+                                 (assoc-step (library-library-axiom library "ASSOCIATIVITY-OF-+"
+                                                                    (list a b tail)))
+                                 (symmetric (proof-proof-symmetric proof assoc-step)))
+                                (proof-proof-rewrite proof step symmetric place))
+                             step))
+                     (step (proof-proof-rewrite proof step combine
+                                                (if suffix (append place '(1)) place))))
+                    (t2-arithmetic-linear-combine (1- n) library step '(1 2) evidence)))))))))))))
+
+(defun t2-arithmetic-linear-form (library term evidence)
+  (proof-with-checked-results
+   ((step (t2-arithmetic-push-minus 1000000 library term evidence))
+    (step (if step step (proof-proof-reflexive (library-library-proof library) term)))
+    (step (library-linear-reassociate 1000000 library step '(1 2)))
+    (step (library-linear-sort 1000000 library step '(1 2) nil)))
+   (t2-arithmetic-linear-combine 1000000 library step '(1 2) evidence)))
+
+(defun t2-arithmetic-linear-equal (library left right integers)
+  (proof-with-checked-results
+   ((a (t2-arithmetic-linear-form library left integers))
+    (b (t2-arithmetic-linear-form library right integers))
+    (a-first (proof-step-first a))
+    (b-first (proof-step-first b))
+    (a-normal (proof-term-at a-first 2))
+    (b-normal (proof-term-at b-first 2)))
+   (if (equal a-normal b-normal)
+       (let ((proof (library-library-proof library)))
+         (proof-with-checked-results ((symmetric (proof-proof-symmetric proof b)))
+           (proof-proof-chain proof a (list symmetric))))
+     (proof-with-checked-results ((a-text (proof-write a-normal))
+                    (b-text (proof-write b-normal)))
+       '(:failure "RecipeMismatch" "")))))
+
+(defun t2-arithmetic-comparison (library a b integers)
+  (proof-with-checked-results
+   ((a-type (t2-arithmetic-arithmetic-type-of library a integers))
+    (b-type (t2-arithmetic-arithmetic-type-of library b integers)))
+   (library-library-cite library "LESS-DIFFERENCE" (list a b) (list a-type b-type))))
+
+(defun t2-arithmetic-less-from-difference (library a b positive-difference integers)
+  (let ((proof (library-library-proof library)))
+    (proof-with-checked-results
+     ((compare (t2-arithmetic-comparison library a b integers))
+      (first (proof-step-first positive-difference))
+      (term (proof-term-at first 2))
+      (delta (t2-arithmetic-linear-equal library (library-diff b a) term integers))
+      (compare (proof-proof-rewrite proof compare delta '(1 2 2))))
+     (proof-proof-transport proof positive-difference compare))))
+
+(defun t2-arithmetic-weak-from-difference (library a b nonnegative-difference integers)
+  (proof-with-checked-results
+   ((compare (library-library-axiom library "<-ON-OTHERS" (list b a)))
+    (first (proof-step-first nonnegative-difference))
+    (bound (proof-term-at first 1))
+    (term (proof-term-at bound 1))
+    (delta (t2-arithmetic-linear-equal library (library-diff b a) term integers))
+    (compare (proof-proof-rewrite (library-library-proof library) compare delta '(1 2 1))))
+   (library-library-transport-argument library nonnegative-difference compare 1)))
+
+
+; The Library build uses the Arithmetic implication and conjunction citations.
+(defun t2-arithmetic-integer-closure-lemmas (library both recipes)
+  (declare (xargs :measure (acl2-count recipes)))
+  (if (endp recipes)
+      library
+    (let* ((recipe (car recipes))
+           (head (car recipe))
+           (axiom (cadr recipe))
+           (name (caddr recipe))
+           (x *library-x*)
+           (y *library-y*))
+      (proof-with-checked-results
+       ((fact (library-inherited proof-proof-fact library axiom nil))
+        (step (t2-arithmetic-arithmetic-modus-ponens library fact both))
+        (library (library-library-lemma library name (library-integer (list head x y)) step
+                                        (library-guards (list (library-integer x)
+                                                              (library-integer y))))))
+       (t2-arithmetic-integer-closure-lemmas library both (cdr recipes))))))
+
+(defun t2-arithmetic-logic-and-types (library)
+  (let* ((x *library-x*)
+         (y *library-y*)
+         (z *library-z*)
+         (conditional (proof-ite x y z))
+         (integer-x (library-integer x))
+         (integer-y (library-integer y))
+         (nat (list *library-natp* x))
+         (cons-test (list *proof-consp* x))
+         (ordinal (list *proof-ordinalp* x))
+         (ordinal-lt (list *proof-ordinal-less* x y))
+         (nfix (list *library-nfix* x))
+         (gap (list *library-gap* x y)))
+    (proof-with-checked-results
+     ((middle (library-inherited proof-proof-excluded-middle library x))
+      (library (library-library-lemma library "EXCLUDED-MIDDLE" (proof-neg x) middle (list x)))
+      (when-false (library-inherited proof-proof-if-false library conditional))
+      (library (library-library-lemma library "IF-FALSE" (proof-eq conditional z) when-false (list x)))
+      (when-true (library-inherited proof-proof-if-true library conditional))
+      (library (library-library-lemma library "IF-TRUE" (proof-eq conditional y) when-true
+                                      (list (proof-neg x))))
+      (integers (library-library-ints library (list x y)))
+      (both (library-inherited t2-arithmetic-proof-prove library
+                               (proof-ite integer-x integer-y *proof-false*) integers nil))
+      (library (t2-arithmetic-integer-closure-lemmas
+                library both (list (list *proof-plus* "integerp-binary-+" "INTEGER-SUM")
+                                   (list *proof-times* "integerp-binary-*" "INTEGER-PRODUCT"))))
+      (negation (library-inherited proof-proof-fact library "integerp-unary--" nil))
+      (step (t2-arithmetic-arithmetic-modus-ponens library negation (car integers)))
+      (library (library-library-lemma library "INTEGER-NEGATION" (library-integer (library-minus x))
+                                      step (list (proof-neg integer-x))))
+
+      (nat-hyp (library-inherited proof-proof-assume library nat t))
+      (opened (library-inherited proof-proof-unfold library nat))
+      (nat-open (library-inherited proof-proof-rewrite library nat-hyp opened '(1)))
+      (nat-parts (t2-arithmetic-arithmetic-conjunct library nat-open))
+      (library (library-library-lemma library "NATURAL-INTEGER" integer-x (car nat-parts)
+                                      (list (proof-neg nat))))
+      (library (library-library-lemma library "NATURAL-NONNEGATIVE" (library-nonnegative x)
+                                      (cadr nat-parts) (list (proof-neg nat))))
+      (neg-x (library-inherited proof-proof-assume library (library-lt x *proof-zero*) nil))
+      (bounded (library-inherited t2-arithmetic-proof-prove library nat (list (car integers) neg-x)
+                                  (list *library-natp*)))
+      (library (library-library-lemma library "NATURAL-FROM-BOUNDS" nat bounded
+                                      (list (proof-neg integer-x) (library-lt x *proof-zero*))))
+
+      (consp-fact (library-inherited proof-proof-fact library "consp-not-acl2-numberp" nil))
+      (consp-hyp (library-inherited proof-proof-assume library cons-test t))
+      (nonnumber (t2-arithmetic-arithmetic-modus-ponens library consp-fact consp-hyp))
+      (numeric (library-inherited proof-proof-assume library (list *library-numberp* x) t))
+      (finite (library-inherited proof-proof-cut library numeric nonnumber))
+      (finite (library-inherited proof-proof-front library finite (proof-neg cons-test)))
+      (number-finite (library-inherited t2-arithmetic-proof-prove library (list *library-o-finp* x)
+                                        (list finite) (list *library-o-finp* (proof-cl "ATOM"))))
+      (numeric-first (proof-step-first numeric))
+      (library (library-library-lemma library "NUMBER-FINITE" (list *library-o-finp* x)
+                                      number-finite (list (proof-neg numeric-first))))
+      (number-x (t2-arithmetic-number library x (list (car integers))))
+      (integer-finite (library-library-cite library "NUMBER-FINITE" (list x) (list number-x)))
+      (library (library-library-lemma library "INTEGER-FINITE" (list *library-o-finp* x)
+                                      integer-finite (list (proof-neg integer-x))))
+
+      (x-finite (library-library-cite library "INTEGER-FINITE" (list x) (list (car nat-parts))))
+      (natural-ordinal (library-inherited t2-arithmetic-proof-prove library ordinal (list x-finite nat-hyp)
+                                          (list *proof-ordinalp*)))
+      (library (library-library-lemma library "NATURAL-ORDINAL" ordinal natural-ordinal
+                                      (list (proof-neg nat))))
+      (x-finite (library-library-cite library "INTEGER-FINITE" (list x) (list (car integers))))
+      (y-finite (library-library-cite library "INTEGER-FINITE" (list y) (list (cadr integers))))
+      (finite-order (library-inherited t2-arithmetic-simplify library ordinal-lt (list x-finite y-finite)
+                                       (list *proof-ordinal-less* *proof-not*)))
+      (library (library-library-lemma library "FINITE-ORDER" (proof-eq ordinal-lt (library-lt x y))
+                                      finite-order (library-guards (list integer-x integer-y))))
+
+      (library (library-library-definition library *library-nfix* (list x) (proof-ite nat x *proof-zero*)))
+      (good-eq (library-inherited t2-arithmetic-simplify library nfix (list nat-hyp) (list *library-nfix*)))
+      (good (library-library-transport-argument library nat-hyp good-eq 1))
+      (zero-natural (library-inherited t2-arithmetic-proof-prove library (list *library-natp* *proof-zero*)
+                                        nil (list *library-natp* *proof-not*)))
+      (not-natural (library-inherited proof-proof-assume library nat nil))
+      (bad-eq (library-inherited t2-arithmetic-simplify library nfix (list not-natural) (list *library-nfix*)))
+      (bad (library-library-transport-argument library zero-natural bad-eq 1))
+      (cases (library-inherited proof-proof-cases library nat good bad))
+      (library (library-library-lemma library "NFIX-NATURAL" (list *library-natp* nfix) cases nil))
+      (fixed (library-inherited proof-proof-fact library (library-lemma-name "NFIX-NATURAL") nil))
+      (nfix-integer (library-library-cite library "NATURAL-INTEGER" (list nfix) (list fixed)))
+      (library (library-library-lemma library "NFIX-INTEGER" (library-integer nfix) nfix-integer nil))
+      (nfix-ordinal (library-library-cite library "NATURAL-ORDINAL" (list nfix) (list fixed)))
+      (library (library-library-lemma library "NFIX-ORDINAL" (list *proof-ordinalp* nfix) nfix-ordinal nil))
+      (library (library-library-definition library *library-gap* (list x y)
+                                           (list *library-nfix* (library-diff x y))))
+      (difference-ordinal (library-library-cite library "NFIX-ORDINAL" (list (library-diff x y)) nil))
+      (opened (library-inherited proof-proof-unfold library gap))
+      (gap-ordinal (library-library-transport-argument library difference-ordinal opened 1)))
+     (library-library-lemma library "GAP-ORDINAL" (list *proof-ordinalp* gap) gap-ordinal nil))))
+
+(defun t2-arithmetic-additive-identities (library)
+  (let ((x *library-x*)
+        (y *library-y*)
+        (z *library-z*)
+        (zero *proof-zero*)
+        (fix (proof-sym "FIX" "ACL2")))
+    (proof-with-checked-results
+     ((ints (library-library-ints library (list x)))
+      (left-zero (library-library-axiom library "UNICITY-OF-0" (list x)))
+      (x-number (t2-arithmetic-number library x ints))
+      (fixed (library-inherited t2-arithmetic-simplify library (list fix x) (list x-number) (list fix)))
+      (left-zero (library-inherited proof-proof-chain library left-zero (list fixed)))
+      (library (library-library-lemma library "ADD-ZERO-LEFT" (proof-eq (library-plus zero x) x)
+                                      left-zero (list (proof-neg (library-integer x)))))
+      (commute (library-library-axiom library "COMMUTATIVITY-OF-+" (list x zero)))
+      (right-zero (library-inherited proof-proof-chain library commute (list left-zero)))
+      (library (library-library-lemma library "ADD-ZERO-RIGHT" (proof-eq (library-plus x zero) x)
+                                      right-zero (list (proof-neg (library-integer x)))))
+      (assoc-step (library-library-axiom library "ASSOCIATIVITY-OF-+" (list x y z)))
+      (step (library-inherited proof-proof-symmetric library assoc-step))
+      (commute (library-library-axiom library "COMMUTATIVITY-OF-+" (list x y)))
+      (step (library-inherited proof-proof-rewrite library step commute '(1 2 1)))
+      (assoc-step (library-library-axiom library "ASSOCIATIVITY-OF-+" (list y x z)))
+      (step (library-inherited proof-proof-chain library step (list assoc-step)))
+      (library (library-library-lemma library "ADD-SWAP"
+                                      (proof-eq (library-plus x (library-plus y z))
+                                                (library-plus y (library-plus x z))) step nil))
+
+      (inverse (library-library-axiom library "INVERSE-OF-+" (list x)))
+      (commute (library-library-axiom library "COMMUTATIVITY-OF-+" (list (library-minus x) x)))
+      (reverse (library-inherited proof-proof-chain library commute (list inverse)))
+      (involution (library-additive-identities-inverse-unique (library-minus x) x reverse ints library))
+      (involution (library-inherited proof-proof-symmetric library involution))
+      (library (library-library-lemma library "DOUBLE-NEGATION"
+                                      (proof-eq (library-minus (library-minus x)) x)
+                                      involution (list (proof-neg (library-integer x)))))
+      (ints (library-library-ints library (list x y))))
+     (let ((a (library-plus x y))
+           (b (library-plus (library-minus x) (library-minus y))))
+       (proof-with-checked-results
+        ((zero-sum (t2-arithmetic-linear-equal library (library-plus a b) zero ints))
+         (distribute (library-additive-identities-inverse-unique a b zero-sum ints library))
+         (distribute (library-inherited proof-proof-symmetric library distribute)))
+        (library-library-lemma library "NEGATE-SUM" (proof-eq (library-minus a) b) distribute
+                               (library-guards (list (library-integer x) (library-integer y)))))))))
+
+(defun t2-arithmetic-tenfold-increase (library ix px)
+  (let* ((proof (library-library-proof library))
+         (nine (proof-quote 9))
+         (ten (proof-quote 10))
+         (times-x (list *proof-times* nine *library-x*))
+         (fix (proof-sym "FIX" "ACL2")))
+    (proof-with-checked-results
+     ((rational-nine (t2-arithmetic-rational library nine nil))
+      (rational-x (t2-arithmetic-rational library *library-x* (list ix)))
+      (positive-nine (t2-arithmetic-proof-prove proof (library-positive nine) nil nil))
+      (pos-product (library-library-cite library "POSITIVE-PRODUCT"
+                                         (list nine *library-x*)
+                                         (list rational-nine rational-x positive-nine px)))
+      (result (t2-arithmetic-less-from-difference
+               library *library-x* (library-plus *library-x* times-x) pos-product (list ix)))
+      (expansion (library-library-axiom library "COMMUTATIVITY-OF-*" (list ten *library-x*)))
+      (sum-ten (proof-proof-compute proof (library-plus *proof-one* nine) 10))
+      (ten-sum (proof-proof-symmetric proof sum-ten))
+      (expansion (proof-proof-rewrite proof expansion ten-sum '(1 2 2)))
+      (distributed (library-library-axiom library "DISTRIBUTIVITY"
+                                          (list *library-x* *proof-one* nine)))
+      (expansion (proof-proof-chain proof expansion (list distributed)))
+      (one-x (library-library-axiom library "UNICITY-OF-1" (list *library-x*)))
+      (number-x (t2-arithmetic-number library *library-x* (list ix)))
+      (fixed (t2-arithmetic-simplify proof (list fix *library-x*) (list number-x) (list fix)))
+      (one-x (proof-proof-chain proof one-x (list fixed)))
+      (x-one (library-library-axiom library "COMMUTATIVITY-OF-*" (list *library-x* *proof-one*)))
+      (x-one (proof-proof-chain proof x-one (list one-x)))
+      (expansion (proof-proof-rewrite proof expansion x-one '(1 2 1)))
+      (x-nine (library-library-axiom library "COMMUTATIVITY-OF-*" (list *library-x* nine)))
+      (expansion (proof-proof-rewrite proof expansion x-nine '(1 2 2)))
+      (step (library-library-transport-argument library result expansion 2)))
+     (library-library-lemma
+      library "TENFOLD-LARGER" (library-lt *library-x* (list *proof-times* ten *library-x*))
+      step (library-guards (list (library-integer *library-x*) (library-positive *library-x*)))))))
+
+(defun t2-arithmetic-ordered-arithmetic (library)
+  (let* ((x *library-x*)
+         (y *library-y*)
+         (integer-x (library-integer x))
+         (integer-y (library-integer y))
+         (positive-x (library-positive x))
+         (positive-y (library-positive y))
+         (negative-x (library-lt x *proof-zero*))
+         (negative-y (library-lt y *proof-zero*))
+         (difference (library-diff y x))
+         (compare-xy (library-lt x y))
+         (proof (library-library-proof library)))
+    (proof-with-checked-results
+     ((ints (library-library-ints library (list x y)))
+      (a (library-library-axiom library "<-ON-OTHERS" (list x y)))
+      (b (library-library-axiom library "<-ON-OTHERS" (list *proof-zero* difference)))
+      (delta (t2-arithmetic-linear-equal
+              library (library-diff *proof-zero* difference) (library-diff x y) ints))
+      (b (proof-proof-rewrite proof b delta '(1 2 1)))
+      (b (proof-proof-symmetric proof b))
+      (step (proof-proof-chain proof a (list b)))
+      (library (library-library-lemma library "LESS-DIFFERENCE"
+                                      (proof-eq compare-xy (library-positive difference))
+                                      step (library-guards (list integer-x integer-y))))
+      (proof (library-library-proof library))
+
+      (px (proof-proof-assume proof positive-x t))
+      (py (proof-proof-assume proof positive-y t))
+      (positive (library-library-axiom library "POSITIVE" (list x y)))
+      (parts (t2-arithmetic-arithmetic-conjunct library positive))
+      (both-positive (proof-ite positive-x positive-y *proof-false*))
+      (premise (t2-arithmetic-proof-prove proof both-positive (list px py) nil))
+      (step (t2-arithmetic-arithmetic-modus-ponens library (car parts) premise))
+      (library (library-library-lemma library "POSITIVE-SUM"
+                                      (library-positive (library-plus x y)) step
+                                      (library-guards (list positive-x positive-y))))
+      (proof (library-library-proof library))
+      (r-x (list *library-rationalp* x))
+      (r-y (list *library-rationalp* y))
+      (rx (proof-proof-assume proof r-x t))
+      (ry (proof-proof-assume proof r-y t))
+      (both-rational-positive (proof-ite r-x (proof-ite r-y both-positive *proof-false*)
+                                         *proof-false*))
+      (premise (t2-arithmetic-proof-prove proof both-rational-positive (list rx ry px py) nil))
+      (step (t2-arithmetic-arithmetic-modus-ponens library (cadr parts) premise))
+      (library (library-library-lemma library "POSITIVE-PRODUCT"
+                                      (library-positive (list *proof-times* x y)) step
+                                      (library-guards (list r-x r-y positive-x positive-y))))
+      (proof (library-library-proof library))
+
+      (ix (car ints))
+      (iy (cadr ints))
+      (trichotomy (library-library-axiom library "TRICHOTOMY" (list x)))
+      (parts (t2-arithmetic-arithmetic-conjunct library trichotomy))
+      (tri (car parts))
+      (exclusive (cadr parts))
+      (opposite (t2-arithmetic-comparison library x *proof-zero* (list ix)))
+      (delta (t2-arithmetic-linear-equal library (library-diff *proof-zero* x)
+                                           (library-minus x) (list ix)))
+      (opposite (proof-proof-rewrite proof opposite delta '(1 2 2)))
+      (exclusive-first (proof-step-first exclusive))
+      (test (proof-term-at exclusive-first 1))
+      (test-equality (t2-arithmetic-simplify proof test
+                                           (list px) (list *proof-not*)))
+      (exclusive (proof-proof-rewrite proof exclusive test-equality '(1 1)))
+      (exclusive (t2-arithmetic-simplify-first proof exclusive nil nil))
+      (step (library-library-transport-argument library exclusive opposite 1))
+      (library (library-library-lemma library "POSITIVE-NONNEGATIVE"
+                                      (library-nonnegative x) step
+                                      (library-guards (list integer-x positive-x))))
+      (proof (library-library-proof library))
+
+      (goal (library-positive (library-plus y x)))
+      (good (library-library-cite library "POSITIVE-SUM" (list y x) (list py px)))
+      (x-zero (proof-eq x *proof-zero*))
+      (y-zero (library-library-cite library "ADD-ZERO-RIGHT" (list y) (list iy)))
+      (zero-case (library-library-transport-argument library py y-zero 2))
+      (x-is-zero (proof-proof-assume proof x-zero t))
+      (zero-x (proof-proof-symmetric proof x-is-zero))
+      (zero-case (proof-proof-rewrite proof zero-case zero-x '(1 2 2)))
+      (zero-case (proof-proof-tidy proof zero-case))
+      (number-x (t2-arithmetic-number library x (list ix)))
+      (disjunction (t2-arithmetic-arithmetic-modus-ponens library tri number-x))
+      (x-not-positive (proof-proof-assume proof positive-x nil))
+      (x-not-zero (proof-proof-assume proof x-zero nil))
+      (negative-case (t2-arithmetic-simplify-first proof disjunction
+                                                  (list x-not-positive x-not-zero) nil))
+      (negative-case (proof-proof-transport proof negative-case opposite))
+      (x-bound (proof-proof-assume proof negative-x nil))
+      (contradiction (proof-proof-cut proof negative-case x-bound))
+      (impossible (proof-proof-subsume proof contradiction
+                                       (cons goal (proof-step-clause contradiction))))
+      (branch (proof-proof-cases proof x-zero zero-case impossible))
+      (step (proof-proof-cases proof positive-x good branch))
+      (library (library-library-lemma library "POSITIVE-PLUS-NONNEGATIVE" goal step
+                                      (list (proof-neg integer-x) (proof-neg integer-y)
+                                            (proof-neg positive-y) negative-x)))
+      (proof (library-library-proof library))
+
+      (sum (library-plus y x))
+      (goal (library-nonnegative sum))
+      (y-bound (proof-proof-assume proof negative-y nil))
+      (sum-type (t2-arithmetic-arithmetic-type-of library sum ints))
+      (pos-sum (library-library-cite library "POSITIVE-PLUS-NONNEGATIVE"
+                                      (list y x) (list iy ix px y-bound)))
+      (commute (library-library-axiom library "COMMUTATIVITY-OF-+" (list x y)))
+      (pos-sum (proof-proof-rewrite proof pos-sum commute '(1 2)))
+      (good (library-library-cite library "POSITIVE-NONNEGATIVE"
+                                   (list sum) (list sum-type pos-sum)))
+      (y-zero (library-library-cite library "ADD-ZERO-RIGHT" (list y) (list iy)))
+      (zero-y (proof-proof-symmetric proof y-zero))
+      (zero-case (proof-proof-rewrite proof y-bound zero-y '(1 1 1)))
+      (zero-case (proof-proof-tidy proof zero-case))
+      (x-is-zero (proof-proof-assume proof x-zero t))
+      (zero-x (proof-proof-symmetric proof x-is-zero))
+      (zero-case (proof-proof-rewrite proof zero-case zero-x '(1 1 1 2)))
+      (zero-case (proof-proof-tidy proof zero-case))
+      (impossible (proof-proof-subsume proof contradiction
+                                       (cons goal (proof-step-clause contradiction))))
+      (branch (proof-proof-cases proof x-zero zero-case impossible))
+      (step (proof-proof-cases proof positive-x good branch))
+      (library (library-library-lemma library "NONNEGATIVE-SUM" goal step
+                                      (list (proof-neg integer-x) (proof-neg integer-y)
+                                            negative-x negative-y)))
+      (proof (library-library-proof library))
+
+      (nx (proof-proof-assume proof (list *library-natp* x) t))
+      (ny (proof-proof-assume proof (list *library-natp* y) t))
+      (ix-nat (library-library-cite library "NATURAL-INTEGER" (list x) (list nx)))
+      (iy-nat (library-library-cite library "NATURAL-INTEGER" (list y) (list ny)))
+      (x-nat-bound (library-library-cite library "NATURAL-NONNEGATIVE" (list x) (list nx)))
+      (y-nat-bound (library-library-cite library "NATURAL-NONNEGATIVE" (list y) (list ny)))
+      (sum-nat-bound (library-library-cite library "NONNEGATIVE-SUM" (list y x)
+                                           (list iy-nat ix-nat y-nat-bound x-nat-bound)))
+      (sum (library-plus x y))
+      (sum-type (t2-arithmetic-arithmetic-type-of library sum (list ix-nat iy-nat)))
+      (sum-nat (library-library-cite library "NATURAL-FROM-BOUNDS" (list sum)
+                                     (list sum-type sum-nat-bound)))
+      (nat-x (proof-step-first nx))
+      (nat-y (proof-step-first ny))
+      (library (library-library-lemma library "NATURAL-SUM" (list *library-natp* sum)
+                                      sum-nat (library-guards (list nat-x nat-y))))
+      (proof (library-library-proof library))
+
+      (pos-one (t2-arithmetic-proof-prove proof (library-positive *proof-one*) nil nil))
+      (one-type (t2-arithmetic-arithmetic-type-of library *proof-one* nil))
+      (nonnegative-x (proof-proof-assume proof negative-x nil))
+      (step (library-library-cite library "POSITIVE-PLUS-NONNEGATIVE" (list x *proof-one*)
+                                   (list ix one-type pos-one nonnegative-x)))
+      (one-plus-x (library-plus *proof-one* x))
+      (library (library-library-lemma library "POSITIVE-ONE-PLUS" (library-positive one-plus-x)
+                                      step (list (proof-neg integer-x) negative-x)))
+      (step (t2-arithmetic-less-from-difference library x one-plus-x pos-one (list ix)))
+      (library (library-library-lemma library "SUCCESSOR-LARGER" (library-lt x one-plus-x)
+                                      step (list (proof-neg integer-x))))
+      (proof (library-library-proof library))
+
+      (nonless (proof-proof-assume proof compare-xy nil))
+      (delta (library-diff x y))
+      (offset (library-library-axiom library "<-ON-OTHERS" (list x y)))
+      (nonneg-delta (proof-proof-rewrite proof nonless offset '(1 1)))
+      (delta-type (t2-arithmetic-arithmetic-type-of library delta ints))
+      (bound (library-library-cite library "POSITIVE-ONE-PLUS" (list delta)
+                                    (list delta-type nonneg-delta)))
+      (step (t2-arithmetic-less-from-difference library y one-plus-x bound ints))
+      (library (library-library-lemma
+                library "LESS-THAN-NEXT" (library-lt y one-plus-x) step
+                (append (library-guards (list integer-x integer-y)) (list compare-xy)))))
+     (t2-arithmetic-tenfold-increase library ix px))))
+
+(defun t2-arithmetic-count-leaf (lib leaf)
+  (cond
+   ((proof-is-call leaf *proof-plus*)
+    (library-library-cite lib "SUM-NUMBER" (cdr leaf) nil))
+   ((proof-is-call leaf *proof-minus*)
+    (library-library-cite lib "NEGATION-NUMBER" (cdr leaf) nil))
+   ((or (proof-is-call leaf *t2-arithmetic-abs*)
+        (proof-is-call leaf *t2-arithmetic-length*))
+    (library-library-cite lib (if (equal (car leaf) *t2-arithmetic-abs*)
+                                  "ABS-NUMBER" "LENGTH-NUMBER")
+                          (cdr leaf) nil))
+   (t
+    (proof-with-checked-results
+        ((evidence (if (equal leaf *library-x*)
+                       (library-library-ints lib (list *library-x*))
+                     nil)))
+      (t2-arithmetic-number lib leaf evidence)))))
+
+(defun t2-arithmetic-count-leaves (lib requests)
+  (if (endp requests)
+      nil
+    (let ((request (car requests)))
+      (proof-with-checked-results ((step (t2-arithmetic-count-leaf lib (car request)))
+                                   (rest (t2-arithmetic-count-leaves lib (cdr requests))))
+        (cons (cons request step) rest)))))
+
+(defun t2-arithmetic-count-number-lemma (lib function name)
+  (let* ((proof (library-library-proof lib))
+         (call (list function *library-x*))
+         (template (list *library-numberp* *proof-result*)))
+    (proof-with-checked-results
+        ((opened (proof-proof-unfold proof call))
+         (body (t2-arithmetic-first-at opened 2))
+         (requests (proof-proof-by-value-leaves proof body nil))
+         (leaves (t2-arithmetic-count-leaves lib requests))
+         (step (proof-proof-by-value proof body template leaves nil))
+         (closed (proof-proof-symmetric proof opened))
+         (step (proof-proof-rewrite-result proof step closed template *proof-result*)))
+      (library-library-lemma lib name (list *library-numberp* call) step nil))))
+
+(defun t2-arithmetic-count-lemmas (lib)
+  (let* ((x *library-x*)
+         (y *library-y*)
+         (size (list *library-count* x)))
+    (proof-with-checked-results
+        ((closure (library-library-axiom lib "CLOSURE" (list x y)))
+         (parts (t2-arithmetic-arithmetic-conjunct lib closure))
+         (add (car parts))
+         (parts (t2-arithmetic-arithmetic-conjunct lib (cadr parts)))
+         (parts (t2-arithmetic-arithmetic-conjunct lib (cadr parts)))
+         (lib (library-library-lemma lib "SUM-NUMBER"
+                                     (list *library-numberp* (library-plus x y)) add nil))
+         (lib (library-library-lemma lib "NEGATION-NUMBER"
+                                     (list *library-numberp* (library-minus x)) (car parts) nil))
+         (lib (t2-arithmetic-count-number-lemma lib *t2-arithmetic-abs* "ABS-NUMBER"))
+         (lib (t2-arithmetic-count-number-lemma lib *t2-arithmetic-length* "LENGTH-NUMBER"))
+         (lib (t2-arithmetic-count-number-lemma lib *library-count* "COUNT-NUMBER"))
+         (count-number (library-library-cite lib "COUNT-NUMBER" (list x) nil))
+         (finite (library-library-cite lib "NUMBER-FINITE" (list size) (list count-number)))
+         (ordinal (library-library-builtin lib 1 x))
+         (step (t2-arithmetic-simplify-first (library-library-proof lib) ordinal
+                                             (list finite) (list *proof-ordinalp*)))
+         (lib (library-library-lemma lib "COUNT-NATURAL" (list *library-natp* size) step nil))
+         (natural (t2-arithmetic-arithmetic-natural lib size))
+         (step (library-library-cite lib "NATURAL-INTEGER" (list size) (list natural))))
+      (library-library-lemma lib "COUNT-INTEGER" (library-integer size) step nil))))
+
+(defun t2-arithmetic-arithmetic-build (lib)
+  (let* ((x *library-x*)
+         (y *library-y*)
+         (implication (list *library-implies* x y))
+         (conjunction (proof-ite x y *proof-false*))
+         (proof (proof-proof-with-kind (library-library-proof lib) :slice)))
+    (proof-with-checked-results
+        ((lib (library-library-with-proof lib proof))
+         (reflexive (proof-proof-reflexive-base proof x))
+         (lib (library-library-lemma lib "EQUALITY-REFLEXIVE" (proof-eq x x) reflexive nil))
+         (proof (library-library-proof lib))
+         (true (proof-proof-prove proof *proof-true* nil nil))
+         (lib (library-library-lemma lib "TRUE" *proof-true* true nil))
+         (proof (library-library-proof lib))
+         (implication-step (proof-proof-assume proof implication t))
+         (x-step (proof-proof-assume proof x t))
+         (consequent (proof-proof-modus-ponens proof implication-step x-step))
+         (lib (library-library-lemma lib "IMPLICATION-CONSEQUENT" y consequent
+                                     (list (proof-neg implication) (proof-neg x))))
+         (proof (library-library-proof lib))
+         (assumed (proof-proof-assume proof conjunction t))
+         (parts (proof-proof-conjunct proof assumed))
+         (lib (library-library-lemma lib "CONJUNCTION-FIRST" x (car parts)
+                                     (list (proof-neg conjunction))))
+         (lib (library-library-lemma lib "CONJUNCTION-SECOND" y (cadr parts)
+                                     (list (proof-neg conjunction))))
+         (lib (t2-arithmetic-logic-and-types lib))
+         (lib (t2-arithmetic-additive-identities lib))
+         (lib (t2-arithmetic-ordered-arithmetic lib))
+         (lib (library-library-order-lemmas lib))
+         (lib (library-library-length-lemmas lib))
+         (lib (t2-arithmetic-count-lemmas lib)))
+      (library-library-build-after-count lib))))
+
+(defun t2-arithmetic-arithmetic-numeric-add-zero (lib number)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((term (t2-arithmetic-first-at number 1))
+         (zero-axiom (library-library-axiom lib "UNICITY-OF-0" (list term)))
+         (fixed (t2-arithmetic-first-at zero-axiom 2))
+         (opened (proof-proof-unfold proof fixed))
+         (conditional (t2-arithmetic-first-at opened 2))
+         (selected (proof-proof-select proof conditional number)))
+      (proof-proof-chain proof zero-axiom (list opened selected)))))
+
+(defun t2-arithmetic-arithmetic-unique-inverse (lib value candidate zero candidate-number)
+  (let ((proof (library-library-proof lib))
+        (inverse (library-minus value)))
+    (proof-with-checked-results
+        ((number (library-library-cite lib "NEGATION-NUMBER" (list value) nil))
+         (add-zero (t2-arithmetic-arithmetic-numeric-add-zero lib number))
+         (swap (library-library-axiom lib "COMMUTATIVITY-OF-+" (list inverse *proof-zero*)))
+         (add-zero (proof-proof-chain proof swap (list add-zero)))
+         (left (proof-proof-symmetric proof add-zero))
+         (right (proof-proof-symmetric proof zero))
+         (identity (proof-proof-rewrite proof left right '(1 2 2)))
+         (associated (library-library-axiom lib "ASSOCIATIVITY-OF-+" (list inverse value candidate)))
+         (associated (proof-proof-symmetric proof associated))
+         (identity (proof-proof-chain proof identity (list associated)))
+         (swap (library-library-axiom lib "COMMUTATIVITY-OF-+" (list inverse value)))
+         (cancel (library-library-axiom lib "INVERSE-OF-+" (list value)))
+         (cancellation (proof-proof-chain proof swap (list cancel)))
+         (identity (proof-proof-rewrite proof identity cancellation '(1 2 1)))
+         (add-zero (t2-arithmetic-arithmetic-numeric-add-zero lib candidate-number)))
+      (proof-proof-chain proof identity (list add-zero)))))
+
+(defun t2-arithmetic-arithmetic-negate-successor (lib)
+  (let* ((proof (library-library-proof lib))
+         (x *library-x*)
+         (x-plus-one (library-plus x *proof-one*))
+         (minus-x (library-minus x))
+         (candidate (library-plus *proof-neg-one* minus-x)))
+    (proof-with-checked-results
+        ((zero (library-library-axiom lib "ASSOCIATIVITY-OF-+" (list x *proof-one* candidate)))
+         (right (library-library-axiom lib "ASSOCIATIVITY-OF-+"
+                                       (list *proof-one* *proof-neg-one* minus-x)))
+         (right (proof-proof-symmetric proof right))
+         (zero-sum (proof-proof-compute proof (library-plus *proof-one* *proof-neg-one*) 0))
+         (right (proof-proof-rewrite proof right zero-sum '(1 2 1)))
+         (number (library-library-cite lib "NEGATION-NUMBER" (list x) nil))
+         (add-zero (t2-arithmetic-arithmetic-numeric-add-zero lib number))
+         (right (proof-proof-chain proof right (list add-zero)))
+         (zero (proof-proof-rewrite proof zero right '(1 2 2)))
+         (cancel (library-library-axiom lib "INVERSE-OF-+" (list x)))
+         (zero (proof-proof-chain proof zero (list cancel)))
+         (number (library-library-cite lib "SUM-NUMBER" (cdr candidate) nil))
+         (identity (t2-arithmetic-arithmetic-unique-inverse lib x-plus-one candidate zero number)))
+      (library-library-lemma lib "NEGATE-SUCCESSOR" (proof-eq (library-minus x-plus-one) candidate)
+                             identity nil))))
+
+(defun t2-arithmetic-build-nfix (lib)
+  (let* ((proof (library-library-proof lib))
+         (nfix (list *t2-arithmetic-nfix* *library-x*))
+         (clip (list *library-nfix* *library-x*)))
+    (proof-with-checked-results
+        ((opened (proof-proof-unfold proof nfix))
+         (same (t2-arithmetic-simplify proof clip nil (list *library-nfix* *library-natp*)))
+         (same (proof-proof-symmetric proof same))
+         (same (proof-proof-chain proof opened (list same))))
+      (library-library-lemma lib "LIBRARY-NFIX" (proof-eq nfix clip) same nil))))
+
+(defun t2-arithmetic-build-ifix (lib)
+  (let* ((proof (library-library-proof lib))
+         (ifix (list *t2-arithmetic-ifix* *library-x*))
+         (test (library-integer *library-x*)))
+    (proof-with-checked-results
+        ((opened (proof-proof-unfold proof ifix))
+         (body (t2-arithmetic-first-at opened 2))
+         (good (proof-proof-if-true proof body))
+         (good (proof-proof-chain proof opened (list good)))
+         (bad (proof-proof-if-false proof body))
+         (bad (proof-proof-chain proof opened (list bad)))
+         (yes (proof-proof-assume proof test t))
+         (yes (library-library-transport-argument lib yes good 1))
+         (no (t2-arithmetic-arithmetic-type-of lib *proof-zero* nil))
+         (no (library-library-transport-argument lib no bad 1))
+         (step (proof-proof-cases proof test yes no)))
+      (library-library-lemma lib "IFIX-INTEGER" (library-integer ifix) step nil))))
+
+(defun t2-arithmetic-build-length (lib)
+  (let ((proof (library-library-proof lib))
+        (length-term (list *t2-arithmetic-length* *library-x*)))
+    (proof-with-checked-results
+        ((opened (proof-proof-unfold proof length-term))
+         (body (t2-arithmetic-first-at opened 2))
+         (good (proof-proof-if-true proof body))
+         (good (proof-proof-chain proof opened (list good)))
+         (bad (proof-proof-if-false proof body))
+         (bad (proof-proof-chain proof opened (list bad)))
+         (test (proof-term-at body 1))
+         (yes (t2-arithmetic-first-at good 2))
+         (yes (t2-arithmetic-arithmetic-natural lib yes))
+         (yes (library-library-transport-argument lib yes good 1))
+         (no (t2-arithmetic-first-at bad 2))
+         (no (t2-arithmetic-arithmetic-natural lib no))
+         (no (library-library-transport-argument lib no bad 1))
+         (step (proof-proof-cases proof test yes no)))
+      (library-library-lemma lib "LENGTH-NATURAL" (list *library-natp* length-term) step nil))))
+
+(defun t2-arithmetic-arithmetic-build-countdowns (lib)
+  (if (t2-arithmetic-has-lemma lib "LIBRARY-NFIX")
+      lib
+    (proof-with-checked-results ((lib (t2-arithmetic-build-nfix lib))
+                                 (lib (t2-arithmetic-build-ifix lib))
+                                 (lib (t2-arithmetic-build-length lib)))
+      (t2-arithmetic-arithmetic-negate-successor lib))))
+
+(defun t2-arithmetic-arithmetic-known-nfix (lib nfix natural)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((equation (library-library-cite lib "LIBRARY-NFIX" (cdr nfix) nil))
+         (arg (proof-term-at nfix 1))
+         (opened (t2-arithmetic-simplify proof (list *library-nfix* arg)
+                                         (list natural) (list *library-nfix*))))
+      (proof-proof-chain proof equation (list opened)))))
+
+(defun t2-arithmetic-integral-count-lemma (lib)
+  (if (t2-arithmetic-has-lemma lib "COUNT-OF-INTEGER")
+      lib
+    (let ((proof (library-library-proof lib))
+          (x *library-x*))
+      (proof-with-checked-results
+          ((ints (library-library-ints lib (list x)))
+           (ix (car ints))
+           (finite (library-library-cite lib "INTEGER-FINITE" (list x) (list ix)))
+           (atom-step (t2-arithmetic-simplify-first proof finite nil
+                                                     (list *library-o-finp* *t2-arithmetic-atom*)))
+           (rational (t2-arithmetic-rational lib x (list ix)))
+           (opened (t2-arithmetic-simplify proof (list *library-count* x)
+                                           (list atom-step rational ix) (list *library-count*))))
+        (library-library-lemma lib "COUNT-OF-INTEGER"
+                               (proof-eq (list *library-count* x) (list *t2-arithmetic-abs* x))
+                               opened (list (proof-neg (library-integer x))))))))
+
+(defun t2-arithmetic-arithmetic-integral-count (lib term premise)
+  (proof-with-checked-results
+      ((lib (t2-arithmetic-integral-count-lemma lib))
+       (step (library-library-cite lib "COUNT-OF-INTEGER" (list term) (list premise))))
+    (cons step lib)))
+
+(defun t2-arithmetic-arithmetic-build-weak-order (lib)
+  (if (t2-arithmetic-has-lemma lib "WEAK-SHIFT")
+      lib
+    (let* ((proof (library-library-proof lib))
+           (x *library-x*)
+           (y *library-y*)
+           (z *library-z*)
+           (dx (library-diff y x))
+           (dy (library-diff z y))
+           (x-z (library-plus x z))
+           (y-z (library-plus y z))
+           (guards (library-guards (list (library-integer x) (library-integer y) (library-integer z)))))
+      (proof-with-checked-results
+          ((ints (library-library-ints lib (list x y z)))
+           (xy (proof-proof-assume proof (library-lt y x) nil))
+           (yz (proof-proof-assume proof (library-lt z y) nil))
+           (weak-x (library-library-axiom lib "<-ON-OTHERS" (list y x)))
+           (weak-x (proof-proof-rewrite proof xy weak-x '(1 1)))
+           (weak-y (library-library-axiom lib "<-ON-OTHERS" (list z y)))
+           (weak-y (proof-proof-rewrite proof yz weak-y '(1 1)))
+           (shift (t2-arithmetic-weak-from-difference lib x-z y-z weak-x ints))
+           (lib (library-library-lemma lib "WEAK-SHIFT" (library-le x-z y-z) shift
+                                       (append guards (list (library-lt y x)))))
+           (dy-int (t2-arithmetic-arithmetic-type-of lib dy ints))
+           (dx-int (t2-arithmetic-arithmetic-type-of lib dx ints))
+           (sum-bound (library-library-cite lib "NONNEGATIVE-SUM" (list dy dx)
+                                            (list dy-int dx-int weak-y weak-x)))
+           (transitive (t2-arithmetic-weak-from-difference lib x z sum-bound ints)))
+        (library-library-lemma lib "WEAK-TRANSITIVE" (library-le x z) transitive
+                               (append guards (list (library-lt y x) (library-lt z y))))))))
+
+(defun t2-arithmetic-arithmetic-weak-shift (lib bound offset integers)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((literal (proof-step-first bound))
+         (outer (proof-list-of-length literal 2))
+         (inner (proof-list-of-length (cadr outer) 3)))
+      (let* ((upper (cadr inner))
+             (lower (caddr inner))
+             (args (list lower upper offset)))
+        (proof-with-checked-results
+            ((types (t2-arithmetic-type-arguments lib args integers))
+             (result (library-library-cite lib "WEAK-SHIFT" args (append types (list bound))))
+             (upper-swap (library-library-axiom lib "COMMUTATIVITY-OF-+" (list upper offset)))
+             (result (proof-proof-rewrite proof result upper-swap '(1 1 1)))
+             (lower-swap (library-library-axiom lib "COMMUTATIVITY-OF-+" (list lower offset)))
+             (result (proof-proof-rewrite proof result lower-swap '(1 1 2))))
+          (proof-proof-tidy proof result))))))
+
+(defun t2-arithmetic-arithmetic-compare-chain (lib left right integers)
+  (proof-with-checked-results ((p (proof-step-first left))
+                               (q (proof-step-first right))
+                               (left-strict (proof-is-call p *proof-less*))
+                               (right-strict (proof-is-call q *proof-less*))
+                               (left-args (library-compare-chain-arguments p left-strict))
+                               (right-args (library-compare-chain-arguments q right-strict)))
+    (if (not (equal (cadr left-args) (car right-args)))
+        '(:failure "RecipeMismatch" "")
+      (let ((args (append left-args (cdr right-args)))
+            (name (if left-strict
+                      (if right-strict "LESS-TRANSITIVE" "LESS-THEN-WEAK")
+                    (if right-strict "WEAK-THEN-LESS" "WEAK-TRANSITIVE"))))
+        (proof-with-checked-results ((types (t2-arithmetic-type-arguments lib args integers)))
+          (library-library-cite lib name args (append types (list left right))))))))
+
+(defun t2-arithmetic-arithmetic-as-weak (lib strict integers)
+  (proof-with-checked-results ((literal (proof-step-first strict))
+                               (parts (proof-list-of-length literal 3))
+                               (args (cdr parts))
+                               (types (t2-arithmetic-type-arguments lib args integers)))
+    (library-library-cite lib "LESS-TO-WEAK" args (append types (list strict)))))
+
+(defun t2-arithmetic-arithmetic-ordinal-comparison (lib a b integers)
+  (proof-with-checked-results ((types (t2-arithmetic-type-arguments lib (list a b) integers)))
+    (library-library-cite lib "FINITE-ORDER" (list a b) types)))
+
+(defun t2-arithmetic-count-comparison (lib strict child-count parent-count integers)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((left (t2-arithmetic-first-at strict 1))
+         (right (t2-arithmetic-first-at strict 2))
+         (order (t2-arithmetic-arithmetic-ordinal-comparison lib left right integers))
+         (step (proof-proof-transport proof strict order))
+         (step (library-library-transport-argument lib step child-count 1)))
+      (library-library-transport-argument lib step parent-count 2))))
+
+(defun t2-arithmetic-reversed-successor (lib before after)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results ((ends (proof-list-of-length (cdr before) 2))
+                                 (base (proof-term-at (cadr ends) 1))
+                                 (negated (proof-term-at after 2))
+                                 (advanced (proof-term-at negated 1)))
+      (let ((bound (car ends)))
+        (proof-with-checked-results
+            ((step (cond
+                    ((equal advanced (library-plus *proof-one* base))
+                     (proof-with-checked-results
+                         ((same (t2-arithmetic-arithmetic-reflexive lib after))
+                          (swap (library-library-axiom lib "COMMUTATIVITY-OF-+"
+                                                       (list *proof-one* base))))
+                       (proof-proof-rewrite proof same swap '(1 2 2 1))))
+                    ((equal advanced (library-plus base *proof-one*))
+                     (t2-arithmetic-arithmetic-reflexive lib after))
+                    (t '(:failure "RecipeMismatch" ""))))
+             (negated (library-library-cite lib "NEGATE-SUCCESSOR" (list base) nil))
+             (step (proof-proof-rewrite proof step negated '(1 2 2)))
+             (swap (library-library-cite lib "ADD-SWAP"
+                                         (list bound *proof-neg-one* (library-minus base)) nil)))
+          (proof-proof-rewrite proof step swap '(1 2)))))))
+
+(defun t2-arithmetic-gap-endpoint (bound negative position)
+  (case position
+    (:difference
+     (and (proof-is-call negative *proof-minus*)
+          (proof-with-checked-results ((lower (proof-term-at negative 1)))
+            (list lower bound nil))))
+    (:upper-successor
+     (and (proof-is-call negative *proof-minus*)
+          (proof-is-call bound *proof-plus*)
+          (proof-with-checked-results ((first (proof-term-at bound 1)))
+            (and (equal first *proof-one*)
+              (proof-with-checked-results ((lower (proof-term-at negative 1))
+                                           (upper (proof-term-at bound 2)))
+                (list lower upper t))))))
+    (otherwise
+     (and (equal bound *proof-one*)
+          (proof-is-call negative *proof-plus*)
+          (proof-with-checked-results ((right (proof-term-at negative 2)))
+            (and (proof-is-call right *proof-minus*)
+              (proof-with-checked-results ((lower (proof-term-at right 1))
+                                           (upper (proof-term-at negative 1)))
+                (list lower upper t))))))))
+
+(defconst *t2-arithmetic-gap-positions* '(:difference :upper-successor :outer-successor))
+
+(defun t2-arithmetic-gap-endpoint-list (bound negative positions)
+  (if (endp positions)
+      nil
+    (proof-with-checked-results
+        ((point (t2-arithmetic-gap-endpoint bound negative (car positions)))
+         (rest (t2-arithmetic-gap-endpoint-list bound negative (cdr positions))))
+      (if point (cons point rest) rest))))
+
+(defun t2-arithmetic-gap-endpoints (term)
+  (if (proof-is-call term *proof-plus*)
+      (proof-with-checked-results ((ends (proof-list-of-length (cdr term) 2)))
+        (t2-arithmetic-gap-endpoint-list (car ends) (cadr ends) *t2-arithmetic-gap-positions*))
+    nil))
+
+(defun t2-arithmetic-request-p (value)
+  (and (consp value) (eq (car value) :t2-arithmetic-hypothesis-request)))
+
+(defun t2-arithmetic-request-operation (request)
+  (cadr request))
+
+(defun t2-arithmetic-request-term (request)
+  (caddr request))
+
+(defun t2-arithmetic-request-library (request)
+  (cadddr request))
+
+(defun t2-arithmetic-request-hypotheses (request)
+  (car (cddddr request)))
+
+(defmacro t2-arithmetic-with-queries (bindings result)
+  (if (endp bindings)
+      result
+    (let ((binding (car bindings))
+          (value (caar bindings)))
+      `(let (,binding)
+         (if (or (failure-p ,value) (t2-arithmetic-request-p ,value))
+             ,value
+           (t2-arithmetic-with-queries ,(cdr bindings) ,result))))))
+
+(defun t2-arithmetic-hypotheses-after-library (hypotheses initial lib)
+  (if (and (not (equal initial lib))
+           (equal initial (descent-hypotheses-proof
+                           (t2-guarded-selectors-context-hypotheses hypotheses))))
+      (t2-guarded-selectors-context-with-library hypotheses lib)
+    hypotheses))
+
+(defun t2-arithmetic-hypothesis-query (operation term lib hypotheses replies)
+  (cond
+   ((eq replies :plain)
+    (proof-with-checked-results
+        ((result (case operation
+                   (:premises
+                    (if (equal hypotheses (t2-guarded-selectors-context-hypotheses hypotheses))
+                        '(:failure "failure" "")
+                      (t2-guarded-selectors-context-premises hypotheses)))
+                   (:require (t2-guarded-selectors-context-require hypotheses term))
+                   (otherwise (t2-guarded-selectors-context-find hypotheses term)))))
+      (list (car result) (cdr result) replies)))
+   ((endp replies)
+    (list :t2-arithmetic-hypothesis-request operation term lib hypotheses))
+   (t (list (caar replies) (cadar replies) (cdr replies)))))
+
+(defun t2-arithmetic-integer-premises (steps)
+  (if (endp steps)
+      nil
+    (proof-with-checked-results ((literal (proof-step-first (car steps)))
+                                 (rest (t2-arithmetic-integer-premises (cdr steps))))
+      (if (proof-is-call literal *proof-integerp*)
+          (cons (car steps) rest)
+        rest))))
+
+(defun t2-arithmetic-positive-gap-offset (start lower)
+  (if (proof-is-call start *proof-plus*)
+      (proof-with-checked-results ((actual (proof-term-at start 1)))
+        (and (equal actual lower)
+          (proof-with-checked-results ((offset (proof-term-at start 2)))
+            (and (proof-is-call offset *t2-arithmetic-length*) offset))))
+    nil))
+
+(defun t2-arithmetic-positive-gap-shift (lib delta offset integers)
+  (if (not offset)
+      delta
+    (proof-with-checked-results
+        ((difference (t2-arithmetic-first-at delta 2))
+         (natural (t2-arithmetic-arithmetic-natural lib offset))
+         (bound (library-library-cite lib "NATURAL-NONNEGATIVE" (list offset) (list natural)))
+         (offset-int (t2-arithmetic-arithmetic-type-of lib offset nil))
+         (difference-int (t2-arithmetic-arithmetic-type-of lib difference integers)))
+      (library-library-cite lib "POSITIVE-PLUS-NONNEGATIVE" (list offset difference)
+                            (list offset-int difference-int delta bound)))))
+
+(defun t2-arithmetic-positive-gap-inclusive (lib delta inclusive)
+  (if (not inclusive)
+      delta
+    (proof-with-checked-results
+        ((difference (t2-arithmetic-first-at delta 2))
+         (one-pos (t2-arithmetic-arithmetic-prove lib (library-positive *proof-one*) nil nil)))
+      (library-library-cite lib "POSITIVE-SUM" (list *proof-one* difference) (list one-pos delta)))))
+
+(defun t2-arithmetic-positive-gap-comparison (lib before point comparison integers)
+  (proof-with-checked-results ((literal (proof-step-first comparison)))
+    (if (not (proof-is-call literal *proof-less*))
+        nil
+      (proof-with-checked-results ((upper (proof-term-at literal 2)))
+        (if (not (equal upper (cadr point)))
+            nil
+          (let ((proof (library-library-proof lib))
+                (lower (car point)))
+            (proof-with-checked-results ((start (proof-term-at literal 1))
+                                         (offset (t2-arithmetic-positive-gap-offset start lower)))
+              (if (and (not offset) (not (equal start lower)))
+                  nil
+                (proof-with-checked-results
+                    ((equation (t2-arithmetic-comparison lib start upper integers))
+                     (delta (proof-proof-rewrite proof comparison equation '(1)))
+                     (delta (t2-arithmetic-positive-gap-shift lib delta offset integers))
+                     (delta (t2-arithmetic-positive-gap-inclusive lib delta (caddr point)))
+                     (difference (t2-arithmetic-first-at delta 2))
+                     (identity (t2-arithmetic-linear-equal lib before difference integers)))
+                  (library-library-transport-argument lib delta identity 2))))))))))
+
+(defun t2-arithmetic-positive-gap-premises (lib before point premises integers)
+  (if (endp premises)
+      nil
+    (proof-with-checked-results
+        ((step (t2-arithmetic-positive-gap-comparison lib before point (car premises) integers)))
+      (if step
+          step
+        (t2-arithmetic-positive-gap-premises lib before point (cdr premises) integers)))))
+
+(defun t2-arithmetic-positive-gap-positions (lib before ends positions hypotheses integers replies)
+  (cond
+   ((endp positions) '(:failure "RecipeMismatch" ""))
+   (t (t2-arithmetic-with-queries
+          ((point (t2-arithmetic-gap-endpoint (car ends) (cadr ends) (car positions))))
+        (if (not point)
+            (t2-arithmetic-positive-gap-positions lib before ends (cdr positions)
+                                                  hypotheses integers replies)
+          (t2-arithmetic-with-queries
+              ((result (t2-arithmetic-hypothesis-query :premises nil lib hypotheses replies))
+               (step (t2-arithmetic-positive-gap-premises lib before point (car result) integers)))
+            (if step
+                (list step lib (cadr result))
+              (t2-arithmetic-positive-gap-positions lib before ends (cdr positions)
+                                                    (cadr result) integers (caddr result)))))))))
+
+(defun t2-arithmetic-positive-gap-query (lib before hypotheses integers replies)
+  (if (proof-is-call before *proof-plus*)
+      (proof-with-checked-results ((ends (proof-list-of-length (cdr before) 2)))
+        (t2-arithmetic-positive-gap-positions lib before ends *t2-arithmetic-gap-positions*
+                                             hypotheses integers replies))
+    '(:failure "RecipeMismatch" "")))
+
+(defun t2-arithmetic-positive-gap (lib before hypotheses integers)
+  (t2-arithmetic-positive-gap-query lib before hypotheses integers :plain))
+
+(defun t2-arithmetic-positive-countdown-query (lib before hypotheses integers replies)
+  (t2-arithmetic-with-queries ((first (and (proof-is-call before *proof-plus*)
+                                           (proof-term-at before 1))))
+    (if (not (equal first *proof-one*))
+        (t2-arithmetic-positive-gap-query lib before hypotheses integers replies)
+      (t2-arithmetic-with-queries
+          ((counter (proof-term-at before 2))
+           (result (t2-arithmetic-hypothesis-query :find (library-nonnegative counter)
+                                                   lib hypotheses replies)))
+        (if (car result)
+            (proof-with-checked-results
+                ((integral (t2-arithmetic-arithmetic-type-of lib counter integers))
+                 (step (library-library-cite lib "POSITIVE-ONE-PLUS" (list counter)
+                                             (list integral (car result)))))
+              (list step lib (cadr result)))
+          (t2-arithmetic-positive-gap-query lib before (cadr result) integers (caddr result)))))))
+
+(defun t2-arithmetic-positive-countdown (lib before hypotheses integers)
+  (t2-arithmetic-positive-countdown-query lib before hypotheses integers :plain))
+
+(defun t2-arithmetic-rational-parts (lib rational)
+  (proof-with-checked-results
+      ((value (t2-arithmetic-first-at rational 1))
+       (implication (library-library-axiom lib "RATIONAL-IMPLIES1" (list value)))
+       (parts (t2-arithmetic-arithmetic-modus-ponens lib implication rational))
+       (parts (t2-arithmetic-arithmetic-conjunct lib parts))
+       (int-den (car parts))
+       (parts (t2-arithmetic-arithmetic-conjunct lib (cadr parts))))
+    (list (car parts) int-den (cadr parts))))
+
+(defun t2-arithmetic-natural-from-sign (lib integer-fact nonnegative)
+  (proof-with-checked-results ((value (t2-arithmetic-first-at integer-fact 1)))
+    (library-library-cite lib "NATURAL-FROM-BOUNDS" (list value) (list integer-fact nonnegative))))
+
+(defun t2-arithmetic-natural-from-positive (lib integer-fact pos)
+  (proof-with-checked-results
+      ((value (t2-arithmetic-first-at integer-fact 1))
+       (bound (library-library-cite lib "POSITIVE-NONNEGATIVE" (list value)
+                                    (list integer-fact pos))))
+    (t2-arithmetic-natural-from-sign lib integer-fact bound)))
+
+(defun t2-arithmetic-count-natural-lemma (lib)
+  (if (t2-arithmetic-has-lemma lib "COUNT-OF-NATURAL")
+      lib
+    (let* ((proof (library-library-proof lib))
+           (x *library-x*)
+           (natural (list *library-natp* x)))
+      (proof-with-checked-results
+          ((nat-x (proof-proof-assume proof natural t))
+           (ix (library-library-cite lib "NATURAL-INTEGER" (list x) (list nat-x)))
+           (bound (library-library-cite lib "NATURAL-NONNEGATIVE" (list x) (list nat-x)))
+           (opened (t2-arithmetic-arithmetic-integral-count lib x ix))
+           (lib (cdr opened))
+           (proof (library-library-proof lib))
+           (absolute (t2-arithmetic-simplify proof (list *t2-arithmetic-abs* x)
+                                              (list ix bound) (list *t2-arithmetic-abs*)))
+           (step (proof-proof-chain proof (car opened) (list absolute)))
+           (first (proof-step-first nat-x)))
+        (library-library-lemma lib "COUNT-OF-NATURAL" (proof-eq (list *library-count* x) x)
+                               step (list (proof-neg first)))))))
+
+(defun t2-arithmetic-count-natural (lib natural)
+  (proof-with-checked-results
+      ((lib (t2-arithmetic-count-natural-lemma lib))
+       (value (t2-arithmetic-first-at natural 1))
+       (step (library-library-cite lib "COUNT-OF-NATURAL" (list value) (list natural))))
+    (cons step lib)))
+
+(defun t2-arithmetic-negative-magnitude (lib strict integers)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((value (t2-arithmetic-first-at strict 1))
+         (comparison (t2-arithmetic-comparison lib value *proof-zero* integers))
+         (pos (proof-proof-rewrite proof strict comparison '(1)))
+         (identity (t2-arithmetic-linear-equal lib (library-diff *proof-zero* value)
+                                              (library-minus value) integers))
+         (step (proof-proof-rewrite proof pos identity '(1 2))))
+      (proof-proof-tidy proof step))))
+
+(defun t2-arithmetic-count-negative-lemma (lib)
+  (if (t2-arithmetic-has-lemma lib "COUNT-OF-NEGATIVE-INTEGER")
+      lib
+    (let ((proof (library-library-proof lib))
+          (x *library-x*))
+      (proof-with-checked-results
+          ((ints (library-library-ints lib (list x)))
+           (ix (car ints))
+           (negative (proof-proof-assume proof (library-lt x *proof-zero*) t))
+           (equation (t2-arithmetic-arithmetic-integral-count lib x ix))
+           (lib (cdr equation))
+           (proof (library-library-proof lib))
+           (absolute (t2-arithmetic-simplify proof (list *t2-arithmetic-abs* x)
+                                              (list ix negative) (list *t2-arithmetic-abs*)))
+           (step (proof-proof-chain proof (car equation) (list absolute)))
+           (first (proof-step-first negative)))
+        (library-library-lemma lib "COUNT-OF-NEGATIVE-INTEGER"
+                               (proof-eq (list *library-count* x) (library-minus x))
+                               step (list (proof-neg (library-integer x)) (proof-neg first)))))))
+
+(defun t2-arithmetic-count-negative (lib strict integers)
+  (proof-with-checked-results
+      ((lib (t2-arithmetic-count-negative-lemma lib))
+       (value (t2-arithmetic-first-at strict 1))
+       (integral (t2-arithmetic-arithmetic-type-of lib value integers))
+       (step (library-library-cite lib "COUNT-OF-NEGATIVE-INTEGER"
+                                   (list value) (list integral strict))))
+    (cons step lib)))
+
+(defun t2-arithmetic-clipped-predecessor-transport (lib step index natural)
+  (proof-with-checked-results
+      ((value (t2-arithmetic-first-at natural 1))
+       (fixed (t2-arithmetic-arithmetic-known-nfix lib (list *t2-arithmetic-nfix* value) natural))
+       (count (t2-arithmetic-count-natural lib natural))
+       (lib (cdr count))
+       (proof (library-library-proof lib))
+       (back (proof-proof-symmetric proof (car count)))
+       (identity (proof-proof-chain proof fixed (list back)))
+       (step (library-library-transport-argument lib step identity index)))
+    (cons step lib)))
+
+(defun t2-arithmetic-clipped-predecessor-lemma (lib)
+  (if (t2-arithmetic-has-lemma lib "NFIX-PREDECESSOR-DECREASE")
+      lib
+    (let* ((proof (library-library-proof lib))
+           (x *library-x*)
+           (predecessor (library-plus *proof-neg-one* x))
+           (int-x (library-integer x))
+           (pos-x (library-positive x)))
+      (proof-with-checked-results
+          ((ints (library-library-ints lib (list x)))
+           (ix (car ints))
+           (pos (proof-proof-assume proof pos-x t))
+           (selected (proof-proof-select proof (proof-ite int-x pos-x *proof-false*) ix))
+           (premise (proof-proof-transport proof pos selected))
+           (fact (proof-proof-fact proof "integer-discrete" nil))
+           (discrete (t2-arithmetic-arithmetic-modus-ponens lib fact premise))
+           (comparison (library-library-axiom lib "<-ON-OTHERS" (list x *proof-one*)))
+           (minus-one (proof-proof-compute proof (library-minus *proof-one*) -1))
+           (comparison (proof-proof-rewrite proof comparison minus-one '(1 2 1 2)))
+           (swapped (library-library-axiom lib "COMMUTATIVITY-OF-+" (list x *proof-neg-one*)))
+           (comparison (proof-proof-rewrite proof comparison swapped '(1 2 1)))
+           (nonnegative (proof-proof-rewrite proof discrete comparison '(1 1)))
+           (before (t2-arithmetic-natural-from-positive lib ix pos))
+           (int-after (t2-arithmetic-arithmetic-type-of lib predecessor ints))
+           (after (t2-arithmetic-natural-from-sign lib int-after nonnegative))
+           (step (library-library-builtin lib 14 x))
+           (step (proof-proof-discharge proof step ix))
+           (step (proof-proof-discharge proof step pos))
+           (part (t2-arithmetic-clipped-predecessor-transport lib step 1 after))
+           (part (t2-arithmetic-clipped-predecessor-transport (cdr part) (car part) 2 before))
+           (step (car part))
+           (claim (proof-step-first step)))
+        (library-library-lemma (cdr part) "NFIX-PREDECESSOR-DECREASE" claim step
+                               (library-guards (list int-x pos-x)))))))
+
+(defun t2-arithmetic-clipped-predecessor (lib integral positive-value)
+  (proof-with-checked-results
+      ((lib (t2-arithmetic-clipped-predecessor-lemma lib))
+       (value (t2-arithmetic-first-at integral 1))
+       (step (library-library-cite lib "NFIX-PREDECESSOR-DECREASE"
+                                   (list value) (list integral positive-value))))
+    (cons step lib)))
+
+(defun t2-arithmetic-clipped-reversed-p (before after)
+  (and (proof-is-call before *proof-plus*)
+       (proof-is-call after *proof-plus*)
+       (proof-with-checked-results
+           ((bound (proof-term-at before 1))
+            (new-bound (proof-term-at after 1)))
+         (and (equal bound new-bound)
+              (proof-with-checked-results ((lower (proof-term-at before 2)))
+                (and (proof-is-call lower *proof-minus*)
+                     (proof-with-checked-results ((new-lower (proof-term-at after 2)))
+                       (and (proof-is-call new-lower *proof-minus*)
+                            (proof-with-checked-results
+                                ((advanced (proof-term-at new-lower 1))
+                                 (base (proof-term-at lower 1)))
+                              (or (equal advanced (library-plus *proof-one* base))
+                                  (equal advanced (library-plus base *proof-one*))))))))))))
+
+(defun t2-arithmetic-clipped-linear-step (lib after decremented integers)
+  (proof-with-checked-results ((negative (and (proof-is-call after *proof-plus*)
+                                               (proof-term-at after 2)))
+                               (index (and (proof-is-call negative *proof-minus*)
+                                           (proof-term-at negative 1))))
+    (if (proof-is-call index *t2-arithmetic-nfix*)
+        (let ((proof (library-library-proof lib)))
+          (proof-with-checked-results
+              ((value (proof-term-at index 1))
+               (natural (t2-arithmetic-arithmetic-natural lib value))
+               (identity (t2-arithmetic-arithmetic-known-nfix lib index natural))
+               (step (t2-arithmetic-arithmetic-reflexive lib after))
+               (step (proof-proof-rewrite proof step identity '(1 2 2 1)))
+               (normal (t2-arithmetic-first-at step 2))
+               (equality (t2-arithmetic-linear-equal lib normal decremented integers)))
+            (proof-proof-chain proof step (list equality))))
+      (t2-arithmetic-linear-equal lib after decremented integers))))
+
+(defun t2-arithmetic-clipped-finish (lib before integers pos step hypotheses)
+  (proof-with-checked-results
+      ((integral (t2-arithmetic-arithmetic-type-of lib before integers))
+       (clipped (t2-arithmetic-clipped-predecessor lib integral pos))
+       (next-lib (cdr clipped))
+       (proof (library-library-proof next-lib))
+       (back (proof-proof-symmetric proof step))
+       (result (proof-proof-rewrite proof (car clipped) back '(1 1 1)))
+       (result (proof-proof-tidy proof result)))
+    (list result next-lib (t2-arithmetic-hypotheses-after-library hypotheses lib next-lib))))
+
+(defun t2-arithmetic-clipped-reversed (lib before after decremented pos hypotheses replies)
+  (t2-arithmetic-with-queries
+      ((required (t2-arithmetic-hypothesis-query :require (library-integer before)
+                                                 lib hypotheses replies))
+       (step (t2-arithmetic-reversed-successor lib before after))
+       (right (t2-arithmetic-first-at step 2)))
+    (if (equal right decremented)
+        (t2-arithmetic-clipped-finish lib before (list (car required))
+                                      pos step (cadr required))
+      '(:failure "RecipeMismatch" ""))))
+
+(defun t2-arithmetic-clipped-linear (lib before after decremented pos hypotheses replies)
+  (t2-arithmetic-with-queries
+      ((premises (t2-arithmetic-hypothesis-query :premises nil lib hypotheses replies))
+       (integers (t2-arithmetic-integer-premises (car premises)))
+       (positive (if pos
+                     (list pos lib (cadr premises))
+                   (t2-arithmetic-positive-countdown-query lib before (cadr premises)
+                                                            integers (caddr premises))))
+       (step (t2-arithmetic-clipped-linear-step lib after decremented integers)))
+    (t2-arithmetic-clipped-finish lib before integers (car positive) step (caddr positive))))
+
+(defun t2-arithmetic-clipped-decrease-query (lib goal hypotheses replies)
+  (t2-arithmetic-with-queries
+      ((parts (proof-list-of-length goal 3))
+       (before (proof-term-at (caddr parts) 1))
+       (after (proof-term-at (cadr parts) 1))
+       (decremented (library-plus *proof-neg-one* before))
+       (positive (t2-arithmetic-hypothesis-query :find (library-positive before)
+                                                 lib hypotheses replies))
+       (pos (car positive))
+       (reversed (and pos (t2-arithmetic-clipped-reversed-p before after))))
+    (if reversed
+        (t2-arithmetic-clipped-reversed lib before after decremented pos
+                                        (cadr positive) (caddr positive))
+      (t2-arithmetic-clipped-linear lib before after decremented pos
+                                    (cadr positive) (caddr positive)))))
+
+(defun t2-arithmetic-clipped-decrease (lib goal hypotheses)
+  (t2-arithmetic-clipped-decrease-query lib goal hypotheses :plain))
+
+(defun t2-arithmetic-positive-absolute (lib integral nonzero)
+  (proof-with-checked-results
+      ((lib (t2-products-positive-from-nonzero lib))
+       (proof (library-library-proof lib))
+       (value (t2-arithmetic-first-at integral 1))
+       (test (library-lt value *proof-zero*))
+       (equation (proof-proof-unfold proof (list *t2-arithmetic-abs* value)))
+       (body (t2-arithmetic-first-at equation 2))
+       (selected (proof-proof-select proof body integral))
+       (equation (proof-proof-chain proof equation (list selected)))
+       (not-negative (proof-proof-assume proof test nil))
+       (positive (library-library-cite lib "POSITIVE-FROM-NONZERO" (list value)
+                                        (list integral not-negative nonzero)))
+       (body (t2-arithmetic-first-at equation 2))
+       (branch (proof-proof-if-false proof body))
+       (identity (proof-proof-chain proof equation (list branch)))
+       (nonnegative-case (library-library-transport-argument lib positive identity 2))
+       (negative (proof-proof-assume proof test t))
+       (magnitude (t2-arithmetic-negative-magnitude lib negative (list integral)))
+       (branch (proof-proof-if-true proof body))
+       (identity (proof-proof-chain proof equation (list branch)))
+       (negative-case (library-library-transport-argument lib magnitude identity 2))
+       (step (proof-proof-cases proof test negative-case nonnegative-case)))
+    (cons step lib)))
+
+(defun t2-arithmetic-nonzero-numerator (lib rational noninteger)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((value (t2-arithmetic-first-at rational 1))
+         (test (proof-eq (list *t2-arithmetic-numerator* value) *proof-zero*))
+         (fact (library-library-axiom lib "RATIONAL-IMPLIES2" (list value)))
+         (equality (t2-arithmetic-arithmetic-modus-ponens lib fact rational))
+         (zero (proof-proof-assume proof test t))
+         (equality (proof-proof-rewrite proof equality zero '(1 1 2)))
+         (product (t2-arithmetic-first-at equality 1))
+         (factor (proof-term-at product 1))
+         (zero (t2-products-product-zero lib factor))
+         (lib (cdr zero))
+         (proof (library-library-proof lib))
+         (equality (proof-proof-rewrite proof equality (car zero) '(1 1)))
+         (integer-zero (t2-arithmetic-arithmetic-type-of lib *proof-zero* nil))
+         (back (proof-proof-symmetric proof equality))
+         (at-zero (library-library-transport-argument lib integer-zero back 1))
+         (step (proof-proof-cut proof at-zero noninteger))
+         (step (proof-proof-front proof step (proof-neg test))))
+      (cons step lib))))
+
+(defun t2-arithmetic-rational-type-leaves (lib requests int-num)
+  (if (endp requests)
+      nil
+    (let ((request (car requests)))
+      (proof-with-checked-results
+          ((step (t2-arithmetic-arithmetic-type-of lib (car request) (list int-num)))
+           (rest (t2-arithmetic-rational-type-leaves lib (cdr requests) int-num)))
+        (cons (cons request step) rest)))))
+
+(defun t2-arithmetic-rational-absolute-integer (lib absolute int-num)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((equation (proof-proof-unfold proof absolute))
+         (body (t2-arithmetic-first-at equation 2))
+         (requests (proof-proof-by-value-leaves proof body nil))
+         (leaves (t2-arithmetic-rational-type-leaves lib requests int-num))
+         (step (proof-proof-by-value proof body (list *proof-integerp* *proof-result*) leaves nil)))
+      (library-library-transport-argument lib step equation 1))))
+
+(defun t2-arithmetic-rational-increase (lib child numerator denominator absolute parts abs-int
+                                           rational noninteger)
+  (let ((int-num (car parts))
+        (int-den (cadr parts))
+        (pos-den (caddr parts))
+        (sum (library-plus absolute denominator))
+        (integers (list abs-int (cadr parts))))
+    (proof-with-checked-results ((actual (proof-term-at child 1)))
+      (cond
+       ((equal actual numerator)
+        (proof-with-checked-results
+            ((count (t2-arithmetic-arithmetic-integral-count lib numerator int-num))
+             (lib (cdr count))
+             (increase (t2-arithmetic-less-from-difference lib absolute sum pos-den integers)))
+          (list (car count) increase lib)))
+       ((equal actual denominator)
+        (proof-with-checked-results
+            ((distinct (t2-arithmetic-nonzero-numerator lib rational noninteger))
+             (positive (t2-arithmetic-positive-absolute (cdr distinct) int-num (car distinct)))
+             (lib (cdr positive))
+             (natural (t2-arithmetic-natural-from-positive lib int-den pos-den))
+             (count (t2-arithmetic-count-natural lib natural))
+             (lib (cdr count))
+             (increase (t2-arithmetic-less-from-difference
+                        lib denominator sum (car positive) integers)))
+          (list (car count) increase lib)))
+       (t '(:failure "RecipeMismatch" ""))))))
+
+(defun t2-arithmetic-rational-count-step (lib child parent value rational noninteger)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+        ((parts (t2-arithmetic-rational-parts lib rational))
+         (numerator (t2-arithmetic-first-at (car parts) 1))
+         (denominator (t2-arithmetic-first-at (cadr parts) 1))
+         (fact (proof-proof-fact proof "rationalp-acl2-numberp" (list (list *library-x* value))))
+         (number (t2-arithmetic-arithmetic-modus-ponens lib fact rational))
+         (finite (library-library-cite lib "NUMBER-FINITE" (list value) (list number)))
+         (atom-proof (t2-arithmetic-simplify-first proof finite nil
+                                                    (list *library-o-finp* *t2-arithmetic-atom*)))
+         (opened (t2-arithmetic-simplify proof parent (list atom-proof rational noninteger)
+                                         (list *library-count*)))
+         (absolute (list *t2-arithmetic-abs* numerator))
+         (abs-int (t2-arithmetic-rational-absolute-integer lib absolute (car parts)))
+         (result (t2-arithmetic-rational-increase lib child numerator denominator absolute parts
+                                                  abs-int rational noninteger))
+         (lib (caddr result))
+         (step (library-library-transport-argument lib (cadr result) (car result) 1))
+         (step (library-library-transport-argument lib step opened 2))
+         (comparison (t2-arithmetic-arithmetic-ordinal-comparison lib child parent nil))
+         (step (proof-proof-transport (library-library-proof lib) step comparison)))
+      (cons step lib))))
+
+(defun t2-arithmetic-rational-count-decrease-query (lib goal hypotheses replies)
+  (t2-arithmetic-with-queries
+      ((parts (proof-list-of-length goal 3))
+       (child (cadr parts))
+       (parent (caddr parts))
+       (value (proof-term-at parent 1))
+       (rational (t2-arithmetic-hypothesis-query :require (list *library-rationalp* value)
+                                                 lib hypotheses replies))
+       (noninteger (t2-arithmetic-hypothesis-query :require (proof-neg (library-integer value))
+                                                   lib (cadr rational) (caddr rational)))
+       (result (t2-arithmetic-rational-count-step lib child parent value
+                                                   (car rational) (car noninteger))))
+    (list (car result) (cdr result)
+          (t2-arithmetic-hypotheses-after-library (cadr noninteger) lib (cdr result)))))
+
+(defun t2-arithmetic-rational-count-decrease (lib goal hypotheses)
+  (t2-arithmetic-rational-count-decrease-query lib goal hypotheses :plain))

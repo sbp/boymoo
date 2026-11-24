@@ -1,0 +1,8 @@
+(measure COMMON-LISP::NTH (ACL2::ACL2-COUNT ACL2::N))
+(fact "built-in-clause-1")
+(instantiate 1 ((ACL2::X ACL2::N)))
+(qed)
+(fact "built-in-clause-9")
+(instantiate 1 ((ACL2::X ACL2::N)))
+(subsume 2 (COMMON-LISP::ENDP ACL2::L) (ACL2::ZP ACL2::N) (ACL2::O< (ACL2::ACL2-COUNT (ACL2::BINARY-+ (COMMON-LISP::QUOTE -1) ACL2::N)) (ACL2::ACL2-COUNT ACL2::N)))
+(qed)

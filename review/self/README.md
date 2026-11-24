@@ -6,10 +6,10 @@ Run from the repository root.
 sh review/self/run.sh
 ```
 
-On 2026-11-21 this command gave `accepted` on the JavaScript checker
-and on the reference runner, with an empty library. The 238 statements
-include 207 definitions and 103 entries with termination obligations.
-The generated source proofs cover all 103 entries, with zero skips.
+On 2026-11-24 this command gave `accepted` on the JavaScript checker
+and on the reference runner, with an empty library. The 241 statements
+include 210 definitions and 102 entries with termination obligations.
+The generated source proofs cover all 102 entries, with zero skips.
 
 The script builds the checker with `checker/build.sh` and the runner
 with `runner/Makefile`. It supplies the exporter with the names of the
@@ -92,7 +92,7 @@ appropriate test. [descent.py](descent.py)
 The 13 functions containing `mbe` are listed in `build/self/mbe.tsv`.
 The run constructs a statement file in which each `mbe` is replaced
 by its logical half and checks the proofs for that file with both
-checkers. On 2026-11-21 both gave `accepted`. For each affected
+checkers. On 2026-11-24 both gave `accepted`. For each affected
 statement the two walks gave the same ordered obligations after
 erasing nested `mbe` wrappers in clause terms.
 
@@ -107,7 +107,7 @@ their wrappers. Proofs of the exported statements cite the equation
 of `return-last` wherever a comparison needs the logical argument.
 
 The exact clauses can also be checked by passing the logical-body
-proofs with the exported statements. On 2026-11-21 both commands
+proofs with the exported statements. On 2026-11-24 both commands
 below gave `rejected proofs 6018` at the first differing `qed`.
 
 ```sh
@@ -117,7 +117,7 @@ sh checker/check.sh build/self/empty build/checker/checker.statements build/self
 
 ## Measurements
 
-These are from `sh review/self/run.sh` on 2026-11-21.
+These are from `sh review/self/run.sh` on 2026-11-24.
 `build/self/sizes.tsv` gives the number of steps in each obligation
 and the step total and byte size of each source entry, lemma and
 definition in the proofs. Entry bytes include the head and `qed`
@@ -125,13 +125,13 @@ lines. Step counts count only rule applications.
 
 | Entries in the source proof file | Entries | Steps | Bytes |
 |---|---:|---:|---:|
-| Source measures and their 264 obligations | 103 | 3,187 | 796,397 |
+| Source measures and their 262 obligations | 102 | 3,182 | 795,721 |
 | Lemmas | 60 | 4,645 | 2,001,229 |
 | Definitions in the proofs | 2 | 0 | 252 |
-| Whole proof file | 165 | 7,832 | 2,797,878 |
+| Whole proof file | 164 | 7,827 | 2,797,202 |
 
-The source proof file has 8,321 lines. Of the 264 source obligations,
-225 take two or three steps, and 82 source entries take five steps
+The source proof file has 8,313 lines. Of the 262 source obligations,
+223 take two or three steps, and 81 source entries take five steps
 in total. The seven lexer lemmas account for 2,094 steps and
 1,683,286 bytes. Their proofs carry the translated branch terms
 through case splits and substitutions.
@@ -143,12 +143,12 @@ through case splits and substitutions.
 | `SIXTEENS` | 2 | 70 | 17,689 |
 | `PARSE-LOOP` | 6 | 276 | 101,765 |
 | `WALK` | 22 | 1,322 | 398,744 |
-| `RUN` | 3 | 108 | 17,461 |
+| `RUN` | 3 | 108 | 18,462 |
 
 The timing files record elapsed wall time after export and compilation,
 including the checker wrappers and the whole input.
 
 | Input | JavaScript | Reference runner |
 |---|---:|---:|
-| Source | 0.24 s | 3.04 s |
-| Logical bodies | 0.23 s | 2.78 s |
+| Source | 0.48 s | 4.38 s |
+| Logical bodies | 0.36 s | 3.86 s |

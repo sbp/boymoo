@@ -93,7 +93,7 @@
 (verify-guards repeat-p
   :hints (("Goal" :in-theory (disable first-name))))
 
-(verify-guards admit
+(verify-guards prepare-statement
   :hints (("Goal" :in-theory (disable repeat-p admit-package admit-hidden-package
                                      admit-define admit-constrain admit-choose
                                      admit-theorem admit-axiom admit-reserve))))

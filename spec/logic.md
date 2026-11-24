@@ -8,13 +8,13 @@ Statements about ACL2 are confirmed against ACL2 8.7 by `sh checks/run.sh`, run 
 
 ## 1. What a verdict means
 
-**If a checker says `accepted`, then every theorem among the statements follows, by the rules of ACL2's logic, from ACL2's axioms about its primitive functions, the imports of the packages that the statements declare, and the definitions, constraints and choice axioms among the statements; and the packages can all be as declared, and each of the other additions is met by functions that exist, so that none of them makes a false statement about what stood before it provable.**
+**If a checker says `accepted`, then every theorem of the library and of the statements follows, by the rules of ACL2's logic, from ACL2's axioms about its primitive functions, the imports of the packages that the library and the statements declare, and the definitions, constraints and choice axioms among them; and the packages can all be as declared, and each of the other additions is met by functions that exist, so that none of them makes a false statement about what stood before it provable.**
 
 Four things stand beside ACL2's axioms in this, because ACL2 itself reasons with them although it states none as an axiom: that the package `COMMON-LISP` imports nothing, that `bad-atom<=` gives `NIL` on data, that a hidden package imports what its statement declares, and the built-in clauses of its prover about `acl2-count`, which say that the conses are well founded (sections 3 and 10).
 
-If it says `provisional`, the same holds with these added as assumptions, each of which the verdict counts: the formula of every `axiom` statement, the facts of every statement whose entry is `skip`, and the facts of every statement of the library.
+If it says `provisional`, the same holds with these added as assumptions, each of which the verdict counts: the formula of every `axiom` statement, the facts of every statement or `define` entry whose entry is `skip`, and the facts of every statement of the library that is given.
 
-Section 9 lays out the argument in seven steps. It holds whoever wrote the three inputs. That the statements say what a book says is not a claim of the checker: ACL2 writes them, and `PLAN.md` says how that is cross-checked.
+Section 9 lays out the argument in seven steps. It holds whoever wrote the four inputs. That the statements say what a book says is not a claim of the checker: ACL2 writes them, and `PLAN.md` says how that is cross-checked.
 
 ## 2. Formulas and clauses
 
@@ -130,12 +130,12 @@ At any line, the facts are these, and no others.
 | A `clause` line of the ground theory | Its name | Its literals. |
 | A definition: of the ground theory, of an admitted `define` statement, or of a `define` entry of the proofs | The function's name | The one literal `(equal (f x1 ... xn) body)`, with the formals and the body of the definition. |
 | A formula of an admitted `constrain` statement | The formula's name | The one literal that is the formula. |
-| An admitted `choose` statement | The function's name | The one literal that is its axiom (section 6). |
+| An admitted `choose` statement, or a `choose` entry of the proofs | The function's name | The one literal that is its axiom (section 6). |
 | An admitted `theorem` or `axiom` statement | Its name | The one literal that is its formula. |
 | An admitted `package` statement, and the four packages of the ground theory for which ACL2 has an axiom | The name of ACL2's rule for the package, `NAME-PACKAGE` (`language.md`, section 6) | The one literal `(equal (pkg-imports '"NAME") 'imports)`. |
 | A `lemma` entry of the proofs whose proof was checked | Its name | The literals the entry states. |
 
-A statement's facts are added when the statement and its entry have been checked, not before. So the proof of a theorem cannot cite the theorem, and the proofs of termination of a definition cannot cite its equation.
+A statement's facts are added when the statement and its entry have been checked, not before; those of a given statement of the library, when its `skip` has been read or, where the library's proofs have ended, when its line has been admitted. So the proof of a theorem cannot cite the theorem, and the proofs of termination of a definition cannot cite its equation. Here and below, "the proofs" are the third input for a statement of the second, and the fourth for a statement of the library.
 
 ## 5. The rules
 
@@ -183,9 +183,9 @@ ACL2 states its principle with several cases, each with a test and its own subst
 
 ## 6. Admitting statements
 
-Each line of the library, of the statements, and each `define` and `lemma` entry of the proofs, is **admitted** only if it meets the conditions of its kind. A statement of the second input that has obligations is admitted only with its entry. In the conditions, "new" means not in use, and the names a line introduces must also differ from one another. What may be a name, and a function name, is said in `language.md`, section 6.
+Each line of the library, of the statements, and each `define`, `lemma` and `choose` entry of the proofs, is **admitted** only if it meets the conditions of its kind. A statement of the second input that has obligations is admitted only with its entry; a statement of the library that has obligations is admitted with its entry, or, where the library's proofs have ended, without one, as given (section 7). In the conditions, "new" means not in use, and the names a line introduces must also differ from one another. What may be a name, and a function name, is said in `language.md`, section 6.
 
-A statement with obligations is taken in this order. When its line is read, its names stop being new, but its functions are not yet in use. The `define` and `lemma` entries that stand before its own entry are admitted next, so none of them can take one of its names or call one of its functions. Then its own entry is read and its proofs are checked. Only then do its facts become facts.
+A statement with obligations is taken in this order. When its line is read, its names stop being new, but its functions are not yet in use. The `define`, `lemma` and `choose` entries that stand before its own entry are admitted next, so none of them can take one of its names or call one of its functions. Then its own entry is read and its proofs are checked. Only then do its facts become facts. A statement of the library is taken in the same order; where the library's proofs have ended, it has no entry, and its facts become facts as soon as its line is admitted.
 
 ### `package`
 
@@ -218,7 +218,7 @@ This is what ACL2 does with a package that reaches its world only because a book
 2. each `Fi` is a new function name;
 3. each `FORMALSi` is a list of distinct variables;
 4. each `BODYi` is a term whose variables are all among `FORMALSi`, where, for this test, each `Fi` counts as a function in use with as many arguments as it has formals;
-5. if some body calls one of the `Fi`: the obligations of termination below are proved, or the entry is `skip`, or the line is in the library.
+5. if some body calls one of the `Fi`: the obligations of termination below are proved, or the entry is `skip`, or the line is in the library and is given.
 
 A body **calls** one of the `Fi` when a call of it stands in the body outside a constant, in which a list is data, and outside the executable half of an `mbe`, `a` in `(return-last 'mbe1-raw a b)`, which the walk below does not enter either. This is how ACL2 decides whether a definition is recursive: a definition whose only calls of its own functions are in executable halves has no obligations, and ACL2 holds its own `string-append`, which calls itself in the executable half of its `mbe`, as not recursive (`EDGE-CASES.md`, entry 6.2).
 
@@ -282,11 +282,11 @@ ACL2 8.7 starts with two relations: `o<` on the objects `o-p` recognizes, and `l
 1. each `Fi` is a new function name, and each `Ni` is an integer that is not negative;
 2. each `NAMEj` is a new symbol;
 3. each `TERMj` is a term, where, for this test, each `Fi` counts as a function in use with `Ni` arguments;
-4. if `m` is not 0: the obligations below are proved, or the entry is `skip`, or the line is in the library.
+4. if `m` is not 0: the obligations below are proved, or the entry is `skip`, or the line is in the library and is given.
 
 It brings the `Fi` into use, and adds each formula as a fact under its name.
 
-**The obligations.** The entry `(witness F1 G1 ... Gk)` names, for each `Fi`, a function `Gi` that is in use when the entry is read and has `Ni` arguments. The `Fi` are not in use then, so no witness is, or is defined with, one of them; nor are they while the proofs of the entry are checked, since its obligations name the witnesses and not the `Fi`. They come into use, with the formulas as facts, when the last of those proofs is checked or at the `skip`. The obligations are the clauses `(TERMj')` for each `j` in order, where `TERMj'` is `TERMj` with the name of every call of an `Fi` replaced by `Gi`, at any depth: in the arguments of calls, in the actuals of lambda applications and in the bodies of lambdas. Nothing inside a constant is replaced: a constant is data. A witness that is not yet a function is first defined by a `define` entry of the proofs.
+**The obligations.** The entry `(witness F1 G1 ... Gk)` names, for each `Fi`, a function `Gi` that is in use when the entry is read and has `Ni` arguments. The `Fi` are not in use then, so no witness is, or is defined with, one of them; nor are they while the proofs of the entry are checked, since its obligations name the witnesses and not the `Fi`. They come into use, with the formulas as facts, when the last of those proofs is checked or at the `skip`. The obligations are the clauses `(TERMj')` for each `j` in order, where `TERMj'` is `TERMj` with the name of every call of an `Fi` replaced by `Gi`, at any depth: in the arguments of calls, in the actuals of lambda applications and in the bodies of lambdas. Nothing inside a constant is replaced: a constant is data. A witness that is not yet a function is first defined by a `define` entry of the proofs, or introduced by a `choose` entry.
 
 **Why the formulas may be assumed of functions with no definition.** The functions `Gi` exist and satisfy the formulas. So whatever functions are in use before the statement, there are functions for the `Fi` that make every formula true: the `Gi`. Any proof that uses the formulas is therefore a proof about some functions that exist, and a conclusion of it that does not mention the `Fi` does not depend on the choice. This is ACL2's principle for `encapsulate`: the local definitions of the book are the witnesses, and they are needed only to show that the constraint can be met.
 
@@ -312,7 +312,7 @@ The basic axiom says: if any values of the bound variables make the body true, t
 
 ### `theorem` and `axiom`
 
-`(theorem NAME TERM)` is admitted when `NAME` is a new symbol, `TERM` is a term whose functions are in use, and either the entry `(theorem NAME)` is followed by a proof of the clause `(TERM)`, or the entry is `(skip NAME)`, or the line is in the library. It adds the formula as a fact.
+`(theorem NAME TERM)` is admitted when `NAME` is a new symbol, `TERM` is a term whose functions are in use, and either the entry `(theorem NAME)` is followed by a proof of the clause `(TERM)`, or the entry is `(skip NAME)`, or the line is in the library and is given. It adds the formula as a fact.
 
 `(axiom NAME TERM)` is admitted when `NAME` is a new symbol and `TERM` is a term whose functions are in use. It adds the formula as a fact, with no obligation, and the verdict counts it: among the assumed if it is a statement of the book, and among the given facts if it is in the library.
 
@@ -330,13 +330,15 @@ A `define` entry is admitted exactly as a `define` statement of a book. If some 
 
 `(lemma NAME L1 ... Ln)` is admitted when `NAME` is a new symbol, there is at least one literal, each literal is a term whose functions are in use, and the proof that follows proves the clause. It adds the clause as a fact. A lemma is never skipped: it is the proof's own claim.
 
-A proof cannot introduce a function by choice. So a `constrain` statement whose formulas only a choice function meets, as those of `defun-sk` may be, can only be skipped; whether a proof may hold a `choose` entry is undecided (`EDGE-CASES.md`, entry 6.9; `PLAN.md`).
+A `choose` entry is admitted exactly as a `choose` statement of a book, and adds the same fact under the same name. It has no obligation and the verdict does not count it: its axiom may be assumed for the reason given for the statement.
 
-Definitions and lemmas of the proofs add nothing that could not be had without them. A lemma stands for its proof. A definition is admitted by the same principle as a statement's, so it leaves everything about the other functions as it was. They are how the local events of a book reach a proof, and why ACL2 Core has no statement for `local`.
+A `choose` entry is how a proof meets a constraint that only a choice function meets, as that of a `defun-sk` is. ACL2 introduces the function of a `defun-sk` and its witness with an `encapsulate`, and proves the constraint, inside it, from a `defchoose` that is local to it; the `constrain` statement holds the constraint and not the `defchoose`. Its proof does what ACL2 did: a `choose` entry introduces a function by the `defchoose`, a `define` entry defines the other function from it where one is needed, the `witness` entry names the two, and the proofs derive the formulas from the axiom of choice (`EDGE-CASES.md`, entry 6.9).
+
+Definitions, lemmas and functions chosen in the proofs add nothing that could not be had without them. A lemma stands for its proof. A definition, or a function introduced by choice, is admitted by the same principle as a statement's, so it leaves everything about the other functions as it was. They are how the local events of a book reach a proof, and why ACL2 Core has no statement for `local`.
 
 ## 7. The library
 
-The first input holds statements that are taken as given. For now it is ACL2's own built-in library: every function in logic mode that ACL2 has before it reads a book, other than those of the ground theory, the theorems ACL2 holds about them, and a `reserve` line for every other name ACL2 has in use, written by ACL2 from its own world (`PLAN.md`, step 2). The library is where ACL2's own functions of the package `COMMON-LISP` are defined, which no book may define (`language.md`, section 6).
+The first input holds statements that are taken as given unless the fourth input proves them. For now it is ACL2's own built-in library: every function in logic mode that ACL2 has before it reads a book, other than those of the ground theory, the theorems ACL2 holds about them, and a `reserve` line for every other name ACL2 has in use, written by ACL2 from its own world (`PLAN.md`, step 2). The library is where ACL2's own functions of the package `COMMON-LISP` are defined, which no book may define (`language.md`, section 6).
 
 **What ACL2 starts with.** The world of ACL2 8.7, before it reads a book, holds 1,489 functions defined in logic mode, the 37 of the ground theory among them. Among the 1,489 are 40 cliques of more than one function, each of which is one `define` statement. The world also holds 162 functions in logic mode that have no definition and are not primitive. An `encapsulate` event introduced every one of them, and for 40 of them ACL2 stores no constraint. They become `constrain` statements, with the formulas ACL2 stores as their constraints, which are the facts about them. 68 of the 162 have an attachment, a function that ACL2 runs in their place. An attachment is no part of the logic and becomes no statement (`language.md`, section 4). One of the 1,489 defined functions, `apply$-equivalence`, which `defun-sk` defines, has its equation in the constraint of the `encapsulate` that introduced its witness: it is a function of that `constrain` statement and has no `define` statement (`EDGE-CASES.md`, entry 6.6).
 
@@ -344,7 +346,9 @@ The first input holds statements that are taken as given. For now it is ACL2's o
 
 A line of the library is admitted when it meets every condition of its kind except the obligations. So a given statement is well formed: its names are new, its terms are terms, its symbols exist. What is not shown is that its recursion ends, that its constraint can be met, or that its theorem follows.
 
-The verdict counts what was given (`formats.md`, section 9). A statement is given because of the input it came on, and nothing in a book can change that (`formats.md`, section 5). When the proofs of the library exist, its statements move to the second input with their proofs in the third, and the counts fall to 0.
+**The library's proofs.** The fourth input holds proofs of statements of the library, in the form of the proofs of a book (`formats.md`, section 6). The checker reads it beside the library (`formats.md`, section 7). A statement of the library that has obligations is proved as a statement of a book is: by its `theorem`, `measure` or `witness` entry and the proofs that follow, from the facts that stand before it. One whose entry there is a `skip`, or that the checker reaches after the library's proofs have ended, is given. A proved statement of the library differs from a statement of a book in one thing: it is a line of the library, so it may define a function whose name is a symbol of `COMMON-LISP`, as ACL2's own definitions of `nth` and `expt` do, which no book may (`language.md`, section 6). The entries of the library's proofs are entries of proofs like any others: a function that one of them defines or chooses is not named by a symbol of `COMMON-LISP`, and every name that one of them takes is in use from then on, for the statements of the book too.
+
+The verdict counts what was given (`formats.md`, section 9). A statement is given because it came on the first input and the fourth does not prove it, and nothing in a book can change that (`formats.md`, section 5). When the fourth input proves every statement of the library that has obligations, and the library has no `axiom`, the counts of the given are 0.
 
 ## 8. An example
 
@@ -382,9 +386,9 @@ Without the rule, a checker could be given `P::N` where `P` imports a symbol `Q:
 
 **Step 5. `compute` gives the value the axioms fix.** A constant stands for the object it writes: an integer for itself, built from 0 and 1 by `binary-+` and `unary--`; a fraction for its numerator times the reciprocal of its denominator; a complex rational for `complex` of its parts; a character for `code-char` of its code; a string for `coerce` of the list of its characters; a symbol for the interning of step 2; a cons for `cons` of its parts. For each primitive, the value in the table of `language.md` is the one that ACL2's axioms give to such objects: the axioms named `completion-of-` give the values outside the guards, and the rest are the arithmetic of the rationals and of the complex rationals, the pairing of characters with codes, the pairing of strings with lists of characters, and the axioms about symbols. The calls that ACL2's evaluator refuses are not computed. In two places the value rests on what ACL2 does and not on an axiom: `bad-atom<=` on data, for which ACL2's evaluator gives `NIL`, and `intern-in-package-of-symbol` at a symbol of a hidden package, which ACL2's evaluator computes from the imports it keeps; ACL2 proves theorems by both (section 10). For the second, step 6 shows that every package of an input, a hidden one among them, can import what it declares while the axioms hold. The check records ACL2's own value for 157 calls, and they are the table's. That a checker's own arithmetic is right is a matter of its code, which is why two checkers are to be written apart and compared.
 
-**Step 6. Each admission adds only what can be assumed.** Section 6 argues it for each kind. The packages of an input, the hidden ones among them, can all be as declared, together, with ACL2's axioms about symbols true of them. A `reserve` line and a repeated line add nothing. A definition whose obligations are proved has a function that satisfies it; a constraint whose witnesses are shown is met by them; a choice axiom is met by a least-value function. In each of those three the functions that were there before keep their meaning, so nothing about them becomes provable that was not already true of them. Whatever is admitted without its obligation, by `skip`, by `axiom` or in the library, is counted.
+**Step 6. Each admission adds only what can be assumed.** Section 6 argues it for each kind. The packages of an input, the hidden ones among them, can all be as declared, together, with ACL2's axioms about symbols true of them. A `reserve` line and a repeated line add nothing. A definition whose obligations are proved has a function that satisfies it; a constraint whose witnesses are shown is met by them; a choice axiom, of a statement or of an entry of the proofs, is met by a least-value function. In each of those three the functions that were there before keep their meaning, so nothing about them becomes provable that was not already true of them. Whatever is admitted without its obligation, by `skip`, by `axiom` or as a given statement of the library, is counted.
 
-**Step 7. The checker's bookkeeping lets nothing else in.** A fact enters the table in the six ways of section 4 and no other. Names are never reused, so the name on a `fact` step means one fact. A term is checked before it is used, so no step reasons about a function that is not in use or a call with the wrong number of arguments. `QUOTE` names no function, so a list that begins with it is always a constant, although `QUOTE` alone may be a variable; `T`, `NIL` and the keywords name no function and no variable (`language.md`, sections 5 and 6). So no term is read in two ways. A proof with no step proves nothing, and a proof proves only the clause its last step concludes. A statement with obligations needs its own entry, in order.
+**Step 7. The checker's bookkeeping lets nothing else in.** A fact enters the table in the seven ways of section 4 and no other. Names are never reused, so the name on a `fact` step means one fact. A term is checked before it is used, so no step reasons about a function that is not in use or a call with the wrong number of arguments. `QUOTE` names no function, so a list that begins with it is always a constant, although `QUOTE` alone may be a variable; `T`, `NIL` and the keywords name no function and no variable (`language.md`, sections 5 and 6). So no term is read in two ways. A proof with no step proves nothing, and a proof proves only the clause its last step concludes. A statement of the second input with obligations needs its own entry, in order; a statement of the library with obligations needs its own entry too, in order, unless the library's proofs have ended; it is counted when that entry is a `skip` and when they have ended.
 
 **Conclusion.** Go through the lines in the order a checker takes them. By steps 3 and 6, the facts present at any line are ACL2's axioms, the axioms that admitted statements add, and the counted assumptions, together with clauses that follow from those. By steps 2, 4, 5 and 7, each step of each proof concludes a clause that follows from the facts present. So every theorem follows from them. If the verdict is `accepted`, nothing was counted, and by step 6 the theory is the ground theory, with the packages as declared, extended only by functions that exist.
 
@@ -414,6 +418,7 @@ Every rule, kind of line and special case is something to implement twice and to
 | Clauses, not single formulas | Two notions, formula and clause. | Case analysis and hypotheses without wrapping every step in `if`; the propositional rules are two. |
 | One statement, `define`, for one function and for several | Nothing. | One kind of statement fewer than ACL2's `defun` and `mutual-recursion`. |
 | `define` and `lemma` entries in the proofs | Two kinds of entry, in the one space of names. | No statement for `local`, no scopes, and no `include-book` statement: what a book wrote for ACL2's prover is the proof's business. |
+| A `choose` entry in the proofs | One more kind of entry, admitted by the conditions of the `choose` statement. | A proof of the constraint of a `defun-sk`, which ACL2 too proves from a local `defchoose`. Without it every such constraint could only be skipped or given. |
 | A witness that is a function name, not a term | A `define` entry when the witness is not yet a function. | Putting the witness for the constrained function is a renaming, with no substitution into lambdas. |
 | `FREE2` in `choose` | One datum. | ACL2's strengthened axiom of choice, without the checker inventing variables. |
 | `true-listp`, `mv-nth` and `zp` in the ground theory | Three definitions. | ACL2's axiom of choice for several bound variables, exactly. |
@@ -426,7 +431,7 @@ Every rule, kind of line and special case is something to implement twice and to
 | The `specials` line of the ground theory | 122 symbols that every checker holds. | ACL2's rule for a variable, exactly. |
 | A repeated line adds nothing | A comparison of lines. | ACL2's treatment of an event that repeats an earlier one. |
 | `skip` | One kind of entry and one count. | A provisional verdict for every book before any proof exists, and a measure of what remains. |
-| Three inputs | Nothing in the format. | What is given cannot be claimed from inside a book. |
+| Four inputs | A second place where entries are read, and one more name of an input in a rejection. | What is given cannot be claimed from inside a book; and the library can be proved where it stands, with its definitions of functions of `COMMON-LISP`, which no book may define. |
 | Two budgets, stated in sizes | The arithmetic of sizes in each checker. | Every check ends, and two checkers reject the same line. |
 | A rejection that names a place | No symbol in the verdict. | No printer in a checker, and exact agreement on a rejection even when the line that fails has no readable name. |
 

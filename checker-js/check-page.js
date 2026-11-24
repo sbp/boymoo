@@ -4,7 +4,7 @@
     var form = document.getElementById("inputs");
     var button = document.getElementById("check");
     var verdict = document.getElementById("verdict");
-    var fields = ["ground", "library", "statements", "proofs"];
+    var fields = ["ground", "library", "statements", "proofs", "library-proofs"];
 
     form.addEventListener("submit", function (event) {
         event.preventDefault();

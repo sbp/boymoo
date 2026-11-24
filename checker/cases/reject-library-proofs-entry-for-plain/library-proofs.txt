@@ -1,0 +1,4 @@
+(theorem ACL2::PROVED-FACT)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE 42)))
+(qed)
+(measure ACL2::PLAIN-FN (ACL2::ACL2-COUNT ACL2::X))

@@ -1,0 +1,3 @@
+(measure COMMON-LISP::C-LEN (ACL2::ACL2-COUNT ACL2::X))
+(fact "built-in-clause-1")
+(qed)

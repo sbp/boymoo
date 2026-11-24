@@ -59,10 +59,26 @@ static Fn *fns;
 static size_t nfns, fns_cap;
 unsigned long defs_built;
 
+/* The instructions of the machine. */
+enum { O_CONST, O_VAR, O_PRIM, O_CALL, O_TCALL, O_JNIL, O_JMP, O_RET,
+       O_ENTER, O_LEAVE, O_REBIND, O_JET };
+
+/* The prelude: two functions of two arguments that the runner has from
+   the start when it is run with -j, and computes by num.c.  They are
+   functions like any other: a define line for one of them is in force
+   in its place. */
+int prelude;
+enum { J_ASH, J_LOGXOR, NJETS };
+static const char *const jet_pkg[NJETS] = {"COMMON-LISP", "ACL2"};
+static const char *const jet_name[NJETS] = {"ASH", "BINARY-LOGXOR"};
+static long jet_code[NJETS][3] = {{O_JET, J_ASH, O_RET}, {O_JET, J_LOGXOR, O_RET}};
+
 static long fn_of(V s)
 {
     Sym *y = &syms[SYMIDX(s)];
+    const Pkg *p = &pkgs[y->pkg];
     Fn *f;
+    int j;
     if (y->fn >= 0)
         return y->fn;
     if (nfns == fns_cap) {
@@ -79,6 +95,14 @@ static long fn_of(V s)
     f->attach = -1;
     f->code.op = NULL;
     f->code.n = f->code.maxstack = 0;
+    for (j = 0; prelude && j < NJETS; j++)
+        if (strlen(jet_name[j]) == y->len && memcmp(jet_name[j], y->name, y->len) == 0 &&
+            strlen(jet_pkg[j]) == p->len && memcmp(jet_pkg[j], p->name, p->len) == 0) {
+            f->arity = 2;
+            f->built = 1;
+            f->code.op = jet_code[j];
+            f->code.n = f->code.maxstack = 3;
+        }
     return y->fn = (long)nfns++;
 }
 
@@ -124,6 +148,7 @@ void index_define(const unsigned char *p, const unsigned char *e, int file, long
         if (fns[k].line == start)
             bad("a define line defines a function twice:", name);
         fns[k].line = start;   /* a later definition is in force */
+        fns[k].built = 0;      /* also in place of a function of the prelude */
         fns[k].end = e;
         fns[k].file = file;
         fns[k].lineno = line;
@@ -147,9 +172,6 @@ void set_attach(void)
 }
 
 /* The compiler. */
-
-enum { O_CONST, O_VAR, O_PRIM, O_CALL, O_TCALL, O_JNIL, O_JMP, O_RET,
-       O_ENTER, O_LEAVE, O_REBIND };
 
 static long *cb;              /* the code being compiled */
 static size_t cb_n, cb_cap;
@@ -510,6 +532,15 @@ static void prim(int p)
     stk[sp - 1] = r;
 }
 
+/* A function of the prelude: its two arguments on the stack give way to
+   its value. */
+static void jet(int j)
+{
+    V r = j == J_ASH ? num_ash(stk[sp - 2], stk[sp - 1]) : num_logxor(stk[sp - 2], stk[sp - 1]);
+    sp--;
+    stk[sp - 1] = r;
+}
+
 /* The machine. */
 
 typedef struct { long fn; size_t pc, fp; } Ret;   /* fn -1: the term */
@@ -678,6 +709,10 @@ V run_term(void)
         case O_REBIND:
             memmove(st + fp, st + s - op[pc + 1], (size_t)op[pc + 1] * sizeof(V));
             s = fp + (size_t)op[pc + 1];
+            pc += 2;
+            break;
+        case O_JET:
+            SYNC; jet((int)op[pc + 1]); RELOAD;
             pc += 2;
             break;
         }

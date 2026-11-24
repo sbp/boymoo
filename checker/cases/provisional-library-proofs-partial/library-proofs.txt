@@ -1,0 +1,6 @@
+(skip ACL2::LOCAL-LOOP)
+(skip ACL2::GIVEN-FN)
+(skip ACL2::GIVEN-FACT)
+(theorem ACL2::PROVED-FACT)
+(fact ACL2::GIVEN-FACT)
+(qed)

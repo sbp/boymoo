@@ -1,0 +1,320 @@
+(in-package "BOYMOO-PROVER")
+(set-verify-guards-eagerness 0)
+
+(defconst *strsplit-proofs-split* (proof-sym "SPLIT-LIST-1" "STR"))
+(defconst *strsplit-proofs-split-many* (proof-sym "SPLIT-LIST*" "STR"))
+(defconst *strsplit-proofs-del* (proof-sym "DEL" "STR"))
+(defconst *strsplit-proofs-mv-nth* (proof-sym "MV-NTH" "ACL2"))
+(defconst *strsplit-proofs-characters* (proof-sym "CHARACTER-LISTP" "ACL2"))
+(defconst *strsplit-proofs-strings* (proof-sym "STRING-LISTP" "ACL2"))
+(defconst *strsplit-proofs-tail* (list *library-cdr* *library-x*))
+(defconst *strsplit-proofs-cons-input* (list *proof-consp* *library-x*))
+(defconst *strsplit-proofs-cons-tail* (list *proof-consp* *strsplit-proofs-tail*))
+(defconst *strsplit-proofs-delimiter*
+  (proof-eq (list *library-car* *library-x*) *strsplit-proofs-del*))
+(defconst *strsplit-proofs-base*
+  (list (proof-cl "ATOM") *proof-not* (proof-cl "EQ") (proof-sym "ZP" "ACL2")))
+(defconst *strsplit-proofs-projections*
+  (append *strsplit-proofs-base* (list *strsplit-proofs-split* *strsplit-proofs-mv-nth*)))
+
+(defun strsplit-proofs-part (index value)
+  (list *strsplit-proofs-mv-nth* index
+        (list *strsplit-proofs-split* value *strsplit-proofs-del*)))
+
+(defun strsplit-proofs-smaller-tail (lib cons-proof)
+  (proof-with-checked-results
+   ((builtin (library-library-builtin lib 3 *library-x*)))
+   (proof-proof-discharge (library-library-proof lib) builtin cons-proof)))
+
+(defun strsplit-proofs-restore (lib step equation location)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+     ((reverse (proof-proof-symmetric proof equation))
+      (step (proof-proof-rewrite proof step reverse location)))
+     (proof-proof-tidy proof step))))
+
+(defun strsplit-proofs-reduce (lib evidence definitions term)
+  (proof-with-checked-results
+   ((reducer (book-logic-reducer-init lib evidence definitions nil 800 400 nil nil))
+    (result (book-logic-reducer-reduce reducer term nil)))
+   (car result)))
+
+(defun strsplit-proofs-prove (lib evidence definitions term)
+  (proof-with-checked-results
+   ((reducer (book-logic-reducer-init lib evidence definitions nil 800 400 nil nil))
+    (result (book-logic-reducer-prove reducer term)))
+   (car result)))
+
+(defun strsplit-proofs-split-count (lib formula)
+  (let* ((x *library-x*)
+         (tail *strsplit-proofs-tail*)
+         (delim *strsplit-proofs-delimiter*)
+         (projections *strsplit-proofs-projections*)
+         (part (strsplit-proofs-part *proof-one* x))
+         (proof (library-library-proof lib)))
+    (proof-with-checked-results
+     ((induction (book-logic-tree-induction-init lib formula x))
+      (cons-proof (proof-proof-assume proof *strsplit-proofs-cons-input* t))
+      (match (proof-proof-assume proof delim t))
+      (descent (strsplit-proofs-smaller-tail lib cons-proof))
+      (comparison (library-library-ordinal-comparison
+                   lib (list *library-count* tail) (list *library-count* x)))
+      (tail-count (proof-proof-rewrite proof descent comparison '(1)))
+      (tail-count (proof-proof-tidy proof tail-count))
+      (hit (strsplit-proofs-reduce lib (list cons-proof match) projections part))
+      (yes (strsplit-proofs-restore lib tail-count hit '(1 1 1)))
+      (nonmatch (proof-proof-assume proof delim nil))
+      (next-part (strsplit-proofs-reduce lib (list cons-proof nonmatch) projections part))
+      (tail-cons (proof-proof-assume proof *strsplit-proofs-cons-tail* t))
+      (at (book-logic-tree-induction-at induction tail descent nil))
+      (instance (car at))
+      (induction (cdr at))
+      (claim (proof-proof-modus-ponens proof instance tail-cons))
+      (recursive (library-library-compare-chain lib claim tail-count))
+      (tail-atom (proof-proof-assume proof *strsplit-proofs-cons-tail* nil))
+      (empty (strsplit-proofs-reduce
+              lib (list tail-atom) projections (strsplit-proofs-part *proof-one* tail)))
+      (lib (selector-proofs-count-nil-bound lib))
+      (proof (library-library-proof lib))
+      (nil-bound (library-library-cite lib "COUNT-NIL-LESS" (list x) (list cons-proof)))
+      (first (proof-step-first nil-bound))
+      (comparison (library-library-ordinal-comparison lib (cadr first) (caddr first)))
+      (nil-less (proof-proof-rewrite proof nil-bound comparison '(1)))
+      (nil-less (proof-proof-tidy proof nil-less))
+      (atomic (strsplit-proofs-restore lib nil-less empty '(1 1 1)))
+      (no (proof-proof-cases proof *strsplit-proofs-cons-tail* recursive atomic))
+      (no (strsplit-proofs-restore lib no next-part '(1 1 1)))
+      (smaller (proof-proof-cases proof delim yes no))
+      (implication (witnesses-prove-implication lib formula cons-proof smaller))
+      (step (book-logic-tree-induction-finish induction implication)))
+     (cons step lib))))
+
+(defun strsplit-proofs-split-characters-on-delimiter
+    (holds lib cons-proof index character-proof tail claim definitions)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+     ((match (proof-proof-assume proof *strsplit-proofs-delimiter* holds))
+      (part-equation (strsplit-proofs-reduce
+                      lib (list cons-proof match) *strsplit-proofs-projections*
+                      (strsplit-proofs-part index *library-x*)))
+      (first (proof-step-first part-equation))
+      (actual (proof-term-at first 2))
+      (reduced (list *strsplit-proofs-characters* actual))
+      (step (strsplit-proofs-prove lib (list character-proof tail claim) definitions reduced)))
+     (library-library-transport-argument lib step part-equation 1))))
+
+(defun strsplit-proofs-split-characters (lib formula)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+     ((induction (book-logic-tree-induction-init lib formula *library-x*))
+      (hypothesis (proof-term-at formula 1))
+      (premise (proof-proof-assume proof hypothesis t))
+      (result (proof-term-at formula 2))
+      (part (proof-term-at result 1))
+      (index (proof-term-at part 1))
+      (cons-proof (proof-proof-assume proof *strsplit-proofs-cons-input* t))
+      (premise-literal (proof-step-first premise))
+      (opened (proof-proof-unfold proof premise-literal))
+      (first (proof-step-first opened))
+      (alternatives (proof-term-at first 2))
+      (condition (strsplit-proofs-reduce lib (list cons-proof) *strsplit-proofs-base* alternatives))
+      (branch (proof-proof-chain proof opened (list condition)))
+      (specialized (proof-proof-rewrite proof premise branch '(1)))
+      (conjuncts (proof-proof-conjunct proof specialized))
+      (character-proof (car conjuncts))
+      (tail (cadr conjuncts))
+      (descent (strsplit-proofs-smaller-tail lib cons-proof))
+      (at (book-logic-tree-induction-at induction *strsplit-proofs-tail* descent nil))
+      (ih (car at))
+      (induction (cdr at))
+      (claim (proof-proof-modus-ponens proof ih tail))
+      (definitions (append *strsplit-proofs-projections* (list *strsplit-proofs-characters*)))
+      (yes (strsplit-proofs-split-characters-on-delimiter
+            t lib cons-proof index character-proof tail claim definitions))
+      (no (strsplit-proofs-split-characters-on-delimiter
+           nil lib cons-proof index character-proof tail claim definitions))
+      (nonempty (proof-proof-cases proof *strsplit-proofs-delimiter* yes no))
+      (atom-proof (proof-proof-assume proof *strsplit-proofs-cons-input* nil))
+      (empty (strsplit-proofs-prove lib (list atom-proof) definitions result))
+      (both (proof-proof-cases proof *strsplit-proofs-cons-input* nonempty empty))
+      (implication (witnesses-prove-implication lib formula premise both)))
+     (book-logic-tree-induction-finish induction implication))))
+
+(defun strsplit-proofs-split-bound (lib cons-proof)
+  (let* ((goal (library-lt (list *library-count* (strsplit-proofs-part *proof-one* *library-x*))
+                           (list *library-count* *library-x*)))
+         (proof (library-library-proof lib)))
+    (proof-with-checked-results
+     ((fact (proof-proof-fact proof (proof-sym "SPLIT-LIST-1-COUNT" "STR") nil))
+      (smaller (proof-proof-modus-ponens proof fact cons-proof))
+      (comparison (library-library-ordinal-comparison lib (cadr goal) (caddr goal))))
+     (proof-proof-transport proof smaller comparison))))
+
+(defun strsplit-proofs-split-many-branch (lib holds cons-proof prefix-type recursive definitions result)
+  (proof-with-checked-results
+   ((test (proof-proof-assume (library-library-proof lib)
+                              (strsplit-proofs-part *proof-zero* *library-x*) holds)))
+   (strsplit-proofs-prove lib (list cons-proof test prefix-type recursive) definitions result)))
+
+(defun strsplit-proofs-split-many-characters (lib formula)
+  (let ((proof (library-library-proof lib)))
+    (proof-with-checked-results
+     ((induction (book-logic-tree-induction-init lib formula *library-x*))
+      (hypothesis (proof-term-at formula 1))
+      (premise (proof-proof-assume proof hypothesis t))
+      (cons-proof (proof-proof-assume proof *strsplit-proofs-cons-input* t))
+      (suffix-type (proof-proof-fact proof (proof-sym "CHARACTER-LISTP-OF-SPLIT-LIST-1-1" "STR") nil))
+      (suffix-type (proof-proof-modus-ponens proof suffix-type premise))
+      (prefix-type (proof-proof-fact proof (proof-sym "CHARACTER-LISTP-OF-SPLIT-LIST-1-0" "STR") nil))
+      (prefix-type (proof-proof-modus-ponens proof prefix-type premise))
+      (part (strsplit-proofs-part *proof-one* *library-x*))
+      (descent (strsplit-proofs-split-bound lib cons-proof))
+      (at (book-logic-tree-induction-at induction part descent nil))
+      (instance (car at))
+      (induction (cdr at))
+      (recursive (proof-proof-modus-ponens proof instance suffix-type))
+      (result (proof-term-at formula 2))
+      (recognizer (proof-term-at result 0))
+      (definitions (append *strsplit-proofs-base*
+                           (list *strsplit-proofs-split-many* recognizer)))
+      (yes (strsplit-proofs-split-many-branch lib t cons-proof prefix-type recursive definitions result))
+      (no (strsplit-proofs-split-many-branch lib nil cons-proof prefix-type recursive definitions result))
+      (nonempty (proof-proof-cases proof (strsplit-proofs-part *proof-zero* *library-x*) yes no))
+      (atomic (proof-proof-assume proof *strsplit-proofs-cons-input* nil))
+      (empty (strsplit-proofs-prove lib (list atomic) definitions result))
+      (both (proof-proof-cases proof *strsplit-proofs-cons-input* nonempty empty))
+      (implication (witnesses-prove-implication lib formula premise both)))
+     (book-logic-tree-induction-finish induction implication))))
+
+(defun strsplit-proofs-mapped-strings (lib formula)
+  (let ((proof (library-library-proof lib))
+        (x *library-x*))
+    (proof-with-checked-results
+     ((induction (book-logic-tree-induction-init lib formula x))
+      (cons-proof (proof-proof-assume proof *strsplit-proofs-cons-input* t))
+      (descent (strsplit-proofs-smaller-tail lib cons-proof))
+      (at (book-logic-tree-induction-at induction *strsplit-proofs-tail* descent nil))
+      (recursive (car at))
+      (induction (cdr at))
+      (car-x (list *library-car* x))
+      (coerce-to (proof-quote (proof-cl "STRING")))
+      (string-fact (proof-proof-fact proof "stringp-coerce"
+                                     (list (list x car-x) (list *library-y* coerce-to))))
+      (first (proof-step-first string-fact))
+      (hypothesis (proof-term-at first 1))
+      (condition (strsplit-proofs-prove lib nil (list *proof-not*) hypothesis))
+      (string-proof (proof-proof-modus-ponens proof string-fact condition))
+      (mapped (proof-term-at formula 1))
+      (function (proof-term-at mapped 0))
+      (definitions (append *strsplit-proofs-base*
+                           (list function *strsplit-proofs-strings*)))
+      (yes (strsplit-proofs-prove lib (list cons-proof recursive string-proof) definitions formula))
+      (atomic (proof-proof-assume proof *strsplit-proofs-cons-input* nil))
+      (no (strsplit-proofs-prove lib (list atomic) definitions formula))
+      (both (proof-proof-cases proof *strsplit-proofs-cons-input* yes no)))
+     (book-logic-tree-induction-finish induction both))))
+
+(defun strsplit-proofs-split-strings (lib formula)
+  (proof-with-checked-results
+   ((call (proof-term-at formula 1))
+    (opened (proof-proof-unfold (library-library-proof lib) call))
+    (first (proof-step-first opened))
+    (body (proof-term-at first 2))
+    (normalized (list *strsplit-proofs-strings* body))
+    (step (book-logic-instance
+           lib (proof-sym "STRING-LISTP-OF-COERCE-LIST-TO-STRINGS" "STR") normalized)))
+   (library-library-transport-argument lib step opened 1)))
+
+(defconst *strsplit-proofs-split-formulas*
+  (list
+   (list (list *library-implies* *strsplit-proofs-cons-input*
+               (library-lt (list *library-count* (strsplit-proofs-part *proof-one* *library-x*))
+                           (list *library-count* *library-x*)))
+         'strsplit-proofs-split-count)
+   (list (list *library-implies* (list *strsplit-proofs-characters* *library-x*)
+               (list *strsplit-proofs-characters* (strsplit-proofs-part *proof-zero* *library-x*)))
+         'strsplit-proofs-split-characters)
+   (list (list *library-implies* (list *strsplit-proofs-characters* *library-x*)
+               (list *strsplit-proofs-characters* (strsplit-proofs-part *proof-one* *library-x*)))
+         'strsplit-proofs-split-characters)
+   (list (list *library-implies* (list *strsplit-proofs-characters* *library-x*)
+               (list (proof-sym "CHARACTER-LIST-LISTP" "STR")
+                     (list *strsplit-proofs-split-many* *library-x* *strsplit-proofs-del*)))
+         'strsplit-proofs-split-many-characters)))
+
+(defun strsplit-proofs-run-template (lib template tactic bindings)
+  (proof-with-checked-results
+   ((result (case tactic
+              (strsplit-proofs-split-count (strsplit-proofs-split-count lib template))
+              (strsplit-proofs-split-characters
+               (proof-with-checked-results ((step (strsplit-proofs-split-characters lib template)))
+                                     (cons step lib)))
+              (otherwise
+               (proof-with-checked-results ((step (strsplit-proofs-split-many-characters lib template)))
+                                     (cons step lib)))))
+    (lib (cdr result))
+    (step (proof-proof-instantiate (library-library-proof lib) (car result)
+                                   (table-items bindings))))
+   (cons step lib)))
+
+(defun strsplit-proofs-find-template (lib formula definitions templates)
+  (declare (xargs :measure (acl2-count templates)))
+  (if (endp templates)
+      (cons nil lib)
+    (let ((template (caar templates))
+          (tactic (cadar templates)))
+      (if (not (and (proof-is-call formula (car template))
+                    (assoc-equal *strsplit-proofs-split* definitions)
+                    (assoc-equal *strsplit-proofs-mv-nth* definitions)))
+          (strsplit-proofs-find-template lib formula definitions (cdr templates))
+        (proof-with-checked-results
+         ((matched (book-logic-match template formula nil)))
+         (if (car matched)
+             (strsplit-proofs-run-template lib template tactic (cdr matched))
+           (strsplit-proofs-find-template lib formula definitions (cdr templates))))))))
+
+(defun strsplit-proofs-map-body (function value)
+  (let ((coerce-term (list (proof-cl "COERCE") (list *library-car* value)
+                           (proof-quote (proof-cl "STRING")))))
+    (proof-ite (list *proof-consp* value)
+               (list *proof-cons* coerce-term (list function (list *library-cdr* value)))
+               *proof-false*)))
+
+(defun strsplit-proofs-string-tactic (lib formula definitions)
+  (if (not (proof-is-call formula *strsplit-proofs-strings*))
+      (cons nil lib)
+    (proof-with-checked-results
+     ((call (proof-term-at formula 1)))
+     (if (not (proof-compound call))
+         (cons nil lib)
+       (proof-with-checked-results
+        ((function (proof-term-at call 0))
+         (definition (assoc-equal function definitions))
+         (formals (cadr definition))
+         (body (caddr definition)))
+        (cond
+         ((not definition) (cons nil lib))
+         ((and (equal (len formals) 1)
+               (equal body (strsplit-proofs-map-body function (car formals))))
+          (proof-with-checked-results
+           ((result (strsplit-proofs-mapped-strings
+                     lib (list *strsplit-proofs-strings* (list function *library-x*))))
+            (argument (proof-term-at call 1))
+            (step (proof-proof-instantiate (library-library-proof lib) result
+                                           (list (list *library-x* argument)))))
+           (cons step lib)))
+         ((proof-is-call body (proof-sym "COERCE-LIST-TO-STRINGS" "STR"))
+          (let ((step (strsplit-proofs-split-strings lib formula)))
+            (if (or (terms-unproved-p step)
+                    (and (failure-p step) (equal (cadr step) "key")))
+                (cons nil lib)
+              (proof-with-checked-results ((step step)) (cons step lib)))))
+         (t (cons nil lib))))))))
+
+(defun strsplit-proofs-split-tactic (lib formula)
+  (let ((definitions (proof-proof-definitions (library-library-proof lib))))
+    (proof-with-checked-results
+     ((result (strsplit-proofs-find-template lib formula definitions *strsplit-proofs-split-formulas*)))
+     (if (car result)
+         result
+       (strsplit-proofs-string-tactic (cdr result) formula definitions)))))

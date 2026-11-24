@@ -1,10 +1,11 @@
 ; Boymoo, the checker: the order of checking and the verdict
 ; (spec/formats.md, sections 5 to 9).
 ;
-; (check GROUND LIBRARY STATEMENTS PROOFS), on four strings, the bytes of
-; spec/ground.txt and of the three inputs, gives a list of two strings: the
-; verdict, the line of spec/formats.md, section 9, without its line feed;
-; and a few words on what failed, empty if nothing did.
+; (check-four GROUND LIBRARY STATEMENTS PROOFS LIBRARY-PROOFS) takes the
+; bytes of spec/ground.txt and the four inputs as strings. It returns a
+; list of the verdict without its line feed (spec/formats.md, section 9)
+; and an explanation that is empty if every line was admitted.
+; (check GROUND LIBRARY STATEMENTS PROOFS) uses empty library proofs.
 
 (in-package "BOYMOO")
 
@@ -38,10 +39,10 @@
                 :theorem :axiom :reserve)))
 
 (defconst *proof-words*
-  (word-table '("define" "lemma" "theorem" "measure" "witness" "skip"
+  (word-table '("define" "lemma" "choose" "theorem" "measure" "witness" "skip"
                 "fact" "instantiate" "subsume" "cut" "substitute" "beta"
                 "compute" "induct" "qed")
-              '(:define :lemma :theorem :measure :witness :skip
+              '(:define :lemma :choose :theorem :measure :witness :skip
                 :fact :instantiate :subsume :cut :substitute :beta
                 :compute :induct :qed)))
 
@@ -160,30 +161,13 @@
   (and (consp x) (equal (car x) :rejected)))
 
 ; ---------------------------------------------------------------------------
-; The library (spec/formats.md, section 7, step 2)
-
-(defun check-library (lines n w)
-  (declare (xargs :guard (and (natp n)
-                              (guard-world-p w))
-                  :verify-guards nil))
-  (if (consp lines)
-      (let ((line (parse-line (car lines) *statement-words* (w-pkgs w))))
-        (if line
-            (let ((r (admit line :library w)))
-              (if (stringp r)
-                  (rejection "library" (+ 1 n) r)
-                (check-library (cdr lines) (+ 1 n) (car r))))
-          (rejection "library" (+ 1 n) *unreadable*)))
-    w))
-
-; ---------------------------------------------------------------------------
 ; The proofs
 ;
 ; While a statement with obligations waits for its entry, the checker reads
 ; the proofs one line at a time, in a context:
 ;
-;   (:ENTRY P)             a head line comes next: a define or a lemma entry,
-;                          or the entry of the pending statement P;
+;   (:ENTRY P)             a define, lemma or choose entry comes next, or
+;                          the entry of the pending statement P;
 ;   (:DEFINE-ENTRY D P)    the measure or the skip of the define entry D,
 ;                          and then P again;
 ;   (:PROOF GOALS FIN BACK STEPS COUNT TOTAL)
@@ -262,6 +246,20 @@
            (add-facts (list (car (cdr p))) (list (car (cdr (cdr p)))) w))
           (t w))))
 
+(defun give-statement (p w)
+  (declare (xargs :guard (and (guard-pending-p p) (guard-world-p w))
+                  :verify-guards nil))
+  (count-one (if (equal (car p) :theorem) 3 2) (finish p w)))
+
+; Admit a single line, taking library obligations as given.
+(defun admit (line input w)
+  (declare (xargs :guard (and (true-listp line) (guard-world-p w))
+                  :verify-guards nil))
+  (let ((r (prepare-statement line input w)))
+    (if (and (equal input :library) (consp r) (cdr r))
+        (cons (give-statement (cdr r) (car r)) nil)
+      r)))
+
 (defun start-proofs (goals p back w)
   (declare (xargs :guard (true-listp w)))
   (cons (list :proof goals p back nil 0 0) w))
@@ -298,8 +296,9 @@
                       p back w)
       "a witness entry that does not fit the constraint")))
 
-; The entry of the pending statement or define entry P.
-(defun pending-entry (line p back w)
+; The entry of the pending statement or define entry P. GIVE-ON-SKIP
+; holds for a statement of the library.
+(defun pending-entry (line p back give-on-skip w)
   (declare (xargs :guard (and (true-listp line)
                               (guard-pending-p p)
                               (guard-world-p w))
@@ -310,7 +309,9 @@
     (cond ((equal word :skip)
            (if (and (consp data) (equal (cdr data) nil)
                     (equal (car data) (pending-name p)))
-               (cons back (count-one 0 (finish p w)))
+               (cons back (if give-on-skip
+                              (give-statement p w)
+                            (count-one 0 (finish p w))))
              "a skip entry that is not the entry of the statement"))
           ((and (equal word :theorem) (equal kind :theorem))
            (if (and (consp data) (equal (cdr data) nil)
@@ -337,14 +338,14 @@
                       (put-entry (car data) (list nil nil nil) w)))
     "a lemma that may not be admitted"))
 
-(defun entry-head (line p w)
+(defun entry-head (line p library w)
   (declare (xargs :guard (and (true-listp line)
                               (guard-pending-p p)
                               (guard-world-p w))
                   :verify-guards nil))
   (let ((word (car line)))
-    (cond ((equal word :define)
-           (let ((r (admit line :proofs w)))
+    (cond ((or (equal word :define) (equal word :choose))
+           (let ((r (prepare-statement line :proofs w)))
              (if (stringp r)
                  r
                (cons (if (cdr r)
@@ -352,7 +353,7 @@
                        (list :entry p))
                      (car r)))))
           ((equal word :lemma) (lemma-head (cdr line) p w))
-          (t (pending-entry line p nil w)))))
+          (t (pending-entry line p nil library w)))))
 
 (defun proof-step (line ctx w)
   (declare (xargs :guard (and (true-listp line)
@@ -385,55 +386,66 @@
               "a step that does not follow, or passes the budget"))
         "a head line inside a proof"))))
 
-(defun proof-line (line ctx w)
+(defun proof-line (line ctx library w)
   (declare (xargs :guard (and (true-listp line)
                               (guard-proof-context-p ctx)
                               (consp ctx)
                               (guard-world-p w))
                   :verify-guards nil))
   (let ((kind (car ctx)))
-    (cond ((equal kind :entry) (entry-head line (car (cdr ctx)) w))
+    (cond ((equal kind :entry) (entry-head line (car (cdr ctx)) library w))
           ((equal kind :define-entry)
            (if (or (equal (car line) :measure) (equal (car line) :skip))
                (pending-entry line (car (cdr ctx))
-                              (list :entry (car (cdr (cdr ctx)))) w)
+                              (list :entry (car (cdr (cdr ctx)))) nil w)
              "a line that is not the measure or the skip of the define entry"))
           (t (proof-step line ctx w)))))
 
 ; ---------------------------------------------------------------------------
-; The statements, with the proofs (spec/formats.md, section 7, steps 3 and
-; 4).  SN and PN are the numbers of the lines of each input read so far.
+; One pair of statements and proofs (spec/formats.md, section 7).
+; SN and PN count the lines read from each input so far.
 
-(defun run (slines sn plines pn ctx w)
+(defun run (slines sn plines pn ctx input w)
   (declare (xargs :guard (and (natp sn)
                               (natp pn)
                               (guard-proof-context-p ctx)
                               (guard-world-p w))
                   :verify-guards nil
-                  :measure (+ (len slines) (len plines))))
-  (if (equal ctx nil)
-      (if (consp slines)
-          (let ((line (parse-line (car slines) *statement-words* (w-pkgs w))))
+                  :measure (+ (len slines) (len plines))
+                  :hints (("Goal" :in-theory (disable admit parse-line
+                                                    prepare-statement proof-line)))))
+  (let* ((library (equal input :library))
+         (sname (if library "library" "statements"))
+         (pname (if library "library-proofs" "proofs")))
+    (if (equal ctx nil)
+        (if (consp slines)
+            (let ((line (parse-line (car slines) *statement-words* (w-pkgs w))))
+              (if line
+                  (let ((r (if (and library (not (consp plines)))
+                               (admit line input w)
+                             (prepare-statement line input w))))
+                    (if (stringp r)
+                        (rejection sname (+ 1 sn) r)
+                      (run (cdr slines) (+ 1 sn) plines pn
+                           (if (cdr r) (list :entry (cdr r)) nil) input (car r))))
+                (rejection sname (+ 1 sn) *unreadable*)))
+          (if (consp plines)
+              (rejection pname (+ 1 pn) "a line of the proofs after the statements are done")
+            w))
+      (if (consp plines)
+          (let ((line (parse-line (car plines) *proof-words* (w-pkgs w))))
             (if line
-                (let ((r (admit line :statements w)))
+                (let ((r (proof-line line ctx library w)))
                   (if (stringp r)
-                      (rejection "statements" (+ 1 sn) r)
-                    (run (cdr slines) (+ 1 sn) plines pn
-                         (if (cdr r) (list :entry (cdr r)) nil)
-                         (car r))))
-              (rejection "statements" (+ 1 sn) *unreadable*)))
-        (if (consp plines)
-            (rejection "proofs" (+ 1 pn) "a line of the proofs after the statements are done")
-          w))
-    (if (consp plines)
-        (let ((line (parse-line (car plines) *proof-words* (w-pkgs w))))
-          (if line
-              (let ((r (proof-line line ctx w)))
-                (if (stringp r)
-                    (rejection "proofs" (+ 1 pn) r)
-                  (run slines sn (cdr plines) (+ 1 pn) (car r) (cdr r))))
-            (rejection "proofs" (+ 1 pn) *unreadable*)))
-      (rejection "statements" sn "the proofs end before those of the statement"))))
+                      (rejection pname (+ 1 pn) r)
+                    (run slines sn (cdr plines) (+ 1 pn) (car r) input (cdr r))))
+              (rejection pname (+ 1 pn) *unreadable*)))
+        (rejection sname sn "the proofs end before those of the statement")))))
+
+(defun check-library (lines n w)
+  (declare (xargs :guard (and (natp n) (guard-world-p w))
+                  :verify-guards nil))
+  (run lines n nil 0 nil :library w))
 
 ; ---------------------------------------------------------------------------
 ; The verdict (spec/formats.md, section 9)
@@ -471,17 +483,24 @@
   (declare (xargs :guard (stringp string)))
   (split-lines (coerce string 'list) nil nil))
 
-(defun check (ground library statements proofs)
+(defun check-four (ground library statements proofs library-proofs)
   (declare (xargs :guard (and (stringp ground) (stringp library)
-                             (stringp statements) (stringp proofs))
+                             (stringp statements) (stringp proofs)
+                             (stringp library-proofs))
                   :verify-guards nil))
   (let ((g (load-ground (lines-of ground) (initial-world))))
     (if (equal g :bad)
         (list "the ground theory could not be read" "")
-      (let ((w (check-library (lines-of library) 0 g)))
+      (let ((w (run (lines-of library) 0 (lines-of library-proofs) 0 nil :library g)))
         (if (rejected-p w)
             (rejection-verdict w)
-          (let ((w (run (lines-of statements) 0 (lines-of proofs) 0 nil w)))
+          (let ((w (run (lines-of statements) 0 (lines-of proofs) 0 nil :statements w)))
             (if (rejected-p w)
                 (rejection-verdict w)
               (list (verdict w) ""))))))))
+
+(defun check (ground library statements proofs)
+  (declare (xargs :guard (and (stringp ground) (stringp library)
+                             (stringp statements) (stringp proofs))
+                  :verify-guards nil))
+  (check-four ground library statements proofs ""))

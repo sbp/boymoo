@@ -1,0 +1,4 @@
+(theorem ACL2::CAR-OF-ATOM)
+(compute (COMMON-LISP::CAR (COMMON-LISP::QUOTE 42)))
+(qed)
+(skip ACL2::CAR-OF-ZERO)

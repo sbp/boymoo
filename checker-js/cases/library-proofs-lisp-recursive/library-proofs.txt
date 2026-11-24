@@ -1,0 +1,6 @@
+(measure COMMON-LISP::C-LEN (ACL2::ACL2-COUNT ACL2::X))
+(fact "built-in-clause-1")
+(qed)
+(fact "built-in-clause-3")
+(subsume 1 (COMMON-LISP::NOT (COMMON-LISP::CONSP ACL2::X)) (ACL2::O< (ACL2::ACL2-COUNT (COMMON-LISP::CDR ACL2::X)) (ACL2::ACL2-COUNT ACL2::X)))
+(qed)

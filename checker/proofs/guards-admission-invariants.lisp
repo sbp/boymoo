@@ -119,11 +119,10 @@
   (implies (package-conditions name imports)
            (symbol-listp imports)))
 
-(local
- (defthm cg-world-has-package-trie
-   (implies (guard-world-p w)
-            (guard-trie-p (w-pkgs w) :package))
-   :hints (("Goal" :in-theory (enable guard-world-p)))))
+(defthm cg-world-has-package-trie
+  (implies (guard-world-p w)
+           (guard-trie-p (w-pkgs w) :package))
+  :hints (("Goal" :in-theory (enable guard-world-p))))
 
 (local
  (defthm cg-package-lookup-has-lines
@@ -158,14 +157,14 @@
 (local
  (defthm cg-admit-define-keeps-world
    (implies (and (guard-world-p w) (true-listp line)
-                 (not (stringp (admit-define data line book library w))))
-            (guard-world-p (car (admit-define data line book library w))))))
+                 (not (stringp (admit-define data line book w))))
+            (guard-world-p (car (admit-define data line book w))))))
 
 (local
  (defthm cg-admit-constrain-keeps-world
    (implies (and (guard-world-p w) (true-listp line)
-                 (not (stringp (admit-constrain data line book library w))))
-            (guard-world-p (car (admit-constrain data line book library w))))))
+                 (not (stringp (admit-constrain data line book w))))
+            (guard-world-p (car (admit-constrain data line book w))))))
 
 (local
  (defthm cg-admit-choose-keeps-world
@@ -176,8 +175,8 @@
 (local
  (defthm cg-admit-theorem-keeps-world
    (implies (and (guard-world-p w) (true-listp line)
-                 (not (stringp (admit-theorem data line library w))))
-            (guard-world-p (car (admit-theorem data line library w))))))
+                 (not (stringp (admit-theorem data line w))))
+            (guard-world-p (car (admit-theorem data line w))))))
 
 (local
  (defthm cg-admit-axiom-keeps-world
@@ -191,21 +190,14 @@
                  (not (stringp (admit-reserve data line w))))
             (guard-world-p (car (admit-reserve data line w))))))
 
-(defthm cg-admit-keeps-world
+(defthm cg-prepare-statement-keeps-world
   (implies (and (guard-world-p w) (true-listp line)
-                (not (stringp (admit line input w))))
-           (guard-world-p (car (admit line input w))))
+                (not (stringp (prepare-statement line input w))))
+           (guard-world-p (car (prepare-statement line input w))))
   :hints (("Goal"
            :in-theory (disable repeat-p admit-package admit-hidden-package
                                admit-define admit-constrain admit-choose
                                admit-theorem admit-axiom admit-reserve))))
-
-(defthm cg-check-library-keeps-world
-  (implies (and (guard-world-p w)
-                (not (rejected-p (check-library lines n w))))
-           (guard-world-p (check-library lines n w)))
-  :hints (("Goal" :induct (check-library lines n w)
-           :in-theory (disable admit parse-line))))
 
 (defthm cg-guard-definition-list-characterization
   (equal (guard-definition-list-p defs)
@@ -220,27 +212,27 @@
 
 (local
  (defthm cg-admit-define-pending
-   (implies (and (not (stringp (admit-define data line book library w)))
-                 (cdr (admit-define data line book library w)))
-            (guard-pending-p (cdr (admit-define data line book library w))))
+   (implies (and (not (stringp (admit-define data line book w)))
+                 (cdr (admit-define data line book w)))
+            (guard-pending-p (cdr (admit-define data line book w))))
    :hints (("Goal" :in-theory (disable defs-terms-p)))))
 
 (local
  (defthm cg-admit-constrain-pending
-   (implies (and (not (stringp (admit-constrain data line book library w)))
-                 (cdr (admit-constrain data line book library w)))
-            (guard-pending-p (cdr (admit-constrain data line book library w))))
+   (implies (and (not (stringp (admit-constrain data line book w)))
+                 (cdr (admit-constrain data line book w)))
+            (guard-pending-p (cdr (admit-constrain data line book w))))
    :hints (("Goal" :in-theory (disable constrain-arities)))))
 
 (local
  (defthm cg-admit-theorem-pending
-   (implies (and (not (stringp (admit-theorem data line library w)))
-                 (cdr (admit-theorem data line library w)))
-            (guard-pending-p (cdr (admit-theorem data line library w))))))
+   (implies (and (not (stringp (admit-theorem data line w)))
+                 (cdr (admit-theorem data line w)))
+            (guard-pending-p (cdr (admit-theorem data line w))))))
 
-(defthm cg-admitted-pending
-  (implies (and (not (stringp (admit line input w)))
-                (cdr (admit line input w)))
-           (guard-pending-p (cdr (admit line input w))))
+(defthm cg-prepared-pending
+  (implies (and (not (stringp (prepare-statement line input w)))
+                (cdr (prepare-statement line input w)))
+           (guard-pending-p (cdr (prepare-statement line input w))))
   :hints (("Goal" :in-theory (disable admit-define admit-constrain admit-theorem
                                      repeat-p guard-pending-p))))

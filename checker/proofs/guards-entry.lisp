@@ -36,6 +36,17 @@
                                      guard-definition-list-p))))
 
 (local
+ (defthm cg-pending-is-list
+   (implies (guard-pending-p p) (true-listp p))
+   :rule-classes :forward-chaining))
+
+(verify-guards give-statement
+  :hints (("Goal" :in-theory (disable finish guard-pending-p))))
+
+(verify-guards admit
+  :hints (("Goal" :in-theory (disable prepare-statement give-statement guard-pending-p))))
+
+(local
  (defthm cg-measures-are-list
    (implies (measures-p measures defs w) (true-listp measures))
    :hints (("Goal" :induct (measures-p measures defs w)
@@ -51,14 +62,14 @@
                                      formula-terms formula-names def-names))))
 
 (verify-guards pending-entry
-  :hints (("Goal" :in-theory (disable finish measure-entry witness-entry
+  :hints (("Goal" :in-theory (disable finish give-statement measure-entry witness-entry
                                      pending-name guard-definition-list-p))))
 
 (verify-guards lemma-head
   :hints (("Goal" :in-theory (disable term-p terms-p new-name-p))))
 
 (verify-guards entry-head
-  :hints (("Goal" :in-theory (disable admit pending-entry lemma-head))))
+  :hints (("Goal" :in-theory (disable prepare-statement pending-entry lemma-head))))
 
 (local
  (defthm cg-proof-context-spine
@@ -79,11 +90,10 @@
             (guard-proof-context-p (list :entry p)))))
 
 (verify-guards run
-  :hints (("Goal" :in-theory (disable admit parse-line proof-line
-                                     guard-proof-context-p))))
+  :hints (("Goal" :in-theory (disable prepare-statement parse-line proof-line
+                                     give-statement guard-proof-context-p))))
 
-(verify-guards check-library
-  :hints (("Goal" :in-theory (disable admit parse-line))))
+(verify-guards check-library)
 
 (local
  (defthm cg-world-is-not-rejection
@@ -101,25 +111,14 @@
                    (stringp (cadr r)))))))
 
 (local
- (defthm cg-library-rejection-record
-   (implies (and (guard-world-p w) (rejected-p (check-library lines n w)))
-            (let ((r (check-library lines n w)))
-              (and (true-listp r)
-                   (stringp (cadr r)))))
-   :hints (("Goal" :induct (check-library lines n w)
-            :in-theory (disable admit parse-line rejected-p rejection)))))
-
-(local
  (defthm cg-run-rejection-record
    (implies (and (guard-world-p w) (guard-proof-context-p ctx)
-                 (rejected-p (run slines sn plines pn ctx w)))
-            (let ((r (run slines sn plines pn ctx w)))
+                 (rejected-p (run slines sn plines pn ctx input w)))
+            (let ((r (run slines sn plines pn ctx input w)))
               (and (true-listp r)
                    (stringp (cadr r)))))
-   :hints (("Goal" :induct (run slines sn plines pn ctx w)
-            :expand ((run slines sn plines pn ctx w)
-                     (run slines sn plines pn nil w))
-            :in-theory (disable (:definition run) admit parse-line proof-line
+   :hints (("Goal" :induct (run slines sn plines pn ctx input w)
+            :in-theory (disable prepare-statement parse-line proof-line give-statement
                                 guard-proof-context-p rejected-p rejection)))))
 
 (local
@@ -128,6 +127,8 @@
 
 (local (in-theory (disable (:executable-counterpart initial-world))))
 
-(verify-guards check
-  :hints (("Goal" :in-theory (disable load-ground lines-of initial-world check-library
+(verify-guards check-four
+  :hints (("Goal" :in-theory (disable load-ground lines-of initial-world
                                      run rejected-p rejection-verdict verdict))))
+
+(verify-guards check)

@@ -1,0 +1,96 @@
+(in-package "BOYMOO-PROVER")
+
+(set-verify-guards-eagerness 0)
+
+(defconst *fixer-proofs-char-code* (proof-cl "CHAR-CODE"))
+(defconst *fixer-proofs-coerce* (proof-cl "COERCE"))
+(defconst *fixer-proofs-list* (proof-quote (proof-cl "LIST")))
+
+(defmacro fixer-proofs-let* (bindings body)
+  (if (endp bindings)
+      body
+    (let ((binding (car bindings)))
+      `(let (,binding)
+         (if (failure-p ,(car binding))
+             ,(car binding)
+           (fixer-proofs-let* ,(cdr bindings) ,body))))))
+
+(defun fixer-proofs-fixer-invariance-select (holds lib branch equation fitted)
+  (let ((proof (library-library-proof lib)))
+    (fixer-proofs-let*
+     ((chosen (if holds (proof-proof-if-true proof branch) (proof-proof-if-false proof branch)))
+      (argument (proof-proof-chain proof equation (list chosen)))
+      (reflexive (lemmas-slice-library-reflexive lib fitted))
+      (step (proof-proof-rewrite proof reflexive argument '(1 2 1))))
+     (proof-proof-tidy proof step))))
+
+(defun fixer-proofs-fixer-invariance-lemma (lib name fixer base fitted claim predicate)
+  (let* ((proof (library-library-proof lib))
+         (test (list predicate *library-x*)))
+    (fixer-proofs-let*
+     ((opened (proof-proof-unfold proof fixer))
+      (literal (proof-step-first opened))
+      (simplified (proof-proof-simplify proof (caddr literal) nil (list *termination-return-last*)))
+      (equation (proof-proof-chain proof opened (list simplified)))
+      (literal (proof-step-first equation)))
+     (let ((branch (caddr literal)))
+       (if (not (and (proof-is-call branch *proof-if*)
+                     (equal (seq-slice branch 1 3) (list test *library-x*))))
+           nil
+         (fixer-proofs-let*
+          ((yes (fixer-proofs-fixer-invariance-select t lib branch equation fitted))
+           (no (fixer-proofs-fixer-invariance-select nil lib branch equation fitted))
+           (premise (proof-proof-assume proof test nil))
+           (reducer (book-logic-reducer-init lib (list premise) nil nil 35 100 nil t))
+           (literal (proof-step-first no))
+           (reduced (book-logic-reducer-reduce reducer (caddr literal) nil))
+           (reduction (car reduced))
+           (value-equation (proof-proof-chain proof no (list reduction)))
+           (default (book-logic-reducer-reduce (cdr reduced) base nil))
+           (default (car default))
+           (literal (and default (proof-step-first default)))
+           (value-literal (proof-step-first value-equation)))
+          (if (not (and default (equal (caddr literal) (caddr value-literal))))
+              nil
+            (fixer-proofs-let*
+             ((reversed (proof-proof-symmetric proof default))
+              (no (proof-proof-chain proof value-equation (list reversed)))
+              (step (proof-proof-cases proof test yes no)))
+             (library-library-lemma lib name claim step nil)))))))))
+
+(defun fixer-proofs-fixer-invariance-instance (lib call fixed predicate)
+  (let* ((fixer (list (car fixed) *library-x*))
+         (base (list* (car call) *library-x* (cddr call)))
+         (fitted (list* (car call) fixer (cddr call)))
+         (claim (proof-eq fitted base))
+         (source (proof-write claim)))
+    (if (failure-p source)
+        (cons source lib)
+      (let* ((name (concatenate 'string "FIXER-INVARIANCE-"
+                                (text-upper (seq-slice (siphash-hexdigest source) 0 20))))
+             (fact (proof-sym (concatenate 'string "SELF-" name) "ACL2"))
+             (facts (proof-proof-facts (library-library-proof lib)))
+             (updated (if (assoc-equal fact facts)
+                          lib
+                        (fixer-proofs-fixer-invariance-lemma
+                         lib name fixer base fitted claim predicate))))
+        (cond ((failure-p updated) (cons updated lib))
+              ((not updated) (cons nil lib))
+              (t (cons (library-library-cite updated name (seq-slice call 1 2) nil)
+                       updated)))))))
+
+(defun fixer-proofs-fixer-invariance (lib call fixed)
+  (let ((predicate
+         (cond ((atom call) '(:failure "failure" ""))
+               ((equal (car call) *fixer-proofs-char-code*) (proof-cl "CHARACTERP"))
+               ((not (equal (car call) *fixer-proofs-coerce*)) nil)
+               ((not (consp (cddr call))) '(:failure "failure" ""))
+               ((equal (caddr call) *fixer-proofs-list*) (proof-cl "STRINGP"))
+               (t nil))))
+    (cond ((failure-p predicate) (cons predicate lib))
+          ((or (not predicate) (not (equal (cdr fixed) (seq-slice call 1 2)))) (cons nil lib))
+          ((atom fixed) (cons '(:failure "failure" "") lib))
+          ((not (assoc-equal (car fixed)
+                             (proof-proof-definitions (library-library-proof lib))))
+           (cons nil lib))
+          (t (fixer-proofs-fixer-invariance-instance lib call fixed predicate)))))
