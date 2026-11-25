@@ -1,0 +1,65 @@
+#!/bin/sh
+# Builds the compiled checker, build/compiler/checker.  From the root of the
+# repository:
+#
+#     sh compiler/build-checker.sh
+#
+# It has checker/build.sh build the checker and compiler/build.sh the
+# compiler; has ACL2 certify compiler/checker-entry.lisp beside the
+# checker's books, and the exporter export it; writes the compiler's input,
+# the program text of the checker and of its entry, to
+# build/compiler/checker-test/checker.input; and compiles that input on the
+# reference runner with compiler/compile.sh, printing the runner's time.
+set -eu
+
+runner=build/runner/boymoo-run
+if [ ! -x "$runner" ]; then
+    echo "compiler/build-checker.sh requires $runner" >&2
+    exit 2
+fi
+
+export LC_ALL=C
+work=build/compiler/checker-test
+acl=build/checker/acl2
+book=$acl/checker-entry
+exported=build/export/books/$book
+mkdir -p "$work/tmp"
+export TMPDIR="$PWD/$work/tmp"
+
+sh checker/build.sh
+sh compiler/build.sh
+if ! cmp -s compiler/checker-entry.lisp "$book.lisp" ||
+   [ ! -f "$book.cert" ] || [ "$acl/check.cert" -nt "$book.cert" ]; then
+    cp compiler/checker-entry.lisp "$book.lisp"
+    rm -f "$book.cert"
+    (cd "$acl" &&
+        printf '(ld "package.lsp")\n(certify-book "checker-entry" 1)\n(good-bye)\n' |
+            acl2 > checker-entry.out 2>&1)
+fi
+if [ ! -f "$book.cert" ]; then
+    echo "ACL2 did not certify the entry book. See $book.out" >&2
+    exit 2
+fi
+
+if [ ! -s "$exported.program" ] || [ "$book.cert" -nt "$exported.program" ]; then
+    sh export/book.sh "$book"
+fi
+if [ ! -s "$exported.program" ] || [ ! -s "$exported.readback" ] ||
+   ! awk '{ n = $NF; sub(/\)$/, "", n); if ($(NF - 1) != n) bad = 1 }
+          END { exit bad }' "$exported.readback"; then
+    echo "The export of the entry book failed. See $exported.log" >&2
+    exit 2
+fi
+
+# The export includes the definitions of the checker and the entry book.
+awk -f checker/library.awk spec/ground.txt "$exported.statements" \
+    build/export/library.statements > "$work/library.statements"
+{
+    awk '/^\((package|hidden-package) /' spec/ground.txt "$exported.statements"
+    cat build/checker/ground.program "$work/library.statements" "$exported.program"
+    printf '(entry BOYMOO::CHECKER-ENTRY)\n'
+} > "$work/checker.input"
+
+time -p sh compiler/compile.sh -v "$work/checker.input" > "$work/checker"
+chmod +x "$work/checker"
+mv "$work/checker" build/compiler/checker

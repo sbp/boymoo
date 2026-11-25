@@ -6,7 +6,7 @@ ACL2 is a proof assistant in the [Boyer-Moore family](https://en.wikipedia.org/w
 
 Unlike many other well known proof assistants, ACL2 does not produce a [machine checkable version](https://en.wikipedia.org/wiki/De_Bruijn_criterion) of the proof. Boymoo provides a way to make proofs of ACL2 theorems checkable, and the Boymoo checker itself is written in a subset of ACL2 called ACL2 Core.
 
-The advantages of Boymoo, therefore, are that it provides an independent second opinion on whether ACL2 theorems are correct, and that it does so in a way which can be checked automatically by a machine. In addition, it has an entirely independent runtime written in just a couple of thousand lines of ISO C99 instead of Common Lisp.
+The advantages of Boymoo, therefore, are that it provides an independent second opinion on whether ACL2 theorems are correct, and that it does so in a way which can be checked automatically by a machine. In addition, it has an entirely independent runtime written in just a couple of thousand lines of ISO C99 instead of Common Lisp, and a compiler written in ACL2 Core targeting aarch64.
 
 ## Terminology
 
@@ -21,15 +21,16 @@ There are several components in Boymoo, listed below with the language in which 
 Completed:
 
 * Book exporter (**ACL2**): converts ACL2 books to ACL2 Core.
-* Bootstrap runner (**C**): small, and about 10x slower than ACL2 using SBCL. See "Compiler" below for a planned faster runner.
+* Bootstrap runner (**C**): small, and about 10x slower than ACL2 using SBCL.
 * Fast runner (**C**): large, and compiles to C, but faster than the Bootstrap runner. Only intended for development of the "Prover", below.
 * Checker (**ACL2 Core**): checks proofs of ACL2 Core.
 * Independent checker (**JavaScript**): checks proofs of ACL2 Core.
 * Prover (**ACL2 Core**): assists with building proofs of ACL2 Core conjectures.
+* Compiler for aarch64 (**ACL2 Core**): compiles an ACL2 Core program into machine code, supporting Linux and macOS.
 
 Yet to do:
 
-* Compiler (**ACL2 Core**): compiles an ACL2 Core program into machine code. Platform support is tentatively planned for WASM, aarch64, RV64I + Zmmul, and x64, depending on how much effort each takes.
+* Compiler for other architectures (**ACL2 Core**): compiles an ACL2 Core program into machine code, adding potential support for WASM, RV64I + Zmmul, and x64.
 * POSIX interface (**ACL2 Core, C**): potential way to drive I/O and devices using ACL2 Core programs.
 
 The components that are implemented in ACL2 or ACL2 Core can have proofs written to prove certain correctness properties about them. These are in varying states of completion; see the rest of the repository for details.
