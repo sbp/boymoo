@@ -19,7 +19,6 @@ The theorem names are `*b2-reciprocal-minus-zero*`,
 |---|---|
 | `(b2-reciprocal-reciprocal-theorem lib name formula)` | Pair with the Step proving theorem `name` with the given formula. |
 | `(b2-reciprocal-equal-swap lib a b)` | Step proving that the equality tests on terms `a` and `b` agree in both operand orders. |
-| `(b2-reciprocal-numeric-nonzero-cases lib value evidence prove)` | Pair with the Step joining the numeric and nonzero cases for term `value`. |
 | `(b2-reciprocal-invert-unit lib unit typed)` | Pair with a reciprocal equality Step. `unit` proves a product equals one, and `typed` proves its first factor numeric. |
 | `(b2-reciprocal-invert-involutively lib goal)` | Pair with the Step for the double reciprocal equation. |
 | `(b2-reciprocal-invert-factors lib goal)` | Pair with the Step distributing the reciprocal over a product. |

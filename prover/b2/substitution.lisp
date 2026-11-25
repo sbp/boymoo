@@ -46,12 +46,6 @@
    ((step (proof-proof-by-value (library-library-proof lib) value template prove nil)))
    (b2-substitution-rewrite-opened lib step opened template)))
 
-(defun b2-substitution-result-cases (lib call template prove)
-  (proof-with-checked-results
-   ((opened (proof-proof-unfold (library-library-proof lib) call))
-    (value (b2-substitution-step-result opened)))
-   (b2-substitution-close-result-cases lib opened value template prove)))
-
 (defun b2-substitution-add-pair-projection (lib name)
   (if (assoc-equal name (b2-substitution-facts lib))
       (cons name lib)
@@ -170,7 +164,7 @@
 (defun b2-substitution-folded-equation-visit (n lib equation)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b2-substitution-folded-equation-visit")
+      '(:failure "fuel" "b2-substitution-folded-equation-visit")
     (let ((next (b2-substitution-folded-equation-step lib equation)))
       (if (eq (car next) :continue)
           (b2-substitution-folded-equation-visit (1- n) lib (cadr next))
@@ -301,7 +295,7 @@
  (defun b2-substitution-return-values-term (n term lib result collectp)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "b2-substitution-return-values-term"))
+    ((zp n) '(:failure "fuel" "b2-substitution-return-values-term"))
     ((proof-is-call term *termination-return-last*)
      (proof-with-checked-results
       ((next (b2-substitution-return-last-step term lib result collectp)))
@@ -314,17 +308,12 @@
     (t result)))
  (defun b2-substitution-return-values-args (n args lib result collectp)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "b2-substitution-return-values-args"))
+   (cond ((zp n) '(:failure "fuel" "b2-substitution-return-values-args"))
          ((endp args) result)
          (t
           (proof-with-checked-results
            ((result (b2-substitution-return-values-term (1- n) (car args) lib result collectp)))
            (b2-substitution-return-values-args (1- n) (cdr args) lib result collectp))))))
-
-(defun b2-substitution-erase-return-values-collect (term lib)
-  (proof-with-checked-results
-   ((equations (b2-substitution-return-values-term 1000000 term lib nil t)))
-   (reverse equations)))
 
 (defun b2-substitution-erase-return-values (lib definition)
   (proof-with-checked-results ((value (b2-substitution-step-result definition)))

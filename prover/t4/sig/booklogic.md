@@ -73,40 +73,18 @@ expanded along a path and `force-open` is Boolean. Use `nil` for an omitted list
 bindings.
 Induction bindings are `(variable term)` pairs in insertion order.
 Proof search can fail during term inspection or proof construction.
-The solver and theorem entry points can report `"SearchMiss"` when
+The solver and theorem entry points can report `"search-miss"` when
 they find no proof. Queries for a Step can return `nil` when none applies.
 
 | Call | Result on success |
 |---|---|
 | `(t4-booklogic-booklogic-index-fact book name clause)` | BookLogic with the eligible patterns of the named fact appended to their indexes. |
 | `(t4-booklogic-booklogic-use-arithmetic book)` | BookLogic with the arithmetic library built if needed. |
-| `(t4-booklogic-booklogic-step-limit book)` | BookLogic with both active counters decreased, or `"SearchMiss"` when a counter becomes negative. |
 | `(t4-booklogic-booklogic-branch-test book term)` | First term to split on, or `nil`. |
 | `(t4-booklogic-booklogic-induction-variables book term)` | List of candidate variables in traversal order, including repeats. |
 | `(t4-booklogic-booklogic-synchronized-selectors book formula)` | List of ordered substitution lists in recursive call and term order. |
 | `(t4-booklogic-booklogic-consequences book evidence)` | `(list steps book evidence)`, with Steps in order of first discovery. |
-| `(t4-booklogic-booklogic-adapt-arguments book term)` | `(cons pairs book)`, with the `(adapted opening)` pairs in argument order. |
-| `(t4-booklogic-booklogic-discharge-known book step evidence)` | `(list step book evidence)` after discharging the known premises. |
-| `(t4-booklogic-booklogic-known book term evidence)` | `(list step book evidence)` with any proof found in the current context. |
-| `(t4-booklogic-booklogic-fact-proof book term evidence)` | `(list step book evidence)` with the first applicable fact proof. |
-| `(t4-booklogic-booklogic-equation book term evidence)` | `(list step book evidence)` with the first applicable equality. |
-| `(t4-booklogic-booklogic-normalize book term evidence opened force-open)` | `(list step book evidence)` with an equality between the term and its normal form, if changed. |
-| `(t4-booklogic-booklogic-local-equation book term evidence opened)` | `(list step book evidence)` with a single applicable reduction. |
-| `(t4-booklogic-booklogic-count-comparison book term evidence)` | `(list step book evidence)` with a proof of a weak count comparison. |
-| `(t4-booklogic-booklogic-arithmetic-equation book formula evidence)` | `(list step book evidence)` with a proof by integer arithmetic. |
 | `(t4-booklogic-booklogic-constant book term)` | `(cons step book)` with an equality Step computing the constant when recognized. |
-| `(t4-booklogic-booklogic-congruence book formula tests extra depth)` | `(cons step book)` with a proof by equalities of arguments. |
-| `(t4-booklogic-booklogic-normalize-premise book step tests known)` | `(list contradiction book known)` with the resulting ordered list of known Steps. |
-| `(t4-booklogic-booklogic-solve book formula tests extra depth)` | `(cons step book)` with a proof under the branch tests and additional Steps. |
-| `(t4-booklogic-booklogic-induction book formula obj selectors countdown bindings)` | `(cons step book)` with a proof by induction on `obj`. `selectors` is an ordered list of selector symbols, or the one-element list `(nil)` for countdown induction. |
-| `(t4-booklogic-booklogic-mutual-result book formula)` | `(cons step book)` with a proof by simultaneous induction. |
-| `(t4-booklogic-booklogic-boolean-true book step)` | `(cons equality book)` equating a proved equality or conjunction of equalities to true. |
-| `(t4-booklogic-booklogic-constructor-equality book formula)` | `(cons step book)` with a proof by reconstruction and projection equations. |
-| `(t4-booklogic-booklogic-reconstruct-pair book formula)` | `(cons step book)` with a reconstructed pair proof. |
-| `(t4-booklogic-booklogic-nonempty-argument book formula)` | `(cons step book)` with a proof that the premise forces an argument to be nonempty. |
-| `(t4-booklogic-booklogic-implies-cons book formula)` | `(cons step book)` with a proof that the premise forces a cons. |
-| `(t4-booklogic-booklogic-nonempty-result book formula)` | `(cons step book)` with a proof that the premise forces a nonempty result. |
-| `(t4-booklogic-booklogic-theorem book formula enabled)` | `(cons step book)` with a proof of the formula and the BookLogic holding its auxiliary entries. `enabled` is the list of functions enabled by the supplied hints. |
 
 A method failure is the entire result. For calls that catch a proof search
 failure and continue with the same BookLogic, the calls
@@ -133,7 +111,7 @@ when the current definition has the stored body.
 
 | Call | Result |
 |---|---|
-| `(t4-booklogic-lookup-tree entries)` | A balanced lookup tree of alist entries with distinct keys in ACL2's lexical order. May return `Fuel`. |
+| `(t4-booklogic-lookup-tree entries)` | A balanced lookup tree of alist entries with distinct keys in ACL2's lexical order. May return `fuel`. |
 | `(t4-booklogic-lookup-entry key tree)` | The alist entry for `key`, or `nil` when absent. |
 | `(t4-booklogic-booklogic-cache-definition-sizes book)` | BookLogic with the sizes of its admitted definition bodies. May return a failure from building the tree. |
 | `(t4-booklogic-booklogic-extend-definition-sizes book definitions)` | BookLogic with size entries from the supplied `(name formals body)` triples inserted or replaced. |

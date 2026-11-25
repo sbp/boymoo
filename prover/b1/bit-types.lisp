@@ -223,7 +223,7 @@
 (defund b1-bit-types-exponent-types (n lib term)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "b1-bit-types-exponent-types"))
+   ((zp n) '(:failure "fuel" "b1-bit-types-exponent-types"))
    ((proof-is-call term *b1-bit-types-expt2*)
     (proof-with-checked-results
         ((opened (b1-bit-types-normalize lib term nil (list *b1-bit-types-expt2*)))
@@ -415,7 +415,7 @@
  (defun b1-bit-types-by-value (n lib value template recipe context)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "b1-bit-types-by-value"))
+    ((zp n) '(:failure "fuel" "b1-bit-types-by-value"))
     ((proof-is-call value *proof-if*)
      (proof-with-checked-results
          ((branches (proof-list-of-length (cdr value) 3))
@@ -455,7 +455,7 @@
  (defun b1-bit-types-integer-fix-visit (n lib value)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-bit-types-integer-fix-visit")
+       '(:failure "fuel" "b1-bit-types-integer-fix-visit")
      (proof-with-checked-results
          ((view (b1-bit-types-unfold lib value))
           (body (b1-bit-types-step-at view 2))
@@ -467,7 +467,7 @@
    (declare (ignore tests)
             (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "b1-bit-types-and-integer-leaf"))
+    ((zp n) '(:failure "fuel" "b1-bit-types-and-integer-leaf"))
     ((or (equal value *library-x*) (equal value *library-y*))
      (proof-with-checked-results
          ((negative (proof-proof-assume (library-library-proof lib) (list *b1-quotient-zip* value) nil))
@@ -484,7 +484,7 @@
  (defun b1-bit-types-and-integer (n lib expression)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-bit-types-and-integer")
+       '(:failure "fuel" "b1-bit-types-and-integer")
      (let* ((name (proof-sym "SELF-LOGAND-INTEGER" "ACL2"))
             (proof (library-library-proof lib)))
        (proof-with-checked-results
@@ -521,7 +521,7 @@
  (defun b1-bit-types-numeric-parts (n lib parts evidence)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "b1-bit-types-numeric-parts"))
+    ((zp n) '(:failure "fuel" "b1-bit-types-numeric-parts"))
     ((endp parts) (cons nil lib))
     (t (proof-with-checked-results
            ((first (b1-bit-types-numeric-type (1- n) lib *proof-integerp* (car parts) evidence))
@@ -531,7 +531,7 @@
  (defun b1-bit-types-numeric-mod-bit (n lib value evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-bit-types-numeric-mod-bit")
+       '(:failure "fuel" "b1-bit-types-numeric-mod-bit")
      (proof-with-checked-results
          ((view (b1-bit-types-bit-modulus-view lib value))
           (integral (b1-bit-types-numeric-type (1- n) lib *proof-integerp* (car view) evidence))
@@ -546,7 +546,7 @@
  (defun b1-bit-types-numeric-mod-natural (n lib value evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-bit-types-numeric-mod-natural")
+       '(:failure "fuel" "b1-bit-types-numeric-mod-natural")
      (proof-with-checked-results
          ((view (b1-bit-types-normalize lib value nil (list *b1-bit-types-imod*)))
           (mod (b1-bit-types-step-at view 2))
@@ -581,7 +581,7 @@
  (defun b1-bit-types-reverse-is-natural-consequence (n premise lib carry closed added hypothesis advanced test)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-bit-types-reverse-is-natural-consequence")
+       '(:failure "fuel" "b1-bit-types-reverse-is-natural-consequence")
      (proof-with-checked-results
          ((base (b1-bit-types-reverse-is-natural-closed-case lib carry closed premise))
           (low (proof-term-at added 1))
@@ -624,7 +624,7 @@
  (defun b1-bit-types-reverse-is-natural-library (n lib name)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-bit-types-reverse-is-natural-library")
+       '(:failure "fuel" "b1-bit-types-reverse-is-natural-library")
      (let ((proof (library-library-proof lib)))
        (if (assoc-equal name (proof-proof-facts proof))
            lib
@@ -664,7 +664,7 @@
  (defun b1-bit-types-reverse-is-natural (n lib call initial)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-bit-types-reverse-is-natural")
+       '(:failure "fuel" "b1-bit-types-reverse-is-natural")
      (let ((name (proof-sym "SELF-LOGREV1-NATURAL" "ACL2")))
        (proof-with-checked-results
            ((lib (b1-bit-types-reverse-is-natural-library (1- n) lib name))
@@ -680,7 +680,7 @@
  (defun b1-bit-types-numeric-fallback (n lib predicate value evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-bit-types-numeric-fallback")
+       '(:failure "fuel" "b1-bit-types-numeric-fallback")
      (proof-with-checked-results ((head (proof-term-at value 0)))
        (cond
         ((proof-is-call value *b1-quotient-ifix*)
@@ -708,7 +708,7 @@
  (defun b1-bit-types-numeric-type (n lib predicate value evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-bit-types-numeric-type")
+       '(:failure "fuel" "b1-bit-types-numeric-type")
      (let ((claim (list predicate value))
            (template (list predicate *proof-result*)))
        (proof-with-checked-results ((present (b1-bit-types-evidence-type claim evidence)))

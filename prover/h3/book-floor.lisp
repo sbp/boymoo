@@ -19,9 +19,6 @@
 (defun h3-book-floor-checked-pair (result)
   (if (failure-p (car result)) (car result) result))
 
-(defun h3-book-floor-checked-library (result)
-  (if (failure-p (car result)) (car result) (cdr result)))
-
 ; Carry the Library through each proof attempt so another tactic can use it.
 (defmacro h3-book-floor-with-library (lib bindings result)
   (if (endp bindings)
@@ -181,7 +178,7 @@
         ((evidence (h3-rewrite-search-context search premises))
          (equality (car (h3-rewrite-search-reduce search quotient evidence nil nil))))
       (if (not equality)
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((right (h3-book-floor-step-term equality 2))
              (normal (h3-book-arithmetic-associative-equal lib right value)))
@@ -301,9 +298,6 @@
          (lib (library-library-lemma lib *h3-book-floor-quotient-bounds* formula proof nil)))
       (cons nil lib))))
 
-(defun h3-book-floor-prove-quotient-bounds (lib)
-  (h3-book-floor-checked-library (h3-book-floor-prove-quotient-bounds-with-library lib)))
-
 (defun h3-book-floor-quotient-bounds-with-library (lib numerator-int denominator-int nonnegative positive)
   (h3-book-floor-with-library lib
       ((registration lib (if (h3-book-floor-has-lemma lib *h3-book-floor-quotient-bounds*)
@@ -317,10 +311,6 @@
        (interval (h3-book-floor-infer modus-ponens lib fact guard))
        (parts (h3-book-floor-split-interval lib interval)))
     (cons parts lib)))
-
-(defun h3-book-floor-quotient-bounds (lib numerator-int denominator-int nonnegative positive)
-  (h3-book-floor-checked-pair
-   (h3-book-floor-quotient-bounds-with-library lib numerator-int denominator-int nonnegative positive)))
 
 (defun h3-book-floor-rational-quotient-bounds-with-library (lib n-int d-int nonnegative positive reconstruction)
   (h3-book-floor-with-library lib
@@ -336,10 +326,6 @@
        (lower (h3-book-floor-infer rewrite lib lower reconstruction '(1 1 1)))
        (upper (h3-book-floor-infer rewrite lib upper reconstruction '(1 1))))
     (cons (list q-int lower upper) lib)))
-
-(defun h3-book-floor-rational-quotient-bounds (lib n-int d-int nonnegative positive reconstruction)
-  (h3-book-floor-checked-pair
-   (h3-book-floor-rational-quotient-bounds-with-library lib n-int d-int nonnegative positive reconstruction)))
 
 (defun h3-book-floor-integer-gap-with-library (lib first second strict)
   (h3-book-floor-with-library lib
@@ -361,9 +347,6 @@
        (result (h3-book-floor-infer rewrite lib difference normalize '(1 1)))
        (result (h3-book-floor-infer tidy lib result)))
     (cons result lib)))
-
-(defun h3-book-floor-integer-gap (lib first second strict)
-  (h3-book-floor-checked-pair (h3-book-floor-integer-gap-with-library lib first second strict)))
 
 (defun h3-book-floor-same-floor-interval-exclusion (i-int j-int i-hi j-lo lib rational value)
   (h3-book-floor-with-library lib
@@ -401,9 +384,6 @@
                                     (list a-number b-number b-ge-a a-ge-b))))
     (cons step lib)))
 
-(defun h3-book-floor-same-floor-interval (lib rational first second)
-  (h3-book-floor-checked-pair (h3-book-floor-same-floor-interval-with-library lib rational first second)))
-
 (defun h3-book-floor-floor-ratio (i j)
   (list *proof-times* i (list *h3-book-arithmetic-divide* j)))
 
@@ -419,7 +399,7 @@
          (reduction (h3-rewrite-search-reduce search call evidence nil nil))
          (equality (car reduction)))
       (if (not equality)
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((normal (car (h3-rewrite-search-reduce (cadr reduction) result evidence nil nil)))
              (normal (or normal (h3-book-floor-infer reflexive lib result)))
@@ -444,9 +424,6 @@
        (lower bounds (h3-book-order-bounds-bound-with-bounds bounds (library-le term term))))
     (cons (list integer lower upper) lib)))
 
-(defun h3-book-floor-integer-interval (lib integer)
-  (h3-book-floor-checked-pair (h3-book-floor-integer-interval-with-library lib integer)))
-
 (defun h3-book-floor-change-interval-value (lib interval equality)
   (proof-with-checked-results
       ((interval (proof-list-of-length interval 3))
@@ -468,10 +445,6 @@
        (cut (h3-book-floor-infer cut lib equal different))
        (step (h3-book-floor-infer front lib cut test)))
     (cons step lib)))
-
-(defun h3-book-floor-strict-from-weak (lib left right bound different)
-  (h3-book-floor-checked-pair
-   (h3-book-floor-strict-from-weak-with-library lib left right bound different)))
 
 (defun h3-book-floor-negative-floor-interval-with-library
     (lib rational divisor numerator positive reconstruction negative-n denominator-nonunit)
@@ -546,12 +519,6 @@
        (upper (h3-book-floor-infer transport lib reflected-upper high-eq)))
     (cons (list output-integer weak-left upper) lib)))
 
-(defun h3-book-floor-negative-floor-interval (lib rational divisor numerator positive reconstruction
-                                               negative-n denominator-nonunit)
-  (h3-book-floor-checked-pair
-   (h3-book-floor-negative-floor-interval-with-library
-    lib rational divisor numerator positive reconstruction negative-n denominator-nonunit)))
-
 (defun h3-book-floor-prove-floor-bounds-lift (premises interval lib call ratio)
   (proof-with-checked-results
       ((whole (proof-term-at interval 0))
@@ -608,9 +575,6 @@
          (lib (library-library-lemma lib *h3-book-floor-floor-bounds* formula proof nil)))
       (cons nil lib))))
 
-(defun h3-book-floor-prove-floor-bounds (lib)
-  (h3-book-floor-checked-library (h3-book-floor-prove-floor-bounds-with-library lib)))
-
 (defun h3-book-floor-floor-bounds-with-library (lib call rational)
   (h3-book-floor-with-library lib
       ((registration lib (if (h3-book-floor-has-lemma lib *h3-book-floor-floor-bounds*)
@@ -622,9 +586,6 @@
        (whole (h3-book-floor-infer conjunct lib facts))
        (bounds (h3-book-floor-infer conjunct lib (cadr whole))))
     (cons (list (car whole) (car bounds) (cadr bounds)) lib)))
-
-(defun h3-book-floor-floor-bounds (lib call rational)
-  (h3-book-floor-checked-pair (h3-book-floor-floor-bounds-with-library lib call rational)))
 
 (defun h3-book-floor-floor-default (lib call not-rational)
   (proof-with-checked-results
@@ -658,9 +619,6 @@
        (args (h3-book-floor-argument-tail call))
        (step (library-library-cite lib *h3-book-floor-floor-integer* args nil)))
     (cons step lib)))
-
-(defun h3-book-floor-floor-is-integer (lib call)
-  (h3-book-floor-checked-pair (h3-book-floor-floor-is-integer-with-library lib call)))
 
 (defun h3-book-floor-exact-floor (lib call ratio-integer)
   (proof-with-checked-results
@@ -708,7 +666,7 @@
                   (equation (h3-book-floor-infer rewrite lib ratio reciprocal '(1 2 2)))
                   (product (h3-event-counts-multiply-zero lib left)))
                (h3-book-floor-infer chain lib equation (list product))))
-            (t '(:failure "Unproved" ""))))))
+            (t '(:failure "unproved" ""))))))
 
 (defun h3-book-floor-floor-zero-by-argument (lib call absent)
   (proof-with-checked-results
@@ -902,7 +860,7 @@
        (position (if (equal i term) "I" "J"))
        (name (proof-sym (concatenate 'string "FLOOR-WITH-" position "-NOT-RATIONAL") "ACL2")))
     (if (not (h3-book-floor-has-fact lib name))
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
           ((rule (h3-book-floor-infer fact lib name
                     (list (list (proof-sym "I" "ACL2") i) (list (proof-sym "J" "ACL2") j))))
@@ -938,7 +896,7 @@
                  (h3-book-order-bounds-search context) (proof-neg (proof-eq j *proof-zero*))
                  (h3-book-order-bounds-evidence context))))
     (if (not notzero)
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (h3-book-floor-with-library lib
           ((strict lib (h3-book-floor-scaled-strict lib j j-number zero-numeric notzero direction context))
            (signs lib (h3-book-signs-sign-evidence-with-library lib j-number direction strict))
@@ -959,10 +917,6 @@
            (result (h3-book-floor-infer rewrite lib lower equation '(1 1)))
            (step (h3-book-floor-infer tidy lib result)))
         (cons step lib)))))
-
-(defun h3-book-floor-floor-scaled-bound (lib clause call direction context lower)
-  (h3-book-floor-checked-pair
-   (h3-book-floor-floor-scaled-bound-with-library lib clause call direction context lower)))
 
 (defun h3-book-floor-equivalent-booleans-start-with-library (lib p)
   (h3-book-floor-with-library lib
@@ -998,19 +952,6 @@
          (negative (h3-book-floor-infer chain lib nil-p (list symmetric))))
       (h3-book-floor-infer cases lib p positive negative))))
 
-(defun h3-book-floor-equivalent-booleans-with-library (lib p q forward backward)
-  (h3-book-floor-with-library lib
-      ((start lib (h3-book-floor-equivalent-booleans-start-with-library lib p))
-       (positive lib (h3-book-floor-equivalent-booleans-positive-with-library lib (cadr start) forward))
-       (no (h3-book-floor-infer assume lib p nil))
-       (assumption (h3-book-floor-infer assume lib q t))
-       (result (h3-book-floor-equivalent-booleans-finish lib p q positive no backward)))
-    (cons result lib)))
-
-(defun h3-book-floor-equivalent-booleans (lib p q forward backward)
-  (h3-book-floor-checked-pair
-   (h3-book-floor-equivalent-booleans-with-library lib p q forward backward)))
-
 (defun h3-book-floor-floor-sign-forward (proof lib rational whole upper q)
   (h3-book-floor-with-library lib
       ((zero (library-library-axiom lib "INTEGER-0" nil))
@@ -1042,9 +983,6 @@
        (backward lib (h3-book-floor-floor-sign-backward given lib rational whole lower p))
        (step (h3-book-floor-equivalent-booleans-finish lib p q positive no backward)))
     (cons step lib)))
-
-(defun h3-book-floor-floor-sign (lib call rational interval)
-  (h3-book-floor-checked-pair (h3-book-floor-floor-sign-with-library lib call rational interval)))
 
 (defun h3-book-floor-compare-floor-zero-product (lib sa sb ratio evidence)
   (let* ((product-sign (library-lt ratio *proof-zero*))
@@ -1100,9 +1038,6 @@
        (number (h3-book-signs-number lib a-rat)))
     (h3-book-signs-each-sign-with-library lib number h3-book-floor-apply-sign-case
       h3-book-floor-compare-floor-zero-numerator-case a-rat b-rat a b ratio floor-signs goal)))
-
-(defun h3-book-floor-compare-floor-zero (lib goal context)
-  (h3-book-floor-checked-pair (h3-book-floor-compare-floor-zero-with-library lib goal context)))
 
 (defun h3-book-floor-first-noncomplex (evidence)
   (if (endp evidence)
@@ -1194,9 +1129,6 @@
        (step (h3-book-floor-infer cases lib test yes no)))
     (cons step lib)))
 
-(defun h3-book-floor-floor-nonnegative (lib goal guard want-type)
-  (h3-book-floor-checked-pair (h3-book-floor-floor-nonnegative-with-library lib goal guard want-type)))
-
 (defun h3-book-floor-first-floor (terms)
   (cond ((endp terms) '(:failure "failure" ""))
         ((proof-is-call (car terms) *h3-book-floor-floor*) (car terms))
@@ -1262,9 +1194,6 @@
                   given lib call product ratio j i law context))
        (step (h3-book-floor-equivalent-booleans-finish lib p q positive no backward)))
     (cons step lib)))
-
-(defun h3-book-floor-floor-integral-ratio (lib goal context)
-  (h3-book-floor-checked-pair (h3-book-floor-floor-integral-ratio-with-library lib goal context)))
 
 (defun h3-book-floor-self-less (lib goal)
   (if (not (proof-is-call goal *proof-equal*))
@@ -1340,7 +1269,7 @@
             (j-absent
              (proof-with-checked-results ((rational (h3-book-order-bounds-rational context i)))
                (h3-book-floor-floor-mixed-types lib call j-absent rational)))
-            (t '(:failure "Unproved" ""))))))
+            (t '(:failure "unproved" ""))))))
 
 (defun h3-book-floor-theorem-mixed-calls (lib context calls)
   (if (endp calls)
@@ -1464,5 +1393,3 @@
                (proof-with-checked-results ((result (h3-rewrite-implication lib guard step)))
                  (cons result lib))))))))
 
-(defun h3-book-floor-floor-theorem (lib name formula)
-  (h3-book-floor-checked-pair (h3-book-floor-floor-theorem-with-library lib name formula)))

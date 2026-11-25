@@ -18,9 +18,6 @@
 (defun worklist-statement-names (statement)
   (third statement))
 
-(defun worklist-statement-package (statement)
-  (fourth statement))
-
 (defun worklist-name-text (symbol)
   (reader-write symbol))
 

@@ -168,7 +168,7 @@
 (defun h4-book-accumulator-mapped-descent-head-shape (tests p subject head parent nonpair)
   (declare (xargs :measure (acl2-count tests)))
   (if (endp tests)
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (let* ((proof (library-library-proof p))
            (step (car tests)))
       (proof-with-checked-results
@@ -193,7 +193,7 @@
            (cons *library-car* 2))
           ((equal output (list *proof-cons* (list *library-cdr* head) tail))
            (cons *library-cdr* 3))
-          (t '(:failure "Unproved" "")))))
+          (t '(:failure "unproved" "")))))
 
 (defun h4-book-accumulator-ordinal-comparison (p step)
   (proof-with-checked-results
@@ -206,7 +206,7 @@
         (head (list *library-car* subject)))
     (if (not (and (proof-compound child) (equal (cdr child) (list subject))
                   (assoc-equal (car child) (proof-proof-definitions proof))))
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
           ((opened (h4-book-accumulator-opened-call p child (list parent)))
            (output (proof-rewritten-term opened))
@@ -243,14 +243,14 @@
   (let ((proof (library-library-proof p)))
     (proof-with-checked-results ((parent (proof-find-evidence tests (list (list *proof-consp* subject)))))
       (if (not parent)
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (let* ((bindings (h4-book-accumulator-bindings (cdr executable) (cdr actual)))
                (mapping (proof-bindings-table bindings nil))
                (child (table-get mapping subject nil)))
           (proof-with-checked-results
               ((less (h4-book-accumulator-accumulator-induction-descend p subject child tests parent)))
             (if (and (consp changes) (not (equal (car changes) bindings)))
-                '(:failure "Unproved" "")
+                '(:failure "unproved" "")
               (proof-with-checked-results
                   ((smaller (proof-subst formula mapping))
                    (decrease (proof-step-first less))
@@ -288,7 +288,7 @@
             ((update (h4-book-accumulator-accumulator-induction-update-p
                       actual described executable logical accumulator)))
           (if (not update)
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (h4-book-accumulator-accumulator-induction-advance
              p formula executable subject tests changes implementation lifted actual)))))))
 
@@ -305,7 +305,7 @@
      (n tests p formula executable logical accumulator subject changes)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "h4-book-accumulator-accumulator-induction-compare")
+       '(:failure "fuel" "h4-book-accumulator-accumulator-induction-compare")
      (let ((proof (library-library-proof p)))
        (proof-with-checked-results
            ((implementation (h4-book-accumulator-opened-call p executable tests))
@@ -317,7 +317,7 @@
                   (h4-book-accumulator-accumulator-induction-finish
                    p formula executable logical accumulator subject tests changes
                    implementation specification actual described))
-                 ((equal (len tests) 4) '(:failure "Unproved" ""))
+                 ((equal (len tests) 4) '(:failure "unproved" ""))
                  (t
                   (proof-with-checked-results
                       ((test (h4-book-accumulator-accumulator-induction-test remaining))
@@ -333,7 +333,7 @@
      (n sign tests p formula executable logical accumulator subject changes)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "h4-book-accumulator-accumulator-induction-compare-branch")
+       '(:failure "fuel" "h4-book-accumulator-accumulator-induction-compare-branch")
      (h4-book-accumulator-accumulator-induction-compare
       (1- n) (append tests (list sign)) p formula executable logical accumulator subject changes))))
 
@@ -352,7 +352,7 @@
   (if (endp subjects)
       nil
     (let ((result (h4-book-accumulator-accumulator-induction p formula match (car subjects))))
-      (if (and (failure-p result) (equal (cadr result) "Unproved"))
+      (if (and (failure-p result) (equal (cadr result) "unproved"))
           (h4-book-accumulator-reverse-accumulator-proof-try (cdr subjects) p formula match)
         result))))
 

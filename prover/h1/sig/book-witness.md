@@ -9,9 +9,9 @@ The formulas are ordered `(name formula)` pairs.
 
 | Call | Result | Failure |
 |---|---|---|
-| `(h1-book-witness-witness-entry proof raw fields)` | `(cons entry proof)` with the witness entry and the Prover after its auxiliary definitions and lemmas. | `Unproved` for unsupported constraints, or a failure from reading terms or constructing proofs. The failure is the entire result. |
+| `(h1-book-witness-witness-entry proof raw fields)` | `(cons entry proof)` with the witness entry and the Prover after its auxiliary definitions and lemmas. | `unproved` for unsupported constraints, or a failure from reading terms or constructing proofs. The failure is the entire result. |
 | `(h1-book-witness-evaluator-equations functions formulas)` | Alist from evaluator names to the same list of `(formula-name operation)` pairs. Each equation list is in formula order. The evaluator names are in canonical symbol order and a missing operation is `nil`. Returns `nil` when the constraints do not describe a pair of binary evaluators. | A failure from reading terms or checking selector paths. |
-| `(h1-book-witness-evaluator-proof proof formula evaluators)` | Step proving `formula`. The caller supplies its `evaluators` alist as given by `evaluator-equations`, extended by the declarations in scope. | `Unproved` for absent equations or a failed search, or a failure from constructing proofs. |
+| `(h1-book-witness-evaluator-proof proof formula evaluators)` | Step proving `formula`. The caller supplies its `evaluators` alist as given by `evaluator-equations`, extended by the declarations in scope. | `unproved` for absent equations or a failed search, or a failure from constructing proofs. |
 
 `rename-calls` receives a term and an alist from old to new function
 heads. It preserves the order of actual arguments and recurses into

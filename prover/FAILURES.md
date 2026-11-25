@@ -22,9 +22,9 @@ A kind other than `"failure"` is kept only where some caller tests for it and do
 
 | Kind | Meaning | Message |
 |---|---|---|
-| `"Fuel"` | A recursion with a counter ran out of its count (see below). | The name of the function. |
-| `"Unproved"` | The tactic ran to its end and has no proof. | Empty, or the goal's name. |
-| `"Unsupported"`, `"UnsupportedApplication"` | The statement is of a form this tactic does not handle. | Empty. |
+| `"fuel"` | A recursion with a counter ran out of its count (see below). | The name of the function. |
+| `"unproved"` | The tactic ran to its end and has no proof. | Empty, or the goal's name. |
+| `"unsupported"`, `"unsupported-application"` | The statement is of a form this tactic does not handle. | Empty. |
 | A kind of a set's own | Listed in that set's notes, with the function that tests for it. | Empty. |
 
 The shared books (`basics` through `descent`) return these kinds, and a set may test for them by name:
@@ -42,7 +42,7 @@ Some sets also name `"stop"`, `"recursion"`, `"lookup"`, `"coding"`, `"decoding"
 
 ## Fuel
 
-Every function is in logic mode and ACL2 admits it with at most a declared measure. A recursion that has no such measure takes a first argument `n`, a natural number that every recursive call decreases, and returns `(:failure "Fuel" "NAME")` when it is 0. The caller at the top passes `1000000`.
+Every function is in logic mode and ACL2 admits it with at most a declared measure. A recursion that has no such measure takes a first argument `n`, a natural number that every recursive call decreases, and returns `(:failure "fuel" "NAME")` when it is 0. The caller at the top passes `1000000`.
 
 ## What a message may say
 

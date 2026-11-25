@@ -29,8 +29,6 @@ only a Search and uses its Proof.
 | `h2-search-rule-from-fact` | `proof`, `name` | Rules in the order visited by the generator. May return a failure a lookup or term error. |
 | `h2-search-rule-from-fact-descend` | `formula`, `action`, `conditions`, `name` | The Rules for that formula in the generator's order. May return a failure a term error. |
 | `h2-search-rule-apply` | `rule`, `search`, `term`, `context`, `active`, `rewrite` | The first successful instance Step or `nil`, paired with the resulting Context. May return a failure. |
-| `h2-search-rule-complete` | `rule`, `bindings`, `context` | Completed binding maps in generator order. `rule-apply` consumes them lazily and stops at the first successful instance. May return a failure or exhaust fuel. |
-| `h2-search-rule-prove-instance` | `rule`, `search`, `context`, `active`, `bindings` | The Step or `nil`, paired with the resulting Context. May return a failure. |
 
 Each of `h2-search-rule-name`, `h2-search-rule-pattern`, `h2-search-rule-action`, `h2-search-rule-conditions`, `h2-search-rule-required`, and `h2-search-rule-id` takes one Rule and returns its named field. `h2-search-rule-with-id` takes a Rule and a replacement identity. A caller that builds additional rule indexes may give their Rules a distinct identity with this function.
 
@@ -49,17 +47,13 @@ Each of `h2-search-rule-name`, `h2-search-rule-pattern`, `h2-search-rule-action`
 | `h2-search-search-truth` | `search`, `term`, `context`, `active` | A Step for either sign, or `nil`, paired with the resulting Context. May return a failure. |
 | `h2-search-search-apply-rules` | `search`, `term`, `context`, `active`, `rewrite` | A Step or `nil`, paired with the resulting Context. May return a failure. |
 | `h2-search-search-primitive` | `search`, `term`, `context` | A primitive computation or selector Step, `nil`, or a failure. |
-| `h2-search-search-normalize` | `search`, `term`, `context`, `opened`, `active` | A reduction equality Step or `nil`, paired with the resulting Context. May return a failure. |
 | `h2-search-search-reduce` | `search`, `term`, `context`, `opened`, `active` | The reduction without first registering the normalization query, paired with the resulting Context. May return a failure. |
-| `h2-search-search-can-open` | `search`, `term`, `opened` | Whether the term's definition can be opened, or a failure. |
 | `h2-search-search-remove-wrappers` | `search`, `term` | Equality Step for removing lambda applications and `RETURN-LAST`, `nil`, or a failure. |
 | `h2-search-search-learn` | `search`, `step`, `context`, `opened`, `seen` | `(cons context seen)` with the resulting Context and set of seen literals, or a failure. |
-| `h2-search-search-learn-oriented-equality` | `search`, `step`, `context` | The resulting Context, or a failure. |
 | `h2-search-search-rewrite-result-in-argument` | `search`, `step`, `index`, `context` | The Step with known equalities applied inside the indexed argument, or a failure. |
 | `h2-search-search-rewrite-result-in-argument-rewrite` | `term`, `place`, `inside`, `step`, `search`, `context` | The Step after rewriting the given term and its arguments, or a failure. |
 | `h2-search-search-deduce` | `search`, `term`, `context`, `active` | A Step or `nil`, paired with the resulting Context. May return a failure. |
-| `h2-search-search-find-proof` | `search`, `term`, `context`, `active` | The proof without first registering the deduction query, paired with the resulting Context. May return a failure. |
-| `h2-search-search-solve` | `search`, `formula`, seed Steps, explicit case terms | The Step for `formula`, or a failure including `Unproved` when rewriting and splitting fail. Supply `nil nil` for omitted seeds and cases. |
+| `h2-search-search-solve` | `search`, `formula`, seed Steps, explicit case terms | The Step for `formula`, or a failure including `unproved` when rewriting and splitting fail. Supply `nil nil` for omitted seeds and cases. |
 | `h2-search-search-introduce` | `search`, implication term, conclusion Step | The implication Step, or a failure. |
 | `h2-search-search-induction` | `search`, `formula`, `measure`, substitution lists, ordinal Step, case terms | The induction Step, or a failure. Supply `nil` for omitted cases. |
 | `h2-search-search-list-induction` | `search`, `formula`, `variable`, additional substitution pairs, `depth` | The list induction Step, or a failure. Supply `nil 1` for the defaults. |
@@ -76,11 +70,7 @@ Pass `nil` for omitted `opened`, `active` and `seen` arguments, and `nil` for th
 
 A reply to `:before` is `:base` to call the base implementation, `:after` to run the base implementation and request a reply to its result, or `(:return result)` to supply the method's result. An `:after` request carries the same operation and arguments and the base result in its last field. Its reply is `(:return result)` or `:base` to retain the base result. Calls from the base implementations still use the overrides. Failures from a base implementation propagate directly.
 
-`h2-search-request-search` returns the Search captured when the request was made. Its reply list is empty. The captured Search follows the base result in the request. This supplies the configuration and Library of an inner call, including when they differ from the initiating call. `h2-search-search-with-hook-data` takes a Search and arbitrary caller data and returns the Search with that data stored in an optional field following `replies`. `h2-search-search-hook-data` reads this field, with `nil` when absent. Rule configuration and Library replacement retain this data.
-
 `h2-search-search-call-with-remainder` takes a Search, an operation keyword, and the operation's argument list after the Search. `:rule-apply` and `:rule-prove-instance` put the Rule first in that list. The keyword names a Search operation such as `:solve`, `:normalize`, or `:list-induction`. A completed call returns `(cons value search)` with the unused replies in that Search. A request or failure is returned in place of the pair. `h2-search-stopped-p` recognizes both forms.
-
-`h2-search-search-solve-visit` takes seed Steps, the Search, the formula, the explicit case terms, and the remaining split limit. It returns `(cons step remaining)` with the remaining split limit after visiting the branch, or a failure or request.
 
 `h2-search-search-call-with-outcome` takes the same arguments as `h2-search-search-call-with-remainder`. It returns `(cons value search)` for both successful values and failures, with the failure in the value position and the unused replies in the Search. A request is the entire result. The caller can handle the failure and continue with the remaining replies.
 

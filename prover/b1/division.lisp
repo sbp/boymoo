@@ -207,7 +207,7 @@
 (defun b1-division-normalize-zero-products-replay (n lib term rules provep replies result)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-division-normalize-zero-products-replay")
+      '(:failure "fuel" "b1-division-normalize-zero-products-replay")
     (cond ((failure-p result) result)
           ((b1-logic-call-p result)
            (let* ((current (b1-logic-call-library result))

@@ -28,7 +28,7 @@
          (floor-type (library-library-cite lib "FLOOR-IS-INTEGER" (list dividend divisor) nil))
          (literal (proof-step-first floor-type)))
       (if (not (equal literal (library-integer (list *t2-floor-floor* dividend divisor))))
-          '(:failure "RecipeMismatch" "")
+          '(:failure "recipe-mismatch" "")
         (proof-with-checked-results
             ((step (t2-power-join lib (list floor-type floor-nonnegative floor-smaller)))
              (claim (proof-step-first step))
@@ -256,7 +256,7 @@
     (proof-with-checked-results ((name (proof-term-at (car definitions) 0)))
       (let ((entry (assoc-equal name measures)))
         (cond
-         ((not entry) '(:failure "MissingBinding" ""))
+         ((not entry) '(:failure "missing-binding" ""))
          ((not (proof-is-call (cdr entry) *library-count*)) (cons nil lib))
          (t
           (let ((measure (cdr entry)))

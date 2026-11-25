@@ -36,9 +36,6 @@
                       (cons ,name ,library)
                     ,next)))))))
 
-(defun h3-book-power-products-checked-pair (result)
-  (if (failure-p (car result)) (car result) result))
-
 (defun h3-book-power-products-step-at (step index)
   (proof-with-checked-results ((literal (proof-step-first step)))
     (proof-term-at literal index)))
@@ -107,10 +104,6 @@
        (bound (h3-book-powers-nonnegative-integer library opposite positive)))
     (cons (list opposite bound) library)))
 
-(defun h3-book-power-products-reflect-index (library negative integer)
-  (h3-book-power-products-checked-pair
-   (h3-book-power-products-reflect-index-with-library library negative integer)))
-
 (defun h3-book-power-products-compose-goal (base first second)
   (proof-eq (h3-book-powers-power (h3-book-powers-power base first) second)
             (h3-book-powers-power base (list *proof-times* first second))))
@@ -136,10 +129,6 @@
              library source-term (list *proof-times* m n) (list first second)) :pair)
        (step (proof-proof-chain (library-library-proof library) source (list sum))))
     (cons step library)))
-
-(defun h3-book-power-products-predecessor-multiple (library first second child)
-  (h3-book-power-products-checked-pair
-   (h3-book-power-products-predecessor-multiple-with-library library first second child)))
 
 (defun h3-book-power-products-product-factor (product position)
   (cond ((natp position) (proof-term-at product position))
@@ -232,10 +221,6 @@
                                         formula proof nil) :library))
       (cons nil library))))
 
-(defun h3-book-power-products-prove-natural-distribution (library)
-  (let ((result (h3-book-power-products-prove-natural-distribution-with-library library)))
-    (if (failure-p (car result)) (car result) (cdr result))))
-
 (defun h3-book-power-products-natural-distribution-with-library (library b b-nz c c-nz n bound)
   (let* ((name (proof-sym (concatenate 'string "SELF-" *h3-book-power-products-distribute*)
                           "ACL2"))
@@ -254,10 +239,6 @@
              (premises (h3-book-floor-conjunct-proof library (list b b-nz c c-nz n bound)))
              (step (proof-proof-modus-ponens (library-library-proof library) theorem premises)))
           (cons step library))))))
-
-(defun h3-book-power-products-natural-distribution (library b b-nz c c-nz n bound)
-  (h3-book-power-products-checked-pair
-   (h3-book-power-products-natural-distribution-with-library library b b-nz c c-nz n bound)))
 
 (defun h3-book-power-products-distribution-inverses
     (library inverted bases position index below)
@@ -311,10 +292,6 @@
                   library inverted (list (list b b-nz) (list c c-nz)) 1 n below) :pair)
        (step (proof-proof-cases (library-library-proof library) test inverted nonnegative)))
     (cons step library)))
-
-(defun h3-book-power-products-integer-distribution (library b b-nz c c-nz n)
-  (h3-book-power-products-checked-pair
-   (h3-book-power-products-integer-distribution-with-library library b b-nz c c-nz n)))
 
 (defun h3-book-power-products-distribute-power-default (position fixed status library goal a b n)
   (let* ((target (cadr goal))
@@ -371,10 +348,6 @@
                      library)) :pair)
          (step (proof-proof-cases (library-library-proof library) test yes no)))
       (cons step library))))
-
-(defun h3-book-power-products-distribute-power (library a b n)
-  (h3-book-power-products-checked-pair
-   (h3-book-power-products-distribute-power-with-library library a b n)))
 
 (defun h3-book-power-products-power-reciprocal-base-numeric
     (base-type nonzero library base reciprocal index target term final)
@@ -447,10 +420,6 @@
             fixed status library base reciprocal index target term final)
            library))))
 
-(defun h3-book-power-products-power-reciprocal-base (library base index)
-  (h3-book-power-products-checked-pair
-   (h3-book-power-products-power-reciprocal-base-with-library library base index)))
-
 (defun h3-book-power-products-prove-natural-composition-empty (zero library target second)
   (let ((proof (library-library-proof library)))
     (proof-with-checked-results
@@ -515,10 +484,6 @@
                                         formula theorem nil) :library))
       (cons nil library))))
 
-(defun h3-book-power-products-prove-natural-composition (library)
-  (let ((result (h3-book-power-products-prove-natural-composition-with-library library)))
-    (if (failure-p (car result)) (car result) (cdr result))))
-
 (defun h3-book-power-products-natural-composition-with-library (library base nonzero first second bound)
   (let* ((name (proof-sym (concatenate 'string "SELF-" *h3-book-power-products-compose*)
                           "ACL2"))
@@ -537,10 +502,6 @@
              (premises (h3-book-floor-conjunct-proof library (list base nonzero first second bound)))
              (step (proof-proof-modus-ponens (library-library-proof library) theorem premises)))
           (cons step library))))))
-
-(defun h3-book-power-products-natural-composition (library base nonzero first second bound)
-  (h3-book-power-products-checked-pair
-   (h3-book-power-products-natural-composition-with-library library base nonzero first second bound)))
 
 (defun h3-book-power-products-integer-composition-with-library (library base nonzero first second)
   (h3-book-power-products-with-results library
@@ -574,10 +535,6 @@
        (negative-proof (proof-proof-chain (library-library-proof library) inverted (list flipped)))
        (step (proof-proof-cases (library-library-proof library) test negative-proof nonnegative)))
     (cons step library)))
-
-(defun h3-book-power-products-integer-composition (library base nonzero first second)
-  (h3-book-power-products-checked-pair
-   (h3-book-power-products-integer-composition-with-library library base nonzero first second)))
 
 (defun h3-book-power-products-compose-power-default-first-zero (zero library base first m n target)
   (h3-book-power-products-with-results library
@@ -652,10 +609,6 @@
      (fixed status)
      (h3-book-power-products-compose-power-default fixed status library base first second m n target))))
 
-(defun h3-book-power-products-compose-power (library base first second)
-  (h3-book-power-products-checked-pair
-   (h3-book-power-products-compose-power-with-library library base first second)))
-
 (defun h3-book-power-products-goal-arguments (value)
   (if (equal (len value) 3)
       (cdr value)
@@ -724,6 +677,3 @@
                     result)
                   library)))))))
 
-(defun h3-book-power-products-power-products-theorem (library formula)
-  (h3-book-power-products-checked-pair
-   (h3-book-power-products-power-products-theorem-with-library library formula)))

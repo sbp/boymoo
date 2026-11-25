@@ -186,7 +186,7 @@
 (defun h4-lexicographic-with-constructor (n p term evidence expand rewrites establish pending)
   (declare (xargs :measure (nfix n)))
   (cond ((eq (car pending) :done) (cdr pending))
-        ((zp n) '(:failure "Fuel" "h4-lexicographic-with-constructor"))
+        ((zp n) '(:failure "fuel" "h4-lexicographic-with-constructor"))
         (t (h4-lexicographic-with-constructor
             (1- n) p term evidence expand rewrites establish
             (h4-lexicographic-constructor-reply p term evidence expand

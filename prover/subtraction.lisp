@@ -158,6 +158,3 @@
                (cons (list (car result) latest-rulers) latest-lib)))
           (cons (list nil rulers) lib)))))))
 
-(defun subtraction-subtraction-decrease (lib goal rulers)
-  (proof-with-checked-results ((result (subtraction-subtraction-decrease-with-rulers lib goal rulers)))
-   (cons (caar result) (cdr result))))

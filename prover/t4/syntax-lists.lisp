@@ -32,7 +32,7 @@
 
 (defun t4-syntax-lists-prove (n lib term evidence definitions)
   (let ((result (if (zp n)
-                    '(:failure "Fuel" "t4-syntax-lists-prove")
+                    '(:failure "fuel" "t4-syntax-lists-prove")
                   (t4-ordinals-ordinals-prove lib term evidence definitions))))
     (if (failure-p result)
         (cons result lib)
@@ -59,7 +59,7 @@
 (defun t4-syntax-lists-open-body-visit (n proof equation)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-syntax-lists-open-body-visit")
+      '(:failure "fuel" "t4-syntax-lists-open-body-visit")
     (let ((result (t4-syntax-lists-open-body-step proof equation)))
       (if (eq (car result) :open-body)
           (t4-syntax-lists-open-body-visit (1- n) proof (cadr result))
@@ -79,14 +79,14 @@
     (if (not (member-equal test (list (list *t4-syntax-lists-atom* obj)
                                      (list *t4-syntax-lists-endp* obj)
                                      (list *proof-consp* obj))))
-        '(:failure "InferenceMismatch" "")
+        '(:failure "inference-mismatch" "")
       (proof-with-checked-results ((literal (proof-step-first shape)))
         (let* ((cons-test (list *proof-consp* obj))
                (positive (equal literal cons-test))
                (sign (if (equal (car test) *proof-consp*) positive (not positive))))
           (if (or positive (equal literal (proof-neg cons-test)))
               (list equation (if sign test (proof-neg test)))
-            '(:failure "InferenceMismatch" "")))))))
+            '(:failure "inference-mismatch" "")))))))
 
 (defun t4-syntax-lists-project-one (lib equation pair name)
   (proof-with-checked-results
@@ -143,12 +143,12 @@
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results ((call (proof-step-first equivalence)))
       (if (not (proof-is-call call *t4-syntax-lists-iff*))
-          '(:failure "InferenceMismatch" "")
+          '(:failure "inference-mismatch" "")
         (proof-with-checked-results
             ((antecedent (proof-term-at call 1))
              (literal (proof-step-first premise)))
           (if (not (equal antecedent literal))
-              '(:failure "InferenceMismatch" "")
+              '(:failure "inference-mismatch" "")
             (proof-with-checked-results
                 ((opening (proof-proof-unfold proof call))
                  (unfolded (proof-proof-rewrite proof equivalence opening '(1)))
@@ -232,7 +232,7 @@
 (defun t4-syntax-lists-syntax-type-visit (n lib call premises contextual replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      (list '(:failure "Fuel" "t4-syntax-lists-syntax-type-visit") lib replies)
+      (list '(:failure "fuel" "t4-syntax-lists-syntax-type-visit") lib replies)
     (let ((known (assoc-equal call premises)))
       (if known
           (list (cdr known) lib replies)
@@ -247,7 +247,7 @@
                                             contextual replies))
              ((or (and (not element-type) (not (equal operator *t4-syntax-lists-term*)))
                   (not (proof-is-call datum *proof-cons*)))
-              (list '(:failure "SearchMiss" "")
+              (list '(:failure "search-miss" "")
                     lib replies))
              (t
               (t4-syntax-lists-with-replies
@@ -272,7 +272,7 @@
                           (args (cadr fields)))
                       (if (or (not (proof-is-call tag *proof-quote*))
                               (equal tag (proof-quote *proof-quote*)))
-                          (list '(:failure "SearchMiss" "") lib replies)
+                          (list '(:failure "search-miss" "") lib replies)
                         (t4-syntax-lists-with-replies
                             ((body (t4-syntax-lists-step-at equation 2))
                              (test (proof-term-at body 1))
@@ -302,36 +302,27 @@
                           (list (proof-proof-true-from-eq (library-library-proof lib) joined)
                                 lib replies)))))))))))))))
 
-(defun t4-syntax-lists-syntax-type (lib call premises)
-  (t4-syntax-lists-result (t4-syntax-lists-syntax-type-visit 1000000 lib call premises nil nil)))
-
-(defun t4-syntax-lists-syntax-type-with-replies (lib call premises replies)
-  (t4-syntax-lists-result (t4-syntax-lists-syntax-type-visit 1000000 lib call premises t replies)))
-
 (defun t4-syntax-lists-evaluate-run (lib call premises replies)
   (t4-syntax-lists-with-replies
       ((equation (t4-syntax-lists-request lib replies :evaluator-equation (list call premises))
                  :recipe))
     (if (not equation)
-        (list '(:failure "SearchMiss" "")
+        (list '(:failure "search-miss" "")
               lib replies)
       (t4-syntax-lists-with-replies ((pair (proof-term-at call 1)))
         (list (t4-syntax-lists-projections lib equation pair) lib replies)))))
-
-(defun t4-syntax-lists-evaluate (lib call premises replies)
-  (t4-syntax-lists-result (t4-syntax-lists-evaluate-run lib call premises replies)))
 
 (defun t4-syntax-lists-iff-transitive-run (lib first second replies)
   (t4-syntax-lists-with-replies
       ((first-head (t4-syntax-lists-step-at first 0))
        (second-head (t4-syntax-lists-step-at second 0)))
     (if (not (and (equal first-head second-head) (equal second-head *t4-syntax-lists-iff*)))
-        (list '(:failure "InferenceMismatch" "") lib replies)
+        (list '(:failure "inference-mismatch" "") lib replies)
       (t4-syntax-lists-with-replies
           ((middle (t4-syntax-lists-step-at first 2))
            (next-middle (t4-syntax-lists-step-at second 1)))
         (if (not (equal middle next-middle))
-            (list '(:failure "InferenceMismatch" "") lib replies)
+            (list '(:failure "inference-mismatch" "") lib replies)
           (t4-syntax-lists-with-replies
               ((premise (t4-division-combine lib (list first second)))
                (left (t4-syntax-lists-step-at first 1))
@@ -342,7 +333,7 @@
                       lib replies :fact-proof (list (list *library-implies* hypothesis thesis) nil))
                      :recipe))
             (if (not rule)
-                (list '(:failure "SearchMiss" "") lib replies)
+                (list '(:failure "search-miss" "") lib replies)
               (list (proof-proof-modus-ponens (library-library-proof lib) rule premise)
                     lib replies))))))))
 
@@ -355,12 +346,8 @@
                     (list *t4-syntax-lists-or-list* (list list-evaluator clause environment)))))
     (t4-syntax-lists-with-replies
         ((fact (t4-syntax-lists-request lib replies :fact-proof (list term nil)) :recipe))
-      (list (or fact '(:failure "SearchMiss" ""))
+      (list (or fact '(:failure "search-miss" ""))
             lib replies))))
-
-(defun t4-syntax-lists-disjunction (lib evaluator list-evaluator clause environment replies)
-  (t4-syntax-lists-result
-   (t4-syntax-lists-disjunction-run lib evaluator list-evaluator clause environment replies)))
 
 (defun t4-syntax-lists-induct (lib obj result formula bindings)
   (proof-with-checked-results ((ordinal (library-library-builtin lib 1 obj)))
@@ -557,7 +544,7 @@
          (source (t4-syntax-lists-spine-run lib syntax cons-proof t replies) :recipe)
          (pair (t4-syntax-lists-step-at source 2)))
       (if (not (proof-is-call pair *proof-cons*))
-          (list '(:failure "InferenceMismatch" "") lib replies)
+          (list '(:failure "inference-mismatch" "") lib replies)
         (t4-syntax-lists-with-replies
             ((evaluated (t4-syntax-lists-evaluate-run lib (list list-eval pair env) nil replies)
                         :recipe)
@@ -727,7 +714,7 @@
          (pair (t4-syntax-lists-step-at rebuilt 2)))
       (if (not (equal pair (list *proof-cons* (list *library-car* obj)
                                  (list subst-list (list *library-cdr* obj) bindings))))
-          (list '(:failure "InferenceMismatch" "") lib replies)
+          (list '(:failure "inference-mismatch" "") lib replies)
         (t4-syntax-lists-with-replies
             ((app-result (t4-syntax-lists-prove-substitution-app
                           lib rebuilt tag-test eval-before list-evaluator evaluator env
@@ -752,7 +739,7 @@
          (pieces (t4-division-pieces lib validity))
          (observed (t4-syntax-lists-request lib replies :fact-proof (list want pieces)) :recipe))
       (if (not observed)
-          (list '(:failure "SearchMiss" "")
+          (list '(:failure "search-miss" "")
                 lib replies)
         (t4-syntax-lists-with-replies
             ((found-result (t4-syntax-lists-lift-proof lib observed (list found)))
@@ -817,10 +804,6 @@
        (step (t4-syntax-lists-induct lib obj cases joint (list (cadr head) (cadr tail))))
        (new-library (library-library-lemma lib name joint step nil)))
     (list nil new-library replies)))
-
-(defun t4-syntax-lists-prove-substitution (lib name joint term terms eval-before list-before replies)
-  (t4-syntax-lists-result
-   (t4-syntax-lists-prove-substitution-run lib name joint term terms eval-before list-before replies)))
 
 (defun t4-syntax-lists-substitution-term-mode (expanded)
   (if (not (proof-is-call expanded *proof-if*))
@@ -1067,7 +1050,7 @@
                lib replies :fact-proof (list (list *t4-syntax-lists-iff* new-head fold) nil))
               :recipe))
     (if (not known)
-        (list '(:failure "SearchMiss" "")
+        (list '(:failure "search-miss" "")
               lib replies)
       (t4-syntax-lists-with-replies
           ((list-value (t4-syntax-lists-step-at evaluated-added 2))
@@ -1079,7 +1062,7 @@
         (if (equal after (proof-ite old-head *proof-true* (cadr guard)))
             (t4-syntax-lists-evaluated-clause-map-conclude
              lib known after old-head premise ih old-pair new-pair old new replies)
-          (list '(:failure "InferenceMismatch" "") lib replies))))))
+          (list '(:failure "inference-mismatch" "") lib replies))))))
 
 (defun t4-syntax-lists-evaluated-clause-map-step (lib widened left right obj clause guard
                                                      premise ih cons-proof replies)
@@ -1090,7 +1073,7 @@
        (old-pair (t4-syntax-lists-step-at old 2))
        (new-pair (t4-syntax-lists-step-at new 2)))
     (if (not (and (proof-is-call old-pair *proof-cons*) (proof-is-call new-pair *proof-cons*)))
-        (list '(:failure "InferenceMismatch" "") lib replies)
+        (list '(:failure "inference-mismatch" "") lib replies)
       (t4-syntax-lists-with-replies
           ((old-head (proof-term-at old-pair 1))
            (new-head (proof-term-at new-pair 1))
@@ -1098,7 +1081,7 @@
            (added (proof-term-at disjoin 1)))
         (if (not (and (equal disjoin (list *t4-syntax-lists-disjoin* added))
                       (equal added (list *proof-cons* (list *library-car* obj) clause))))
-            (list '(:failure "InferenceMismatch" "") lib replies)
+            (list '(:failure "inference-mismatch" "") lib replies)
           (t4-syntax-lists-evaluated-clause-map-add
            lib new-head old-head added (car left) (caddr left) guard premise ih
            old-pair new-pair old new replies))))))
@@ -1186,7 +1169,7 @@
              lib replies :fact-proof (list (list *t4-syntax-lists-iff* literal folded) nil))
             :recipe))
     (if (not law)
-        (list '(:failure "SearchMiss" "") lib replies)
+        (list '(:failure "search-miss" "") lib replies)
       (t4-syntax-lists-with-replies
           ((truth (t4-syntax-lists-iff-forward lib law opened))
            (clauses (t4-syntax-lists-step-at unpacked 2))
@@ -1240,7 +1223,7 @@
     (if (proof-is-call tuple-value *proof-cons*)
         (t4-syntax-lists-evaluated-clause-result-open lib result processor output tuple-value
                                                     wanted list-evaluator env replies)
-      (list '(:failure "InferenceMismatch" "") lib replies))))
+      (list '(:failure "inference-mismatch" "") lib replies))))
 
 (defun t4-syntax-lists-evaluated-clause-result-fail (lib fail conclusion guard opening result
                                                         processor wanted evaluator list-evaluator env
@@ -1279,14 +1262,14 @@
        (compatible (t4-syntax-lists-request lib replies :fact-proof (list thinning (list denied)))
                    :recipe))
     (if (not compatible)
-        (list '(:failure "SearchMiss" "")
+        (list '(:failure "search-miss" "")
               lib replies)
       (t4-syntax-lists-with-replies
           ((fold-agreement (proof-eq other (list *t4-syntax-lists-and-list* binding-values)))
            (equivalence (t4-syntax-lists-request
                          lib replies :fact-proof (list fold-agreement (list compatible))) :recipe))
         (if (not equivalence)
-            (list '(:failure "SearchMiss" "")
+            (list '(:failure "search-miss" "")
                   lib replies)
           (t4-syntax-lists-with-replies
               ((agreement (proof-proof-rewrite (library-library-proof lib) other-clauses
@@ -1300,7 +1283,7 @@
                               lib replies :fact-proof
                               (list rewritten (append demand (list accepted agreement)))) :recipe))
             (if (not preservation)
-                (list '(:failure "SearchMiss" "")
+                (list '(:failure "search-miss" "")
                       lib replies)
               (t4-syntax-lists-with-replies
                   ((original-or (proof-proof-rewrite (library-library-proof lib) changed-or
@@ -1349,7 +1332,7 @@
        (deny-rule (t4-syntax-lists-request
                    lib replies :fact-proof (list disjunction-denial (list original))) :recipe))
     (if (not deny-rule)
-        (list '(:failure "SearchMiss" "") lib replies)
+        (list '(:failure "search-miss" "") lib replies)
       (t4-syntax-lists-with-replies
           ((negated (proof-proof-assume (library-library-proof lib) conclusion nil))
            (denied (proof-proof-rewrite (library-library-proof lib) negated deny-rule '(1)))

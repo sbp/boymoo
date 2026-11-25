@@ -126,7 +126,7 @@
                             "ACL2"))))
         (if (assoc-equal name (proof-proof-facts (library-library-proof lib)))
             (b1-logic-bookproof-from-fact lib name goal)
-          '(:failure "Unproved" ""))))))
+          '(:failure "unproved" ""))))))
 
 (defun b1-abstract-lists-list-type-on (typed items)
   (let ((predicate (b1-abstract-lists-list-type-predicate typed))

@@ -53,9 +53,6 @@
     (cons (car result)
           (h3-book-order-bounds-with-library bounds (cdr result)))))
 
-(defun h3-book-order-expose-result (result)
-  (if (failure-p (car result)) (car result) result))
-
 (defmacro h3-book-order-with-results (bounds bindings result)
   ;; An optional third binding field identifies a paired result.
   (if (endp bindings)
@@ -172,10 +169,6 @@
                                      (list an bn cn first second))
               bounds)))))
 
-(defun h3-book-order-bounds-compose (bounds first second)
-  (h3-book-order-expose-result
-   (h3-book-order-bounds-compose-with-bounds bounds first second)))
-
 (defun h3-book-order-reflect-reductions (terms index equation bounds)
   (let* ((library (h3-book-order-bounds-lib bounds))
          (proof (library-library-proof library)))
@@ -224,10 +217,6 @@
   (h3-book-order-with-results bounds
       ((lemmas (h3-book-sums-lemmas-with-library (h3-book-order-bounds-lib bounds)) :library))
     (cons (h3-book-order-reflection bounds first second) bounds)))
-
-(defun h3-book-order-bounds-reflect (bounds first second)
-  (h3-book-order-expose-result
-   (h3-book-order-bounds-reflect-with-bounds bounds first second)))
 
 (defun h3-book-order-add-edge (edges from to strict proof)
   (table-put edges from
@@ -341,7 +330,7 @@
 (defun h3-book-order-breadth-first (n edges destination strict queued seen)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h3-book-order-breadth-first"))
+   ((zp n) '(:failure "fuel" "h3-book-order-breadth-first"))
    ((endp queued) *h3-rewrite-unproved*)
    (t (let* ((current (car queued))
              (neighbors (table-get edges (car current) nil))
@@ -364,10 +353,6 @@
                                          (list (list source nil nil))
                                          (list (list source nil)))
             bounds))))
-
-(defun h3-book-order-bounds-path (bounds source destination strict mirrored)
-  (h3-book-order-expose-result
-   (h3-book-order-bounds-path-with-bounds bounds source destination strict mirrored)))
 
 (defun h3-book-order-compose-path (bounds first later)
   (declare (xargs :measure (acl2-count later)))
@@ -421,18 +406,11 @@
                   (h3-book-order-weaken-path bounds first a b)
                 (cons first bounds)))))))))
 
-(defun h3-book-order-bounds-direct-bound (bounds goal mirrored)
-  (h3-book-order-expose-result
-   (h3-book-order-bounds-direct-bound-with-bounds bounds goal mirrored)))
-
 (defun h3-book-order-bounds-bound-with-bounds (bounds goal)
   (let ((direct (h3-book-order-bounds-direct-bound-with-bounds bounds goal nil)))
     (if (h3-rewrite-unproved-p (car direct))
         (h3-book-order-bounds-direct-bound-with-bounds (cdr direct) goal t)
       direct)))
-
-(defun h3-book-order-bounds-bound (bounds goal)
-  (h3-book-order-expose-result (h3-book-order-bounds-bound-with-bounds bounds goal)))
 
 (defun h3-book-order-product-identity (library scalar scalar-type)
   (let ((proof (library-library-proof library)))
@@ -478,9 +456,6 @@
           (h3-book-order-negative-unit-product library expression scalar identity))))
      (t (cons (proof-proof-reflexive proof expression) library)))))
 
-(defun h3-book-order-constant-product (library constant scalar scalar-type)
-  (car (h3-book-order-constant-product-with-library library constant scalar scalar-type)))
-
 (defun h3-book-order-try-signs (signs bounds rational term)
   (if (endp signs)
       (cons nil bounds)
@@ -502,10 +477,6 @@
   (let ((bounds (h3-book-order-bounds-with-library bounds library)))
     (h3-book-order-with-results bounds ((term (h3-book-order-step-at rational 1)))
       (h3-book-order-try-signs '(1 -1) bounds rational term))))
-
-(defun h3-book-order-selected-sign (library bounds rational)
-  (h3-book-order-expose-result
-   (h3-book-order-selected-sign-with-bounds library bounds rational)))
 
 (defun h3-book-order-rational-pair (bounds a b)
   (proof-with-checked-results
@@ -602,10 +573,6 @@
         (bounds (h3-book-order-bounds-with-library bounds library)))
     (h3-book-order-quotient-bound-loop
      remaining (h3-book-order-quotient-next remaining goal bounds))))
-
-(defun h3-book-order-quotient-bound (library goal bounds depth)
-  (h3-book-order-expose-result
-   (h3-book-order-quotient-bound-with-bounds library goal bounds depth)))
 
 (defun h3-book-order-common-factors (left right)
   (cond ((endp left) nil)
@@ -741,9 +708,6 @@
              (cons :next bounds) goal strict left right)
           (cons *h3-rewrite-unproved* bounds))))))
 
-(defun h3-book-order-scaled-bound (library goal bounds)
-  (h3-book-order-expose-result (h3-book-order-scaled-bound-with-bounds library goal bounds)))
-
 (defun h3-book-order-comparison (low high strict)
   (if strict (library-lt low high) (library-le low high)))
 
@@ -818,7 +782,7 @@
    (let ((request (car next))
          (bounds (cdr next)))
      (cond
-      ((zp n) (cons '(:failure "Fuel" "h3-book-order-product-bound-loop") bounds))
+      ((zp n) (cons '(:failure "fuel" "h3-book-order-product-bound-loop") bounds))
       ((not (eq (car request) :unit)) next)
       (t
        (let* ((high (cadr request))
@@ -835,7 +799,7 @@
  (defun h3-book-order-product-unit (n unit high strict bounds)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h3-book-order-product-unit") bounds)
+       (cons '(:failure "fuel" "h3-book-order-product-unit") bounds)
      (let* ((expansion (h3-book-order-unit-expansion unit high strict bounds))
             (child (if (failure-p expansion)
                        (cons expansion bounds)
@@ -859,9 +823,6 @@
   (h3-book-order-product-bound-loop
    1000000 (h3-book-order-product-next
             goal (h3-book-order-bounds-with-library bounds library))))
-
-(defun h3-book-order-product-bound (library goal bounds)
-  (h3-book-order-expose-result (h3-book-order-product-bound-with-bounds library goal bounds)))
 
 (defun h3-book-order-product-zero-align (library equation comparison product position)
   (let ((proof (library-library-proof library)))
@@ -925,10 +886,6 @@
         (h3-book-order-with-results bounds ((product (proof-term-at comparison position)))
           (h3-book-order-product-zero-factors '(2 1) (cons nil bounds) product comparison
                                              position orientation strict))))))
-
-(defun h3-book-order-product-zero-bound (library goal bounds)
-  (h3-book-order-expose-result
-   (h3-book-order-product-zero-bound-with-bounds library goal bounds)))
 
 (defun h3-book-order-operand-tactic (low high)
   (cond
@@ -1081,6 +1038,3 @@
                 (eligible (h3-book-order-prove-implication library guard goal))
                 (t (cons nil library))))))))
 
-(defun h3-book-order-nonlinear-theorem (library formula)
-  (let ((result (h3-book-order-nonlinear-theorem-with-library library formula)))
-    (if (car result) (h3-book-order-expose-result result) nil)))

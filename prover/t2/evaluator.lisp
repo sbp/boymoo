@@ -40,7 +40,7 @@
    (declare (xargs :measure (acl2-count term)))
    (cond
     ((or (not (proof-compound term)) (proof-is-call term *proof-quote*)) term)
-    ((endp term) '(:failure "RecipeMismatch" ""))
+    ((endp term) '(:failure "recipe-mismatch" ""))
     (t (let* ((operator (car term))
               (renamed (table-get witnesses operator operator)))
          (proof-with-checked-results
@@ -75,7 +75,7 @@
     (let ((expression (caddr equation)))
       (cond
        ((integerp expression) '(:failure "failure" ""))
-       ((endp expression) '(:failure "RecipeMismatch" ""))
+       ((endp expression) '(:failure "recipe-mismatch" ""))
        (t (proof-with-checked-results ((lhs (proof-list-of-length (cadr equation) 3)))
             (let ((test (car parts)) (term (cadr lhs)) (environment (caddr lhs))
                   (operator (car expression)) (arguments (cdr expression)))
@@ -84,7 +84,7 @@
                                                *proof-false*))
                        (equal arguments (t2-evaluator-operator-arguments arguments 1 term environment)))
                   (list operator (len arguments))
-                '(:failure "RecipeMismatch" "")))))))))
+                '(:failure "recipe-mismatch" "")))))))))
 
 (defun t2-evaluator-operators (formulas)
   (if (endp formulas)
@@ -194,7 +194,7 @@
         ((literal (proof-step-first equation))
          (rhs (proof-term-at literal 2)))
       (if (not (equal rhs *proof-false*))
-          '(:failure "RecipeMismatch" "")
+          '(:failure "recipe-mismatch" "")
         (proof-with-checked-results
             ((not-nil (proof-proof-not-nil proof))
              (reverse (proof-proof-symmetric proof equation))
@@ -290,12 +290,12 @@
          (literal (proof-step-first on-cons))
          (lhs (proof-term-at literal 1)))
       (if (not (equal lhs selector))
-          '(:failure "RecipeMismatch" "")
+          '(:failure "recipe-mismatch" "")
         (proof-with-checked-results
             ((rhs (proof-term-at literal 2))
              (argument (proof-term-at rhs 1)))
           (if (not (equal argument east))
-              '(:failure "RecipeMismatch" "")
+              '(:failure "recipe-mismatch" "")
             (proof-with-checked-results
                 ((step (proof-proof-cases proof branch on-cons on-atom))
                  (claim (proof-step-first step)))
@@ -332,7 +332,7 @@
          (literal (proof-step-first opened))
          (rhs (proof-term-at literal 2)))
       (if (not (proof-is-call rhs *termination-return-last*))
-          '(:failure "RecipeMismatch" "")
+          '(:failure "recipe-mismatch" "")
         (proof-with-checked-results
             ((unwrapped (proof-proof-unfold proof rhs))
              (quoted (proof-proof-chain proof opened (list unwrapped)))
@@ -474,7 +474,7 @@
   (declare (xargs :measure (nfix n)))
   (cond ((failure-p path) path)
         ((eq (car path) :done) (cdr path))
-        ((zp n) '(:failure "Fuel" "t2-evaluator-known-path"))
+        ((zp n) '(:failure "fuel" "t2-evaluator-known-path"))
         (t (t2-evaluator-known-path-loop
             (1- n) lib (t2-evaluator-known-path-step lib (cadr path) (cddr path))))))
 
@@ -612,7 +612,7 @@
 
 (defun t2-evaluator-constraint (lib formula index)
   (if (not (proof-is-call formula *library-implies*))
-      '(:failure "RecipeMismatch" "")
+      '(:failure "recipe-mismatch" "")
     (proof-with-checked-results
         ((parts (proof-list-of-length (cdr formula) 2))
          (test (car parts))
@@ -628,7 +628,7 @@
          (literal (proof-step-first equation)))
       (if (equal literal goal)
           (t2-power-implication lib test equation)
-        '(:failure "RecipeMismatch" "")))))
+        '(:failure "recipe-mismatch" "")))))
 
 (defun t2-evaluator-witness-arities (declarations)
   (if (endp declarations)
@@ -694,28 +694,28 @@
 
 (defun t2-evaluator-witness-constraints (generator declarations constraints)
   (if (or (not (proof-compound constraints)) (< (len constraints) *t2-evaluator-operator-constraints*))
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (proof-with-checked-results
         ((names (strip-cars declarations))
          (formulas (t2-evaluator-witness-formulas constraints))
          (implications (t2-evaluator-witness-implications formulas)))
       (if (not implications)
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((claim (proof-term-at (car formulas) 2))
              (lhs (proof-term-at claim 1))
              (evaluator (t2-book-logic-head lhs)))
           (if (not (member-equal evaluator names))
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (t2-evaluator-witness-install generator names formulas
                                          (t2-evaluator-witness-map names evaluator nil))))))))
 
 (defun t2-evaluator-witness (generator data)
   (proof-with-checked-results ((declarations (proof-term-at data 0)))
     (cond ((integerp declarations) '(:failure "failure" ""))
-          ((not (equal (len declarations) 2)) '(:failure "Unproved" ""))
+          ((not (equal (len declarations) 2)) '(:failure "unproved" ""))
           (t (proof-with-checked-results ((arities (t2-evaluator-witness-arities declarations)))
                (if (not arities)
-                   '(:failure "Unproved" "")
+                   '(:failure "unproved" "")
                  (proof-with-checked-results ((constraints (proof-term-at data 1)))
                    (t2-evaluator-witness-constraints generator declarations constraints))))))))

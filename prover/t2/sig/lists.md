@@ -26,4 +26,4 @@ for the base constructor. The constants `*t2-lists-evens*`,
 
 Each function can return a failure in place of its result when term access,
 proof construction, or a hypothesis query fails. The fuel argument also
-allows a `Fuel` failure on exhaustion.
+allows a `fuel` failure on exhaustion.

@@ -44,7 +44,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((zp n) '(:failure "Fuel" "t3-book-projections-project"))
+     ((zp n) '(:failure "fuel" "t3-book-projections-project"))
      ((not (proof-is-call value *proof-cons*))
       (let ((term (list *t3-book-projections-mv-nth* (proof-quote index) value)))
         (if (proof-is-call value *proof-quote*)
@@ -160,7 +160,7 @@
     (n value lib observed variable accepted predicate measure formula evidence)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-projections-projected-list-leaf-recognize")
+      '(:failure "fuel" "t3-book-projections-projected-list-leaf-recognize")
     (let ((proof (library-library-proof lib))
           (entry (assoc-equal value observed))
           (target (list predicate value)))
@@ -226,7 +226,7 @@
                 (car rest)))
              (step (proof-proof-transport proof recognized rule)))
             (cons step (cdr rest))))
-          (t '(:failure "Unsupported" "")))))))))
+          (t '(:failure "unsupported" "")))))))))
 
 (defun t3-book-projections-projected-list-leaf
     (value tests lib index observed variable accepted predicate measure formula)

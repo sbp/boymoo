@@ -235,10 +235,6 @@
     (h2-api-make-world (h2-api-world-library world) (car advanced)
                        (h2-api-world-not-nil world) (cadr advanced) (caddr advanced) earlier)))
 
-(defun h2-api-world (library earlier)
-  (proof-with-checked-results ((world (h2-api-world-init library)))
-    (h2-api-world-advance world earlier)))
-
 (defun h2-api-world-with-indexed-prefix (library earlier)
   (proof-with-checked-results
       ((world (h2-api-world-init library))
@@ -262,7 +258,7 @@
   (proof-with-checked-results ((label (proof-term-at name 2)))
     (cond ((not (stringp label)) '(:failure "failure" ""))
           ((h2-computation-ascii-chars-p (coerce label 'list)) label)
-          (t '(:failure "TacticInapplicable" "")))))
+          (t '(:failure "tactic-inapplicable" "")))))
 
 (defun h2-api-special-theorem (trial name data)
   (let ((trial (h2-books-book-proof-with-fuel trial 150000)))
@@ -274,7 +270,7 @@
 (defun h2-api-special-fallback-p (value)
   (and (failure-p value)
        (member-equal (cadr value)
-                     '("Unproved" "TacticInapplicable" "ArithmeticInapplicable"
+                     '("unproved" "tactic-inapplicable" "arithmetic-inapplicable"
                        "assertion" "key" "value" "index" "type"
                        "encoding" "decoding" "translating"))))
 

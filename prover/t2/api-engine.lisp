@@ -2,7 +2,7 @@
 (set-verify-guards-eagerness 0)
 
 (defconst *t2-api-engine-failures*
-  '("Unsupported" "Unproved" "MissingBinding" "RecipeMismatch" "MissingTermPart"
+  '("unsupported" "unproved" "missing-binding" "recipe-mismatch" "missing-term-part"
     "key" "value" "assertion" "stop"
     "index" "recursion"))
 
@@ -628,7 +628,7 @@
   (declare (xargs :measure (acl2-count indices)))
   (cond
    (result result)
-   ((endp indices) '(:failure "Unproved" ""))
+   ((endp indices) '(:failure "unproved" ""))
    (t
     (t2-api-engine-guess-indices
      (cdr indices) generator rulers definitions
@@ -638,7 +638,7 @@
 (defun t2-api-engine-guessed-termination (generator data)
   (proof-with-checked-results ((rulers (proof-term-at data 0)))
     (if (endp (cdr data))
-        '(:failure "RecipeMismatch" "")
+        '(:failure "recipe-mismatch" "")
       (proof-with-checked-results ((limit (t2-api-engine-formal-minimum (cdr data) 6)))
         (t2-api-engine-guess-indices (seq-range 0 limit 1) generator rulers (cdr data) nil)))))
 

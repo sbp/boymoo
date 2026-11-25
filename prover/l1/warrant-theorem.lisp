@@ -50,7 +50,7 @@
   (let ((fact (assoc-equal name (proof-proof-facts proof))))
     (if fact
         (proof-term-at (cdr fact) 0)
-      '(:failure "MissingWarrantDependency" ""))))
+      '(:failure "missing-warrant-dependency" ""))))
 
 (defun l1-warrant-theorem-match-tests (rule tests badge expected guard designator arguments)
   (let ((test (car tests))
@@ -282,9 +282,3 @@
              (and (equal unfolded warrant)
                   (l1-warrant-theorem-prove-match proof name formula parts match unfold-force)))))))
 
-(defun l1-warrant-theorem-prove-warrant-theorem (proof name formula choices)
-  (proof-with-checked-results
-      ((result (l1-warrant-theorem-prove-fragments proof name formula choices)))
-    (and result
-         (proof-with-checked-results ((source (l1-warrant-join-sources 1000000 (cadr result))))
-           (list (car result) source)))))

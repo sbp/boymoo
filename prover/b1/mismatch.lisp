@@ -714,7 +714,7 @@
 (defun b1-mismatch-maximum-decreases-first-case
     (n left lib b stopped original claim replies result)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "b1-mismatch-maximum-decreases-first-case"))
+  (cond ((zp n) '(:failure "fuel" "b1-mismatch-maximum-decreases-first-case"))
         ((failure-p result) result)
         ((not (eq (caar result) :b1-bit-length-case)) result)
         (t
@@ -730,7 +730,7 @@
 
 (defun b1-mismatch-maximum-decreases-cases (n lib a b stopped original claim replies result)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "b1-mismatch-maximum-decreases-cases"))
+  (cond ((zp n) '(:failure "fuel" "b1-mismatch-maximum-decreases-cases"))
         ((failure-p result) result)
         ((not (eq (caar result) :b1-bit-length-case)) result)
         (t
@@ -1442,7 +1442,7 @@
                      bits-equal))
      (agreement (b1-logic-matching-claim (b1-search-fact-index-claims index) same-bit)))
     (if (not agreement)
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (b1-mismatch-let
         ((premise (b1-logic-bookproof-prove-implication-premise lib formula))
          ((consequence lib)

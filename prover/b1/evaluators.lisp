@@ -245,7 +245,7 @@
 (defun b1-evaluators-evaluator-selector-law-rec (n evaluator index terms environment)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-evaluators-evaluator-selector-law-rec")
+      '(:failure "fuel" "b1-evaluators-evaluator-selector-law-rec")
     (let* ((lib (b1-evaluators-evaluator-lib evaluator))
            (proof (library-library-proof lib))
            (tag (b1-evaluators-selector-tag evaluator index))

@@ -69,21 +69,6 @@
      (cons (l1-rewriting-dump-key (car data))
            (l1-rewriting-dump-keys (cdr data))))))
 
-(defun l1-rewriting-keyed-variables (variables)
-  (if (endp variables)
-      nil
-    (cons (list (l1-rewriting-dump-key (car variables)) (car variables))
-          (l1-rewriting-keyed-variables (cdr variables)))))
-
-(defun l1-rewriting-unkey-variables (variables)
-  (if (endp variables)
-      nil
-    (cons (cadar variables) (l1-rewriting-unkey-variables (cdr variables)))))
-
-(defun l1-rewriting-variables (term)
-  (l1-rewriting-unkey-variables
-   (seq-sorted (l1-rewriting-keyed-variables (l1-rewriting-variable-set term)))))
-
 (mutual-recursion
  (defun l1-rewriting-size (term)
    (declare (xargs :measure (1+ (* 2 (acl2-count term)))))
@@ -112,7 +97,7 @@
 
 (defun l1-rewriting-structural-value (n body)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "l1-rewriting-structural-value"))
+  (cond ((zp n) '(:failure "fuel" "l1-rewriting-structural-value"))
         ((proof-is-call body *termination-return-last*)
          (l1-rewriting-structural-value (1- n) (car (last body))))
         (t body)))
@@ -383,7 +368,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((premise (assoc-equal term evidence))
          (proof (l1-rewriting-rewriter-proof rewriter)))
-     (cond ((zp n) '(:failure "Fuel" "l1-rewriting-derive-visit"))
+     (cond ((zp n) '(:failure "fuel" "l1-rewriting-derive-visit"))
            (premise (cdr premise))
            ((equal term *proof-true*) (l1-application-proof-prove proof term nil nil))
            ((or (member-equal term trail)
@@ -411,7 +396,7 @@
                                                evidence depth trail)))))))))
  (defun l1-rewriting-derive-rules (n rules rewriter term evidence depth trail)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "l1-rewriting-derive-rules"))
+   (cond ((zp n) '(:failure "fuel" "l1-rewriting-derive-rules"))
          ((endp rules) nil)
          (t
           (let ((proof (l1-rewriting-rewriter-proof rewriter)))
@@ -465,7 +450,7 @@
 (defun l1-rewriting-open-structural-body (n proof opened)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "l1-rewriting-open-structural-body")
+      '(:failure "fuel" "l1-rewriting-open-structural-body")
     (let ((next (l1-rewriting-structural-opening proof opened)))
       (if (eq (car next) :continue)
           (l1-rewriting-open-structural-body (1- n) proof (cadr next))
@@ -610,7 +595,7 @@
 
 (defun l1-rewriting-retry-proof-p (result)
   (or (l1-application-unproved-p result)
-      (and (failure-p result) (equal (cadr result) "UnsupportedApplication"))))
+      (and (failure-p result) (equal (cadr result) "unsupported-application"))))
 
 (defun l1-rewriting-transport-if-changed (proof result chain)
   (if chain (proof-proof-transport proof result chain) result))
@@ -631,7 +616,7 @@
 
 (defund l1-rewriting-bounded-step (rewriter formula premises current chain visited)
   (if (> (l1-rewriting-size current) 1024)
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (let ((proof (l1-rewriting-rewriter-proof rewriter)))
       (proof-with-checked-results
           ((change (l1-rewriting-rewriter-redex rewriter current premises '(1 2))))
@@ -702,7 +687,7 @@
 
 (defun l1-rewriting-premises-visit (n rewriter pending known)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "l1-rewriting-premises-visit"))
+  (cond ((zp n) '(:failure "fuel" "l1-rewriting-premises-visit"))
         ((endp pending) known)
         (t (proof-with-checked-results
                ((next (l1-rewriting-enlarge-premises rewriter pending known)))
@@ -724,7 +709,7 @@
 (defun l1-rewriting-rewrite-visit (n rewriter formula premises split)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "l1-rewriting-rewrite-visit")
+      '(:failure "fuel" "l1-rewriting-rewrite-visit")
     (let ((result (l1-rewriting-rewrite-progress rewriter formula premises)))
       (if (not (eq (car result) :unestablished))
           result
@@ -732,7 +717,7 @@
                (chain (caddr result))
                (conditional (l1-rewriting-split-conditional current split)))
           (if (not conditional)
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (let ((proof (l1-rewriting-rewriter-proof rewriter)))
               (proof-with-checked-results
                   ((test (proof-term-at conditional 1))
@@ -855,7 +840,7 @@
 
 (defun l1-rewriting-try-plans (plans updates rewriter formula)
   (if (endp plans)
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (let* ((variable (caar plans))
            (plain (l1-rewriting-plain-inductions *l1-rewriting-descent* variable (cdar plans)))
            (updated (proof-unique (append plain (table-get updates variable nil)))))

@@ -34,7 +34,7 @@ normalized lines from `t4-api-given` are ordered by S-expression text.
 | `(t4-api-init-proof instance)` | The Proof `instance` with ground facts, definitions, and primitives. Pass `nil` to initialize a base Proof. | None. |
 | `(t4-api-admitted-facts proof kind data choices)` | `(proof choices)` with the parsed statement's facts and any available choice recorded. Pass `:none` to skip choice discovery. | A failure from reading the statement or discovering a choice. |
 
-The auxiliary-entry traversal and token scanner can also return `Fuel`
+The auxiliary-entry traversal and token scanner can also return `fuel`
 when their recursion budget is exhausted.
 
 ## Session preparation

@@ -133,9 +133,6 @@
                             ((equal operation (proof-cl "NTH")) 'b1-abstract-lists-abstract-list-nth)
                             (t nil)))))))))))))
 
-(defun b1-shapes-abstract-list-recipe (lib test goal subject)
-  (b1-shapes-abstract-list-recipe-with-index lib test goal subject nil))
-
 (defun b1-shapes-revappend-recipe (test goal subject)
   (or
    (and (proof-is-call goal *b1-revappend-iff*)
@@ -896,9 +893,6 @@
        (xdoc-recipes (b1-shapes-xdoc-recipes definitions test goal subject)))
       (append primary-recipes type-recipes mismatch-recipes
               fixer-recipes numeric-recipes xdoc-recipes)))))
-
-(defun b1-shapes-theorem-recipes (lib formula)
-  (b1-shapes-theorem-recipes-with-index lib formula nil))
 
 (defun b1-shapes-witness-arities (functions)
   (if (endp functions)

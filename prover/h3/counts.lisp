@@ -31,7 +31,7 @@
 (defun h3-counts-mv-nth-induction (n lib goal variable replacements rev replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h3-counts-mv-nth-induction")
+      '(:failure "fuel" "h3-counts-mv-nth-induction")
     (let ((result (h3-counts-induction-result lib goal variable replacements replies)))
       (if (h3-induction-request-p result)
           (proof-with-checked-results
@@ -92,7 +92,7 @@
     (proof-with-checked-results ((lib (h3-counts-register-mv-nth lib mv-eq)))
       (if (integerp last)
           (h3-counts-more-indexed-selectors last 1 lib (list (proof-sym "NTH-0-CONS" "ACL2") mv-eq))
-        '(:failure "MalformedTacticInput" "")))))
+        '(:failure "malformed-tactic-input" "")))))
 
 (defun h3-counts-car-at-zero (lib)
   (let* ((label "H3-NTH-0-IS-CAR")
@@ -164,7 +164,7 @@
    ((step (h3-counts-indexed-count-prove-case-leaf value tests lib template rules evidence integer))
     (literal (proof-step-first step))
     (claim (proof-subst template (list (cons *proof-result* value)))))
-   (if (equal literal claim) step '(:failure "ProofMismatch" ""))))
+   (if (equal literal claim) step '(:failure "proof-mismatch" ""))))
 
 (defund h3-counts-open-value (proof value)
   (proof-with-checked-results
@@ -176,7 +176,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((zp n) '(:failure "Fuel" "h3-counts-count-by-value"))
+     ((zp n) '(:failure "fuel" "h3-counts-count-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
        ((branches (proof-list-of-length (cdr value) 3))
@@ -187,7 +187,7 @@
                                      (append tests (list (list test nil))) rules evidence integer)))
        (proof-by-value-join proof value template yes no)))
      ((and (proof-compound value) (endp value))
-      '(:failure "MalformedTacticInput" ""))
+      '(:failure "malformed-tactic-input" ""))
      ((and (proof-compound value) (proof-compound (car value)))
       (proof-with-checked-results
        ((opened (h3-counts-open-value proof value))
@@ -211,7 +211,7 @@
     (n lib formula variable replacements antecedent template rules normal replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h3-counts-count-induction")
+      '(:failure "fuel" "h3-counts-count-induction")
     (let ((step (h3-counts-induction-result lib formula variable replacements replies)))
       (if (h3-induction-request-p step)
           (proof-with-checked-results
@@ -234,9 +234,9 @@
           (variable (caddr call))
           (measure (list *library-count* variable)))
      (cond
-      ((integerp call) '(:failure "MalformedTacticInput" ""))
+      ((integerp call) '(:failure "malformed-tactic-input" ""))
       ((< (len call) 3)
-       '(:failure "MalformedTacticInput" ""))
+       '(:failure "malformed-tactic-input" ""))
       (t
        (proof-with-checked-results
         ((lib (h3-merges-arithmetic lib))

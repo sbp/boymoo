@@ -26,7 +26,7 @@ The symbol constants are `*t3-quotient-niq*`, `*t3-quotient-print-base*`,
 | `(t3-quotient-digit-measure value)` | An integer term. Returns its count plus the phase for its sign. | None. |
 | `(t3-quotient-is-digit-measure term)` | Returns whether the term has the digit measure form. | A failure on a matching head with a missing argument. |
 | `(t3-quotient-digit-rank-value lib rank typed sign)` | Digit measure term, an integer Step for its argument, and the sign Step. Returns the equality Step for the evaluated rank. | A failure from proof construction or a malformed rank. |
-| `(t3-quotient-digit-descent lib smaller larger evidence)` | Two digit measure terms. Returns `((step evidence) . lib)` with the ordinal decrease Step, resulting Evidence, and resulting Library. | `Unsupported` for an unrecognized step, or a failure from proof construction or an evidence query. |
+| `(t3-quotient-digit-descent lib smaller larger evidence)` | Two digit measure terms. Returns `((step evidence) . lib)` with the ordinal decrease Step, resulting Evidence, and resulting Library. | `unsupported` for an unrecognized step, or a failure from proof construction or an evidence query. |
 
 A failure is the whole result. Induction substitutions occur in leaf
 visit order. The substitutions within a recursive quotient case are a

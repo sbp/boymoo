@@ -31,7 +31,7 @@
 (defun t2-input-state-tests-visit (n lib proposition find-first term)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t2-input-state-tests-visit")
+      '(:failure "fuel" "t2-input-state-tests-visit")
     (proof-with-checked-results
         ((literal (proof-step-first proposition))
          (otherwise (if (proof-is-call literal *proof-if*)
@@ -422,7 +422,7 @@
 (defun t2-input-state-print-branches (n lib value template tests initial assumed)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t2-input-state-print-branches")
+      '(:failure "fuel" "t2-input-state-print-branches")
     (let ((proof (library-library-proof lib)))
       (cond
        ((proof-is-call value *proof-if*)

@@ -7,7 +7,6 @@ in argument order. All proof operations below may return a failure.
 | ACL2 call | Arguments and result |
 |---|---|
 | `(h4-function-equality-apply-at p equivalence arguments)` | Step instantiating an extensional equivalence Step at the argument-list term. |
-| `(h4-function-equality-apply-equivalence p left right checked)` | Extensional equivalence Step from the Step `checked` at the witness of functions `left` and `right`. |
 | `(h4-function-equality-unequal-functions p equivalence unequal)` | Three-element list of the left tame Step, right tame Step and extensional equivalence Step under the two supplied premises. |
 | `(h4-function-equality-introduce-fn-equal p left right evidence)` | Step establishing `FN-EQUAL` for functions `left` and `right` with the evidence Steps. |
 | `(h4-function-equality-pointwise-lemma p)` | `(cons name p)` with the local lemma's name symbol and the updated Library. |
@@ -32,7 +31,6 @@ lemma name or `nil` before it is built.
 | `(h4-function-equality-caller-congruence-init p formula measure descent)` | CallerCongruence for the formula and measure. Pass `nil` for an absent measure. |
 | `(h4-function-equality-caller-congruence-p caller)` | The current Library. |
 | `(h4-function-equality-caller-congruence-application caller left right evidence)` | `(cons step caller)` with the application Step and updated CallerCongruence. |
-| `(h4-function-equality-caller-congruence-conditional caller left right evidence)` | `(cons step caller)` with the conditional Step and updated CallerCongruence. |
 | `(h4-function-equality-caller-congruence-compare caller left right evidence)` | `(cons step caller)` with the comparison Step and updated CallerCongruence. Pass `nil` for omitted evidence. |
 | `(h4-function-equality-caller-congruence-prove caller ordinal)` | `(cons step caller)` with the congruence Step and updated CallerCongruence. Pass `nil` for an absent ordinality Step. |
 

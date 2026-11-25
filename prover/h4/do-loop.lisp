@@ -66,7 +66,7 @@
   (n pending p formula measure ordinal embedding initial)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h4-do-loop-prove-with-descent"))
+   ((zp n) '(:failure "fuel" "h4-do-loop-prove-with-descent"))
    ((failure-p pending) pending)
    ((failure-p (car pending)) (car pending))
    ((eq (caar pending) :h4-function-equality-descent-request)

@@ -56,7 +56,7 @@
 (defun t4-witness-need-at-least (items minimum)
   (let ((size (len items)))
     (cond ((integerp items) '(:failure "failure" ""))
-          ((< size minimum) '(:failure "SearchMiss" ""))
+          ((< size minimum) '(:failure "search-miss" ""))
           (t items))))
 
 (defun t4-witness-comparison-read-application
@@ -398,7 +398,7 @@
 (defun t4-witness-argument-shape-collect (n step proof argument values pairs)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t4-witness-argument-shape-collect")
+      '(:failure "fuel" "t4-witness-argument-shape-collect")
     (proof-with-checked-results ((literal (proof-step-first step)))
       (cond
        ((proof-is-call literal *proof-if*)
@@ -430,7 +430,7 @@
 (defun t4-witness-argument-shape-recover (n term proof values pairs)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t4-witness-argument-shape-recover")
+      '(:failure "fuel" "t4-witness-argument-shape-recover")
     (let ((value (assoc-equal term values))
           (pair (assoc-equal term pairs)))
       (cond
@@ -571,14 +571,14 @@
  (defun t4-witness-branch-selectors-reduce-branch (n term premise proof)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t4-witness-branch-selectors-reduce-branch")
+       '(:failure "fuel" "t4-witness-branch-selectors-reduce-branch")
      (t4-witness-branch-reduce-body
       (1- n) (t4-witness-branch-reduction-opening term premise proof) term premise proof)))
 
  (defun t4-witness-branch-reduce-body (n opening term premise proof)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t4-witness-branch-reduce-body"))
+    ((zp n) '(:failure "fuel" "t4-witness-branch-reduce-body"))
     ((failure-p opening) opening)
     ((eq (car opening) :done) (cadr opening))
     (t (t4-witness-branch-reduction-finish
@@ -589,7 +589,7 @@
  (defun t4-witness-branch-reduce-arguments (n arguments index equation term premise proof)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t4-witness-branch-reduce-arguments"))
+    ((zp n) '(:failure "fuel" "t4-witness-branch-reduce-arguments"))
     ((failure-p equation) equation)
     ((endp arguments) equation)
     (t
@@ -675,32 +675,11 @@
             (t4-witness-witness-entry proof comparison (car direct) (cadr direct))
           (cons nil proof))))))
 
-(defun t4-witness-counterexample-choice (proof constraint)
-  (proof-with-checked-results ((problem (t4-witness-comparison-read constraint)))
-    (if (not problem)
-        '(:failure "failure" "")
-      (let ((data (list *t4-witness-choice*
-                        (list (t4-witness-comparison-argument problem))
-                        (or (t4-witness-comparison-parameters problem) *proof-nil*)
-                        (t4-witness-comparison-counterexample problem)
-                        *proof-nil*)))
-        (proof-with-checked-results
-            ((registration (t4-witness-available-choice proof "choose" data))
-             (proved (t4-witness-prove-witness (cdr registration) constraint
-                                              (list (car registration)))))
-          (if (not (car proved))
-              '(:failure "failure" "")
-            (proof-with-checked-results
-                ((proof (cdr proved))
-                 (facts (table-delete (proof-proof-facts proof) *t4-witness-choice*))
-                 (choice (proof-line "choose" data)))
-              (cons (list choice (cadar proved)) (proof-proof-with-facts proof facts)))))))))
-
 (mutual-recursion
  (defun t4-witness-dependencies-collect (n term called)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t4-witness-dependencies-collect"))
+    ((zp n) '(:failure "fuel" "t4-witness-dependencies-collect"))
     ((not (proof-compound term)) called)
     ((endp term) '(:failure "failure" ""))
     ((equal (car term) *proof-quote*) called)
@@ -719,7 +698,7 @@
  (defun t4-witness-dependencies-arguments (n arguments called)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t4-witness-dependencies-arguments"))
+    ((zp n) '(:failure "fuel" "t4-witness-dependencies-arguments"))
     ((endp arguments) called)
     (t
      (proof-with-checked-results
@@ -750,92 +729,3 @@
      (cons (t4-witness-dependency-text (car items))
            (t4-witness-dependency-text-items (cdr items))))))
 
-(defun t4-witness-dependency-sort-keys (called)
-  (if (endp called)
-      nil
-    (cons (list (t4-witness-dependency-text (car called)) (car called))
-          (t4-witness-dependency-sort-keys (cdr called)))))
-
-(defun t4-witness-dependency-sort-values (entries)
-  (if (endp entries)
-      nil
-    (cons (cadar entries) (t4-witness-dependency-sort-values (cdr entries)))))
-
-(defun t4-witness-dependencies (term)
-  (proof-with-checked-results ((called (t4-witness-dependencies-collect 1000000 term nil)))
-    (t4-witness-dependency-sort-values (seq-sorted (t4-witness-dependency-sort-keys called)))))
-
-(defun t4-witness-affected-definitions-p (definitions affected)
-  (if (endp definitions)
-      nil
-    (proof-with-checked-results
-        ((definition (proof-list-of-length (car definitions) 3))
-         (calls (t4-witness-dependencies (caddr definition))))
-      (or (intersectp-equal calls affected)
-          (t4-witness-affected-definitions-p (cdr definitions) affected)))))
-
-(defun t4-witness-affected-definition-names (definitions affected)
-  (if (endp definitions)
-      affected
-    (proof-with-checked-results ((definition (proof-list-of-length (car definitions) 3)))
-      (t4-witness-affected-definition-names (cdr definitions)
-                                           (add-to-set-equal (car definition) affected)))))
-
-(defun t4-witness-affected-formulas (formulas index affected)
-  (if (endp formulas)
-      nil
-    (proof-with-checked-results
-        ((formula (proof-list-of-length (car formulas) 2))
-         (calls (t4-witness-dependencies (cadr formula)))
-         (rest (t4-witness-affected-formulas (cdr formulas) index affected)))
-      (if (intersectp-equal calls affected)
-          (cons (list index (car formula)) rest)
-        rest))))
-
-(defun t4-witness-affected-statement (kind data index affected)
-  (cond
-   ((equal kind "define")
-    (if (integerp data)
-        '(:failure "failure" "")
-      (proof-with-checked-results
-          ((dependent (t4-witness-affected-definitions-p (cdr data) affected))
-           (affected (if dependent
-                         (t4-witness-affected-definition-names (cdr data) affected)
-                       affected)))
-        (cons nil affected))))
-   ((equal kind "constrain")
-    (proof-with-checked-results
-        ((formulas (proof-term-at data 1))
-         (hits (and (proof-compound formulas)
-                    (t4-witness-affected-formulas formulas index affected))))
-      (cons hits affected)))
-   ((member-equal kind '("theorem" "axiom"))
-    (proof-with-checked-results
-        ((hits (t4-witness-affected-formulas (list data) index affected)))
-      (cons hits affected)))
-   ((equal kind "choose")
-    (proof-with-checked-results
-        ((name (proof-term-at data 0))
-         (predicate (proof-term-at data 3))
-         (calls (t4-witness-dependencies predicate))
-         (affected (if (intersectp-equal calls affected)
-                       (add-to-set-equal name affected)
-                     affected))
-         (hits (t4-witness-affected-formulas (list (list name predicate)) index affected)))
-      (cons hits affected)))
-   (t (cons nil affected))))
-
-(defun t4-witness-affected-constraints-prefix (statements before index affected)
-  (if (endp statements)
-      nil
-    (proof-with-checked-results ((statement (proof-list-of-length (car statements) 3)))
-      (and (< index before)
-        (proof-with-checked-results
-            ((result (t4-witness-affected-statement (cadr statement) (caddr statement)
-                                                   index affected))
-             (rest (t4-witness-affected-constraints-prefix (cdr statements) before
-                                                          (1+ index) (cdr result))))
-          (append (car result) rest))))))
-
-(defun t4-witness-affected-constraints (statements before functions)
-  (t4-witness-affected-constraints-prefix statements before 1 (proof-unique functions)))

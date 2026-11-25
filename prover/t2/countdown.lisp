@@ -174,7 +174,7 @@
        (bound (cond ((equal after successor) bound)
                     ((equal after (library-plus value *proof-one*))
                      (proof-proof-rewrite proof bound swap '(1 1 2)))
-                    (t '(:failure "RecipeMismatch" ""))))
+                    (t '(:failure "recipe-mismatch" ""))))
        (integral (t2-arithmetic-arithmetic-type-of lib after integers))
        (count (library-library-cite lib "COUNT-NONPOSITIVE" (list after) (list integral bound)))
        (count (if (equal after successor)

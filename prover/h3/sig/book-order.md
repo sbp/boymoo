@@ -23,20 +23,8 @@ Library used by `bounds`.
 | `(h3-book-order-bounds-with-library bounds library)` | Bounds using the given Library, with the same evidence and search budget. Does not produce a failure. |
 | `(h3-book-order-bounds-rational bounds term)` | A Step proving `term` rational. May fail. |
 | `(h3-book-order-bounds-numeric bounds term)` | A Step proving `term` an ACL2 number. May fail. |
-| `(h3-book-order-bounds-compose bounds first second)` | `(cons step bounds)` for the composition of two comparison Steps. May fail. |
-| `(h3-book-order-bounds-path bounds source destination strict mirrored)` | `(cons steps bounds)` with the first eligible path in breadth-first order. The Step list is in path order. May fail, including `Unproved` when no path exists. |
-| `(h3-book-order-bounds-direct-bound bounds goal mirrored)` | `(cons step bounds)` for the proof of the comparison `goal`. May fail, including `Unproved`. |
-| `(h3-book-order-bounds-reflect bounds first second)` | `(cons step bounds)` with an equality Step reflecting `first < second` through additive negation. `first` and `second` are terms. May fail. |
-| `(h3-book-order-bounds-bound bounds goal)` | `(cons step bounds)` for the proof of the comparison `goal`, with reflection on a retry. May fail, including `Unproved`. |
-| `(h3-book-order-constant-product library constant scalar scalar-type)` | An equality Step reducing `constant * scalar` for `0`, `1`, and `-1`, or proving reflexivity. `scalar-type` proves `scalar` rational. May fail. |
-| `(h3-book-order-selected-sign library bounds rational)` | `(cons signs bounds)` for the first provable sign, testing positive before negative. `rational` is a rationality Step and `signs` is the value from `book-signs`, or `nil` if neither sign is proved. May fail. |
-| `(h3-book-order-quotient-bound library goal bounds depth)` | `(cons step bounds)` proving the comparison `goal` by clearing reciprocals. May fail, including `Unproved`. |
-| `(h3-book-order-scaled-bound library goal bounds)` | `(cons step bounds)` proving the comparison `goal` by the sign of a common factor. May fail, including `Unproved`. |
-| `(h3-book-order-product-bound library goal bounds)` | `(cons step bounds)` proving the comparison `goal` using comparisons through an intermediate product. May fail, including `Unproved`. |
-| `(h3-book-order-product-zero-bound library goal bounds)` | `(cons step bounds)` proving the comparison `goal` by the sign of a factor. May fail, including `Unproved`. |
 | `(h3-book-order-bound-tactic goal)` | `:quotient-bound`, `:product-bound`, `:product-zero-bound`, or `nil`, denoting the selected tactic. Malformed terms can fail. |
 | `(h3-book-order-bound-atoms term)` | List of conjuncts, recursively visiting the test then the true branch of each `IF` with false other branch. A malformed `IF` can fail when a required operand is absent. |
-| `(h3-book-order-nonlinear-theorem library formula)` | `(cons step library)` with the proof and any auxiliary lemmas, or `nil` when the tactic is inapplicable. May fail, including `Unproved`. |
 
 In the paired results, the returned Bounds contains the current Library and
 Search. A failure is the entire result. The comparison graph uses premise

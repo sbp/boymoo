@@ -165,7 +165,7 @@
           (proof-with-checked-results
               ((added (t3-book-permutations-permutations-lemma tactic "OTHER-MEMBER" step)))
             (cdr added))
-        '(:failure "Unproved" "")))))
+        '(:failure "unproved" "")))))
 
 (defun t3-book-permutations-permutations-other-member (tactic a b sequence different)
   (let ((proof (library-library-proof (t3-book-permutations-permutations-lib tactic))))
@@ -391,7 +391,7 @@
  (defun t3-book-permutations-permutations-boolean-leaf (n value tests lib induction)
    (declare (ignore tests) (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-book-permutations-permutations-boolean-leaf")
+       '(:failure "fuel" "t3-book-permutations-permutations-boolean-leaf")
      (let* ((plan (t3-book-permutations-boolean-plan lib value induction))
             (answers (t3-book-permutations-permutations-boolean-leaves
                       (1- n) (t3-book-permutations-boolean-requests plan) lib induction)))
@@ -401,7 +401,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((endp requests) nil)
-    ((zp n) '(:failure "Fuel" "t3-book-permutations-permutations-boolean-leaves"))
+    ((zp n) '(:failure "fuel" "t3-book-permutations-permutations-boolean-leaves"))
     (t
      (let* ((request (car requests))
             (answer (t3-book-permutations-permutations-boolean-leaf
@@ -647,4 +647,4 @@
             (proof-with-checked-results
                 ((entry (proof-proof-entry "theorem" name (list name) (list result))))
               (cons entry lib))
-          '(:failure "Unproved" ""))))))
+          '(:failure "unproved" ""))))))

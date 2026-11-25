@@ -11,9 +11,8 @@ entry has the form returned by `proof-proof-entry`.
 
 | Call | Result | Failure |
 |---|---|---|
-| `(t3-book-measures-plans lib rulers definitions stored)` | List of `(plan calls)` pairs. The inferred plans precede the exported plan and its expanded form. Each plan preserves the source insertion order and equal maps are yielded once. | A failure from reading the definitions or expanding a measure. |
-| `(t3-book-measures-count-or-length lib smaller larger evidence)` | `(cons step evidence)` with a size-comparison Step for the two measure terms and the resulting Evidence. | `Unsupported` when the size comparison is unavailable, or a construction failure. |
-| `(t3-book-measures-sum-decrease lib smaller larger evidence)` | `(cons step evidence)` with a decrease Step for the two measure terms and the resulting Evidence. | `Unsupported` or a construction failure. |
+| `(t3-book-measures-count-or-length lib smaller larger evidence)` | `(cons step evidence)` with a size-comparison Step for the two measure terms and the resulting Evidence. | `unsupported` when the size comparison is unavailable, or a construction failure. |
+| `(t3-book-measures-sum-decrease lib smaller larger evidence)` | `(cons step evidence)` with a decrease Step for the two measure terms and the resulting Evidence. | `unsupported` or a construction failure. |
 | `(t3-book-measures-prove-clause lib search clause call)` | `(list step lib search)` with the proof Step for the clause and the resulting Library and theorem search states. | A failure from the search or proof construction. |
 | `(t3-book-measures-measure-proof lib search rulers definitions stored)` | `(list entry lib search)` with the measure proof entry and the resulting Library and theorem search states. | The original termination failure if no fallback plan succeeds, or a construction failure. |
 

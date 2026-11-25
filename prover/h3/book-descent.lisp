@@ -152,28 +152,6 @@
      ((matches (h3-book-descent-choice-matches calls positions formals)))
      (and matches (list (h3-book-descent-choice-measures positions formals))))))
 
-(defun h3-book-descent-choices (remaining digits names formals calls)
-  (declare (xargs :measure (nfix remaining)))
-  (if (or (zp remaining) (eq digits :none))
-      nil
-    (proof-with-checked-results
-     ((choice (h3-book-descent-choice digits names formals calls))
-      (rest (h3-book-descent-choices
-             (1- remaining) (h3-book-descent-next-digits digits)
-             names formals calls)))
-     (append choice rest))))
-
-(defun h3-book-descent-candidates (lib definitions calls aids)
-  (proof-with-checked-results
-   ((names (h3-book-descent-definition-names definitions))
-    (formals (termination-formals definitions t nil))
-    (aids (h3-book-descent-aid-measures aids lib nil))
-    (hinted (h3-book-descent-hinted-measures names aids nil))
-    (choices (h3-book-descent-choices
-              250 (h3-book-descent-choice-digits names formals nil)
-              names formals calls)))
-   (append hinted choices)))
-
 (defun h3-book-descent-assumptions (proof tests)
   (if (endp tests)
       nil
@@ -202,9 +180,6 @@
    (car (h3-rewrite-search-prove
          (h3-rewrite-search-init lib *h3-book-descent-transparent* nil rules 20 nil)
          conclusion evidence))))
-
-(defun h3-book-descent-checked-pair (result)
-  (if (failure-p (car result)) (car result) result))
 
 (defun h3-book-descent-set-selector-start (lib formula)
   (let ((proof (library-library-proof lib)))
@@ -276,10 +251,6 @@
               (h3-rewrite-implication lib guard goal-proof))
              lib)))))))
 
-(defun h3-book-descent-set-selector-theorem (lib formula)
-  (h3-book-descent-checked-pair
-   (h3-book-descent-set-selector-theorem-with-library lib formula)))
-
 (defun h3-book-descent-set-fix-type (lib formula)
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results
@@ -332,10 +303,6 @@
                                       (list parent) (list consp-step)))
                arithmetic)))))))))
 
-(defun h3-book-descent-length-edge (lib smaller larger evidence)
-  (h3-book-descent-checked-pair
-   (h3-book-descent-length-edge-with-library lib smaller larger evidence)))
-
 (defun h3-book-descent-use-set-selector (lib name parent guard)
   (cons
    (proof-with-checked-results
@@ -377,10 +344,6 @@
                     (cons updated lib)
                   (h3-book-descent-use-set-selector updated name parent guard)))))))))))
 
-(defun h3-book-descent-set-selector-decrease (lib actual parent evidence)
-  (h3-book-descent-checked-pair
-   (h3-book-descent-set-selector-decrease-with-library lib actual parent evidence)))
-
 (defun h3-book-descent-empty-count-with-library (lib parent evidence)
   (let ((arithmetic (h3-merges-arithmetic lib)))
     (if (failure-p arithmetic)
@@ -402,7 +365,7 @@
                                               (list tail) (list natural)))
            (first (proof-step-first nonnegative)))
           (if (not (equal first (library-le *proof-zero* tail)))
-              '(:failure "ProofMismatch" "")
+              '(:failure "proof-mismatch" "")
             (proof-with-checked-results
              ((bound (library-library-compare-chain lib nonnegative strict))
               (empty (list *library-count* *proof-false*))
@@ -413,10 +376,6 @@
               (comparison (library-library-ordinal-comparison lib empty whole)))
              (proof-proof-transport proof bound comparison))))
          lib)))))
-
-(defun h3-book-descent-empty-count (lib parent evidence)
-  (h3-book-descent-checked-pair
-   (h3-book-descent-empty-count-with-library lib parent evidence)))
 
 (defun h3-book-descent-count-selector (lib actual parent evidence call)
   (let ((consp-step (h3-book-descent-prove-under-rulers
@@ -465,10 +424,6 @@
              lib))
            (t (h3-book-descent-count-selector lib actual parent evidence call))))))))
 
-(defun h3-book-descent-count-decrease (lib actual parent evidence call)
-  (h3-book-descent-checked-pair
-   (h3-book-descent-count-decrease-with-library lib actual parent evidence call)))
-
 (defun h3-book-descent-measure-edge-with-library (lib smaller larger evidence call)
   (cond
    ((and (proof-is-call smaller *library-len*) (proof-is-call larger *library-len*))
@@ -499,10 +454,6 @@
                  (step (proof-proof-rewrite proof step ordinal '(1))))
                 (proof-proof-tidy proof step))
                lib))))))))))
-
-(defun h3-book-descent-measure-edge (lib smaller larger evidence call)
-  (h3-book-descent-checked-pair
-   (h3-book-descent-measure-edge-with-library lib smaller larger evidence call)))
 
 (defund h3-book-descent-additive-edge (new old index previous accumulated lib evidence call)
   (let* ((edge (h3-book-descent-measure-edge-with-library lib new old evidence call))
@@ -562,10 +513,6 @@
             (proof-proof-transport (library-library-proof lib) step ordinal))
            lib)))))))
 
-(defun h3-book-descent-additive-descent (lib goal evidence call)
-  (h3-book-descent-checked-pair
-   (h3-book-descent-additive-descent-with-library lib goal evidence call)))
-
 (defun h3-book-descent-prove-normalized-descent-leaf
     (value tests lib parent evidence call)
   (let ((assumptions (h3-book-descent-assumptions (library-library-proof lib) tests)))
@@ -577,7 +524,7 @@
 (defun h3-book-descent-by-value (n lib value template tests parent evidence call)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) (cons '(:failure "Fuel" "h3-book-descent-by-value") lib))
+   ((zp n) (cons '(:failure "fuel" "h3-book-descent-by-value") lib))
    ((proof-is-call value *proof-if*)
     (let ((branches (proof-list-of-length (cdr value) 3)))
       (if (failure-p branches)
@@ -621,7 +568,7 @@
        (proof-with-checked-results
         ((literal (if (failure-p (car step)) (car step) (proof-step-first (car step))))
          (target (proof-subst template (list (cons *proof-result* value)))))
-        (if (equal literal target) (car step) '(:failure "ProofMismatch" "")))
+        (if (equal literal target) (car step) '(:failure "proof-mismatch" "")))
        (cdr step))))))
 
 (defun h3-book-descent-normalize-count (lib smaller larger evidence call)
@@ -712,10 +659,6 @@
                 (h3-book-descent-length-or-additive
                  lib goal (cadr parts) (caddr parts) evidence call)))))))))))
 
-(defun h3-book-descent-prove-normalized-descent (lib clause call)
-  (h3-book-descent-checked-pair
-   (h3-book-descent-prove-normalized-descent-with-library lib clause call)))
-
 (defun h3-book-descent-measure-head-p (head)
   (or (equal head *library-count*) (equal head *library-len*) (equal head *proof-plus*)))
 
@@ -768,12 +711,9 @@
                    (library-library-proof (cdr result)) (car result) (cdr normalizations))
                   (cdr result))))))))
 
-(defun h3-book-descent-prove-descent (lib clause call)
-  (h3-book-descent-checked-pair (h3-book-descent-prove-descent-with-library lib clause call)))
-
 (defun h3-book-descent-retryable-p (value)
   (and (failure-p value)
-       (member-equal (cadr value) '("Unproved" "ProofMismatch" "value" "key" "assertion"))))
+       (member-equal (cadr value) '("unproved" "proof-mismatch" "value" "key" "assertion"))))
 
 (defun h3-book-descent-proof-exceeds-clause (literals clause)
   (if (endp literals)
@@ -907,6 +847,3 @@
                  250 (h3-book-descent-choice-digits names formals nil) (cdr result)
                  definitions calls names formals proof-entry))))))))))
 
-(defun h3-book-descent-termination-proof (lib fields aids proof-entry)
-  (h3-book-descent-checked-pair
-   (h3-book-descent-termination-proof-with-library lib fields aids proof-entry)))

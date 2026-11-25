@@ -13,10 +13,10 @@
    (declare (xargs :measure (1+ (* 2 (acl2-count term)))))
    (cond
     ((or (not (proof-compound term)) (proof-is-call term *proof-quote*)) term)
-    ((endp term) '(:failure "Unproved" ""))
+    ((endp term) '(:failure "unproved" ""))
     ((proof-compound (car term))
      (if (not (consp (cddar term)))
-         '(:failure "MissingProofInput" "")
+         '(:failure "missing-proof-input" "")
        (proof-with-checked-results
            ((body (t3-tactics-replace-functions (caddar term) mapping))
             (args (t3-tactics-replace-functions-args (cdr term) mapping)))
@@ -106,7 +106,7 @@
 (defun t3-tactics-actual-value-visit (n term)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-tactics-actual-value-visit")
+      '(:failure "fuel" "t3-tactics-actual-value-visit")
     (proof-with-checked-results ((opening (t3-tactics-actual-value-opening term)))
       (if opening
           (t3-tactics-actual-value-visit (1- n) (car opening))
@@ -346,20 +346,6 @@
       (cons plan :done)))
    (t nil)))
 
-(defun t3-tactics-measure-plans-collect (n definitions calls stored phase)
-  (declare (xargs :measure (nfix n)))
-  (if (zp n)
-      '(:failure "Fuel" "t3-tactics-measure-plans-collect")
-    (proof-with-checked-results ((next (t3-tactics-measure-plan-next definitions calls stored phase)))
-      (if (not next)
-          nil
-        (proof-with-checked-results
-            ((rest (t3-tactics-measure-plans-collect (1- n) definitions calls stored (cdr next))))
-          (cons (car next) rest))))))
-
-(defun t3-tactics-measure-plans (definitions calls stored)
-  (t3-tactics-measure-plans-collect 1000000 definitions calls stored :start))
-
 (defun t3-tactics-ordinal (lib measure)
   (proof-with-checked-results
       ((direct (descent-direct-builtin lib (list (list *proof-ordinalp* measure)) nil)))
@@ -386,8 +372,8 @@
       (proof-with-checked-results ((term (proof-term-at larger 1)))
         (if (equal smaller (list *library-len* (list *library-cdr* term)))
             (t3-size-length-tail lib term evidence)
-          '(:failure "Unsupported" "")))
-    '(:failure "Unsupported" "")))
+          '(:failure "unsupported" "")))
+    '(:failure "unsupported" "")))
 
 (defun t3-tactics-shifted-tail (lib smaller larger offset prefix evidence)
   (proof-with-checked-results
@@ -498,7 +484,7 @@
          ((or (proof-is-call larger *library-len*) (proof-is-call larger *proof-plus*))
           (t3-tactics-descent-length lib smaller larger evidence))
          (t (proof-with-checked-results ((printed (proof-write main)))
-              '(:failure "Unsupported" ""))))))))
+              '(:failure "unsupported" ""))))))))
 
 (defun t3-tactics-descent-measures (lib main smaller larger call evidence)
   (cond
@@ -628,12 +614,6 @@
                     (t3-tactics-measure-failure entry (car progress))
                   (cons entry (car progress)))))))))))
 
-(defun t3-tactics-prove-measure (lib definitions calls measures)
-  (let ((result (t3-tactics-prove-measure-attempt lib definitions calls measures)))
-    (if (t3-tactics-measure-failed-p result)
-        (cadr result)
-      result)))
-
 (defund t3-tactics-plan-attempt (lib definitions calls stored phase start error)
   (proof-with-checked-results ((next (t3-tactics-measure-plan-next definitions calls stored phase)))
     (if (not next)
@@ -642,7 +622,7 @@
         (if (not (t3-tactics-measure-failed-p result))
             result
           (let ((error (cadr result)))
-            (if (not (member-equal (cadr error) '("Unproved" "Unsupported" "value")))
+            (if (not (member-equal (cadr error) '("unproved" "unsupported" "value")))
                 error
               (proof-with-checked-results
                   ((lib (t3-logic-libraryproofs-discard-entries (caddr result) start)))
@@ -651,7 +631,7 @@
 (defun t3-tactics-try-plans (n lib definitions calls stored phase start error)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-tactics-try-plans")
+      '(:failure "fuel" "t3-tactics-try-plans")
     (let ((result (t3-tactics-plan-attempt lib definitions calls stored phase start error)))
       (if (eq (car result) :retry)
           (t3-tactics-try-plans (1- n) (cadr result) definitions calls stored
@@ -666,4 +646,4 @@
        (lib (if (equal first *t3-genvar-genvar*) (t3-genvar-build lib) lib)))
     (t3-tactics-try-plans 1000000 lib definitions calls stored :start
                          (len (library-library-entries lib))
-                         '(:failure "Unsupported" ""))))
+                         '(:failure "unsupported" ""))))

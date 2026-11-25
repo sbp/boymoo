@@ -12,9 +12,6 @@ Library. A `proof` is the H2 proof search object that contains a Library.
 | `h2-alist-recognizers-label` | Recognizer | ASCII name of the recognizer predicate | A failure if the predicate has no name field or the field cannot be decoded as ASCII. |
 | `h2-alist-recognizers-alist-fact` | Library, fact name string, recognizer, ordered binding pairs or `nil` | Instantiated fact Step with the bound parameter supplied when present | A failure from fact lookup or instantiation. |
 | `h2-alist-recognizers-cons-closed` | Library, constructor fact name string, recognized singleton Step, recognized tail Step, recognizer | Step recognizing the combined cons | A failure from reading the Steps or proving the recognizer call. |
-| `h2-alist-recognizers-list-parts` | Proof, recognizer | `(cons parts proof)` after establishing the constructor, head and tail facts in order | A failure from proof construction. |
-| `h2-alist-recognizers-lookup-singleton` | Proof, recognizer, parts | `(cons name proof)` after establishing that a found entry is recognized as a singleton | A failure from proof construction. |
-| `h2-alist-recognizers-reverse-preserved` | Proof, recognizer, parts | `(cons name proof)` after establishing preservation through `REVAPPEND` and `REVERSE` | A failure from proof construction. |
 
 The constants are `*h2-alist-recognizers-alist*`,
 `*h2-alist-recognizers-bounded*`, `*h2-alist-recognizers-assoc*`,

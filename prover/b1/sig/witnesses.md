@@ -21,7 +21,7 @@ its failure directly.
 | `(b1-witnesses-alist-type-witness lib functions formulas)` | A Library, constrained function symbols and their constraint formulas. Returns the witness result for abstract association lists. | A failure from reading or proving a constraint. |
 | `(b1-witnesses-list-type-witness lib functions formulas)` | The same arguments. Returns the witness result for an abstract list recognizer. | A failure from reading or proving a constraint. |
 | `(b1-witnesses-evaluator-witness lib functions formulas)` | The same arguments. Returns the witness result for a term and list evaluator. | A failure from reading or proving a constraint. |
-| `(b1-witnesses-small-witnesses lib functions formulas index)` | A Library, list of `(symbol arity)` pairs, constraint formulas and the search FactIndex. Returns the first successful witness result. | `Unproved` when no trial succeeds, or another failure from reading a constraint or constructing a proof. |
+| `(b1-witnesses-small-witnesses lib functions formulas index)` | A Library, list of `(symbol arity)` pairs, constraint formulas and the search FactIndex. Returns the first successful witness result. | `unproved` when no trial succeeds, or another failure from reading a constraint or constructing a proof. |
 
 `*b1-witnesses-witnesses*` is an ordered alist from unqualified ASCII
 function names to the ACL2 symbols naming the

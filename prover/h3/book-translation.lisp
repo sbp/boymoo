@@ -31,7 +31,7 @@
 
 (defun h3-book-translation-retryable-p (result)
   (and (failure-p result)
-       (member-equal (cadr result) '("Unproved" "DifferentNormalForms" "WrongSumArity" "value"))
+       (member-equal (cadr result) '("unproved" "different-normal-forms" "wrong-sum-arity" "value"))
        t))
 
 (defund h3-book-translation-step-at (step index)
@@ -58,7 +58,7 @@
               (proof-with-checked-results
                   ((reversed (library-inherited proof-proof-symmetric library right)))
                 (library-inherited proof-proof-chain library left (list reversed)))
-            '(:failure "Unproved" ""))
+            '(:failure "unproved" ""))
           library)))
 
 (defun h3-book-translation-sum-equality (library first second evidence)
@@ -122,7 +122,7 @@
          (side (table-get evidence (proof-neg complex-test) nil))
          (test (list *library-rationalp* dividend)))
     (if (not side)
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
           ((divisor-type (proof-step-first divisor))
            (inverse-term (proof-term-at ratio 2))
@@ -152,7 +152,7 @@
        ((not (proof-is-call dividend *proof-plus*))
         (h3-book-translation-rational-ratio-noncomplex library dividend divisor ratio evidence))
        ((not (equal (len (cdr dividend)) 2))
-        '(:failure "WrongSumArity" ""))
+        '(:failure "wrong-sum-arity" ""))
        (t
         (proof-with-checked-results
             ((expansion (h3-book-translation-sum-ratio library (cadr dividend) (caddr dividend)
@@ -193,7 +193,7 @@
     (let ((result (library-library-type-of
                    library term (table-values (h3-book-order-bounds-evidence context)))))
       (cons (if (h3-book-translation-retryable-p result)
-                '(:failure "Unproved" "")
+                '(:failure "unproved" "")
               result)
             library))))
 
@@ -201,7 +201,7 @@
  (defun h3-book-translation-integer-translation (n library delta divisor law context)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h3-book-translation-integer-translation") library)
+       (cons '(:failure "fuel" "h3-book-translation-integer-translation") library)
      (let* ((ratio (h3-book-floor-floor-ratio delta divisor))
             (given (table-get (h3-book-order-bounds-evidence context)
                                (library-integer ratio) nil)))
@@ -239,13 +239,13 @@
              ((terms (proof-list-of-length (cdr delta) 2)))
            (h3-book-translation-integer-translation-product
             (1- n) library (list terms (reverse terms)) ratio divisor law context)))
-        (t (cons '(:failure "Unproved" "") library))))))
+        (t (cons '(:failure "unproved" "") library))))))
 
  (defun h3-book-translation-integer-translation-product (n library pairs ratio divisor law context)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "h3-book-translation-integer-translation-product") library))
-    ((endp pairs) (cons '(:failure "Unproved" "") library))
+    ((zp n) (cons '(:failure "fuel" "h3-book-translation-integer-translation-product") library))
+    ((endp pairs) (cons '(:failure "unproved" "") library))
     (t
      (let* ((factor (caar pairs))
             (unit (cadar pairs))
@@ -295,7 +295,7 @@
                (side (table-get (h3-book-order-bounds-evidence context)
                                   (proof-neg complex-test) nil)))
           (if (not side)
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (proof-with-checked-results
                 ((positive (library-inherited proof-proof-assume library test t))
                  (yes (h3-book-mod-floor-zero-with-mixed-types library call positive not-rational))
@@ -307,7 +307,7 @@
 (defun h3-book-translation-mod-translate-floor-zero (call library base context no-rat)
   (proof-with-checked-results ((dividend (proof-term-at call 1)))
     (if (not (equal dividend base))
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
           ((divisor (proof-term-at call 2))
            (rational (h3-book-order-bounds-rational
@@ -318,7 +318,7 @@
   (proof-with-checked-results ((denominator (proof-term-at call 2)))
     (if (equal denominator divisor)
         (h3-book-translation-floor-zero-for-nonrational-divisor library call not-rational context)
-      '(:failure "Unproved" ""))))
+      '(:failure "unproved" ""))))
 
 (defun h3-book-translation-call-floor-zero (library call recipe)
   (case (car recipe)
@@ -343,7 +343,7 @@
    (proof-with-checked-results ((given (and evidence (proof-step-first evidence))))
      (cond
       ((and evidence (equal given (proof-eq term *proof-zero*))) evidence)
-      ((atom term) '(:failure "Unproved" ""))
+      ((atom term) '(:failure "unproved" ""))
       ((and floor-zero (proof-is-call term *h3-book-floor-floor*))
        (h3-book-translation-call-floor-zero library term floor-zero))
       ((proof-is-call term *proof-plus*)
@@ -363,7 +363,7 @@
               (reduced (library-inherited proof-proof-rewrite library initial part '(1 2 1)))
               (zero (library-inherited proof-proof-compute library (library-minus *proof-zero*) 0)))
            (library-inherited proof-proof-chain library reduced (list zero)))))
-      ((not (proof-is-call term *proof-times*)) '(:failure "Unproved" ""))
+      ((not (proof-is-call term *proof-times*)) '(:failure "unproved" ""))
       ((and (member-equal divisor (cdr term)) evidence)
        (h3-book-translation-zero-product library (cdr term) divisor evidence))
       (t (h3-book-translation-zero-multiple-product
@@ -382,7 +382,7 @@
  (defun h3-book-translation-zero-multiple-product (library parts factors divisor evidence floor-zero)
    (declare (xargs :measure (acl2-count parts)))
    (if (endp parts)
-       '(:failure "Unproved" "")
+       '(:failure "unproved" "")
      (let ((equation (h3-book-translation-zero-multiple library (car parts)
                                                          divisor evidence floor-zero)))
        (if (h3-rewrite-unproved-p equation)
@@ -491,7 +491,7 @@
     (n library base delta divisor notzero context)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "h3-book-translation-mod-translate-with-library") library)
+      (cons '(:failure "fuel" "h3-book-translation-mod-translate-with-library") library)
     (let* ((started (h3-book-translation-mod-translate-start library base delta divisor notzero context))
            (part (car started))
            (library (cdr started)))
@@ -503,11 +503,6 @@
             (h3-book-translation-mod-translate-complex
              library base delta (cadr part) (caddr part) yes context))
         started))))
-
-(defun h3-book-translation-mod-translate (library base delta divisor notzero context)
-  (h3-book-translation-result
-   (h3-book-translation-mod-translate-with-library
-    1000000 library base delta divisor notzero context)))
 
 (defun h3-book-translation-translate-mod-by-type-rational-case
     (typed library base delta divisor context)
@@ -755,10 +750,6 @@
                              (list t (caddr arguments) (cadr arguments)))
                context guard))))))))
 
-(defun h3-book-translation-modulus-translation (library formula)
-  (h3-book-translation-result
-   (h3-book-translation-modulus-translation-with-library library formula)))
-
 (defun h3-book-translation-product-remainder-default (status library product divisor call target)
   (proof-with-checked-results
       ((dividend-zero (h3-book-translation-zero-product library (cdr product) divisor status))
@@ -835,10 +826,6 @@
        (no (h3-book-translation-product-remainder-default nonnumeric library product divisor call target)))
     (cons (library-inherited proof-proof-cases library numeric-test yes no) library)))
 
-(defun h3-book-translation-product-remainder (library call factor)
-  (h3-book-translation-result
-   (h3-book-translation-product-remainder-with-library library call factor)))
-
 (defun h3-book-translation-modulus-scaling-zero (library guard call factor scaled divisor)
   (h3-book-translation-with-library library
       ((assumption (library-inherited proof-proof-assume library guard t))
@@ -902,6 +889,3 @@
           (h3-book-translation-modulus-scaling-goal library guard (cadr parts))))
     (h3-book-translation-modulus-scaling-goal library nil formula)))
 
-(defun h3-book-translation-modulus-scaling (library formula)
-  (h3-book-translation-result
-   (h3-book-translation-modulus-scaling-with-library library formula)))

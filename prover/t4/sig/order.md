@@ -5,7 +5,7 @@ The Library, terms, and Steps follow `prover/sig/library.md` and
 
 | Call | Arguments and result | Failure |
 |---|---|---|
-| `(t4-order-strict-equation lib relation)` | `relation` is a term. Return its unfolded equality Step when its definition is the conjunction of an order test and unequal endpoints, or `nil`. | From unfolding or reading the definition, or `Fuel` when unfolding exhausts its allowance. |
+| `(t4-order-strict-equation lib relation)` | `relation` is a term. Return its unfolded equality Step when its definition is the conjunction of an order test and unequal endpoints, or `nil`. | From unfolding or reading the definition, or `fuel` when unfolding exhausts its allowance. |
 | `(t4-order-strict-order lib claim replies)` | `claim` is a term. Return `(cons step lib)` with the proof of an applicable strict order law, or with `nil` as the Step if the recipe is inapplicable. The Library is the one resulting from the proof operations. | From a query or proof operation, or a failure for a different strict order or a missing order law. |
 
 `strict-order` can return a request `(:t4-order-request operation arguments lib)`.

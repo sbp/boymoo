@@ -77,7 +77,7 @@
 (defun b2-removal-solve-tests (n library conditions replies goal evidence unfold rules)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-removal-solve-tests")
+      '(:failure "fuel" "b2-removal-solve-tests")
     (proof-with-checked-results
         ((result (b2-removal-tests library conditions replies nil)))
       (if (b2-removal-tests-request-p result)
@@ -161,7 +161,7 @@
   (let ((proof (library-library-proof library)))
     (cond
      ((not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-removal-disjoin-pair-by-value"))
+      '(:failure "fuel" "b2-removal-disjoin-pair-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((parts (proof-list-of-length (cdr value) 3))

@@ -20,7 +20,7 @@
 (defun t2-lists-sum-decrease-decrease (n child parent lib hypotheses)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t2-lists-sum-decrease-decrease"))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t2-lists-sum-decrease-decrease"))
    ((equal child parent) (cons nil hypotheses))
    ((and (proof-is-call child *proof-plus*) (proof-is-call parent *proof-plus*))
     (proof-with-checked-results
@@ -39,10 +39,10 @@
              ((car left) (t2-lists-sum-shift lib (car left) child-right nil))
              (t (t2-lists-sum-shift lib (car right) parent-left t)))))
      (cons step (cdr right))))
-   ((not (proof-is-call parent *library-len*)) '(:failure "RecipeMismatch" ""))
+   ((not (proof-is-call parent *library-len*)) '(:failure "recipe-mismatch" ""))
    (t (proof-with-checked-results ((argument (proof-term-at parent 1)))
         (if (not (equal child (list *library-len* (list *library-cdr* argument))))
-            '(:failure "RecipeMismatch" "")
+            '(:failure "recipe-mismatch" "")
           (proof-with-checked-results
            ((cons-step (t2-guarded-selectors-context-require hypotheses (list *proof-consp* argument)))
             (decrease (library-library-cite lib "LEN-CDR-LESS" (list argument) (list (car cons-step)))))
@@ -263,7 +263,7 @@
 
 (defun t2-lists-split-evens (lib term original first-tail hypotheses)
   (if (not (equal term (list *t2-lists-evens* original)))
-      '(:failure "RecipeMismatch" "")
+      '(:failure "recipe-mismatch" "")
     (let ((proof (library-library-proof lib)))
       (proof-with-checked-results
        ((equation (proof-proof-unfold proof term))
@@ -337,7 +337,7 @@
       (equation (proof-proof-chain proof taken (list if-false)))
       (reduced (proof-rewritten-term equation)))
      (if (not (equal reduced removed))
-         '(:failure "RecipeMismatch" "")
+         '(:failure "recipe-mismatch" "")
        (proof-with-checked-results
         ((reverse (proof-proof-symmetric proof equation))
          (bound (proof-proof-rewrite proof bound reverse '(1 1 2 1))))
@@ -389,7 +389,7 @@
     (source (proof-term-at term 2))
     (original (proof-term-at parent 1)))
    (if (not (equal source (list *library-cdr* original)))
-       '(:failure "RecipeMismatch" "")
+       '(:failure "recipe-mismatch" "")
      (proof-with-checked-results
       ((key (proof-term-at term 1))
        (weak (library-library-cite ready "COUNT-HONS-REMOVE-ASSOC-WEAK" (list source key) nil))

@@ -71,7 +71,6 @@ Bindings that a rule takes are a list of two-member lists `(variable term)`. A s
 | `(proof-bindings-table pairs bindings)` | The table `bindings` after `table-put` of each `(variable term)` of the list `pairs`. | None. |
 | `(proof-nonidentity-pairs bindings)` | The members of a list of bindings that do not give a variable itself. | `"value"` for a member that does not have two members. |
 | `(proof-change term place old new)` | The term with `new` at the place, where `old` must stand. | `"assertion"` when another term stands there, and when the place leads into a constant, a variable or past the arguments. `"index"` for an empty list on the way. |
-| `(proof-proof-rewrite-result-places term place slot)` | The list of the places at which the term `slot` stands in `term`, in the order of reading, each beginning with the members of `place`. Constants are not entered. | `"index"` for an empty list among the subterms. |
 | `(proof-without-literal clause literal)` | The clause without the literal. | None. |
 
 ## The rules

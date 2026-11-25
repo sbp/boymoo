@@ -24,28 +24,11 @@ distinct projected calls retain the order of their first occurrence.
 |---|---|---|
 | `(t4-results-true-list-cons lib pair)` | Library and a `CONS` term. An equality Step reducing its proper-list test to the test of its tail. | A failure from constructing the Step. |
 | `(t4-results-projection lib term)` | Library and term. A pair of a field-selection equality Step or `nil` and the Library with the corresponding auxiliary lemma if needed. | A failure from constructing the Step or reading the field. |
-| `(t4-results-unfold-projection lib term)` | Library and a call of `MV-NTH` or `NTH` on a `CONS` term at a quoted integer index. The equality Step produced by unfolding the projection. | A failure from constructing the Step. |
-| `(t4-results-result-property lib formula)` | Library and claim term. A pair of the Step or `nil` and the resulting Library. | A failure from proof search or the result-path limit. |
-| `(t4-results-list-projection-invariant lib formula recursive)` | Library, claim term and recursive name set. A pair of the induction Step or `nil` and the resulting Library. | A failure from constructing the Step or from a missing proper-list premise. |
-| `(t4-results-guarded-result-type lib formula recursive)` | Library, claim term and recursive name set. A pair of the Step or `nil` and the resulting Library. | A failure from constructing the Step, from a missing type premise, or from the result-path limit. |
-| `(t4-results-list-result-invariant lib formula recursive)` | Library, claim term and recursive name set. A pair of the induction Step or `nil` and the resulting Library. | A failure from proof search or constructing the Step. |
 
 A failure is the entire result. Tactics that need the library's proof search
 also have query entry points. A caller that holds a subclass uses its
 Library component, retaining the returned Library even when the Step is
 `nil`.
-
-The search entry points with replies are
-`(t4-results-result-property-query lib formula replies)`,
-`(t4-results-list-projection-invariant-query lib formula recursive replies)`,
-`(t4-results-guarded-result-type-query lib formula recursive replies)`,
-and `(t4-results-list-result-invariant-query lib formula recursive replies)`.
-The forms without `replies` start the query with an empty reply list. Pass
-the original arguments and append replies in evaluation order as in
-`prover/t4/sig/constructors.md`. The `:solve` operation takes the formula,
-the signed tests, the list of extra Steps and the depth, in that order.
-Its successful value is a Step. The other operations and replies have the
-forms in the constructor signature.
 
 `(t4-results-query recipe lib formula recursive replies)` selects a search
 entry point by keyword. The keywords are `:result-property`,

@@ -88,7 +88,7 @@
     (claim (proof-subst template (list (cons *proof-result* value)))))
    (if (equal literal claim)
        result
-     '(:failure "InferenceMismatch" ""))))
+     '(:failure "inference-mismatch" ""))))
 
 (defun t4-printing-join-result (value template yes no)
   (let* ((printer (cdr no))
@@ -101,7 +101,7 @@
  (defun t4-printing-character-run (n printer term tests)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-printing-character-run")
+       '(:failure "fuel" "t4-printing-character-run")
      (let ((formula (list *t4-printing-characterp* term))
            (name "DIGIT-PRINTS-A-CHARACTER"))
        (proof-with-checked-results
@@ -118,7 +118,7 @@
               (proved (proof-proof-true-from-eq proof computed)))
              (cons proved printer)))
            ((not (proof-is-call term *t4-printing-digit*))
-            '(:failure "SearchMiss" ""))
+            '(:failure "search-miss" ""))
            (t
             (proof-with-checked-results
              ((printer
@@ -144,7 +144,7 @@
  (defun t4-printing-character-by-value (n printer value template tests)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-printing-character-by-value"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-printing-character-by-value"))
     ((proof-is-call value *proof-if*)
      (proof-with-checked-results
       ((branches (proof-list-of-length (cdr value) 3))
@@ -305,11 +305,11 @@
      (proof-with-checked-results ((datum (proof-term-at value 1)))
        (if (proof-compound datum)
            (t4-printing-literal-elements (reverse datum) nil (car result) (cdr result))
-         '(:failure "SearchMiss" ""))))))
+         '(:failure "search-miss" ""))))))
 
 (defun t4-printing-printed-list-missing-value (value tests)
   (declare (ignore value tests))
-  '(:failure "SearchMiss" ""))
+  '(:failure "search-miss" ""))
 
 (defun t4-printing-printed-list-atoms-primitive (value tests printer i-r large-r)
   (if (not (proof-is-call value *t4-printing-print-integer*))
@@ -360,7 +360,7 @@
 (defun t4-printing-group-index (group head)
   (let ((index (seq-index-from group head 0)))
     (if (< index 0)
-        '(:failure "SearchMiss" "")
+        '(:failure "search-miss" "")
       index)))
 
 (defun t4-printing-character-results-recursive-leaf (value tests printer group joint obj)
@@ -370,7 +370,7 @@
           (lib (t4-printing-printed-list-lib printer)))
       (if (or (not (member-equal selector (list *library-car* *library-cdr*)))
               (not (equal source obj)))
-          '(:failure "SearchMiss" "")
+          '(:failure "search-miss" "")
         (proof-with-checked-results
          ((decrease (library-library-builtin lib (if (equal selector *library-car*) 2 3) obj))
           (decrease-term (proof-step-first decrease))
@@ -425,7 +425,7 @@
     (otherwise
      (let ((entry (assoc-equal (list value tests) leaf)))
        (if (not entry)
-           '(:failure "SearchMiss" "")
+           '(:failure "search-miss" "")
          (proof-with-checked-results ((step (cdr entry)))
            (cons step printer)))))))
 
@@ -459,7 +459,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((template (t4-printing-printed-list-template printer)))
      (cond
-      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-printing-prove-result-run"))
+      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-printing-prove-result-run"))
       ((proof-is-call value *proof-if*)
        (proof-with-checked-results
         ((branches (proof-list-of-length (cdr value) 3))
@@ -487,7 +487,7 @@
  (defun t4-printing-printed-list-prove-result-visit (n node cases printer leaf known)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-printing-printed-list-prove-result-visit")
+       '(:failure "fuel" "t4-printing-printed-list-prove-result-visit")
      (proof-with-checked-results
       ((found (t4-printing-evidence-find printer cases known (list *t4-printing-characters* node))))
       (let ((printer (cdr found)))
@@ -520,7 +520,7 @@
          (zp-test (list *t4-printing-zp* n))
          (positive (library-positive n)))
     (if (not (equal (seq-slice test 1 3) (list zp-test zp-test)))
-        '(:failure "InferenceMismatch" "")
+        '(:failure "inference-mismatch" "")
       (proof-with-checked-results
        ((denied (proof-proof-assume proof test nil))
         (assumed (proof-proof-assume proof zp-test t))
@@ -557,7 +557,7 @@
                    lib "NFIX-DECREASE" (list q n)
                    (list (car parts) (car positive-path) (cadr positive-path) (caddr parts)))))
       (if (not (equal (seq-slice recur :none 3) (list *t4-printing-print-integer* q radix)))
-          '(:failure "InferenceMismatch" "")
+          '(:failure "inference-mismatch" "")
         (proof-with-checked-results
          ((next-ans (proof-term-at recur 3))
           (new-ans (t4-printing-printed-list-prove-result

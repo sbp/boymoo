@@ -7,8 +7,7 @@ for its additive and typed order lemmas.
 
 | Call | Arguments and result | Failure |
 |---|---|---|
-| `(t3-book-numeric-order-number-sums-type-of sums term evidence)` | A Step establishing that `term` is a number, using the first matching Step in ordered list `evidence` if present. Pass `nil` for empty evidence. | `Unsupported` if there is no numeric recipe, or a failure from constructing the Step. |
-| `(t3-book-numeric-order-number-sums-number-type sums term types)` | A number Step for `term` using the ordered list `types`, with the same lookup as `type-of`. | A failure from `type-of`. |
+| `(t3-book-numeric-order-number-sums-type-of sums term evidence)` | A Step establishing that `term` is a number, using the first matching Step in ordered list `evidence` if present. Pass `nil` for empty evidence. | `unsupported` if there is no numeric recipe, or a failure from constructing the Step. |
 | `(t3-book-numeric-order-select lib equation evidence)` | A Step chaining equality Step `equation` with normalization of its right side. `evidence` is the ordered list of Steps. | A failure from normalization or proof construction. |
 | `(t3-book-numeric-order-fixed-comparison lib sums)` | The Library with numeric fixation, addition, negation, and strict comparison lemmas in that order. | A failure from constructing or adding a lemma. |
 | `(t3-book-numeric-order-fixed-comparison-added has-a has-b lib sums a b fx fy)` | A Step comparing the sums of `X` and `Y` and of terms `fx` and `fy` under the signed number tests `a` and `b`. The Boolean arguments choose the signs. | A failure from proof construction. |

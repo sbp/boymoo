@@ -12,7 +12,7 @@
 
 (defun h3-event-counts-step-term (step index)
   (if (null step)
-      '(:failure "MalformedTacticInput" "")
+      '(:failure "malformed-tactic-input" "")
     (proof-with-checked-results ((literal (proof-step-first step)))
       (proof-term-at literal index))))
 
@@ -204,7 +204,7 @@
           (h3-event-counts-fraction-decreases-edges
            (list (list num abs-num count-num dp) (list den den count-den abs-pos))
            parent (list di abs-int) library nil)
-        '(:failure "ProofMismatch" "")))))
+        '(:failure "proof-mismatch" "")))))
 
 (defun h3-event-counts-natural-helpers-length-leaves (requests library)
   (if (endp requests)
@@ -279,7 +279,7 @@
                         (proof-sym "SELF-NATURAL-SUM" "ACL2")
                         (proof-sym "SELF-NATURAL-FROM-BOUNDS" "ACL2"))
                   library))
-        '(:failure "ProofMismatch" "")))))
+        '(:failure "proof-mismatch" "")))))
 
 (defun h3-event-counts-cutoff-rule (library low high)
   (let ((proof (library-library-proof library)))
@@ -322,7 +322,7 @@
                                          (list numeric low-type one edge)))
          (low-value (proof-term-at low 1)))
       (if (not (acl2-numberp low-value))
-          '(:failure "MalformedTacticInput" "")
+          '(:failure "malformed-tactic-input" "")
         (proof-with-checked-results
             ((fixed (proof-quote (1+ low-value)))
              (computation (proof-proof-compute proof (library-plus *proof-one* low) (cadr fixed)))
@@ -397,7 +397,7 @@
            (head (proof-term-at child 0))
            (smaller (if (assoc-equal head edges)
                         (cdr (assoc-equal head edges))
-                      '(:failure "MissingProofData" "")))
+                      '(:failure "missing-proof-data" "")))
            (smaller-claim (proof-step-first smaller))
            (map (h3-event-counts-event-count-binding-map bindings nil))
            (new-measure (proof-subst measure map)))
@@ -410,7 +410,7 @@
               (h3-event-counts-event-count-recursive-context
                (cdr recursive-calls) formula measure call edges proof
                (append context (list step)) used-substitutions))
-          '(:failure "ProofMismatch" ""))))))
+          '(:failure "proof-mismatch" ""))))))
 
 (defun h3-event-counts-event-count-leaf
     (value tests library call edges formula measure template rules used-substitutions)

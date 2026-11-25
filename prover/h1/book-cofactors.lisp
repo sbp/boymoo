@@ -16,7 +16,7 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((eql limit 0) nil)
-   ((zp n) '(:failure "Fuel" "h1-book-cofactors-components-collect"))
+   ((zp n) '(:failure "fuel" "h1-book-cofactors-components-collect"))
    (t (proof-with-checked-results ((literal (proof-step-first statement)))
         (if (not (proof-is-call literal *proof-if*))
             (list statement)

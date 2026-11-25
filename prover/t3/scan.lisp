@@ -139,7 +139,7 @@
                      ((intact (t3-logic-evidence-integer evidence result))
                       (advance (t3-arithmetic-integer-comparison lib index result (cdr intact))))
                      (list (car intact) (car advance) substitutions)))
-                   (t '(:failure "Unsupported" ""))))
+                   (t '(:failure "unsupported" ""))))
       (truth (t3-logic-libraryproofs-prove lib *proof-true* nil nil))
       (when-zero (proof-proof-if-true proof claim))
       (yes (proof-proof-transport proof truth when-zero))
@@ -272,7 +272,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t3-scan-prove-value"))
+     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t3-scan-prove-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
        ((parts (proof-list-of-length (cdr value) 3))
@@ -453,7 +453,7 @@
       (value (t3-scan-step-right equation)))
      (if (proof-is-call value *t3-scan-search-start*)
          equation
-       '(:failure "Unsupported" "")))))
+       '(:failure "unsupported" "")))))
 
 (defun t3-scan-extend-search-order (lib term start evidence index result-type order)
   (proof-with-checked-results

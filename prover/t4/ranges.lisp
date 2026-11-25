@@ -8,7 +8,7 @@
 (defun t4-ranges-range-descent-queries (goal formals)
   (proof-with-checked-results
       ((parameters (if (integerp formals)
-                       '(:failure "MalformedCandidate" "")
+                       '(:failure "malformed-candidate" "")
                      (proof-list-of-length (take (min 3 (len formals)) formals) 3)))
        (goal-parts (proof-list-of-length goal 3)))
     (let ((i (car parameters))
@@ -29,7 +29,7 @@
 (defun t4-ranges-next-difference (after)
   (if (and (not (integerp after)) (equal (len (cdr after)) 2))
       (library-diff (cadr after) (caddr after))
-    '(:failure "MalformedCandidate" "")))
+    '(:failure "malformed-candidate" "")))
 
 (defun t4-ranges-range-descent (lib goal evidence formals)
   (proof-with-checked-results
@@ -49,7 +49,7 @@
             ((below-limit (library-library-cite lib "LESS-THAN-NEXT" (list j i)
                                                  (list (cadr ints) (car ints) inside)))
              (endpoints (if (integerp before)
-                            '(:failure "MalformedCandidate" "")
+                            '(:failure "malformed-candidate" "")
                           (proof-list-of-length (cdr before) 2)))
              (upper (car endpoints))
              (lower (cadr endpoints))
@@ -66,12 +66,12 @@
              (after-head (proof-term-at after 0)))
           (if (not (and (equal before-head after-head)
                         (equal after-head *library-gap*)))
-              '(:failure "InferenceMismatch" "")
+              '(:failure "inference-mismatch" "")
             (proof-with-checked-results
                 ((literal (proof-step-first step))
                  (head (proof-term-at literal 0)))
               (if (not (equal head *proof-ordinal-less*))
-                  '(:failure "InferenceMismatch" "")
+                  '(:failure "inference-mismatch" "")
                 (proof-with-checked-results
                     ((opened (proof-proof-unfold proof after))
                      (first (library-library-transport-argument lib step opened 1))

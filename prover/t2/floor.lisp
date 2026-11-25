@@ -206,7 +206,7 @@
 (defun t2-floor-constant-members (n lib member formula)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t2-floor-constant-members")
+      '(:failure "fuel" "t2-floor-constant-members")
     (let ((proof (library-library-proof lib)))
       (proof-with-checked-results
        ((literal (proof-step-first member))
@@ -234,7 +234,7 @@
            (opened-first (proof-step-first opened))
            (opened-test (proof-term-at opened-first 1)))
           (if (not (equal opened-test test))
-              '(:failure "RecipeMismatch" "")
+              '(:failure "recipe-mismatch" "")
             (proof-with-checked-results
              ((claim (proof-ite (library-integer first) (library-lt *proof-one* first) *proof-false*))
               (holds (t2-arithmetic-arithmetic-prove lib claim nil nil))
@@ -257,7 +257,7 @@
       (membership (car parts))
       (first (proof-step-first membership)))
      (if (not (proof-is-call first *t2-floor-member*))
-         '(:failure "RecipeMismatch" "")
+         '(:failure "recipe-mismatch" "")
        (proof-with-checked-results
         ((formula (proof-ite (library-integer *library-x*)
                              (library-lt *proof-one* *library-x*) *proof-false*))

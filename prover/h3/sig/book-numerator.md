@@ -13,14 +13,7 @@ from that pair even when the value is `nil`.
 |---|---|
 | `(h3-book-numerator-as-rational lib integer)` | Returns the rationality Step for the term in the integer Step. |
 | `(h3-book-numerator-denominator-data lib rational)` | Given a rationality Step, returns the list of Steps for the denominator's and numerator's integrality, the denominator's positivity, and rational reconstruction, in that order. |
-| `(h3-book-numerator-positive-reciprocal lib rational positive)` | Given rationality and positivity Steps, returns `(cons step lib)` proving the reciprocal positive. |
-| `(h3-book-numerator-numerator-sign lib rational orientation)` | Given a rationality Step and orientation, returns `(cons step lib)` for the comparison with zero through the numerator. |
 | `(h3-book-numerator-integer-components lib integer)` | Given an integer Step, returns the list of two equality Steps for the numerator and denominator of its term, in that order. |
-| `(h3-book-numerator-num-nonzero-forward lib formula)` | Returns `(cons step lib)` proving the implication from nonzero numerator. |
-| `(h3-book-numerator-numerator-theorem lib name formula)` | Returns `(cons step lib)` with the selected rational-component proof or `nil` for an unrecognized name. |
-| `(h3-book-numerator-reciprocal-sign lib formula orientation)` | Returns `(cons step lib)` proving preservation of the indicated sign by reciprocation. |
-| `(h3-book-numerator-denominator-one lib formula)` | Returns `(cons step lib)` proving the characterization of denominator one. |
-| `(h3-book-numerator-reconstruct-numerator lib formula)` | Returns `(cons step lib)` proving reconstruction of the numerator from the denominator and rational. |
 
 `*h3-book-numerator-prefix*` is the rational lemma name prefix.
 `*h3-book-numerator-numerator-signs*` is the alist from theorem names to

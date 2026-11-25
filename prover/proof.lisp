@@ -543,10 +543,6 @@
          (let ((rest (proof-places-arguments (cdr arguments) place slot (1+ index))))
            (list (append (car first) (car rest)) (cadr rest))))))))
 
-(defun proof-proof-rewrite-result-places (term place slot)
-  (let ((located (proof-locate-places term place slot)))
-    (or (cadr located) (car located))))
-
 (defun proof-rewrite-places (places failure proof step equality)
   (if (endp places)
       (or failure (proof-proof-tidy proof step))

@@ -440,7 +440,7 @@
  (defun b2-numeric-types-types-prove-run (n types predicate value evidence depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-prove-run")
+       '(:failure "fuel" "b2-numeric-types-types-prove-run")
      (let ((goal (list predicate value))
            (lib (b2-numeric-types-types-lib types)))
        (proof-with-checked-results ((known (b2-tactics-tactics-evidence lib evidence)))
@@ -467,7 +467,7 @@
  (defun b2-numeric-types-types-infer-run (n types predicate value evidence depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-infer-run")
+       '(:failure "fuel" "b2-numeric-types-types-infer-run")
      (let* ((lib (b2-numeric-types-types-lib types))
             (proof (library-library-proof lib))
             (goal (list predicate value)))
@@ -569,7 +569,7 @@
  (defun b2-numeric-types-types-infer-result-run (n types predicate value evidence depth operator)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-infer-result-run")
+       '(:failure "fuel" "b2-numeric-types-types-infer-result-run")
      (proof-with-checked-results
          ((natural (if (equal predicate *proof-integerp*)
                        (b2-numeric-types-types-known-natural types value evidence)
@@ -594,7 +594,7 @@
  (defun b2-numeric-types-types-prove-terms-run (n types predicate terms evidence depth)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-numeric-types-types-prove-terms-run"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-numeric-types-types-prove-terms-run"))
     ((endp terms) (cons nil types))
     (t
      (proof-with-checked-results
@@ -605,7 +605,7 @@
  (defun b2-numeric-types-types-natural-sum-run (n types value evidence depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-natural-sum-run")
+       '(:failure "fuel" "b2-numeric-types-types-natural-sum-run")
      (proof-with-checked-results ((left (proof-term-at value 1)))
        (if (equal left *proof-neg-one*)
            (proof-with-checked-results
@@ -625,7 +625,7 @@
  (defun b2-numeric-types-types-logand-run (n types value)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-logand-run")
+       '(:failure "fuel" "b2-numeric-types-types-logand-run")
      (let ((lib (b2-numeric-types-types-lib types)))
        (proof-with-checked-results
            ((arity (b2-numeric-types-check-arity (len value) 3))
@@ -646,7 +646,7 @@
  (defun b2-numeric-types-types-power-run (n types call evidence depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-power-run")
+       '(:failure "fuel" "b2-numeric-types-types-power-run")
      (proof-with-checked-results ((call (proof-list-of-length call 3)))
        (let ((base (cadr call))
              (exponent (caddr call)))
@@ -664,7 +664,7 @@
  (defun b2-numeric-types-types-remainder-type-run (n types predicate value evidence depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-remainder-type-run")
+       '(:failure "fuel" "b2-numeric-types-types-remainder-type-run")
      (proof-with-checked-results ((call (proof-list-of-length value 3)))
        (let ((i (cadr call))
              (j (caddr call))
@@ -699,7 +699,7 @@
      (n natural types function stop next-call induction test source)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-reversal-establish")
+       '(:failure "fuel" "b2-numeric-types-types-reversal-establish")
      (let ((lib (b2-numeric-types-types-lib types)))
        (proof-with-checked-results
            ((base (b2-tactics-tactics-normalize lib function (list stop) (list function) nil 1500 nil))
@@ -720,7 +720,7 @@
  (defun b2-numeric-types-types-reversal-build-run (n types)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-reversal-build-run")
+       '(:failure "fuel" "b2-numeric-types-types-reversal-build-run")
      (let* ((lib (b2-numeric-types-types-lib types))
             (proof (library-library-proof lib))
             (size *b2-numeric-types-size*)
@@ -760,7 +760,7 @@
  (defun b2-numeric-types-types-reversal-run (n types call evidence depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-reversal-run")
+       '(:failure "fuel" "b2-numeric-types-types-reversal-run")
      (let* ((lib (b2-numeric-types-types-lib types))
             (name (proof-sym "B2-NATURAL-LOGREV" "ACL2")))
        (proof-with-checked-results
@@ -780,7 +780,7 @@
  (defun b2-numeric-types-types-positive-open-run (n types value evidence depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-positive-open-run")
+       '(:failure "fuel" "b2-numeric-types-types-positive-open-run")
      (let ((lib (b2-numeric-types-types-lib types)))
        (proof-with-checked-results
            ((operator (b2-search-head value))
@@ -801,7 +801,7 @@
  (defun b2-numeric-types-types-positive-run (n types value evidence depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-positive-run")
+       '(:failure "fuel" "b2-numeric-types-types-positive-run")
      (let* ((lib (b2-numeric-types-types-lib types))
             (solve (b2-tactics-tactics-solve lib (library-positive value) evidence nil nil 0 nil)))
        (cond
@@ -832,7 +832,7 @@
  (defun b2-numeric-types-types-by-value-visit-run (n types predicate value evidence depth template tests)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-by-value-visit-run")
+       '(:failure "fuel" "b2-numeric-types-types-by-value-visit-run")
      (let ((lib (b2-numeric-types-types-lib types)))
        (cond
         ((proof-is-call value *proof-if*)
@@ -869,7 +869,7 @@
  (defun b2-numeric-types-types-by-value-leaf (n value tests types predicate evidence depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-by-value-leaf")
+       '(:failure "fuel" "b2-numeric-types-types-by-value-leaf")
      (proof-with-checked-results
          ((signed (b2-signed-bitwise-assumptions (b2-numeric-types-types-lib types) tests)))
        (b2-numeric-types-types-prove-run (1- n) types predicate value (append evidence signed) (1- depth)))))
@@ -877,7 +877,7 @@
  (defun b2-numeric-types-types-by-value-run (n types predicate call evidence depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-by-value-run")
+       '(:failure "fuel" "b2-numeric-types-types-by-value-run")
      (proof-with-checked-results
          ((equation (b2-tactics-tactics-normalize
                      (b2-numeric-types-types-lib types) call evidence (list call) nil 1500 t)))
@@ -897,13 +897,13 @@
  (defun b2-numeric-types-types-floor-run (n types i j)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-floor-run")
+       '(:failure "fuel" "b2-numeric-types-types-floor-run")
      (b2-numeric-types-types-quotient-integer-run (1- n) types *b2-numeric-types-floor* i j)))
 
  (defun b2-numeric-types-types-quotient-integer-run (n types operation i j)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-numeric-types-types-quotient-integer-run")
+       '(:failure "fuel" "b2-numeric-types-types-quotient-integer-run")
      (proof-with-checked-results ((stem (proof-term-at operation 2)))
        (let* ((lib (b2-numeric-types-types-lib types))
               (label (concatenate 'string "INTEGERP-" stem))
@@ -925,24 +925,6 @@
 
 (defun b2-numeric-types-types-prove (types predicate value evidence depth)
   (b2-numeric-types-types-prove-run 1000000 types predicate value evidence depth))
-
-(defun b2-numeric-types-types-infer (types predicate value evidence depth)
-  (b2-numeric-types-types-infer-run 1000000 types predicate value evidence depth))
-
-(defun b2-numeric-types-types-power (types call evidence depth)
-  (b2-numeric-types-types-power-run 1000000 types call evidence depth))
-
-(defun b2-numeric-types-types-remainder-type (types predicate value evidence depth)
-  (b2-numeric-types-types-remainder-type-run 1000000 types predicate value evidence depth))
-
-(defun b2-numeric-types-types-reversal (types call evidence depth)
-  (b2-numeric-types-types-reversal-run 1000000 types call evidence depth))
-
-(defun b2-numeric-types-types-positive (types value evidence depth)
-  (b2-numeric-types-types-positive-run 1000000 types value evidence depth))
-
-(defun b2-numeric-types-types-by-value (types predicate call evidence depth)
-  (b2-numeric-types-types-by-value-run 1000000 types predicate call evidence depth))
 
 (defun b2-numeric-types-types-floor (types i j)
   (b2-numeric-types-types-floor-run 1000000 types i j))

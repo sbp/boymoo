@@ -105,7 +105,7 @@
       (step-eq-first (proof-step-first step-eq))
       (result (proof-term-at step-eq-first 2)))
      (if (not (equal result successor))
-         '(:failure "RecipeMismatch" "")
+         '(:failure "recipe-mismatch" "")
        (proof-with-checked-results
         ((step (t2-arithmetic-arithmetic-prove lib properties (list natural bound) nil)))
         (cons (list step substitution) lib))))))
@@ -136,7 +136,7 @@
       (test (library-lt *library-x* *library-y*))
       (rhs-test (proof-term-at rhs 1)))
      (if (not (equal rhs-test test))
-         '(:failure "RecipeMismatch" "")
+         '(:failure "recipe-mismatch" "")
        (proof-with-checked-results
         ((base (t2-quotient-bound-base lib equation rhs nonneg-x properties))
          (step (t2-quotient-bound-step (cdr base) equation rhs test formula properties integers pos-y))
@@ -305,7 +305,7 @@
         (if (not (equal body (proof-ite (library-lt x y) *proof-zero*
                                         (library-plus *proof-one*
                                                       (list *t2-quotient-quotient* (library-diff x y) y)))))
-            '(:failure "RecipeMismatch" "")
+            '(:failure "recipe-mismatch" "")
           (proof-with-checked-results
               ((base (t2-quotient-additive-base lib equation body properties natural))
                (step (t2-quotient-additive-step lib equation body formula properties natural

@@ -354,9 +354,3 @@
                   (cons (list names formulas (h3-book-witness-product (car options) 28))
                         (cdr options)))))))))))
 
-(defun h3-book-witness-witness-proof (lib fields prove)
-  (let ((prepared (h3-book-witness-prepare lib fields)))
-    (if (failure-p (car prepared))
-        prepared
-      (h3-book-witness-try-options (cdr prepared) (caar prepared) (cadar prepared)
-                                  (caddar prepared) prove))))

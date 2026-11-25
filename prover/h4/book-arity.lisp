@@ -294,7 +294,7 @@
          (empty (proof-proof-rewrite proof given chain '(1)))
          (literal (proof-step-first empty)))
       (if (not (equal literal (list null-symbol sequence)))
-          '(:failure "InapplicableStep" "")
+          '(:failure "inapplicable-step" "")
         (proof-with-checked-results
             ((normalized (h4-tactics-tactics-normalize p literal nil (list null-symbol eq-symbol)
                                                        nil nil))
@@ -345,7 +345,7 @@
         (proof-with-checked-results ((literal (proof-step-first certified)))
           (if (equal literal *proof-false*)
               (proof-proof-subsume proof certified (cons goal (cdr (proof-step-clause certified))))
-            '(:failure "InapplicableStep" "")))))))
+            '(:failure "inapplicable-step" "")))))))
 
 (defun h4-book-arity-checked-length-active
     (test-proof p opened given goal count formula bindings natural sequence)
@@ -767,7 +767,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof p)))
     (cond
-     ((zp n) '(:failure "Fuel" "h4-book-arity-by-value-visit"))
+     ((zp n) '(:failure "fuel" "h4-book-arity-by-value-visit"))
      ((failure-p form) form)
      ((eq (car form) :if)
       (let ((test (cadr form)) (yes-value (caddr form)) (no-value (cadddr form)))
@@ -996,8 +996,8 @@
                 (let ((result (h4-book-arity-checked-length p formula match)))
                   (if (and (failure-p result)
                            (member-equal (cadr result)
-                                         '("InapplicableStep" "InapplicableTerm" "MissingProofInput"
-                                           "assertion" "key" "value" "Unproved")))
+                                         '("inapplicable-step" "inapplicable-term" "missing-proof-input"
+                                           "assertion" "key" "value" "unproved")))
                       (h4-book-arity-prove-mode p formula)
                     result))
               (h4-book-arity-prove-mode p formula))))))))

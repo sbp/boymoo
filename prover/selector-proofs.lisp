@@ -156,7 +156,7 @@
 (defun selector-proofs-selector-path-descent-descend (n evidence lib actual edges initial)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "selector-proofs-selector-path-descent-descend")
+      '(:failure "fuel" "selector-proofs-selector-path-descent-descend")
     (if (not (member-equal nil evidence))
         (selector-proofs-regrouped-descent lib actual edges evidence)
       (let* ((index (position-equal nil evidence))
@@ -196,7 +196,3 @@
                           rulers))
                   updated))))))))
 
-(defun selector-proofs-selector-path-descent (lib actual edges rulers)
-  (proof-with-checked-results
-   ((proof (selector-proofs-selector-path-descent-with-rulers lib actual edges rulers)))
-   (cons (caar proof) (cdr proof))))

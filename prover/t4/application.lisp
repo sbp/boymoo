@@ -57,7 +57,7 @@
               ((literal (proof-step-first ground-tame))
                (right (proof-term-at literal 2)))
             (if (not (equal right *proof-false*))
-                '(:failure "InferenceMismatch" "")
+                '(:failure "inference-mismatch" "")
               (proof-with-checked-results
                   ((grounded (proof-proof-rewrite proof tame same '(1 1)))
                    (denied (proof-proof-rewrite proof grounded ground-tame '(1)))
@@ -150,7 +150,7 @@
 (defun t4-application-descent-visit (n lib goal call replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-application-descent-visit")
+      '(:failure "fuel" "t4-application-descent-visit")
     (let ((result (t4-ordinals-ordinals-compare-measures
                    lib goal (termination-call-tests call) replies)))
       (if (t4-ordinals-request-p result)

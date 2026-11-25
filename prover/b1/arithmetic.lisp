@@ -111,7 +111,7 @@
              (fact (proof-proof-fact proof "rationalp-acl2-numberp"
                                      (list (list *library-x* term)))))
             (proof-proof-modus-ponens proof fact rational)))))
-      (t '(:failure "Unproved" ""))))))
+      (t '(:failure "unproved" ""))))))
 
 (defun b1-arithmetic-add-zero (library term evidence)
   (let ((proof (library-library-proof library)))
@@ -501,7 +501,7 @@
 (defun b1-arithmetic-number-sums-push-minus (n sums term evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b1-arithmetic-number-sums-push-minus")
+      '(:failure "fuel" "b1-arithmetic-number-sums-push-minus")
     (let* ((library (b1-arithmetic-sums-library sums))
            (proof (library-library-proof library)))
       (cond
@@ -555,7 +555,7 @@
 (defun b1-arithmetic-linear-combine (n sums step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b1-arithmetic-linear-combine")
+      '(:failure "fuel" "b1-arithmetic-linear-combine")
     (let* ((library (b1-arithmetic-sums-library sums))
            (proof (library-library-proof library)))
       (proof-with-checked-results
@@ -619,7 +619,7 @@
        (proof-with-checked-results
         ((left-text (proof-write left-normal))
          (right-text (proof-write right-normal)))
-        '(:failure "RuleInapplicable" ""))))))
+        '(:failure "rule-inapplicable" ""))))))
 
 (defun b1-arithmetic-number-sums-build (sums)
   (let* ((library (b1-arithmetic-number-sums-library sums))
@@ -731,7 +731,7 @@
            (middle (car right-pair))
            (c (cadr right-pair)))
        (if (not (equal b middle))
-           '(:failure "RuleInapplicable" "")
+           '(:failure "rule-inapplicable" "")
          (proof-with-checked-results
           ((left-comparison (b1-arithmetic-number-sums-comparison sums a b evidence))
            (diff-left (proof-proof-rewrite proof left left-comparison '(1)))
@@ -821,7 +821,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((proof (library-library-proof library)))
      (cond
-      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b1-arithmetic-simplify"))
+      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b1-arithmetic-simplify"))
       ((or (not (proof-compound term)) (proof-is-call term *proof-quote*)) nil)
       ((endp term) '(:failure "failure" ""))
       ((proof-compound (car term))
@@ -852,7 +852,7 @@
  (defun b1-arithmetic-simplify-arguments (n library term args index result)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b1-arithmetic-simplify-arguments"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b1-arithmetic-simplify-arguments"))
     ((endp args) result)
     (t
      (proof-with-checked-results

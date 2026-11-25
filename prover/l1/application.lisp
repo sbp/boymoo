@@ -83,7 +83,7 @@
    (cond ((or (not (proof-compound term)) (proof-is-call term *proof-quote*)) nil)
          ((endp term) '(:failure "failure" ""))
          ((proof-compound (car term))
-          '(:failure "UnsupportedApplication" ""))
+          '(:failure "unsupported-application" ""))
          (t (proof-with-checked-results
                 ((functions (l1-application-value-functions-arguments (cdr term))))
               (add-to-set-equal (car term) functions)))))
@@ -179,7 +179,7 @@
 (mutual-recursion
  (defun l1-application-warrant-simplify-visit (n proof term evidence definitions)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "l1-application-warrant-simplify-visit"))
+   (cond ((zp n) '(:failure "fuel" "l1-application-warrant-simplify-visit"))
          ((proof-is-call term *l1-application-warrant-tame-function*)
           (proof-with-checked-results
               ((argument (proof-term-at term 1))
@@ -209,7 +209,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((head (car term)))
      (cond
-      ((zp n) '(:failure "Fuel" "l1-application-warrant-simplify-base"))
+      ((zp n) '(:failure "fuel" "l1-application-warrant-simplify-base"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
       ((endp term) '(:failure "failure" ""))
       ((or (proof-compound head) (member-equal head definitions))
@@ -240,7 +240,7 @@
                (t constant)))))))
  (defun l1-application-warrant-simplify-arguments (n proof term args index result evidence definitions)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "l1-application-warrant-simplify-arguments"))
+   (cond ((zp n) '(:failure "fuel" "l1-application-warrant-simplify-arguments"))
          ((endp args) result)
          (t (proof-with-checked-results
                 ((equality (l1-application-warrant-simplify-visit
@@ -265,14 +265,14 @@
              (value (and equality (proof-rewritten-term equality))))
           (cond ((or (not equality) (equal value term))
                  (proof-with-checked-results ((written (proof-write term)))
-                   '(:failure "Unproved" "")))
+                   '(:failure "unproved" "")))
                 ((equal value *proof-true*) (proof-proof-true-from-eq proof equality))
                 (t (list :transport value equality))))))))
 
 (defun l1-application-warrant-prove-visit (n proof term evidence definitions)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "l1-application-warrant-prove-visit")
+      '(:failure "fuel" "l1-application-warrant-prove-visit")
     (let ((result (l1-application-warrant-prove-step proof term evidence definitions)))
       (if (eq (car result) :transport)
           (proof-with-checked-results
@@ -288,7 +288,7 @@
 
 (defun l1-application-unproved-p (result)
   (and (failure-p result)
-       (or (equal (cadr result) "Unproved")
+       (or (equal (cadr result) "unproved")
            (equal (cadr result) "value"))))
 
 (defun l1-application-selector-fact (proof name arguments)
@@ -402,7 +402,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((proof (l1-application-application-proof application)))
      (cond
-      ((zp n) '(:failure "Fuel" "l1-application-application-reduce-visit"))
+      ((zp n) '(:failure "fuel" "l1-application-application-reduce-visit"))
       ((or (not (proof-compound term)) (proof-is-call term *proof-quote*)) nil)
       ((endp term) '(:failure "failure" ""))
       ((or (proof-compound (car term)) (proof-is-call term *termination-return-last*))
@@ -445,7 +445,7 @@
    (let ((proof (l1-application-application-proof application)))
      (cond
       ((endp positions) (and step (proof-proof-tidy proof step)))
-      ((zp n) '(:failure "Fuel" "l1-application-application-arguments-visit"))
+      ((zp n) '(:failure "fuel" "l1-application-application-arguments-visit"))
       (t
        (let* ((index (car positions))
               (actual-index (if (< index 0) (+ (len term) index) index)))
@@ -586,7 +586,7 @@
          (badges (l1-application-primitive-badges table functions nil)))
       (if (not (and (equal (len badges) (len functions))
                     (l1-application-ordinary-badges-p badges)))
-          '(:failure "UnsupportedApplication" "")
+          '(:failure "unsupported-application" "")
         (proof-with-checked-results
             ((badges (if recursive
                          (proof-with-checked-results ((badge (proof-term-at recursive-badge 1)))

@@ -26,7 +26,7 @@ natural number, limits the number of ranks to try.
 | `(driver-plan library statements aids options)` | Returns `(rank number set)` triples in attempt order, assuming every attempt is still pending. A host omits subsequent attempts for an obligation after it gets a certificate. |
 
 The driver propagates failures from building the worklist. The checked
-search returns a `Fuel` failure if it exhausts its retry count. It returns
+search returns a `fuel` failure if it exhausts its retry count. It returns
 the generic failure when it cannot confirm the skip count or report a
 checker rejection. `driver-refuse-answers` propagates a failure from
 selecting a certificate to remove. See the [failure convention](../../FAILURES.md).

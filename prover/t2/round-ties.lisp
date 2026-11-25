@@ -296,7 +296,7 @@
 (defun t2-round-ties-build-prove (n cases opened expected replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t2-round-ties-build-prove")
+      '(:failure "fuel" "t2-round-ties-build-prove")
     (proof-with-checked-results
       ((result (t2-quotient-rounding-quotient-cases-prove-with-library cases replies nil)))
       (if (t2-quotient-rounding-branch-request-p result)

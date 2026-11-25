@@ -31,7 +31,7 @@
       ((child (proof-term-at value 1))
        (expected (proof-subst (nth index calls) (list (cons *library-x* child)))))
     (if (not (equal value expected))
-        '(:failure "Unsupported" "")
+        '(:failure "unsupported" "")
       (let* ((child-measure (list *library-count* child))
              (smaller (list *proof-ordinal-less* child-measure measure)))
         (proof-with-checked-results
@@ -40,7 +40,7 @@
                           (list* (car direct) lib (cdr direct))
                         (t3-rational-rational-descent lib child-measure measure (cdr direct)))))
           (if (not (car descent))
-              '(:failure "Unsupported" "")
+              '(:failure "unsupported" "")
             (let* ((lib (cadr descent))
                    (proof (library-library-proof lib))
                    (present (assoc-equal child substitutions))
@@ -70,7 +70,7 @@
 
 (defun t3-book-character-lists-characters-rule (lib value evidence calls substitutions pending)
   (if (not (proof-compound value))
-      '(:failure "Unsupported" "")
+      '(:failure "unsupported" "")
     (proof-with-checked-results ((head (proof-term-at value 0)))
       (let ((rule (cdr (assoc-equal head (car calls)))))
         (case rule
@@ -87,7 +87,7 @@
                              value evidence lib (cadr calls) rule (caddr calls) (cadddr calls)
                              substitutions)))
                  (list :return result pending))
-             '(:failure "Unsupported" ""))))))))
+             '(:failure "unsupported" ""))))))))
 
 (defun t3-book-character-lists-characters-visit (lib value evidence calls substitutions pending)
   (let ((formula (list *t3-list-bounds-char-list* value))
@@ -164,7 +164,7 @@
                   (both (t3-scan-typed-pair lib (cadddr frame) step))
                   (combined (proof-proof-prove-if proof claim both)))
                (list :return (cons combined (cdr result)) rest)))))
-        (otherwise '(:failure "Unproved" ""))))))
+        (otherwise '(:failure "unproved" ""))))))
 
 (defun t3-book-character-lists-characters-next (cursor)
   (if (eq (car cursor) :visit)
@@ -174,7 +174,7 @@
 
 (defun t3-book-character-lists-characters-walk (n cursor)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "t3-book-character-lists-characters"))
+  (cond ((zp n) '(:failure "fuel" "t3-book-character-lists-characters"))
         ((failure-p cursor) cursor)
         ((eq (car cursor) :done) (cadr cursor))
         (t (t3-book-character-lists-characters-walk
@@ -183,10 +183,6 @@
 (defun t3-book-character-lists-characters (n lib value evidence calls substitutions)
   (t3-book-character-lists-characters-walk n
    (list :visit lib value evidence calls substitutions nil)))
-
-(defun t3-book-character-lists-packed-characters-numeral-rule (n value evidence lib substitutions)
-  (t3-book-character-lists-characters-walk
-   n (t3-book-character-lists-numeral-rule-visit value evidence lib substitutions nil)))
 
 (defun t3-book-character-lists-element-list-visit
     (lib predicate element-type value evidence pending)
@@ -206,7 +202,7 @@
              (typed (t3-book-character-lists-head-type lib element-type head (cdr known)))
              (tail (proof-term-at value 2)))
           (list :visit tail (cdr typed) (cons (list target (car typed)) pending))))
-       (t '(:failure "Unsupported" ""))))))
+       (t '(:failure "unsupported" ""))))))
 
 (defun t3-book-character-lists-element-list-next (lib predicate element-type cursor)
   (let ((value (cadr cursor))
@@ -226,7 +222,7 @@
 
 (defun t3-book-character-lists-element-list-walk (n lib predicate element-type cursor)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "t3-book-character-lists-element-list"))
+  (cond ((zp n) '(:failure "fuel" "t3-book-character-lists-element-list"))
         ((failure-p cursor) cursor)
         ((eq (car cursor) :done) (cadr cursor))
         (t (t3-book-character-lists-element-list-walk
@@ -288,7 +284,7 @@
 
 (defun t3-book-character-lists-by-value-walk (n cursor template context)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "t3-book-character-lists-by-value"))
+  (cond ((zp n) '(:failure "fuel" "t3-book-character-lists-by-value"))
         ((failure-p cursor) cursor)
         ((eq (car cursor) :done) (cadr cursor))
         (t (t3-book-character-lists-by-value-walk
@@ -368,7 +364,7 @@
 
 (defun t3-book-character-lists-structural-results-formula (calls)
   (if (endp calls)
-      '(:failure "MissingProofInput" "")
+      '(:failure "missing-proof-input" "")
     (let ((first (list *t3-list-bounds-char-list* (car calls))))
       (if (endp (cdr calls))
           first
@@ -446,7 +442,7 @@
        (head (proof-term-at call 0))
        (step (cond ((equal head *t3-book-character-lists-pack-list*) (car parts))
                    ((equal head *t3-book-character-lists-pack-tree*) (cadr parts))
-                   (t '(:failure "Unproved" ""))))
+                   (t '(:failure "unproved" ""))))
        (entry (proof-proof-entry "theorem" name (list name) (list step))))
     (cons entry lib)))
 

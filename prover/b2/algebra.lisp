@@ -42,16 +42,6 @@
                                           (list no failure) nil nil 0 nil)))
      (proof-proof-cases proof left positive negative))))
 
-(defun b2-algebra-boolean-equivalence (lib left right forward backward)
-  (let ((proof (library-library-proof lib)))
-    (proof-with-checked-results
-     ((yes (proof-proof-assume proof left t))
-      (no (proof-proof-assume proof left nil))
-      (positive (b2-algebra-boolean-equivalence-positive lib (proof-eq left right)
-                                                        yes forward))
-      (right-assumption (proof-proof-assume proof right t)))
-     (b2-algebra-boolean-equivalence-negative lib left right no positive backward))))
-
 (defun b2-algebra-congruence (lib equality term path)
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results

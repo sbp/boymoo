@@ -5,20 +5,20 @@
 (defconst *terms-car* '("sym" "COMMON-LISP" "CAR"))
 (defconst *terms-cdr* '("sym" "COMMON-LISP" "CDR"))
 
-(defconst *terms-unproved* '(:failure "Unproved" ""))
-(defconst *terms-missing-measure-ordinality* '(:failure "MissingMeasureOrdinality" ""))
-(defconst *terms-invalid-proof-arity* '(:failure "InvalidProofArity" ""))
-(defconst *terms-different-normal-forms* '(:failure "DifferentNormalForms" ""))
+(defconst *terms-unproved* '(:failure "unproved" ""))
+(defconst *terms-missing-measure-ordinality* '(:failure "missing-measure-ordinality" ""))
+(defconst *terms-invalid-proof-arity* '(:failure "invalid-proof-arity" ""))
+(defconst *terms-different-normal-forms* '(:failure "different-normal-forms" ""))
 
 (defun terms-unproved-p (answer)
   (and (failure-p answer)
-       (or (equal (cadr answer) "Unproved")
-           (equal (cadr answer) "MissingMeasureOrdinality"))))
+       (or (equal (cadr answer) "unproved")
+           (equal (cadr answer) "missing-measure-ordinality"))))
 
 (defun terms-proof-fallback-p (answer)
   (or (terms-unproved-p answer)
       (and (failure-p answer)
-           (if (member-equal (cadr answer) '("InvalidProofArity" "DifferentNormalForms" "value"))
+           (if (member-equal (cadr answer) '("invalid-proof-arity" "different-normal-forms" "value"))
                t
              nil))))
 

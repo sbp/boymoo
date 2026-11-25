@@ -27,7 +27,7 @@
 
 (defun l1-books-missing-warrant-dependency-p (result)
   (and (failure-p result)
-       (or (equal (cadr result) "MissingWarrantDependency")
+       (or (equal (cadr result) "missing-warrant-dependency")
            (equal (cadr result) "key"))))
 
 (defun l1-books-add-counts (counts count)
@@ -71,7 +71,7 @@
     ((or (not (proof-compound term)) (proof-is-call term *proof-quote*))
      term)
     ((endp term)
-     '(:failure "Unproved" ""))
+     '(:failure "unproved" ""))
     (t
      (let ((head (car term)))
        (proof-with-checked-results
@@ -187,37 +187,6 @@
      (table-values (seq-sorted (pairlis$ (l1-books-datum-items-text all) all)))
      facts)))
 
-(defun l1-books-emit-helpers (helpers emitted sources count)
-  (if (endp helpers)
-      (list emitted sources count)
-    (proof-with-checked-results
-        ((entry (proof-list-of-length (car helpers) 4)))
-      (let ((name (cadr entry)))
-        (if (member-equal name emitted)
-            (l1-books-emit-helpers (cdr helpers) emitted sources count)
-          (l1-books-emit-helpers
-           (cdr helpers) (cons name emitted) (cons (cadddr entry) sources)
-           (l1-books-add-counts (caddr entry) count)))))))
-
-(defun l1-books-with-helpers-visit (entries emitted)
-  (if (endp entries)
-      nil
-    (proof-with-checked-results
-        ((entry (proof-list-of-length (car entries) 2))
-         (result (l1-books-emit-helpers
-                  (l1-books-certificate-helpers (cadr entry))
-                  emitted nil (l1-books-certificate-steps (cadr entry))))
-         (certificate
-          (l1-books-make-certificate
-           (text-join "" (revappend (cadr result)
-                                  (list (l1-books-certificate-source (cadr entry)))))
-           (caddr result) (l1-books-certificate-reason (cadr entry)) nil))
-         (rest (l1-books-with-helpers-visit (cdr entries) (car result))))
-      (cons (list (car entry) certificate) rest))))
-
-(defun l1-books-with-helpers (entries)
-  (l1-books-with-helpers-visit entries nil))
-
 (defun l1-books-simplified-value (step term)
   (if step
       (proof-with-checked-results ((literal (proof-step-first step)))
@@ -253,7 +222,7 @@
           (proof-with-checked-results ((rewriter (or rewriter (l1-rewriting-rewriter-init proof))))
             (l1-rewriting-rewriter-prove rewriter formula evidence 0)))
          (t (proof-with-checked-results ((written (proof-write formula)))
-              '(:failure "Unproved" ""))))))))
+              '(:failure "unproved" ""))))))))
 
 (defund l1-books-formula-plan (proof formula evidence definitions rewriting)
   (l1-books-formula-plan-prepared proof formula evidence definitions rewriting nil))
@@ -307,9 +276,6 @@
                    (result (descent-selector-decrease lib goal (car scope))))
                 (cons (car result) (cdr scope))))))))))
 
-(defun l1-books-selector-case (proof goal hypotheses)
-  (l1-books-selector-case-prepared proof goal hypotheses nil))
-
 (defun l1-books-length-arguments-p (arguments)
   (if (endp arguments)
       t
@@ -343,9 +309,6 @@
                    (result (descent-run-decrease lib goal scope)))
                 (cons (car result) (cdr evidence))))))))))
 
-(defun l1-books-length-sum-changing (proof goal child parent changing fixed hypotheses)
-  (l1-books-length-sum-changing-prepared proof goal child parent changing fixed hypotheses nil))
-
 (defun l1-books-length-sum-case-prepared (proof goal hypotheses arithmetic)
   (if (or (not hypotheses) (not (proof-is-call goal *proof-ordinal-less*)))
       (cons nil hypotheses)
@@ -361,9 +324,6 @@
                 first
               (l1-books-length-sum-changing-prepared
                proof goal child parent 2 1 (cdr first) arithmetic))))))))
-
-(defun l1-books-length-sum-case (proof goal hypotheses)
-  (l1-books-length-sum-case-prepared proof goal hypotheses nil))
 
 (defun l1-books-lexer-arithmetic (entries context arithmetic)
   (if (endp entries)
@@ -394,9 +354,6 @@
              (lib (library-make-library context entries)))
         (lexer-lexer-proofs-build (lexer-lexer-proofs-init lib))))))
 
-(defun l1-books-lexer-proofs (proof)
-  (l1-books-lexer-proofs-prepared proof nil))
-
 (defun l1-books-cdr-root (term)
   (if (not (proof-is-call term *library-cdr*))
       term
@@ -421,9 +378,6 @@
                     (lexer-lexer-proofs-init arithmetic) goal (car scope))))
         (cons (list (car result) lexer) (cdr scope))))))
 
-(defun l1-books-length-selector (proof goal argument root hypotheses lexer)
-  (l1-books-length-selector-prepared proof goal argument root hypotheses lexer nil))
-
 (defun l1-books-length-lexer-prepared (proof goal root hypotheses lexer arithmetic)
   (if (not (proof-compound root))
       (cons (list nil lexer) hypotheses)
@@ -435,9 +389,6 @@
                (result (lexer-lexer-proofs-decrease active goal hypotheses)))
             (cons (list (car result) (cadr result)) (caddr result)))
         (cons (list nil lexer) hypotheses)))))
-
-(defun l1-books-length-lexer (proof goal root hypotheses lexer)
-  (l1-books-length-lexer-prepared proof goal root hypotheses lexer nil))
 
 (defun l1-books-length-case-prepared (proof goal hypotheses lexer arithmetic)
   (proof-with-checked-results ((parts (proof-list-of-length goal 3)))
@@ -453,9 +404,6 @@
           (if (equal root source)
               (l1-books-length-selector-prepared proof goal argument root hypotheses lexer arithmetic)
             (l1-books-length-lexer-prepared proof goal root hypotheses lexer arithmetic)))))))
-
-(defun l1-books-length-case (proof goal hypotheses lexer)
-  (l1-books-length-case-prepared proof goal hypotheses lexer nil))
 
 (defun l1-books-arithmetic-descent-prepared (proof goal hypotheses lexer arithmetic)
   (proof-with-checked-results
@@ -483,9 +431,6 @@
               ((result (l1-books-length-case-prepared proof goal (cdr phase) lexer arithmetic)))
             (car result)))))))
 
-(defun l1-books-arithmetic-descent (proof goal hypotheses lexer)
-  (l1-books-arithmetic-descent-prepared proof goal hypotheses lexer nil))
-
 (defun l1-books-ordinal-case-prepared (clause lexer arithmetic)
   (proof-with-checked-results
       ((lib (l1-books-arithmetic-or-build arithmetic))
@@ -493,9 +438,6 @@
        (measure (proof-term-at literal 1))
        (step (descent-measure-ordinal lib measure)))
     (list step lexer)))
-
-(defun l1-books-ordinal-case (clause lexer)
-  (l1-books-ordinal-case-prepared clause lexer nil))
 
 (defun l1-books-prove-measure-case-prepared (proof clause call lexer arithmetic)
   (proof-with-checked-results
@@ -511,9 +453,6 @@
               ((failure-p result) result)
               ((car result) (list (car result) t (cadr result)))
               (t nil))))))
-
-(defun l1-books-prove-measure-case (proof clause call lexer)
-  (l1-books-prove-measure-case-prepared proof clause call lexer nil))
 
 ; Progress records the seen clauses, reversed Steps, arithmetic use, and LexerProofs.
 (defund l1-books-measure-record-prepared (proof obligation progress arithmetic)
@@ -542,9 +481,6 @@
       (and next (l1-books-measure-ordinalities-prepared
                  (cdr definitions) proof measures next arithmetic)))))
 
-(defun l1-books-measure-ordinalities (definitions proof measures progress)
-  (l1-books-measure-ordinalities-prepared definitions proof measures progress nil))
-
 (defun l1-books-measure-decreases-prepared (calls proof formals measures progress arithmetic)
   (if (endp calls)
       progress
@@ -553,9 +489,6 @@
          (next (l1-books-measure-record-prepared proof (car cases) progress arithmetic)))
       (and next (l1-books-measure-decreases-prepared
                  (cdr calls) proof formals measures next arithmetic)))))
-
-(defun l1-books-measure-decreases (calls proof formals measures progress)
-  (l1-books-measure-decreases-prepared calls proof formals measures progress nil))
 
 (defun l1-books-measure-fields (definitions measures)
   (if (endp definitions)
@@ -582,9 +515,6 @@
       (l1-books-make-certificate (l1-books-certificate-source certificate)
                                  (l1-books-certificate-steps certificate) "" helpers))))
 
-(defun l1-books-measure-helpers (proof certificate lexer)
-  (l1-books-measure-helpers-prepared proof certificate lexer nil))
-
 (defun l1-books-measure-proof-prepared (proof name definitions calls measures arithmetic)
   (proof-with-checked-results
       ((formals (termination-formals definitions nil nil))
@@ -601,9 +531,6 @@
            (if (caddr progress)
                (l1-books-measure-helpers-prepared proof certificate (cadddr progress) arithmetic)
              certificate)))))
-
-(defun l1-books-measure-proof (proof name definitions calls measures)
-  (l1-books-measure-proof-prepared proof name definitions calls measures nil))
 
 (defun l1-books-witness-names (functions tag index names)
   (if (endp functions)
@@ -678,6 +605,43 @@
         (l1-books-constant-values (list *proof-false* *proof-true* *proof-zero*)
                                   proof name (car parts) (cadr parts) names helpers)))))
 
+(defun l1-books-choice-terms-p (comparison functions)
+  (let* ((argument (l1-witness-comparison-argument comparison))
+         (parameters (l1-witness-comparison-parameters comparison))
+         (counterexample (l1-witness-comparison-counterexample comparison))
+         (application (l1-witness-comparison-application comparison))
+         (forbidden (pairlis$ (strip-cars functions) '(nil nil))))
+    (and (subsetp-equal (l1-rewriting-variable-set counterexample)
+                        (cons argument parameters))
+         (proof-with-checked-results
+             ((body (proof-term-at (car application) 2))
+              (marked-body (l1-books-replace-calls body forbidden))
+              (marked-counterexample (l1-books-replace-calls counterexample forbidden)))
+           (and (equal marked-body body)
+                (equal marked-counterexample counterexample))))))
+
+(defun l1-books-choice-witness (proof data tag)
+  (proof-with-checked-results
+      ((comparison (l1-witness-comparison-read data))
+       (admissible (and comparison (l1-books-choice-terms-p comparison (car data)))))
+    (and admissible
+         (let* ((name (proof-sym (concatenate 'string "L1-CHOICE-" tag) "ACL2"))
+                (argument (l1-witness-comparison-argument comparison))
+                (parameters (l1-witness-comparison-parameters comparison))
+                (counterexample (l1-witness-comparison-counterexample comparison))
+                (choice (list name (list argument) (or parameters *proof-nil*)
+                              counterexample *proof-nil*)))
+           (and (not (assoc-equal name (proof-proof-facts proof)))
+                (proof-with-checked-results
+                    ((registered (l1-witness-available-choice proof "choose" choice))
+                     (witness (l1-witness-prove-witness
+                               (cdr registered) data (list (car registered)) tag)))
+                  (and witness
+                       (proof-with-checked-results ((source (proof-line "choose" choice)))
+                         (l1-books-make-certificate
+                          (concatenate 'string source (cadr witness))
+                          (car witness) "" nil)))))))))
+
 (defun l1-books-skip (name reason)
   (proof-with-checked-results ((source (proof-line "skip" (list name))))
     (l1-books-make-certificate source 0 reason nil)))
@@ -688,17 +652,11 @@
               proof formula nil *l1-books-simple-definitions* t rewriter)))
     (l1-books-entry "theorem" name (list name) (list step))))
 
-(defun l1-books-theorem-direct (proof name formula)
-  (l1-books-theorem-direct-prepared proof name formula nil))
-
 (defun l1-books-theorem-induction-prepared (proof name formula rewriter)
   (proof-with-checked-results
       ((rewriter (or rewriter (l1-rewriting-rewriter-init proof)))
        (step (l1-rewriting-rewriter-induct rewriter formula)))
     (l1-books-entry "theorem" name (list name) (list step))))
-
-(defun l1-books-theorem-induction (proof name formula)
-  (l1-books-theorem-induction-prepared proof name formula nil))
 
 (defun l1-books-generate-theorem-prepared (proof choices data name rewriter)
   (proof-with-checked-results ((formula (proof-term-at data 1)))
@@ -718,9 +676,6 @@
                     (l1-books-skip name "needs a theorem proof")
                   induction))
             direct)))))))
-
-(defun l1-books-generate-theorem (proof choices data name)
-  (l1-books-generate-theorem-prepared proof choices data name nil))
 
 (defun l1-books-with-stored-ordinal-p (definitions stored)
   (if (endp definitions)
@@ -767,9 +722,6 @@
                  (and (l1-books-all-measures-p gaps)
                       (l1-books-measure-proof-prepared proof name definitions calls gaps arithmetic))))))))
 
-(defun l1-books-stored-certificate (proof name definitions calls stored)
-  (l1-books-stored-certificate-prepared proof name definitions calls stored nil))
-
 (defun l1-books-count-measures (plan)
   (if (endp plan)
       nil
@@ -782,15 +734,9 @@
          (l1-books-measure-proof-prepared proof name definitions calls
                                           (l1-books-count-measures plan) arithmetic))))
 
-(defun l1-books-selector-certificate (proof name definitions calls)
-  (l1-books-selector-certificate-prepared proof name definitions calls nil))
-
 (defun l1-books-phase-certificate-prepared (proof name definitions calls arithmetic)
   (proof-with-checked-results ((phases (l1-structural-measures-phase-measures definitions calls)))
     (and phases (l1-books-measure-proof-prepared proof name definitions calls phases arithmetic))))
-
-(defun l1-books-phase-certificate (proof name definitions calls)
-  (l1-books-phase-certificate-prepared proof name definitions calls nil))
 
 (defun l1-books-generate-definition-prepared (proof name definitions calls stored arithmetic)
   (proof-with-checked-results
@@ -801,9 +747,6 @@
        (phase (or selector (l1-books-phase-certificate-prepared
                             proof name definitions calls arithmetic))))
     (or phase (l1-books-skip name "needs ordinal descent"))))
-
-(defun l1-books-generate-definition (proof name definitions calls stored)
-  (l1-books-generate-definition-prepared proof name definitions calls stored nil))
 
 (defun l1-books-generate-constraint (proof choices raw data name)
   (let ((tag (text-upper (siphash-hexdigest raw))))
@@ -827,94 +770,9 @@
 (defund l1-books-generate (proof choices raw kind data name calls stored)
   (l1-books-generate-prepared proof choices raw kind data name calls stored nil))
 
-(defun l1-books-read-stored (aids stored)
-  (if (endp aids)
-      stored
-    (proof-with-checked-results ((row (proof-list-of-length (car aids) 3)))
-      (if (equal (cadr row) "measure")
-          (proof-with-checked-results ((name (proof-term-at (caddr row) 0)))
-            (l1-books-read-stored
-             (cdr aids) (table-put stored name (seq-slice (caddr row) 1 3))))
-        (l1-books-read-stored (cdr aids) stored)))))
-
-(defun l1-books-same-facts-p (dependencies facts)
-  (if (endp dependencies)
-      t
-    (and (equal (table-get facts (caar dependencies) nil) (cdar dependencies))
-         (l1-books-same-facts-p (cdr dependencies) facts))))
-
-(defun l1-books-reusable-certificate (previous facts)
-  (if (endp previous)
-      nil
-    (proof-with-checked-results ((record (proof-list-of-length (car previous) 2)))
-      (let ((certificate (car record)))
-        (if (and (l1-books-same-facts-p (cadr record) facts)
-                 (not (l1-books-helpers-occupied-p
-                       (l1-books-certificate-helpers certificate) facts)))
-            certificate
-          (l1-books-reusable-certificate (cdr previous) facts))))))
-
 (defund l1-books-remember-certificate (cache raw certificate facts)
   (proof-with-checked-results ((dependencies (l1-books-fact-dependencies certificate facts)))
     (table-put cache raw
                  (append (table-get cache raw nil)
                          (list (list certificate dependencies))))))
 
-(defun l1-books-prepare-rows (statements proof choices seen stored entries cache)
-  (if (endp statements)
-      (cons (reverse entries) cache)
-    (proof-with-checked-results ((row (proof-list-of-length (car statements) 3)))
-      (let ((raw (car row)) (kind (cadr row)) (data (caddr row)))
-        (if (member-equal raw seen)
-            (l1-books-prepare-rows (cdr statements) proof choices seen stored entries cache)
-          (proof-with-checked-results
-              ((obligation (l1-books-obligation kind data))
-               (name (car obligation))
-               (facts (proof-proof-facts proof))
-               (previous (and name (l1-books-reusable-certificate
-                                    (table-get cache raw nil) facts)))
-               (certificate (and name (or previous (l1-books-generate
-                                                    proof choices raw kind data
-                                                    name (cadr obligation) stored))))
-               (cache (if (and name (not previous)
-                               (equal (l1-books-certificate-reason certificate) ""))
-                          (l1-books-remember-certificate cache raw certificate facts)
-                        cache))
-               (admitted (l1-witness-admit proof kind data)))
-            (l1-books-prepare-rows
-             (cdr statements) (cdr admitted)
-             (if (car admitted) (append choices (list (car admitted))) choices)
-             (cons raw seen) stored (if name (cons (list name certificate) entries) entries)
-             cache)))))))
-
-(defun l1-books-skip-lines (entries)
-  (if (endp entries)
-      nil
-    (proof-with-checked-results
-        ((line (proof-line "skip" (list (caar entries))))
-         (rest (l1-books-skip-lines (cdr entries))))
-      (cons line rest))))
-
-(defun l1-books-prepare-book-with-cache
-    (statements aids base base-choices shared expected statement-name cache)
-  (declare (ignore statement-name))
-  (let* ((ground (l1-warrant-warrant-proof-init))
-         (proof (proof-proof-with-kind
-                 (proof-make-proof
-                  (table-update (proof-proof-facts ground) (proof-proof-facts base))
-                  (table-update (proof-proof-definitions ground) (proof-proof-definitions base))
-                  (proof-proof-primitives ground))
-                 (proof-proof-kind ground))))
-    (proof-with-checked-results
-        ((stored (l1-books-read-stored aids nil))
-         (result (l1-books-prepare-rows statements proof base-choices shared stored nil cache))
-         (lines (l1-books-skip-lines (car result))))
-      (if (equal (text-join "" lines) expected)
-          result
-        '(:failure "failure" "")))))
-
-(defun l1-books-prepare-book (statements aids base base-choices shared expected statement-name)
-  (proof-with-checked-results
-      ((result (l1-books-prepare-book-with-cache
-                statements aids base base-choices shared expected statement-name nil)))
-    (car result)))

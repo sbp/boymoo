@@ -16,7 +16,6 @@ definitions, facts, assumptions, and bindings preserve their supplied order.
 | `h2-book-recipes-append-equation` | `proof`, `formula` | An append equation Step, or `nil`. |
 | `h2-book-recipes-append-recognizer` | `proof`, `formula` | A Step lifting an element recognizer through append, or `nil`. |
 | `h2-book-recipes-injective-intern` | `proof`, `formula` | A Step using the symbol-name inverse of intern. |
-| `h2-book-recipes-injective-intern-inverse` | Name term, Step proving that name is a string, `proof`, package term, Step proving that package's namespace condition | A Step for the symbol-name inverse at the given term. |
 | `h2-book-recipes-make-list-recognizer` | `proof`, `formula` | A Step for the true-list recognizer of `MAKE-LIST-AC`. |
 | `h2-book-recipes-gentle-take` | `proof`, `formula` | A Step for the true-list recognizer of `GENTLE-TAKE`. |
 | `h2-book-recipes-remove-one` | `proof`, ASCII theorem label, `formula` | A Step for the given `REMOVE1-EQUAL` theorem. |
@@ -38,7 +37,7 @@ its original proof, name, and formula.
 A reply is `(cons value proof)` with the BookProof after the operation. The
 value of a procedure is `nil`. A reply may put a failure in the value position
 when the operation updates BookProof before returning the failure. The reply-aware
-entry point returns an `Unproved` in the value position so the caller can
+entry point returns an `unproved` in the value position so the caller can
 retain the BookProof for the rest of the theorem search.
 
 | Operation | Arguments in order | Value |
@@ -75,10 +74,6 @@ induction request in the value position, apply that request with the
 returned Recipes installed before replying to the focused recipe. The
 compression operations use `h2-compression-lookup-call-with-replies` with
 the current BookProof and the same operation name.
-
-`(h2-book-recipes-call-with-replies proof recipe args replies)` applies the
-same reply protocol to any recipe above, with its arguments other than
-`proof` in `args`. Defaults and argument order match the corresponding call.
 
 A `:recipes` reply may also return a folded induction request from
 `:numeric-theorem` as its value. The focused recipe will then request

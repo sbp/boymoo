@@ -440,6 +440,24 @@
 (bm-guarded-try "2.9 prove (equal (symbol-package-name (bm-hidden-symbol)) \"BM-HIDDEN\")"
                 "(thm (equal (symbol-package-name (bm-hidden-symbol)) \"BM-HIDDEN\"))")
 
+; 2.10 A shift by a count that the Lisp under ACL2 cannot make.
+
+(bm-try "2.10 prove (implies (integerp c) (equal (ash 0 c) 0))"
+        (thm (implies (integerp c) (equal (ash 0 c) 0))))
+(bm-guarded-top "2.10 (ash 0 100000000000000000000), guard checking :none"
+                "(ash 0 100000000000000000000)")
+
+; 2.11 NTHCDR by a count far beyond a list that does not end in NIL.  The
+; calls by a count of 2^64 on such a list would not end, and are not made.
+
+(bm-try "2.11 prove (implies (and (natp n) (< (len l) n)) (equal (nthcdr n l) nil))"
+        (thm (implies (and (natp n) (< (len l) n)) (equal (nthcdr n l) nil))))
+(bm-top "2.11 (true-listp '(1 . 2)), guard checking :none" (true-listp '(1 . 2)))
+(bm-top "2.11 (nthcdr (expt 2 64) '(1 2)), guard checking :none"
+        (nthcdr (expt 2 64) '(1 2)))
+(bm-top "2.11 (nthcdr 10000000 '(1 . 2)), guard checking :none"
+        (nthcdr 10000000 '(1 . 2)))
+
 ; ----------------------------------------------------------------------
 ; 3. ACL2 computes a value that the axioms do not prove.
 

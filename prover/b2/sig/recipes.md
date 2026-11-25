@@ -4,7 +4,7 @@
 `prover/sig/proof.md`. A constrained function is `(name arity)`, and a
 constraint formula is `(name formula)`. Both lists keep input order. The
 functions can return a failure in place of the stated result. `prove-theorem`
-returns an `Unproved` failure when no recipe applies.
+returns an `unproved` failure when no recipe applies.
 
 | Function | Arguments in order | Result |
 |---|---|---|

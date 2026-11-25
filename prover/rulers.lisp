@@ -128,10 +128,10 @@
 (defun rulers-expand-subtree (n proof evidence expansion)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "rulers-expand-subtree"))
+   ((zp n) '(:failure "fuel" "rulers-expand-subtree"))
    ((failure-p expansion) expansion)
    ((endp expansion) (list evidence))
-   ((equal n 1) '(:failure "Fuel" "rulers-expand-subtree"))
+   ((equal n 1) '(:failure "fuel" "rulers-expand-subtree"))
    (t
     (let ((first (car expansion))
           (second (cadr expansion)))
@@ -146,7 +146,7 @@
 
 (defun rulers-rulers-expand (n rulers test holds evidence)
   (if (zp n)
-      '(:failure "Fuel" "rulers-rulers-expand")
+      '(:failure "fuel" "rulers-rulers-expand")
     (let ((proof (descent-proof (rulers-rulers-proof rulers))))
       (rulers-expand-subtree n proof evidence (rulers-expansion proof test holds evidence)))))
 
@@ -159,11 +159,11 @@
 (defun rulers-expand-search (n proof literal visit)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "rulers-expand-search"))
+   ((zp n) '(:failure "fuel" "rulers-expand-search"))
    ((failure-p visit) visit)
    ((eq (car visit) :found) (cadr visit))
    ((endp visit) nil)
-   ((equal n 1) '(:failure "Fuel" "rulers-expand-search"))
+   ((equal n 1) '(:failure "fuel" "rulers-expand-search"))
    (t
     (let ((first (car visit))
           (second (cadr visit)))
@@ -179,7 +179,7 @@
 
 (defun rulers-rulers-expand-first (n rulers test holds evidence literal)
   (if (zp n)
-      '(:failure "Fuel" "rulers-rulers-expand-first")
+      '(:failure "fuel" "rulers-rulers-expand-first")
     (let ((proof (descent-proof (rulers-rulers-proof rulers))))
       (rulers-expand-search n proof literal
                             (rulers-expand-search-visit proof test holds evidence literal)))))
@@ -253,10 +253,6 @@
            (rulers-cons-ancestor-path rulers child base step child-is-cons)
          (rulers-cons-ancestor-in rulers base (cdr derived)))))))
 
-(defun rulers-rulers-cons-ancestor (rulers base)
-  (rulers-let* ((derived (rulers-rulers-derived rulers)))
-    (rulers-cons-ancestor-in rulers base derived)))
-
 (defun rulers-positive-length (proof step first position)
   (rulers-let* ((size (proof-term-at first position)))
     (if (not (proof-is-call size *proof-quote*))
@@ -289,10 +285,6 @@
             (right (rulers-positive-length proof step first 2))
             (rest (rulers-lengths-in-steps proof (cdr derived))))
            (append (if left (list left) nil) (if right (list right) nil) rest)))))))
-
-(defun rulers-rulers-positive-lengths (rulers)
-  (rulers-let* ((derived (rulers-rulers-derived rulers)))
-    (rulers-lengths-in-steps (descent-proof (rulers-rulers-proof rulers)) derived)))
 
 (defun rulers-rulers-positive-length-cons (rulers length)
   (let ((proof (descent-proof (rulers-rulers-proof rulers))))
@@ -394,10 +386,6 @@
              (rulers-rulers-positive-length-cons rulers tail-length))
          (rulers-length-cons-in rulers value (cdr lengths)))))))
 
-(defun rulers-rulers-cons-from-length-test (rulers value)
-  (rulers-let* ((lengths (rulers-rulers-positive-lengths rulers)))
-    (rulers-length-cons-in rulers value lengths)))
-
 (defun rulers-find-cons (rulers value derived)
   (rulers-let* ((ancestor (rulers-cons-ancestor-in rulers value derived)))
     (if ancestor
@@ -444,7 +432,7 @@
 (defun rulers-resolve-descent (n recipe lib args hypotheses pair)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "rulers-resolve-descent")
+      '(:failure "fuel" "rulers-resolve-descent")
     (let ((result (car pair)))
       (cond
        ((failure-p result) result)
@@ -463,17 +451,6 @@
       (rulers-descent :direct-builtin lib (list clause) rulers)
     (descent-direct-builtin lib clause nil)))
 
-(defun rulers-selector-chain (lib child parent rulers)
-  (rulers-descent :selector-chain lib (list child parent) rulers))
-
 (defun rulers-selector-decrease (lib goal rulers)
   (rulers-descent :selector-decrease lib (list goal) rulers))
 
-(defun rulers-gap-decrease (lib goal rulers)
-  (rulers-descent :gap-decrease lib (list goal) rulers))
-
-(defun rulers-walk-decrease (lib goal rulers)
-  (rulers-descent :walk-decrease lib (list goal) rulers))
-
-(defun rulers-run-decrease (lib goal rulers)
-  (rulers-descent :run-decrease lib (list goal) rulers))

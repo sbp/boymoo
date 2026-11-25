@@ -41,7 +41,7 @@
        (let ((swapped (cdr (assoc-equal (proof-eq right left) facts))))
          (if swapped
              (proof-proof-symmetric proof swapped)
-           '(:failure "Unsupported" "")))))
+           '(:failure "unsupported" "")))))
      ((and (consp formula) (proof-is-call formula *proof-if*))
       (proof-with-checked-results ((no (proof-term-at formula 3)))
         (if (equal no *proof-false*)
@@ -49,8 +49,8 @@
              ((test (t3-book-lambdas-required lib (cadr formula) facts))
               (yes (t3-book-lambdas-required lib (caddr formula) facts)))
              (t3-scan-typed-pair lib test yes))
-          '(:failure "Unsupported" ""))))
-     (t '(:failure "Unsupported" "")))))
+          '(:failure "unsupported" ""))))
+     (t '(:failure "unsupported" "")))))
 
 (defun t3-book-lambdas-not-symbol (lib cons)
   (let ((proof (library-library-proof lib)))
@@ -160,7 +160,7 @@
  (defun t3-book-lambdas-normalize-checks-run (n lib value evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-book-lambdas-normalize-checks")
+       '(:failure "fuel" "t3-book-lambdas-normalize-checks")
      (proof-with-checked-results
       ((equation (t3-logic-libraryproofs-normalize lib value evidence *t3-book-lambdas-definitions*))
        (current (if equation (proof-rewritten-term equation) value)))
@@ -177,7 +177,7 @@
  (defun t3-book-lambdas-normalize-checks-branches (n lib value current evidence positions equation)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t3-book-lambdas-normalize-checks"))
+    ((zp n) '(:failure "fuel" "t3-book-lambdas-normalize-checks"))
     ((endp positions) equation)
     (t
      (let ((position (car positions)))
@@ -200,7 +200,7 @@
 (defun t3-book-lambdas-conditions-run (n lib step)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-lambdas-conditions")
+      '(:failure "fuel" "t3-book-lambdas-conditions")
     (proof-with-checked-results ((parts (t3-book-lambdas-conditional-proof-parts lib step)))
       (if (not parts)
           (list step)
@@ -255,7 +255,7 @@
                         (list *t3-book-lemmas-true-listp* *library-x*))))
     (proof-with-checked-results ((proof (t3-book-lemmas-implies-proper-list lib template nil)))
       (if (not proof)
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (proof-with-checked-results
          ((literal (proof-step-first typed))
           (value (proof-term-at literal 1))
@@ -266,7 +266,7 @@
   (let ((entry (assoc-equal literal facts)))
     (if entry
         (cdr entry)
-      '(:failure "MissingProofInput" ""))))
+      '(:failure "missing-proof-input" ""))))
 
 (defun t3-book-lambdas-rewrite-fields (proof fields exact marker facts)
   (if (endp fields)
@@ -387,7 +387,7 @@
             (proof-with-checked-results ((step (library-library-cite lib (cdr lemma) (cdr value) nil)))
               (cons step substitutions)))
            ((or (not (proof-is-call value (car call))) (not (equal (cddr value) (cddr call))))
-            '(:failure "Unsupported" ""))
+            '(:failure "unsupported" ""))
            (t
             (proof-with-checked-results ((child (proof-term-at value 1)))
               (let* ((existing (assoc-equal child substitutions))

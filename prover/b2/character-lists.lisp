@@ -107,7 +107,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-character-lists-digit-type-by-value"))
+     ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-character-lists-digit-type-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
        ((branches (proof-list-of-length (cdr value) 3))
@@ -281,7 +281,7 @@
  (defun b2-character-lists-character-result-visit (n lib value evidence other)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-character-lists-character-result-visit")
+       '(:failure "fuel" "b2-character-lists-character-result-visit")
      (let ((goal (list *b2-character-lists-character-list* value)))
        (proof-with-checked-results
         ((known (b2-tactics-tactics-evidence lib evidence)))
@@ -339,7 +339,7 @@
  (defun b2-character-lists-character-result-other (n value evidence lib other)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-character-lists-character-result-other")
+       '(:failure "fuel" "b2-character-lists-character-result-other")
      (case (car other)
        (:atom (b2-character-lists-atom-type-complete-read (1- n) value evidence lib (cadr other)))
        (:pack (proof-with-checked-results
@@ -354,7 +354,7 @@
  (defun b2-character-lists-analyze-result-leaf (n value signed lib evidence other)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-character-lists-analyze-result-leaf")
+       '(:failure "fuel" "b2-character-lists-analyze-result-leaf")
      (proof-with-checked-results
       ((tests (b2-character-lists-signed-assumptions (library-library-proof lib) signed)))
       (b2-character-lists-character-result-visit (1- n) lib value
@@ -364,7 +364,7 @@
      (n lib value template signed evidence other)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-character-lists-analyze-result-by-value"))
+    ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-character-lists-analyze-result-by-value"))
     ((proof-is-call value *proof-if*)
      (proof-with-checked-results
       ((branches (proof-list-of-length (cdr value) 3))
@@ -403,7 +403,7 @@
  (defun b2-character-lists-analyze-result-visit (n lib call evidence other)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-character-lists-analyze-result-visit")
+       '(:failure "fuel" "b2-character-lists-analyze-result-visit")
      (let ((template (list *b2-character-lists-character-list* *proof-result*)))
        (proof-with-checked-results
         ((equation (b2-tactics-tactics-normalize lib call evidence (list call) nil 1500 nil))
@@ -421,7 +421,7 @@
  (defun b2-character-lists-atom-type-complete-read (n term evidence lib kind)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-character-lists-atom-type-complete-read")
+       '(:failure "fuel" "b2-character-lists-atom-type-complete-read")
      (cond
       ((proof-is-call term *b2-character-lists-num-chars*)
        (proof-with-checked-results
@@ -443,7 +443,7 @@
  (defun b2-character-lists-atom-type-complete (n typed-atom lib kind call)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-character-lists-atom-type-complete")
+       '(:failure "fuel" "b2-character-lists-atom-type-complete")
      (let ((facts (if typed-atom (list typed-atom) nil)))
        (proof-with-checked-results
         ((types (cond
@@ -464,7 +464,7 @@
  (defun b2-character-lists-atom-type-lemma (n lib kind label name)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-character-lists-atom-type-lemma"))
+    ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-character-lists-atom-type-lemma"))
     ((assoc-equal name (proof-proof-facts (library-library-proof lib))) lib)
     (t
      (let* ((call (list *b2-character-lists-atom-chars* *library-x* *b2-character-lists-ten*))
@@ -496,7 +496,7 @@
  (defun b2-character-lists-atom-type-visit (n lib value kind)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-character-lists-atom-type-visit")
+       '(:failure "fuel" "b2-character-lists-atom-type-visit")
      (proof-with-checked-results
       ((label (if kind
                   (proof-with-checked-results
@@ -511,14 +511,8 @@
                                (list (list *library-x* value)))))
       (cons step lib)))))
 
-(defun b2-character-lists-character-result (lib value evidence other)
-  (b2-character-lists-character-result-visit 1000000 lib value evidence other))
-
 (defun b2-character-lists-analyze-result (lib call evidence other)
   (b2-character-lists-analyze-result-visit 1000000 lib call evidence other))
-
-(defun b2-character-lists-atom-type (lib value kind)
-  (b2-character-lists-atom-type-visit 1000000 lib value kind))
 
 (defun b2-character-lists-pack-characters-prove (evidence lib packed goal)
   (proof-with-checked-results

@@ -6,7 +6,7 @@ and `prover/sig/library.md`. Tests are ordered lists of two-element lists
 entries `(key . value)`. A set is a list of distinct elements.
 `h1-tactics-variables` orders variables by the text from
 `h1-tactics-variable-text`. An exhausted tactic returns
-`(:failure "Unproved" "")`.
+`(:failure "unproved" "")`.
 
 The constants are `*h1-tactics-booleanp*`, `*h1-tactics-return-last*`,
 `*h1-tactics-symbolp*`, `*h1-tactics-stringp*`, `*h1-tactics-characterp*`
@@ -85,25 +85,6 @@ recorded unsuccessful lookup. The bindings dictionary maps a left side
 to its equality Step. The active and guards fields are sets of terms.
 The Search in the returned Context carries the work still available.
 Pass that Search when reusing the same search with another Context.
-
-| Call | Result |
-|---|---|
-| `(h1-tactics-search-init prover openings local ambient protected limit rewrite-equalities)` | A Search with the given options and the Prover's work budget. |
-| `(h1-tactics-search-prover search)`, `(h1-tactics-search-local search)`, `(h1-tactics-search-ambient search)`, `(h1-tactics-search-protected search)`, `(h1-tactics-search-rewrite-equalities search)`, `(h1-tactics-search-openings search)`, `(h1-tactics-search-remaining search)`, `(h1-tactics-search-work search)` | The named field. |
-| `(h1-tactics-search-with-work search work)` | Search with the given work budget. |
-| `(h1-tactics-search-reduce search term context tests fuel depth)` | `(list step context tests)` with the reduction Step or `nil`, the resulting Context and the resulting dictionary of pending tests. That dictionary maps terms to `nil`. `fuel` is the dictionary of available openings and `depth` defaults to 0. |
-| `(h1-tactics-search-prove search term tests split-and)` | `(cons step search)` with the proof Step and the resulting Search. The defaults are an empty list of tests and `t` for `split-and`. |
-| `(h1-tactics-search-with-premise search formula)` | `(cons step search)` with the implication Step and the resulting Search. |
-| `(h1-tactics-search-contradiction search context)` | `(cons step context)` with a contradiction Step or `nil`, and the resulting Context. |
-| `(h1-tactics-context-init search tests)` | A Context with the given tests and their initial evidence. |
-| `(h1-tactics-context-search context)`, `(h1-tactics-context-tests context)`, `(h1-tactics-context-evidence context)`, `(h1-tactics-context-bindings context)`, `(h1-tactics-context-active context)`, `(h1-tactics-context-guards context)` | The named field. |
-| `(h1-tactics-context-with-search context search)`, `(h1-tactics-context-with-evidence context evidence)`, `(h1-tactics-context-with-bindings context bindings)` | Context with the indicated field set. |
-| `(h1-tactics-context-bind-equality context step)` | Context with the equality binding recorded if applicable. |
-| `(h1-tactics-context-select context term)` | `(cons step context)` with a branch-selection Step or `nil`, and the resulting Context. |
-| `(h1-tactics-context-apply context index term)` | `(cons step context)` with the first applicable rule Step or `nil`, and the resulting Context. `index` is `"claims"` or `"rewrites"`. |
-| `(h1-tactics-context-guard context term)`, `(h1-tactics-context-find context term)`, `(h1-tactics-context-derive context term)` | `(cons step context)` with the requested evidence Step or `nil`, and the resulting Context. |
-| `(h1-tactics-context-learn context premise)` | Context with the results forced by the given premise. |
-| `(h1-tactics-context-if-consequences context step)` | `(cons steps context)` with the list of consequence Steps and the resulting Context. |
 
 The constructors, field accessors, field setters, term walks, pattern
 matching and `functions-in` return their listed results on these inputs. Prover

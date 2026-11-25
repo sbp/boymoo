@@ -36,26 +36,13 @@
     "order-lemmas" "compare-chain" "as-weak" "ordinal-comparison" "length-lemmas" "count-lemmas"
     "weak-selectors" "integer-measures" "build"))
 
-(defun h2-calculation-number-sums-member (sums name)
-  (let* ((library (h2-calculation-number-sums-proof sums))
-         (proof (library-library-proof library)))
-    (cond
-     ((equal name "facts") (proof-proof-facts proof))
-     ((equal name "definitions") (proof-proof-definitions proof))
-     ((equal name "primitives") (proof-proof-primitives proof))
-     ((equal name "entries") (library-library-entries library))
-     ((and (stringp name)
-           (member-equal (text-replace name "_" "-") *h2-calculation-sum-delegates*))
-      (list :h2-number-sums-bound-method name library))
-     (t '(:failure "failure" "")))))
-
 (defun h2-calculation-step-at (step index)
   (proof-with-checked-results ((literal (proof-step-first step)))
     (proof-term-at literal index)))
 
 (defun h2-calculation-inapplicable-p (result)
   (and (failure-p result)
-       (member-equal (cadr result) '("ArithmeticInapplicable" "value"))
+       (member-equal (cadr result) '("arithmetic-inapplicable" "value"))
        t))
 
 (defun h2-calculation-sum-p (term)
@@ -109,7 +96,7 @@
                                 (assoc-equal (car term) *h2-calculation-number-closure*))))
               (if closure
                   (library-library-cite library (cdr closure) (cdr term) nil)
-                '(:failure "ArithmeticInapplicable" "")))))))))
+                '(:failure "arithmetic-inapplicable" "")))))))))
 
 (defun h2-calculation-number-types (sums terms evidence)
   (declare (xargs :measure (acl2-count terms)))
@@ -139,7 +126,7 @@
 (defun h2-calculation-number-sums-push-minus-visit (n sums term evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-calculation-number-sums-push-minus-visit")
+      '(:failure "fuel" "h2-calculation-number-sums-push-minus-visit")
     (let* ((library (h2-calculation-number-sums-proof sums))
            (proof (library-library-proof library)))
       (cond
@@ -179,7 +166,7 @@
 (defun h2-calculation-number-combine (n sums step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-calculation-number-combine")
+      '(:failure "fuel" "h2-calculation-number-combine")
     (let* ((library (h2-calculation-number-sums-proof sums))
            (proof (library-library-proof library)))
       (proof-with-checked-results
@@ -240,7 +227,7 @@
          (proof-with-checked-results ((reverse (proof-proof-symmetric proof b)))
            (proof-proof-chain proof a (list reverse))))
      (proof-with-checked-results ((a-text (proof-write a-normal)) (b-text (proof-write b-normal)))
-       '(:failure "ArithmeticInapplicable" "")))))
+       '(:failure "arithmetic-inapplicable" "")))))
 
 (defun h2-calculation-number-sums-unique-inverse (a b cancels proof sums evidence)
   (let ((library (h2-calculation-number-sums-proof sums)))
@@ -364,7 +351,7 @@
 (defun h2-calculation-product-reassociate (n library result place)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-calculation-product-reassociate")
+      '(:failure "fuel" "h2-calculation-product-reassociate")
     (proof-with-checked-results ((node (h2-calculation-product-form-at place result)))
       (if (not (proof-is-call node *proof-times*))
           result
@@ -400,7 +387,7 @@
 (defun h2-calculation-product-sort (n library result place changed)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-calculation-product-sort")
+      '(:failure "fuel" "h2-calculation-product-sort")
     (proof-with-checked-results ((node (h2-calculation-product-form-at place result)))
       (if (not (proof-is-call node *proof-times*))
           (if changed (h2-calculation-product-sort (1- n) library result '(1 2) nil) result)
@@ -495,7 +482,7 @@
 (defun h2-calculation-product-combine (n search context result place replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-calculation-product-combine")
+      '(:failure "fuel" "h2-calculation-product-combine")
     (proof-with-checked-results ((node (h2-calculation-product-form-at place result)))
       (if (not (proof-is-call node *proof-times*))
           (h2-calculation-search-result result search context replies)
@@ -540,9 +527,6 @@
 
 (defun h2-calculation-product-form-with-replies (search term context replies)
   (h2-calculation-finish-search (h2-calculation-product-form-result search term context replies)))
-
-(defun h2-calculation-product-form (search term context)
-  (h2-calculation-product-form-with-replies search term context nil))
 
 (defun h2-calculation-number-literals (literals)
   (if (endp literals)
@@ -654,9 +638,6 @@
                                                      literals context numbers replies))
                (h2-calculation-search-result nil search context replies)))))))))
 
-(defun h2-calculation-calculate (search goal context)
-  (h2-calculation-calculate-with-replies search goal context nil))
-
 (defconst *h2-calculation-projection-rules*
   '("SELF-H2-ADD-FIXED-OPERANDS" "SELF-H2-NEGATE-FIXED-OPERAND"))
 
@@ -738,20 +719,11 @@
               (h2-search-request-p (car auxiliary))) auxiliary)
          (t (cons *h2-calculation-projection-rules* (cdr auxiliary))))))))
 
-(defun h2-calculation-projected-arithmetic-with-replies (search replies)
-  (let ((result (h2-calculation-projected-arithmetic-result search replies)))
-    (if (failure-p (car result))
-        (car result)
-      (cons (car result) (cadr result)))))
-
-(defun h2-calculation-projected-arithmetic (search)
-  (h2-calculation-projected-arithmetic-with-replies search nil))
-
 (mutual-recursion
  (defun h2-calculation-normalize-total-sum-visit (n library term rules sums)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "h2-calculation-normalize-total-sum-visit")
+       '(:failure "fuel" "h2-calculation-normalize-total-sum-visit")
      (let ((proof (library-library-proof library)))
        (cond
         ((proof-is-call term *h2-calculation-fix*)
@@ -773,7 +745,7 @@
  (defun h2-calculation-normalize-total-arguments (n library arguments position step rules sums)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "h2-calculation-normalize-total-arguments")
+       '(:failure "fuel" "h2-calculation-normalize-total-arguments")
      (if (endp arguments)
          step
        (proof-with-checked-results
@@ -831,9 +803,6 @@
         (car result)
       (cons (car result) (cadr result)))))
 
-(defun h2-calculation-equal-total-sums (search left right)
-  (h2-calculation-equal-total-sums-with-replies search left right nil))
-
 (defun h2-calculation-establish-difference-test (library name)
   (let* ((proof (library-library-proof library))
          (x *library-x*)
@@ -872,10 +841,6 @@
              ((types (h2-calculation-number-types (h2-calculation-number-sums-init prepared) (cdr equality) nil)))
              (library-library-cite prepared "H2-EQUALITY-BY-DIFFERENCE" (cdr equality) types))
             prepared))))
-
-(defun h2-calculation-difference-test (library equality)
-  (let ((result (h2-calculation-difference-test-result library equality)))
-    (if (failure-p (car result)) (car result) result)))
 
 (defun h2-calculation-test-orientation (search reverse right result)
   (let* ((library (h2-search-search-library search))
@@ -958,5 +923,3 @@
           (h2-calculation-signed-identity-differences search left right replies))
          (t (cons nil search)))))))
 
-(defun h2-calculation-signed-identity (search formula)
-  (h2-calculation-signed-identity-with-replies search formula nil))

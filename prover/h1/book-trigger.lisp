@@ -221,7 +221,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((core (h1-tactics-prover-proof proof)))
     (cond
-     ((zp n) '(:failure "Fuel" "h1-book-trigger-by-value"))
+     ((zp n) '(:failure "fuel" "h1-book-trigger-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))

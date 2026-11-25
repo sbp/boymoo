@@ -5,8 +5,6 @@ and `prover/sig/proof.md`. A formula is a prover term.
 
 | Call | Result |
 |---|---|
-| `(t4-record-laws-record-sufficiency library formula replies)` | A proof that agreement at the distinguishing field suffices for equality, or `nil` for a formula outside the recipe. |
-| `(t4-record-laws-record-update-law library formula replies)` | A proof of the write equation, or `nil` for a formula outside the recipe. |
 
 A call returns `(cons result library)`, a failure, or a request as specified
 in `prover/t4/sig/constructors.md`. Both recipes may request

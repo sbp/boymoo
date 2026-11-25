@@ -35,7 +35,6 @@ operations leave the Library unchanged.
 | `(t2-quotient-rounding-to-unit-divisor lib function dividend divisor)` | Step equating the rounding call to its form with divisor one. |
 | `(t2-quotient-rounding-completed-part lib name ratio nonrational)` | Step for the completed `"NUMERATOR"` or `"DENOMINATOR"` call, using the nonrationality Step. |
 | `(t2-quotient-rounding-quotient-cases-value cases function tests)` | Step evaluating the rounding function in the case given by the supplied Steps. The order is rationality, integrality if rational, and comparison with zero if fractional. |
-| `(t2-quotient-rounding-quotient-cases-prove cases replies split-integer-sign)` | Step joining the branch results, or a request for the next branch result. Pass `nil` for the default Boolean `split-integer-sign`. |
 | `(t2-quotient-rounding-resolve-floor-term lib floor expression)` | Step evaluating the floor or its increment in `expression`, using the floor equality Step. |
 | `(t2-quotient-rounding-rounded-quotients lib)` | Library with the truncate and ceiling lemmas. |
 | `(t2-quotient-rounding-cancel-nonzero-divisor lib dividend divisor nonzero-ratio)` | Step cancelling the divisor, using a Step that the ratio is nonzero. |

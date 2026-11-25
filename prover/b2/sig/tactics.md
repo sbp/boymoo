@@ -4,7 +4,7 @@
 `library-library-init` to construct it. A term, symbol, and Step have the
 forms in `prover/sig/proof.md`.
 
-`(b2-tactics-unproved)` returns the `Unproved` failure with an empty
+`(b2-tactics-unproved)` returns the `unproved` failure with an empty
 message. `b2-tactics-unproved-p` recognizes it. The constants are
 `*b2-tactics-eq*`, `*b2-tactics-eql*`,
 `*b2-tactics-atom*`, `*b2-tactics-endp*`, `*b2-tactics-null*`,

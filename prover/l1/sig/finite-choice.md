@@ -7,7 +7,7 @@ False tests are an alist from test terms to Steps in insertion order.
 | Function | Arguments in order | Result | Failure |
 | --- | --- | --- | --- |
 | `l1-finite-choice-variable-free-in` | Variable term, term | Boolean indicating a free occurrence | Malformed term |
-| `l1-finite-choice-equality-tests` | Term, argument variable | All pairs `(test key)` found by the equality-test search | `NonEqualityArgument` for an unsupported occurrence, or a failure from traversing the term |
+| `l1-finite-choice-equality-tests` | Term, argument variable | All pairs `(test key)` found by the equality-test search | `non-equality-argument` for an unsupported occurrence, or a failure from traversing the term |
 | `l1-finite-choice-differing-value` | Proof, value term | `(bit step)` with a Boolean term and the Step proving it differs from the value | Proof construction |
 | `l1-finite-choice-fresh-argument` | Proof, argument variable, test list, key list | `(default false-tests)` with a default term and the corresponding alist of equality Steps | Missing test key or proof construction |
 | `l1-finite-choice-default-equation` | Proof, failure term, argument variable, default term, false-tests alist | Equality Step for the original and default failures when the tests are false | Proof failure |

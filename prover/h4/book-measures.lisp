@@ -126,7 +126,7 @@
 (defun h4-book-measures-expand-pending (n p progress)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h4-book-measures-expand-pending"))
+   ((zp n) '(:failure "fuel" "h4-book-measures-expand-pending"))
    ((eq (car progress) :more)
     (h4-book-measures-expand-pending
      (1- n) p (h4-book-measures-expand-next p (cadr progress) (caddr progress) (cadddr progress))))
@@ -305,7 +305,7 @@
     (cond
      ((or (not (proof-compound term)) (equal head *proof-quote*))
       (list :result frames nil))
-     ((endp term) '(:failure "MissingTermPart" ""))
+     ((endp term) '(:failure "missing-term-part" ""))
      ((or (proof-compound head) (member-equal head definitions))
       (proof-with-checked-results ((expanded (proof-simplify-expansion proof term)))
         (list :term (cons (list :chain (car expanded)) frames) (cadr expanded))))
@@ -349,7 +349,7 @@
            (proof-with-checked-results
             ((next (proof-simplify-argument-result proof term index simplified step)))
             (list :arguments frames term args (1+ index) next))))
-        (otherwise '(:failure "InapplicableTerm" ""))))))
+        (otherwise '(:failure "inapplicable-term" ""))))))
 
 (defun h4-book-measures-simplify-next (proof evidence definitions work)
   (let ((frames (cadr work))
@@ -359,12 +359,12 @@
       (:arguments (h4-book-measures-simplify-arguments
                    proof frames (car args) (cadr args) (caddr args) (cadddr args)))
       (:result (h4-book-measures-simplify-result proof evidence frames (car args)))
-      (otherwise '(:failure "InapplicableTerm" "")))))
+      (otherwise '(:failure "inapplicable-term" "")))))
 
 (defun h4-book-measures-simplify-visit (n proof evidence definitions work)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h4-book-measures-simplify-visit"))
+   ((zp n) '(:failure "fuel" "h4-book-measures-simplify-visit"))
    ((eq (car work) :done) (cdr work))
    ((failure-p work) work)
    (t (h4-book-measures-simplify-visit
@@ -401,7 +401,7 @@
 (defun h4-book-measures-prove-visit (n proof evidence definitions result)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h4-book-measures-prove-visit"))
+   ((zp n) '(:failure "fuel" "h4-book-measures-prove-visit"))
    ((eq (car result) :transport)
     (proof-with-checked-results
      ((step (h4-book-measures-prove-visit
@@ -466,7 +466,7 @@
                 (step (proof-proof-tidy proof rewritten)))
                (cons step (cdr result)))
             result))
-       '(:failure "InapplicableStep" "")))))
+       '(:failure "inapplicable-step" "")))))
 
 (defun h4-book-measures-descent-next (recipe p args initial context replies)
   (proof-with-checked-results
@@ -483,7 +483,7 @@
 (defun h4-book-measures-descent-replies (n recipe p args initial progress)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h4-book-measures-descent-replies"))
+   ((zp n) '(:failure "fuel" "h4-book-measures-descent-replies"))
    ((eq (car progress) :more)
     (h4-book-measures-descent-replies
      (1- n) recipe p args initial
@@ -525,7 +525,7 @@
            ((result (h4-book-measures-selector-decrease p goal context)))
            (car result)))
          ((equal child *proof-false*) (h4-book-measures-count-nil p smaller original context))
-         (t '(:failure "Unproved" "")))))
+         (t '(:failure "unproved" "")))))
 
 (defun h4-book-measures-len-decrease (p smaller original context)
   (proof-with-checked-results
@@ -537,7 +537,7 @@
          (less (library-library-cite p "LEN-CDR-LESS" (cdr original) (list shape)))
          (order (library-library-ordinal-comparison p smaller original)))
         (proof-proof-transport (library-library-proof p) less order))
-     '(:failure "Unproved" ""))))
+     '(:failure "unproved" ""))))
 
 (defun h4-book-measures-structural-decrease (p goal context)
   (proof-with-checked-results ((parts (proof-list-of-length goal 3)))
@@ -548,7 +548,7 @@
         (h4-book-measures-count-decrease p goal smaller original context))
        ((and (proof-is-call smaller *library-len*) (proof-is-call original *library-len*))
         (h4-book-measures-len-decrease p smaller original context))
-       (t '(:failure "Unproved" ""))))))
+       (t '(:failure "unproved" ""))))))
 
 (defun h4-book-measures-split-term (goal splits)
   (if (or (not splits) (equal splits 0))
@@ -605,7 +605,7 @@
 (defun h4-book-measures-decrease-search (n p clause tests splits progress)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h4-book-measures-decrease-search"))
+   ((zp n) '(:failure "fuel" "h4-book-measures-decrease-search"))
    ((eq (car progress) :done) (cdr progress))
    ((eq (car progress) :split)
     (let* ((test (cdr progress))
@@ -636,8 +636,8 @@
 
 (defun h4-book-measures-plan-error (failure last-call)
   (if (member-equal (cadr failure)
-                    '("Unproved" "InapplicableTerm" "InapplicableStep"
-                      "MissingProofInput" "MissingTermPart"
+                    '("unproved" "inapplicable-term" "inapplicable-step"
+                      "missing-proof-input" "missing-term-part"
                       "value" "assertion" "key" "index"))
       (if (eq last-call :unbound)
           '(:failure "failure" "")
@@ -716,7 +716,7 @@
   (cond
    ((eq (car progress) :done) (cdr progress))
    ((not (eq (car progress) :more)) progress)
-   ((endp plans) '(:failure "Unproved" ""))
+   ((endp plans) '(:failure "unproved" ""))
    (t (h4-book-measures-try-plans
        p definitions calls functions names (cdr plans)
        (h4-book-measures-try-one-plan p definitions calls functions names (car plans) progress)))))

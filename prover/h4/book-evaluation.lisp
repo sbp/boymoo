@@ -112,7 +112,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((result (car current)))
     (cond ((not (h4-tactics-request-p result)) result)
-          ((zp n) '(:failure "Fuel" "h4-book-evaluation-reduce-with-replies"))
+          ((zp n) '(:failure "fuel" "h4-book-evaluation-reduce-with-replies"))
           (t (h4-book-evaluation-reduce-with-replies
               (1- n) evaluation term expand
               (h4-book-evaluation-reply evaluation term expand (cdr current) result))))))
@@ -134,7 +134,7 @@
              (not (equal value *proof-false*)))
         (h4-tactics-tactics-non-nil
          (h4-book-evaluation-closed-evaluation-p evaluation) equality)
-      '(:failure "InapplicableTerm" ""))))
+      '(:failure "inapplicable-term" ""))))
 
 (defun h4-book-evaluation-closed-goal (formula)
   (and (or (proof-is-call formula *proof-equal*)
@@ -153,7 +153,7 @@
                   (h4-book-evaluation-closed-evaluation-prove evaluation formula))))
            (if (and (failure-p result)
                     (member-equal (cadr result)
-                                  '("InapplicableStep" "InapplicableTerm"
-                                    "assertion" "value" "Unproved" "recursion")))
+                                  '("inapplicable-step" "inapplicable-term"
+                                    "assertion" "value" "unproved" "recursion")))
                nil
              result)))))

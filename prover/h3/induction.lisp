@@ -25,7 +25,7 @@
         (first (proof-step-first decrease)))
        (let ((smaller (list *proof-ordinal-less* new-measure measure)))
          (if (not (equal first smaller))
-             '(:failure "ProofMismatch" "")
+             '(:failure "proof-mismatch" "")
            (proof-with-checked-results
             ((assumption (proof-proof-assume
                           proof (proof-ite smaller new-formula *proof-true*) t))
@@ -110,34 +110,3 @@
    (h3-induction-well-founded lib formula (list *library-count* variable)
                              ordinal decreases prove-case)))
 
-(defun h3-induction-case-evidence (guards evidence excluded lib hypotheses)
-  (declare (xargs :measure (acl2-count guards)))
-  (if (endp guards)
-      (list (append evidence (h3-induction-enabled hypotheses excluded)))
-    (let* ((test (car guards))
-           (proof (library-library-proof lib)))
-      (proof-with-checked-results
-       ((positive (proof-proof-assume proof test t))
-        (yes (h3-induction-case-evidence
-              (cdr guards) (append evidence (list positive))
-              (cons test excluded) lib hypotheses))
-        (negative (proof-proof-assume proof test nil))
-        (no (h3-induction-case-evidence
-             (cdr guards) (append evidence (list negative))
-             excluded lib hypotheses)))
-       (append yes no)))))
-
-(defun h3-induction-well-founded-cases (lib formula measure replacements)
-  (proof-with-checked-results
-   ((hypotheses (h3-induction-hypotheses lib formula measure replacements)))
-   (h3-induction-case-evidence
-    (proof-unique (h3-induction-conditions hypotheses)) nil nil lib hypotheses)))
-
-(defun h3-induction-structural-induction-cases (lib formula variable replacements)
-  (proof-with-checked-results
-   ((decreases (h3-induction-decreases lib variable replacements)))
-   (let ((ordinal (library-library-builtin lib 1 variable)))
-     (if (failure-p ordinal)
-         ordinal
-       (h3-induction-well-founded-cases
-        lib formula (list *library-count* variable) decreases)))))

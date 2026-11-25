@@ -544,7 +544,7 @@
 (defun b1-parity-negated-base-normalize (n lib term replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-parity-negated-base-normalize")
+      '(:failure "fuel" "b1-parity-negated-base-normalize")
     (proof-with-checked-results
         ((result (b1-parity-negated-base-normalize-attempt lib term replies)))
       (if (b1-logic-call-p result)

@@ -29,7 +29,7 @@
     (n proof operation args folded use-caller-hook replies supplied)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-compression-folded-call")
+      '(:failure "fuel" "h2-compression-folded-call")
     (let* ((search (h2-search-search-with-replies proof supplied))
            (result (h2-search-search-call-with-remainder search operation args)))
       (cond
@@ -86,7 +86,7 @@
 (defun h2-compression-equal-total-sums (n proof left right replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-compression-equal-total-sums")
+      '(:failure "fuel" "h2-compression-equal-total-sums")
     (h2-compression-with-results
         ((result (h2-calculation-equal-total-sums-with-replies proof left right replies)))
       (let ((value (car result)))
@@ -251,7 +251,7 @@
 (defun h2-compression-recognizer-call (n proof operation recognizer parts replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-compression-recognizer-call")
+      '(:failure "fuel" "h2-compression-recognizer-call")
     (h2-compression-with-results
         ((result (case operation
                    (:list-parts (h2-alist-recognizers-list-parts-with-replies proof recognizer replies))
@@ -313,7 +313,7 @@
 (defun h2-compression-conforms-by-value (n value template tests proof data source recognizer laws head)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-compression-conforms-by-value")
+      '(:failure "fuel" "h2-compression-conforms-by-value")
     (let ((core (library-library-proof (h2-search-search-library proof))))
       (cond
        ((proof-is-call value *proof-if*)
@@ -452,7 +452,7 @@
 (defun h2-compression-array-conditions (n core tail)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-compression-array-conditions")
+      '(:failure "fuel" "h2-compression-array-conditions")
     (h2-compression-with-results ((literal (proof-step-first tail)))
       (if (not (proof-is-call literal *proof-if*))
           (list tail)

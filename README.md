@@ -30,6 +30,7 @@ Completed:
 Yet to do:
 
 * Compiler (**ACL2 Core**): compiles an ACL2 Core program into machine code. Platform support is tentatively planned for WASM, aarch64, RV64I + Zmmul, and x64, depending on how much effort each takes.
+* POSIX interface (**ACL2 Core, C**): potential way to drive I/O and devices using ACL2 Core programs.
 
 The components that are implemented in ACL2 or ACL2 Core can have proofs written to prove certain correctness properties about them. These are in varying states of completion; see the rest of the repository for details.
 

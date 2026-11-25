@@ -118,7 +118,7 @@
  (defun t3-book-theorems-terms (term)
    (declare (xargs :measure (acl2-count term)))
    (cond ((not (proof-compound term)) (list term))
-         ((endp term) '(:failure "MissingProofInput" ""))
+         ((endp term) '(:failure "missing-proof-input" ""))
          ((equal (car term) *proof-quote*) (list term))
          (t (proof-with-checked-results
                  ((args (t3-book-theorems-argument-terms (cdr term))))
@@ -154,7 +154,7 @@
           (cons (equal pattern term) bindings))
          ((or (not (proof-compound term)) (not (equal (len pattern) (len term))))
           (cons nil bindings))
-         ((endp pattern) '(:failure "MissingProofInput" ""))
+         ((endp pattern) '(:failure "missing-proof-input" ""))
          ((not (equal (car pattern) (car term))) (cons nil bindings))
          (t (t3-book-theorems-match-arguments (cdr pattern) (cdr term) bindings))))
  (defun t3-book-theorems-match-arguments (patterns terms bindings)
@@ -170,7 +170,7 @@
 (defun t3-book-theorems-projection-traversal (n term path guards)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-theorems-projections")
+      '(:failure "fuel" "t3-book-theorems-projections")
     (let ((recipe (list term path guards)))
       (cond
        ((proof-is-call term *library-implies*)
@@ -204,7 +204,7 @@
 
 (defun t3-book-theorems-conjunct-traversal (n term)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "t3-book-theorems-conjuncts"))
+  (cond ((zp n) '(:failure "fuel" "t3-book-theorems-conjuncts"))
         ((proof-is-call term *proof-if*)
          (proof-with-checked-results ((otherwise (proof-term-at term 3)))
            (if (equal otherwise *proof-false*)
@@ -509,7 +509,7 @@
 (defund t3-book-theorems-context-note-steps (n context steps)
   (declare (xargs :measure (nfix n)))
   (cond ((endp steps) context)
-        ((zp n) '(:failure "Fuel" "t3-book-theorems-context-note"))
+        ((zp n) '(:failure "fuel" "t3-book-theorems-context-note"))
         (t
          (proof-with-checked-results ((noted (t3-book-theorems-context-step-consequences context (car steps))))
            (t3-book-theorems-context-note-steps
@@ -957,7 +957,7 @@
  (defun t3-book-theorems-quick-search (n search term context depth)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-quick") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-quick") search)
      (t3-book-theorems-with-steps search
          ((known (or (table-get (t3-book-theorems-context-facts context) term nil)
                      (t3-book-theorems-theorems-truth search term))))
@@ -971,7 +971,7 @@
  (defun t3-book-theorems-rule-search (n search term context depth rewriting)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-rule-search") search)
+       (cons '(:failure "fuel" "t3-book-theorems-rule-search") search)
      (let* ((local-map (if rewriting (t3-book-theorems-context-rewrites context)
                          (t3-book-theorems-context-projections context)))
             (local (table-get local-map term nil)))
@@ -989,7 +989,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((endp recipes) (cons nil search))
-    ((zp n) (cons '(:failure "Fuel" "t3-book-theorems-try-local-rules") search))
+    ((zp n) (cons '(:failure "fuel" "t3-book-theorems-try-local-rules") search))
     (t (let* ((recipe (car recipes))
               (step (car recipe))
               (path (cadr recipe))
@@ -1006,7 +1006,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((endp recipes) (cons nil search))
-    ((zp n) (cons '(:failure "Fuel" "t3-book-theorems-try-index-rules") search))
+    ((zp n) (cons '(:failure "fuel" "t3-book-theorems-try-index-rules") search))
     (t
      (let* ((recipe (car recipes))
             (name (car recipe)))
@@ -1034,7 +1034,7 @@
      (n search name path guards required bindings context depth)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-apply-rule") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-apply-rule") search)
      (t3-book-theorems-with-steps search
          ((bindings (if (t3-book-theorems-variables-bound-p required bindings)
                         bindings
@@ -1057,7 +1057,7 @@
    (cond
     ((endp guards) (cons nil search))
     ((< depth 0) (cons :none search))
-    ((zp n) (cons '(:failure "Fuel" "t3-book-theorems-theorems-premises") search))
+    ((zp n) (cons '(:failure "fuel" "t3-book-theorems-theorems-premises") search))
     (t
      (t3-book-theorems-with-steps search ((target (proof-subst (car guards) bindings)))
        (t3-book-theorems-with-search
@@ -1076,7 +1076,7 @@
  (defun t3-book-theorems-premise-conjunct (n search target context depth)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-premises") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-premises") search)
      (t3-book-theorems-with-steps search ((otherwise (proof-term-at target 3)))
        (if (not (equal otherwise *proof-false*))
            (cons nil search)
@@ -1100,24 +1100,6 @@
 (defun t3-book-theorems-theorems-quick (search term context depth)
   (t3-book-theorems-search-answer
    (t3-book-theorems-quick-result search term context depth)))
-
-(defun t3-book-theorems-theorems-instance (search term context depth)
-  (t3-book-theorems-search-answer
-   (t3-book-theorems-rule-result search term context depth nil)))
-
-(defun t3-book-theorems-theorems-premises (search guards bindings context depth)
-  (t3-book-theorems-search-answer
-   (t3-book-theorems-premises-search 1000000 search guards bindings context depth)))
-
-(defun t3-book-theorems-theorems-apply-rule
-    (search name path guards required bindings context depth)
-  (t3-book-theorems-search-answer
-   (t3-book-theorems-apply-rule-search
-    1000000 search name path guards required bindings context depth)))
-
-(defun t3-book-theorems-theorems-rewriting (search term context)
-  (t3-book-theorems-search-answer
-   (t3-book-theorems-rule-result search term context 0 t)))
 
 (defund t3-book-theorems-quick-test (search test context)
   (t3-book-theorems-with-search
@@ -1145,10 +1127,6 @@
                            (t3-book-theorems-library search) "T3-BOOLEAN-TRUE"
                            (list term) (list boolean positive)))
                      search))))))))
-
-(defun t3-book-theorems-theorems-known-value (search term context ignore)
-  (t3-book-theorems-search-answer
-   (t3-book-theorems-test-known-value search term context ignore)))
 
 (defun t3-book-theorems-theorems-constructor-equation-reconstruction (value lib context)
   (let ((cells (table-get (t3-book-theorems-context-facts context)
@@ -1356,9 +1334,6 @@
               (cons nil search)
             (t3-book-theorems-unfold-definition search term context function definition)))))))
 
-(defun t3-book-theorems-theorems-open-definition (search term context trail)
-  (t3-book-theorems-search-answer (t3-book-theorems-open-term search term context trail)))
-
 (defun t3-book-theorems-context-equation (term context ignore)
   (and (not (equal term ignore))
        (or (table-get (t3-book-theorems-context-equalities context) term nil)
@@ -1372,7 +1347,7 @@
  (defun t3-book-theorems-normalize-term (n search term context trail ignore)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-normalize") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-normalize") search)
      (t3-book-theorems-with-steps search ((search (t3-book-theorems-spend search 1)))
        (if (or (< (t3-book-theorems-theorems-fuel search) 0)
                (> (len trail) 24) (member-equal term trail)
@@ -1393,7 +1368,7 @@
  (defun t3-book-theorems-normalize-call (n search term context trail ignore)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-normalize") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-normalize") search)
      (t3-book-theorems-with-steps search ((function (proof-term-at term 0)))
        (let ((proof (t3-book-theorems-proof search)))
          (cond
@@ -1411,20 +1386,20 @@
  (defun t3-book-theorems-normalize-to (n search step value context trail)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-normalize") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-normalize") search)
      (t3-book-theorems-with-search
       (tail search (t3-book-theorems-normalize-term (1- n) search value context trail nil))
       (cons (proof-proof-chain (t3-book-theorems-proof search) step (list tail)) search))))
  (defun t3-book-theorems-normalize-right (n search step context trail)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-normalize") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-normalize") search)
      (t3-book-theorems-with-steps search ((value (proof-rewritten-term step)))
        (t3-book-theorems-normalize-to (1- n) search step value context trail))))
  (defun t3-book-theorems-normalize-conditional (n search term context trail)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-conditional") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-conditional") search)
      (t3-book-theorems-with-steps search ((parts (proof-list-of-length (cdr term) 3)))
        (let ((test (car parts))
              (yes (cadr parts))
@@ -1460,7 +1435,7 @@
  (defun t3-book-theorems-normalize-nonconditional (n search term context trail ignore)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-normalize") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-normalize") search)
      (t3-book-theorems-with-steps search ((constant (t3-book-theorems-constant search term)))
        (if constant
            (cons constant search)
@@ -1482,7 +1457,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((endp args) (cons equation search))
-    ((zp n) (cons '(:failure "Fuel" "t3-book-theorems-theorems-normalize") search))
+    ((zp n) (cons '(:failure "fuel" "t3-book-theorems-theorems-normalize") search))
     (t
      (t3-book-theorems-with-search
       (changed search (t3-book-theorems-normalize-term (1- n) search (car args) context trail nil))
@@ -1498,7 +1473,7 @@
  (defun t3-book-theorems-normalize-current (n search term context trail ignore equation)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-normalize") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-normalize") search)
      (let ((proof (t3-book-theorems-proof search)))
        (t3-book-theorems-with-steps search
            ((current (if equation (proof-rewritten-term equation) term))
@@ -1524,14 +1499,6 @@
 
 (defund t3-book-theorems-normalization-result (search term context trail ignore)
   (t3-book-theorems-normalize-term 1000000 search term context trail ignore))
-
-(defun t3-book-theorems-theorems-normalize (search term context trail ignore)
-  (t3-book-theorems-search-answer
-   (t3-book-theorems-normalization-result search term context trail ignore)))
-
-(defun t3-book-theorems-theorems-conditional (search term context trail)
-  (t3-book-theorems-search-answer
-   (t3-book-theorems-normalize-conditional 1000000 search term context trail)))
 
 (defun t3-book-theorems-congruence-arguments (search left right context index result)
   (declare (xargs :measure (acl2-count left)))
@@ -1575,9 +1542,6 @@
                     (t3-book-theorems-congruence-arguments
                      search (cdr left) (cdr right) context 1 initial)))))))))))
 
-(defun t3-book-theorems-theorems-congruence (search term context)
-  (t3-book-theorems-search-answer (t3-book-theorems-match-congruence search term context)))
-
 (defun t3-book-theorems-quick-or-congruence (search term context)
   (t3-book-theorems-with-search
    (known search (t3-book-theorems-quick-result search term context 1))
@@ -1602,9 +1566,6 @@
              (t3-book-theorems-with-steps search
                  ((transported (proof-proof-transport (t3-book-theorems-proof search) result reduced)))
                (cons (list transported nil) search))))))))))
-
-(defun t3-book-theorems-theorems-reduce-goal (search term context)
-  (t3-book-theorems-search-answer (t3-book-theorems-reduce search term context)))
 
 (defun t3-book-theorems-saturation-note (search premise equality denied context)
   (let ((proof (t3-book-theorems-proof search)))
@@ -1672,12 +1633,6 @@
              (cons (cons (reverse choices) context) search)
            (t3-book-theorems-saturate-context (1- passes) search context choices)))))))
 
-(defun t3-book-theorems-theorems-saturate (search context)
-  (let ((result (t3-book-theorems-saturate-context 3 search context nil)))
-    (if (failure-p (car result))
-        (car result)
-      (cons (caar result) (cons (cdr result) (cdar result))))))
-
 (defund t3-book-theorems-result-true-branch (search value test step)
   (let ((lib (t3-book-theorems-library search)))
     (proof-with-checked-results
@@ -1689,7 +1644,7 @@
  (defun t3-book-theorems-result-search (n search formula context trail)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-result-cases") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-result-cases") search)
      (t3-book-theorems-with-steps search ((allowance (t3-book-theorems-allowance search)))
        (if (or (< allowance 0) (> (len trail) 10))
            (cons nil search)
@@ -1706,7 +1661,7 @@
  (defun t3-book-theorems-result-value (n search formula predicate value function context trail)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "t3-book-theorems-theorems-result-cases") search))
+    ((zp n) (cons '(:failure "fuel" "t3-book-theorems-theorems-result-cases") search))
     ((equal function *proof-quote*)
      (t3-book-theorems-with-search
       (result search (t3-book-theorems-reduce search formula context))
@@ -1734,7 +1689,7 @@
  (defun t3-book-theorems-result-opened (n search predicate opened context trail)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-result-cases") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-result-cases") search)
      (t3-book-theorems-with-steps search ((right (proof-rewritten-term opened)))
        (t3-book-theorems-with-search
         (step search (t3-book-theorems-result-search (1- n) search (list predicate right) context trail))
@@ -1744,7 +1699,7 @@
  (defun t3-book-theorems-result-conditional (n search predicate value context trail)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-result-cases") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-result-cases") search)
      (t3-book-theorems-with-steps search ((parts (proof-list-of-length (cdr value) 3)))
        (let ((test (car parts))
              (yes (cadr parts))
@@ -1782,10 +1737,6 @@
 
 (defund t3-book-theorems-result-proof (search formula context trail)
   (t3-book-theorems-result-search 1000000 search formula context trail))
-
-(defun t3-book-theorems-theorems-result-cases (search formula context trail)
-  (t3-book-theorems-search-answer
-   (t3-book-theorems-result-proof search formula context trail)))
 
 (defun t3-book-theorems-theorems-definition-equation (search term)
   (if (not (proof-is-call term *proof-equal*))
@@ -1891,10 +1842,6 @@
              (t3-book-theorems-alias-consequence-loop
               (1- attempts) search term context equation))))))))
 
-(defun t3-book-theorems-theorems-alias-consequence (search term context)
-  (t3-book-theorems-search-answer
-   (t3-book-theorems-alias-consequence-loop 4 search term context nil)))
-
 (defun t3-book-theorems-proved (step search context)
   (if (failure-p step)
       (cons step search)
@@ -1939,18 +1886,18 @@
    (declare (xargs :measure (nfix n)))
    (let ((contradiction (t3-book-theorems-context-contradiction context)))
      (cond
-      ((zp n) (cons '(:failure "Fuel" "t3-book-theorems-theorems-prove") search))
+      ((zp n) (cons '(:failure "fuel" "t3-book-theorems-theorems-prove") search))
       (contradiction
        (t3-book-theorems-proved
         (proof-proof-subsume
          (t3-book-theorems-proof search) contradiction
          (proof-unique (cons term (t3-book-theorems-remove-false (proof-step-clause contradiction)))))
         search context))
-      ((< depth 0) (cons '(:failure "Unsupported" "") search))
+      ((< depth 0) (cons '(:failure "unsupported" "") search))
       (t
        (t3-book-theorems-with-steps search ((allowance (t3-book-theorems-allowance search)))
          (if (< allowance 0)
-             (cons '(:failure "Unsupported" "") search)
+             (cons '(:failure "unsupported" "") search)
            (t3-book-theorems-with-search
             (known search (t3-book-theorems-quick-result search term context 0))
             (cond
@@ -1970,7 +1917,7 @@
  (defun t3-book-theorems-prove-implication (n search term context depth)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-prove") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-prove") search)
      (t3-book-theorems-with-steps search ((parts (proof-list-of-length (cdr term) 2)))
        (let* ((test (car parts))
               (conclusion (cadr parts))
@@ -1987,7 +1934,7 @@
  (defun t3-book-theorems-prove-reduced (n search term context depth)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-prove") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-prove") search)
      (t3-book-theorems-with-search
       (result search (t3-book-theorems-reduce search term context))
       (if (car result)
@@ -2000,7 +1947,7 @@
  (defun t3-book-theorems-prove-conjunct (n search term context depth)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-prove") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-prove") search)
      (t3-book-theorems-with-search
       (guard search (t3-book-theorems-prove-term (1- n) search (cadr term) context (1- depth)))
       (t3-book-theorems-with-steps search ((context (t3-book-theorems-context-note (cdr guard) (car guard))))
@@ -2014,7 +1961,7 @@
  (defun t3-book-theorems-prove-saturated (n search term context depth)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-prove") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-prove") search)
      (t3-book-theorems-with-search
       (saturated search (t3-book-theorems-saturate-context 3 search context nil))
       (let ((choices (car saturated))
@@ -2031,11 +1978,11 @@
                          search current choices (t3-book-theorems-context-facts context))))
                (if (and test (t3-book-theorems-undecided-test-p test (t3-book-theorems-context-facts context)))
                    (t3-book-theorems-prove-cases (1- n) search term test context depth)
-                 (cons '(:failure "Unsupported" "") search))))))))))
+                 (cons '(:failure "unsupported" "") search))))))))))
  (defun t3-book-theorems-prove-cases (n search term test context depth)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-theorems-prove") search)
+       (cons '(:failure "fuel" "t3-book-theorems-theorems-prove") search)
      (t3-book-theorems-with-steps search ((branch (t3-book-theorems-context-branch context test t)))
        (t3-book-theorems-with-search
         (yes search (t3-book-theorems-prove-term (1- n) search term branch (1- depth)))
@@ -2123,11 +2070,6 @@
             (cons (proof-proof-induct proof ordinal cases formula measure substitutions)
                   search))))))))
 
-(defun t3-book-theorems-theorems-induction
-    (search formula variable test recurs-on-true substitutions)
-  (t3-book-theorems-search-answer
-   (t3-book-theorems-induct-on search formula variable test recurs-on-true substitutions)))
-
 (defun t3-book-theorems-count-driver-uses (term indices candidates)
   (declare (xargs :measure (acl2-count indices)))
   (if (endp indices)
@@ -2160,9 +2102,6 @@
                     candidates)))
               (t3-book-theorems-candidate-counts-with-summaries
                (cdr terms) definitions candidates summaries))))))))
-
-(defun t3-book-theorems-induction-candidate-counts (terms definitions candidates)
-  (t3-book-theorems-candidate-counts-with-summaries terms definitions candidates nil))
 
 (defun t3-book-theorems-induction-sort-keys (candidates position)
   (if (endp candidates)
@@ -2300,7 +2239,7 @@
     (n terms args index actuals substitutions seen definitions summaries)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "t3-book-theorems-theorems-induction-schemes"))
+   ((zp n) '(:failure "fuel" "t3-book-theorems-theorems-induction-schemes"))
    ((consp args)
     (proof-with-checked-results
         ((scheme (t3-book-theorems-argument-scheme (car args) actuals index substitutions)))
@@ -2315,11 +2254,6 @@
        (1- n) (cdr terms) (car data) 0 (cadr data) (caddr data) seen definitions summaries)))
    (t nil)))
 
-(defun t3-book-theorems-next-structural-scheme
-    (n terms args index actuals substitutions seen definitions)
-  (t3-book-theorems-next-scheme-with-summaries
-   n terms args index actuals substitutions seen definitions nil))
-
 (defund t3-book-theorems-scheme-from-cursor (cursor definitions summaries)
   (t3-book-theorems-next-scheme-with-summaries
    1000000 (nth 0 cursor) (nth 1 cursor) (nth 2 cursor) (nth 3 cursor)
@@ -2328,33 +2262,8 @@
 (defund t3-book-theorems-next-from-cursor (cursor definitions)
   (t3-book-theorems-scheme-from-cursor cursor definitions nil))
 
-(defun t3-book-theorems-collect-schemes-with-summaries (n cursor definitions summaries)
-  (declare (xargs :measure (nfix n)))
-  (if (zp n)
-      '(:failure "Fuel" "t3-book-theorems-theorems-induction-schemes")
-    (proof-with-checked-results ((next (t3-book-theorems-scheme-from-cursor cursor definitions summaries)))
-      (and next
-           (proof-with-checked-results
-               ((rest (t3-book-theorems-collect-schemes-with-summaries
-                       (1- n) (cadr next) definitions summaries)))
-             (cons (car next) rest))))))
-
-(defun t3-book-theorems-collect-structural-schemes (n cursor definitions)
-  (t3-book-theorems-collect-schemes-with-summaries n cursor definitions nil))
-
-(defun t3-book-theorems-theorems-induction-schemes (search formula)
-  (proof-with-checked-results
-      ((candidates (t3-book-theorems-theorems-induction-candidates search formula))
-       (terms (t3-book-theorems-terms formula))
-       (defaults (t3-book-theorems-default-schemes candidates))
-       (structural (t3-book-theorems-collect-schemes-with-summaries
-                    1000000 (list terms nil 0 nil nil defaults)
-                    (proof-proof-definitions (t3-book-theorems-proof search))
-                    (t3-book-theorems-definition-summaries search))))
-    (append defaults structural)))
-
 (defun t3-book-theorems-unsupported-p (value)
-  (and (failure-p value) (equal (cadr value) "Unsupported")))
+  (and (failure-p value) (equal (cadr value) "unsupported")))
 
 (defund t3-book-theorems-next-induction-attempt (search formula defaults remaining cursor)
   (if remaining
@@ -2407,17 +2316,13 @@
                 4 search formula allowance direct defaults defaults :none))))
           (t attempt)))))))
 
-(defun t3-book-theorems-theorems-formula (search formula allowance induct)
-  (t3-book-theorems-search-answer
-   (t3-book-theorems-prove-formula search formula allowance induct)))
-
 (defund t3-book-theorems-guard-simplification (book value evidence)
   (t3-book-values-book-proofs-normalize book value evidence *t3-book-spines-guards*))
 
 (defund t3-book-theorems-constructor-normalization (n book value evidence)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-theorems-constructor-normalization")
+      '(:failure "fuel" "t3-book-theorems-constructor-normalization")
     (let ((proof (library-library-proof (t3-book-values-book-proofs-library book))))
       (proof-with-checked-results
           ((equation (t3-book-theorems-guard-simplification book value evidence))
@@ -2544,9 +2449,6 @@
                   (rewritten (proof-proof-rewrite proof step equivalent '(1))))
                (cons (proof-proof-tidy proof rewritten) search)))))))))
 
-(defun t3-book-theorems-theorems-boolean-result (search formula)
-  (t3-book-theorems-search-answer (t3-book-theorems-prove-boolean-result search formula)))
-
 (defun t3-book-theorems-constructor-head-p (terms)
   (if (endp terms)
       nil
@@ -2571,9 +2473,6 @@
                  (search (t3-book-theorems-theorems-with-constructor-cases (cdr attempt) nil)))
             (cons (if (failure-p result) result (car result)) search)))))))
 
-(defun t3-book-theorems-theorems-prove-constructor-cases (search formula)
-  (t3-book-theorems-search-answer (t3-book-theorems-prove-constructor search formula)))
-
 (defund t3-book-theorems-shape-solve (target evidence search)
   (t3-book-theorems-with-steps search
       ((context (t3-book-theorems-context-note-steps
@@ -2596,15 +2495,6 @@
   (let ((search (t3-book-theorems-theorems-with-fuel search 160)))
     (t3-book-theorems-rule-result search target (t3-book-theorems-new-context search nil) 0 t)))
 
-(defun t3-book-theorems-theorems-shape-proof-solve (target evidence search)
-  (t3-book-theorems-search-answer (t3-book-theorems-shape-solve target evidence search)))
-
-(defun t3-book-theorems-theorems-shape-proof-earlier (target search)
-  (t3-book-theorems-search-answer (t3-book-theorems-shape-earlier-proof target search)))
-
-(defun t3-book-theorems-theorems-shape-proof-by-equality (target search)
-  (t3-book-theorems-search-answer (t3-book-theorems-shape-rewrite-proof target search)))
-
 (defund t3-book-theorems-spines-attempt (lib goal mapped replies)
   (if mapped
       (t3-book-spines-mapped-list lib goal replies)
@@ -2613,7 +2503,7 @@
 (defun t3-book-theorems-shape-spines (n search goal mapped replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "t3-book-theorems-shape-spines") search)
+      (cons '(:failure "fuel" "t3-book-theorems-shape-spines") search)
     (let ((result (t3-book-theorems-spines-attempt
                    (t3-book-theorems-library search) goal mapped replies)))
       (if (not (t3-book-spines-callback-p result))
@@ -2655,7 +2545,7 @@
  (defun t3-book-theorems-string-value (n search value tests trail)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-string-value") search)
+       (cons '(:failure "fuel" "t3-book-theorems-string-value") search)
      (let ((action (t3-book-theorems-string-action search value tests trail)))
        (if (not (t3-book-strings-earlier-request-p action))
            (cons action search)
@@ -2670,7 +2560,7 @@
  (defun t3-book-theorems-string-dispatch (n search value tests trail action)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-string-value") search)
+       (cons '(:failure "fuel" "t3-book-theorems-string-value") search)
      (let ((lib (t3-book-theorems-library search)))
        (case (car action)
          (:project
@@ -2698,7 +2588,7 @@
  (defun t3-book-theorems-string-visit (n search value template tests trail index)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-string-value") search)
+       (cons '(:failure "fuel" "t3-book-theorems-string-value") search)
      (let* ((proof (t3-book-theorems-proof search))
             (branch (t3-book-strings-branch proof value)))
        (case (car branch)
@@ -2729,7 +2619,7 @@
  (defun t3-book-theorems-string-project-leaf (n search term tests trail index)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "t3-book-theorems-string-value") search)
+       (cons '(:failure "fuel" "t3-book-theorems-string-value") search)
      (t3-book-theorems-with-steps search
          ((selected (t3-book-strings-projected-leaf-selection
                      (t3-book-theorems-string-results search nil) index term)))
@@ -2822,9 +2712,6 @@
             ((and step opened)
              (cons (proof-proof-transport (t3-book-theorems-proof search) step opened) search))
             (t attempt)))))
-
-(defun t3-book-theorems-theorems-shape-proof (search formula)
-  (t3-book-theorems-search-answer (t3-book-theorems-shape-search search formula)))
 
 (defun t3-book-theorems-conclude (search formula)
   (let ((search (t3-book-theorems-theorems-with-fuel search 400)))

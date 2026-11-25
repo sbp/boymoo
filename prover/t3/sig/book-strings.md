@@ -19,10 +19,6 @@ may be supplied in request order.
 | Call | Arguments and result | Failure |
 |---|---|---|
 | `(t3-book-strings-string-results-init lib earlier)` | StringResults object for the Library and earlier-proof callback. | None. |
-| `(t3-book-strings-string-results-string results value tests trail)` | Step for `STRINGP` of the value term, or an earlier-proof request. | `Unsupported` for an unresolved term, or a callback or construction failure. |
-| `(t3-book-strings-string-results-return-cases results value tests trail)` | Step for `STRINGP` of the value term by return cases, or an earlier-proof request. | A callback or construction failure. |
-| `(t3-book-strings-string-results-projected results value tests trail)` | Step for `STRINGP` of the selected result of a producer, or an earlier-proof request. `value` is the `MV-NTH` term. | `Unsupported` for an unresolved projection, or a callback or construction failure. |
-| `(t3-book-strings-string-result lib formula earlier)` | Step for the formula, `nil` for a formula of another form, or an earlier-proof request. | A callback or construction failure, including `Unsupported`. |
 
 `(t3-book-strings-earlier-request-p result)` recognizes an earlier-proof
 request.

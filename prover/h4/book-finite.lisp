@@ -81,8 +81,8 @@
 (defun h4-book-finite-proposition-from-interval-visit (n p term number end integral lower upper excluded)
   (declare (xargs :measure (nfix n)))
   (cond ((not (o< (nfix (1- n)) (nfix n)))
-         '(:failure "Fuel" "h4-book-finite-proposition-from-interval-visit"))
-        ((< end number) '(:failure "InapplicableStep" ""))
+         '(:failure "fuel" "h4-book-finite-proposition-from-interval-visit"))
+        ((< end number) '(:failure "inapplicable-step" ""))
         (t
          (let* ((bound (proof-quote number))
                 (delta (library-diff term bound)))
@@ -166,14 +166,14 @@
        (value (proof-rewritten-term equality)))
     (if (equal value *proof-true*)
         (h4-tactics-tactics-non-nil p equality)
-      '(:failure "InapplicableTerm" ""))))
+      '(:failure "inapplicable-term" ""))))
 
 (defun h4-book-finite-prove-interval-cases-inspect
     (n tests hypotheses first-test p formula variable excluded substitutions provide no-points)
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof p)))
     (cond
-     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h4-book-finite-prove-interval-cases-inspect"))
+     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h4-book-finite-prove-interval-cases-inspect"))
      ((endp tests)
         (proof-with-checked-results
             ((contradiction (proof-proof-instantiate proof no-points (list (list *library-x* variable)))))
@@ -209,14 +209,14 @@
  (defun h4-book-finite-prove-interval-cases-compare
      (n arguments substitutions p formula domain provide no-points)
    (declare (xargs :measure (nfix n)))
-   (cond ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h4-book-finite-prove-interval-cases-compare"))
+   (cond ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h4-book-finite-prove-interval-cases-compare"))
          ((endp arguments) (h4-book-finite-prove-interval-cases-evaluate nil substitutions p formula provide))
          (t (h4-book-finite-prove-interval-cases-test-value
              (1- n) domain nil p formula (car arguments) (cdr arguments) domain substitutions provide no-points))))
  (defun h4-book-finite-prove-interval-cases-test-value
      (n points excluded p formula variable rest domain substitutions provide no-points)
    (declare (xargs :measure (nfix n)))
-   (cond ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h4-book-finite-prove-interval-cases-test-value"))
+   (cond ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h4-book-finite-prove-interval-cases-test-value"))
          ((endp points)
           (h4-book-finite-prove-interval-cases-outside
            excluded p formula variable domain substitutions provide no-points))
@@ -261,7 +261,7 @@
       (let ((result (h4-book-finite-prove-interval-cases p formula (car plan) (cadr plan))))
         (if (and (failure-p result)
                  (member-equal (cadr result)
-                               '("InapplicableStep" "InapplicableTerm"
-                                 "assertion" "value" "recursion" "Unproved")))
+                               '("inapplicable-step" "inapplicable-term"
+                                 "assertion" "value" "recursion" "unproved")))
             nil
           result)))))

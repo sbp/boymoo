@@ -66,11 +66,10 @@ are ordered by the text from `t3-book-theorems-sexp-text`.
 | `(t3-book-theorems-theorems-add search kind data)` | Search with the theorem, axiom, or constraint facts in `data` indexed when applicable. |
 | `(t3-book-theorems-theorems-quick search term context depth)` | `(cons step search)` with the updated search. The Step can be `nil`. Pass 1 for the default depth. |
 | `(t3-book-theorems-theorems-prove search term context depth)` | `(cons step (cons search context))` with the updated search and context. Pass 12 for the default depth. |
-| `(t3-book-theorems-theorems-formula search formula allowance induct)` | `(cons step search)` with the updated search. Defaults are 1100 and `nil`. |
 | `(t3-book-theorems-theorems-theorem search name formula)` | `(cons entry search)` with the updated search and the `proof-proof-entry` result. |
 
 A function that executes an inference or search can return a failure as
-its entire result. The search uses `Unsupported` when no tactic applies.
+its entire result. The search uses `unsupported` when no tactic applies.
 
 The `lib` field of the search is a book proof context with its package
 declarations, as specified in `prover/t3/sig/book-values.md`. The `lib`

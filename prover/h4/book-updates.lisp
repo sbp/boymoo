@@ -95,7 +95,7 @@
                   (cons shape (list car-step cdr-step))))
             (cons shape nil))))
       (if (not (car details))
-          '(:failure "InapplicableStep" "")
+          '(:failure "inapplicable-step" "")
         (proof-with-checked-results
             ((opened (proof-proof-unfold proof (list name sequence)))
              (literal (proof-step-first opened))
@@ -212,7 +212,7 @@
 
 (defun h4-book-updates-applicable-step (result)
   (if (and (failure-p result)
-           (member-equal (cadr result) '("InapplicableStep" "assertion")))
+           (member-equal (cadr result) '("inapplicable-step" "assertion")))
       nil
     result))
 

@@ -22,10 +22,6 @@ instantiates the resulting Step from the active Proof.
 `h2-books-run-indexed-search` removes the fact index when returning
 the BookProof.
 
-`h2-api-world-with-indexed-prefix` and `h2-open-advance-prefix` select the
-written-name index for admission. `h2-api-world` and `h2-open-advance`
-also support admission with the ordered list.
-
 ## Inherited search calls
 
 A request suspends the current invocation at an inherited operation.

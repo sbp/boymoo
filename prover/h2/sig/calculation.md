@@ -18,27 +18,11 @@ is `nil`. Evidence Steps stay in the order supplied.
 | `h2-calculation-number-sums-linear-form` | Sums, term, evidence Steps | Equality Step to the right-associated sorted sum. |
 | `h2-calculation-number-sums-linear-equal` | Sums, left term, right term, evidence Steps | Equality Step for the two terms. |
 | `h2-calculation-number-sums` | Library | Updated Library, with signed-sum lemmas added in order if absent. |
-| `h2-calculation-product-form` | Proof, term, context | `(cons step (cons proof context))`, with the normalized product equality Step and the resulting proof and context. |
-| `h2-calculation-calculate` | Proof, goal term, context | `(cons step (cons proof context))`, with the Step or `nil` and the resulting proof and context. |
-| `h2-calculation-projected-arithmetic` | Proof | `(cons names proof)` after establishing the addition and negation projection rules in that order. |
 | `h2-calculation-normalize-total-sum` | Library, term, projection rule names, sums | Equality Step to the sum with numeric fixes exposed. |
-| `h2-calculation-equal-total-sums` | Proof, left term, right term | `(cons step proof)`, with an equality Step or `nil` and the resulting proof. |
-| `h2-calculation-difference-test` | Library, equality term | `(cons step library)` equating the test to a zero difference, with the resulting Library. |
-| `h2-calculation-signed-identity` | Proof, formula | `(cons step proof)`, with the Step or `nil` and the resulting proof. |
-
-Each call in the table can return a failure in place of the listed result.
-`h2-calculation-calculate`, `h2-calculation-equal-total-sums` and
-`h2-calculation-signed-identity` use `nil` for the unsuccessful paths
-handled in those functions. The type query returns `ArithmeticInapplicable` when it lacks numeric evidence.
 
 The constants are `*h2-calculation-numberp*`, `*h2-calculation-fix*`,
 `*h2-calculation-reciprocal*`, `*h2-calculation-rationalp*` and
 `*h2-calculation-number-rules*`. The rule names retain their declaration order.
-
-`h2-calculation-number-sums-member` takes sums and a field name string.
-It returns the corresponding Library field for `facts`, `definitions`,
-`primitives`, and `entries`. Operation names use hyphens as word
-separators. A missing member returns a generic failure.
 
 `product-form` and `calculate` have entry points with `-with-replies` appended
 to their names and an extra final reply list argument. The short entry points

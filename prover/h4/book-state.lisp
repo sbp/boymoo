@@ -140,7 +140,7 @@
 (defun h4-book-state-indexed-state-restore (n indexed term original)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h4-book-state-indexed-state-restore")
+      '(:failure "fuel" "h4-book-state-indexed-state-restore")
     (proof-with-checked-results ((parts (proof-list-of-length term 4)))
       (let* ((p (h4-book-state-indexed-state-p indexed))
              (proof (library-library-proof p))

@@ -9,7 +9,6 @@ Terms, Steps and Libraries have the forms in `prover/sig/proof.md` and
 | ACL2 call | Result | Failure |
 |---|---|---|
 | `(h4-book-alists-keyed-removal formula)` | Whether a term contains `HONS-REMOVE-ASSOC` and either `HONS-ASSOC-EQUAL` or `FAST-ALIST-FORK`. | A failure from walking the term. |
-| `(h4-book-alists-keyed-removal-proof p formula)` | The first successful induction Step on the formula, or `nil`. | Failures from building the search or proof can propagate. The induction fallback kinds in `prover/h4/notes/failures.md` advance to another plan. |
 
 A KeySearch uses the BookSearch state and its ordinary constructor. Its
 specialized methods use that state with the same interpretation as the base
@@ -27,14 +26,9 @@ search depth, and `rewrite` is `t` when matching the left side of an equation.
 | `(h4-book-alists-key-search-selected-equations search evidence)` | Steps selected and rewritten in evidence order. | A failure from reading or constructing a Step. |
 | `(h4-book-alists-key-search-join-equalities search evidence)` | Evidence with the additional equations formed from Steps with a common side. | A failure from constructing an equation. |
 | `(h4-book-alists-key-search-hypotheses search premises)` | The ordered evidence dictionary with the specialized additions. | A failure from collecting the evidence. |
-| `(h4-book-alists-key-search-instantiate search rule term evidence depth rewrite)` | The base `instantiate` result, with direct replay of a matching `HONS-ASSOC-EQUAL-REMOVE-ASSOC` rewrite rule. | A failure from matching or constructing the Step. |
 
 `instantiate` returns `(cons result search)` as in `book-tactics.md`. A
 matching direct replay leaves the ordinary instantiation budget unchanged.
 During induction, the search requests an evidence map for each premise list
 and replays the removal rewrite before applying the ordinary rewrite filters.
 Replay may itself spend budget when it uses search to discharge a premise.
-
-`(h4-book-alists-keyed-removal-proof-with-templates p formula tables)`
-takes the template tables of `book-tactics.md` and returns the same result
-as `h4-book-alists-keyed-removal-proof`.

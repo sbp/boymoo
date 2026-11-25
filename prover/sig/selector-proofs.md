@@ -9,7 +9,4 @@
 | `(selector-proofs-regrouped-descent lib actual edges evidence)` | `actual` is the descendant term. `evidence` is a list of proofs that the edge parents are conses. Returns `(cons step lib)` with a strict count comparison. |
 | `(selector-proofs-count-nil-bound lib)` | Adds the count comparison between nil and a cons and returns the resulting library. |
 | `(selector-proofs-nil-path-descent lib edges root-cons start)` | `root-cons` proves the root is a cons. `start` is the zero-based index of the first parent assumed to be an atom. Returns `(cons step lib)` with a strict count comparison. |
-| `(selector-proofs-selector-path-descent lib actual edges rulers)` | `actual` is the descendant term. Returns `(cons step lib)` with a strict count comparison or a nil step if the path is too short or a root cons proof is unavailable. |
-| `(selector-proofs-selector-path-descent-descend n evidence lib actual edges initial)` | Splits on missing cons proofs in `evidence`. `initial` is the original list of optional cons proofs. Returns `(cons step lib)` and can return a `Fuel` failure. |
-
-`(selector-proofs-selector-path-descent-with-rulers lib actual edges rulers)` takes the same arguments as `selector-proofs-selector-path-descent` and returns `(cons (list step rulers) lib)` or a failure. The returned Rulers holds the evidence established during the queries.
+| `(selector-proofs-selector-path-descent-descend n evidence lib actual edges initial)` | Splits on missing cons proofs in `evidence`. `initial` is the original list of optional cons proofs. Returns `(cons step lib)` and can return a `fuel` failure. |

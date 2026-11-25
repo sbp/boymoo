@@ -52,8 +52,8 @@ A term `value` is taken apart by its conditionals: at `(IF a b c)` the branch `b
 
 | Call | Value | Failure |
 |---|---|---|
-| `(proof-proof-by-value-leaves proof value tests)` | The list of the leaves, each `(leaf tests)` with the tests that lead to it, the branch of a true test before that of a false one. | `"Fuel"`. |
-| `(proof-proof-by-value proof value template leaf tests)` | A Step of `template` with `value` in the place of the slot `*proof-result*`. `leaf` is a table whose keys are the leaves `(leaf tests)` and whose values are Steps, each of `template` with its leaf in the slot. A value that is a failure is returned when its leaf is reached. | `"value"` when a leaf has no entry. `"assertion"` when a Step's first literal is not `template` with the leaf in the slot. `"Fuel"`. |
+| `(proof-proof-by-value-leaves proof value tests)` | The list of the leaves, each `(leaf tests)` with the tests that lead to it, the branch of a true test before that of a false one. | `"fuel"`. |
+| `(proof-proof-by-value proof value template leaf tests)` | A Step of `template` with `value` in the place of the slot `*proof-result*`. `leaf` is a table whose keys are the leaves `(leaf tests)` and whose values are Steps, each of `template` with its leaf in the slot. A value that is a failure is returned when its leaf is reached. | `"value"` when a leaf has no entry. `"assertion"` when a Step's first literal is not `template` with the leaf in the slot. `"fuel"`. |
 | `(proof-by-value-join proof value template yes no)` | For `value` of the form `(IF a b c)`, the Step of `template` with `value` in the slot, from the Steps `yes` and `no` of `template` with `b` and with `c` in the slot. | |
 
 A caller gets the leaves from `proof-proof-by-value-leaves`, proves each, and gives the Steps to `proof-proof-by-value` in a table in that order.
@@ -63,9 +63,9 @@ A caller gets the leaves from `proof-proof-by-value-leaves`, proves each, and gi
 | Call | Value | Failure |
 |---|---|---|
 | `(proof-proof-constant proof term)` | An equality of `term` and a simpler term when `term` is a computation that the kind of the Proof knows (below), and `nil` otherwise. | |
-| `(proof-proof-simplify proof term evidence definitions)` | An equality of `term` and its simplified form, or `nil` when nothing in it can be simplified. `evidence` is a list of Steps and `definitions` a list of the symbols of functions that may be unfolded. | `"Fuel"`. |
-| `(proof-proof-simplify-first proof step evidence definitions)` | The Step with its first literal simplified, tidied, or `step` itself when nothing can be simplified. | `"Fuel"`. |
-| `(proof-proof-prove proof term evidence definitions)` | A Step of `term`. | `"value"`, with the message `No proof of` and the text of the term, when simplification leaves a term that is not `'T` and cannot be simplified. `"Fuel"`. |
+| `(proof-proof-simplify proof term evidence definitions)` | An equality of `term` and its simplified form, or `nil` when nothing in it can be simplified. `evidence` is a list of Steps and `definitions` a list of the symbols of functions that may be unfolded. | `"fuel"`. |
+| `(proof-proof-simplify-first proof step evidence definitions)` | The Step with its first literal simplified, tidied, or `step` itself when nothing can be simplified. | `"fuel"`. |
+| `(proof-proof-prove proof term evidence definitions)` | A Step of `term`. | `"value"`, with the message `No proof of` and the text of the term, when simplification leaves a term that is not `'T` and cannot be simplified. `"fuel"`. |
 
 `proof-proof-simplify` reads a term from the outside. A variable or a constant stays. A lambda application, or a call of a function in `definitions`, is replaced by its body and the body is simplified. In `(IF a b c)` the test is simplified; when the test is then `'NIL` or `'T`, or a Step of `evidence` has the test or its negation as its first literal, the branch chosen takes the place of the conditional and is simplified, and otherwise the branches are left as they are. In any other call the arguments are simplified in order and then `proof-proof-constant` is asked about the result.
 

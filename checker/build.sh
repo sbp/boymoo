@@ -6,11 +6,17 @@
 # It copies the books of checker/ into build/checker/acl2/, has ACL2
 # certify each that changed and every book after it, in logic mode, so that
 # ACL2 proves the termination of every function; exports the checker with
-# export/book.sh, which writes its statements and its program text; and
-# writes build/checker/ground.program, the definitions of the ground theory
-# as program text.  It does nothing that is already done.  It needs acl2,
-# ACL2 8.7, on the PATH; export/book.sh stops under any other version.
-# It prints nothing unless something fails, and then it exits with status 1.
+# export/book.sh, which writes its statements and its program text; writes
+# build/checker/ground.program, the definitions of the ground theory as
+# program text; and writes build/checker/library.statements, the checker's
+# library: the lines of ACL2's library that define what the checker calls
+# beyond the ground theory and itself, with what those lines call
+# (checker/library.awk), which serve both as statements and as program
+# text.  For that it exports ACL2's library with export/book.sh if
+# build/export/library.statements is missing.  It does nothing that is
+# already done.  It needs acl2, ACL2 8.7, on the PATH; export/book.sh stops
+# under any other version.  It prints nothing unless something fails, and
+# then it exits with status 1.
 
 books="base read terms rules admit check"
 dir=build/checker/acl2
@@ -56,4 +62,15 @@ cp "$out.statements" build/checker/checker.statements
 cp "$out.program" build/checker/checker.program
 
 grep '^(define ' spec/ground.txt > build/checker/ground.program
+
+if [ ! -s build/export/library.statements ]; then
+    sh export/book.sh :library > /dev/null || exit 1
+fi
+lib=build/checker/library.statements
+if [ ! -f "$lib" ] || [ "$out.statements" -nt "$lib" ] ||
+   [ build/export/library.statements -nt "$lib" ] || [ checker/library.awk -nt "$lib" ]; then
+    awk -f checker/library.awk spec/ground.txt "$out.statements" \
+        build/export/library.statements > "$lib.tmp" || exit 1
+    mv "$lib.tmp" "$lib" || exit 1
+fi
 exit 0

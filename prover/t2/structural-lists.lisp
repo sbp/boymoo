@@ -13,17 +13,6 @@
 (defconst *t2-structural-lists-symbol-less* (proof-sym "SYMBOL<" "ACL2"))
 (defconst *t2-structural-lists-acc* (proof-sym "ACC" "ACL2"))
 
-(defun t2-structural-lists-constructed (term)
-  (or (equal term *proof-false*)
-      (proof-is-call term *proof-cons*)))
-
-(defun t2-structural-lists-append-associativity-expand (call)
-  (if (equal (t2-book-logic-head call) *t2-structural-lists-append*)
-      (proof-with-checked-results ((argument (proof-term-at call 1)))
-        (or (equal argument *library-x*)
-            (t2-structural-lists-constructed argument)))
-    nil))
-
 (defun t2-structural-lists-append-associativity (lib)
   (let ((name "STRUCTURAL-APPEND-ASSOCIATIVITY")
         (proof (library-library-proof lib)))
@@ -92,19 +81,11 @@
              (lib (library-library-lemma lib name formula inducted nil)))
           (cons name lib))))))
 
-(defun t2-structural-lists-preserve-list-predicate-expand (call operation predicate)
-  (let ((operator (t2-book-logic-head call)))
-    (if (or (equal operator operation) (equal operator predicate))
-        (proof-with-checked-results ((argument (proof-term-at call 1)))
-          (or (and (equal operator operation) (equal argument *library-x*))
-              (and (equal operator predicate) (t2-structural-lists-constructed argument))))
-      nil)))
-
 (defun t2-structural-lists-field-count (predicate)
   (let ((entry (assoc-equal predicate *t2-structural-lists-fields*)))
     (if entry
         (cdr entry)
-      '(:failure "MissingBinding" ""))))
+      '(:failure "missing-binding" ""))))
 
 (defun t2-structural-lists-unpack-arguments (term count)
   (if (integerp term)
@@ -188,13 +169,6 @@
                (lib (library-library-lemma lib name claim implication nil)))
             (cons name lib)))))))
 
-(defun t2-structural-lists-evens-preserves-expand (call term)
-  (cond ((equal call term) t)
-        ((equal (t2-book-logic-head call) *t2-structural-lists-symbol-alistp*)
-         (proof-with-checked-results ((argument (proof-term-at call 1)))
-           (t2-structural-lists-constructed argument)))
-        (t nil)))
-
 (defun t2-structural-lists-evens-preserves (lib formula)
   (let ((proof (library-library-proof lib))
         (predicate *t2-structural-lists-symbol-alistp*))
@@ -225,13 +199,6 @@
          (step (t2-power-implication lib domain case-proof))
          (inducted (t2-structural-proof-induct lib formula source step (list (cadr smaller)))))
       (cons inducted lib))))
-
-(defun t2-structural-lists-merge-preserves-expand (call term predicate)
-  (cond ((equal call term) t)
-        ((equal (t2-book-logic-head call) predicate)
-         (proof-with-checked-results ((argument (proof-term-at call 1)))
-           (t2-structural-lists-constructed argument)))
-        (t nil)))
 
 (defun t2-structural-lists-merge-preserves-branch
     (lib formula result expand both-lists measure test accumulator accumulated left right take-first element typed)
@@ -314,13 +281,6 @@
          (inducted (proof-proof-induct proof ordinal step formula measure
                                        (list (cadar take-first) (cadar take-second)))))
       (cons inducted lib))))
-
-(defun t2-structural-lists-sort-preserves-expand (call term predicate)
-  (cond ((equal call term) t)
-        ((equal (t2-book-logic-head call) predicate)
-         (proof-with-checked-results ((argument (proof-term-at call 1)))
-           (equal argument *proof-false*)))
-        (t nil)))
 
 (defun t2-structural-lists-sort-preserves-child (lib child formula source measure tests)
   (proof-with-checked-results

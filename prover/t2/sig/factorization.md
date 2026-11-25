@@ -13,6 +13,4 @@ The candidate search takes premises in the insertion order of the RulerFacts ext
 
 `factor-right` and `prove` return `(cons step lib)`, with `nil` for a missing Step. The Library includes any `PRODUCT-ZERO` entry added while constructing or trying a factorization. `comparison-equation` returns `(cons step facts)` with the RulerFacts after the rationality query, when the comparison requires one. A failure is the entire result in each case.
 
-`(t2-factorization-factor-candidates facts comparison)` takes RulerFacts and the comparison operator symbol. It returns `(cons candidates facts)`, with `(factor distinctness-step)` pairs in premise order and the resulting RulerFacts, or a failure. `prove` consumes the same sequence incrementally.
-
 For the quoted zero expression, `factor-right` returns the symmetric `PRODUCT-ZERO` Step, with the factor followed by zero on its right side.

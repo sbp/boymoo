@@ -452,7 +452,7 @@
  (defun b2-bags-bag-fact-with-fuel (n lib name bindings)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-bags-bag-fact-with-fuel")
+       '(:failure "fuel" "b2-bags-bag-fact-with-fuel")
      (let ((proof (library-library-proof lib)))
        (if (assoc-equal name (proof-proof-facts proof))
            (proof-with-checked-results ((step (proof-proof-fact proof name bindings)))
@@ -480,7 +480,7 @@
      (n premise lib cons-step induction condition goal head item ys)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-bags-subbag-delete-advance-consequent")
+       '(:failure "fuel" "b2-bags-subbag-delete-advance-consequent")
      (proof-with-checked-results
          ((opened (b2-bags-reduced-premise lib premise (list cons-step) (list condition) nil))
           (parts (proof-proof-conjunct (library-library-proof lib) opened))
@@ -506,7 +506,7 @@
      (n cons-step induction lib condition goal head item ys)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-bags-subbag-delete-advance")
+       '(:failure "fuel" "b2-bags-subbag-delete-advance")
      (b2-bags-implication
       lib condition goal
       ((premise new-lib)
@@ -516,7 +516,7 @@
  (defun b2-bags-subbag-delete-with-fuel (n lib formula)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-bags-subbag-delete-with-fuel")
+       '(:failure "fuel" "b2-bags-subbag-delete-with-fuel")
      (proof-with-checked-results
          ((parts (b2-bags-condition-and-goal formula))
           (condition (proof-list-of-length (car parts) 3))
@@ -538,7 +538,7 @@
  (defun b2-bags-subbag-tail-consequent (n premise lib name goal)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-bags-subbag-tail-consequent")
+       '(:failure "fuel" "b2-bags-subbag-tail-consequent")
      (proof-with-checked-results
          ((conjuncts (proof-proof-conjunct (library-library-proof lib) premise))
           (data (b2-bags-subbag-tail-data lib name goal (car conjuncts) (cadr conjuncts)))
@@ -553,7 +553,7 @@
  (defun b2-bags-subbag-tail-with-fuel (n lib name formula)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-bags-subbag-tail-with-fuel")
+       '(:failure "fuel" "b2-bags-subbag-tail-with-fuel")
      (proof-with-checked-results ((parts (b2-bags-condition-and-goal formula)))
        (let ((condition (car parts))
              (goal (cadr parts)))
@@ -565,7 +565,7 @@
  (defun b2-bags-intersection-bound-with-fuel (n lib name formula)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-bags-intersection-bound-with-fuel")
+       '(:failure "fuel" "b2-bags-intersection-bound-with-fuel")
      (proof-with-checked-results
          ((parts (proof-list-of-length formula 3))
           (call (proof-list-of-length (cadr parts) 3)))
@@ -628,7 +628,7 @@
  (defun b2-bags-fringe-membership-with-fuel (n lib formula)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-bags-fringe-membership-with-fuel")
+       '(:failure "fuel" "b2-bags-fringe-membership-with-fuel")
      (proof-with-checked-results
          ((parts (proof-list-of-length formula 3))
           (member (proof-list-of-length (caddr parts) 3))
@@ -664,7 +664,7 @@
  (defun b2-bags-prove-bag-with-fuel (n lib name formula)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-bags-prove-bag-with-fuel")
+       '(:failure "fuel" "b2-bags-prove-bag-with-fuel")
      (cond ((equal name *b2-bags-member-delete*)
             (proof-with-checked-results ((step (b2-bags-member-delete lib formula)))
               (cons step lib)))
@@ -684,18 +684,6 @@
 
 (defun b2-bags-bag-fact (lib name bindings)
   (b2-bags-bag-fact-with-fuel 1000000 lib name bindings))
-
-(defun b2-bags-subbag-delete (lib formula)
-  (b2-bags-subbag-delete-with-fuel 1000000 lib formula))
-
-(defun b2-bags-subbag-tail (lib name formula)
-  (b2-bags-subbag-tail-with-fuel 1000000 lib name formula))
-
-(defun b2-bags-intersection-bound (lib name formula)
-  (b2-bags-intersection-bound-with-fuel 1000000 lib name formula))
-
-(defun b2-bags-fringe-membership (lib formula)
-  (b2-bags-fringe-membership-with-fuel 1000000 lib formula))
 
 (defun b2-bags-prove-bag (lib name formula)
   (b2-bags-prove-bag-with-fuel 1000000 lib name formula))

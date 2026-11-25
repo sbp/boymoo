@@ -145,7 +145,7 @@
       (if (and (failure-p result)
                (member-equal (cadr result)
                              '("inapplicable" "tactic-rejected"
-                               "value" "Unproved" "coding"
+                               "value" "unproved" "coding"
                                "decoding" "encoding"
                                "translating" "lookup" "index"
                                "key" "assertion" "type")))

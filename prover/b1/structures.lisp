@@ -40,7 +40,7 @@
 
 (defun b1-structures-project-mv-fields (n lib pending)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "b1-structures-project-mv-fields"))
+  (cond ((zp n) '(:failure "fuel" "b1-structures-project-mv-fields"))
         ((eq (car pending) :continue)
          (b1-structures-project-mv-fields
           (1- n) lib (b1-structures-project-mv-field lib (cdr pending))))
@@ -95,7 +95,7 @@
 
 (defun b1-structures-oracle-projection-normalize (n lib formula unfold rules replies result)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "b1-structures-oracle-projection-normalize"))
+  (cond ((zp n) '(:failure "fuel" "b1-structures-oracle-projection-normalize"))
         ((failure-p result) result)
         ((not (b1-logic-call-p result)) (car result))
         (t

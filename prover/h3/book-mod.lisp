@@ -277,11 +277,6 @@
                 (h3-book-order-bounds-with-library context lib))
           lib)))
 
-(defun h3-book-mod-mod-noncomplex-bounds-with-library (lib call context)
-  (h3-book-rounding-with-library lib
-      (((data lib) (h3-book-mod-mod-noncomplex-bounds-with-context lib call context)))
-    (cons (car data) lib)))
-
 (defun h3-book-mod-bound-numeric (lib z j context)
   (h3-book-rounding-with-library lib
       ((test (list *library-numberp* z))
@@ -689,42 +684,3 @@
         (h3-book-rounding-guarded-step-with-library lib guard step)))
      (t (cons nil lib)))))
 
-(defun h3-book-mod-add-back (lib call opened part numeric)
-  (h3-book-rounding-checked-pair
-   (h3-book-mod-add-back-with-library lib call opened part numeric)))
-
-(defun h3-book-mod-remainder-reconstruction (lib call numeric)
-  (h3-book-rounding-checked-pair
-   (h3-book-mod-remainder-reconstruction-with-library lib call numeric)))
-
-(defun h3-book-mod-remainder-rational (lib call i-rational j-rational)
-  (h3-book-rounding-checked-pair
-   (h3-book-mod-remainder-rational-with-library lib call i-rational j-rational)))
-
-(defun h3-book-mod-remainder-bounds (lib call i-type j-type order direction)
-  (h3-book-rounding-checked-pair
-   (h3-book-mod-remainder-bounds-with-library lib call i-type j-type order direction)))
-
-(defun h3-book-mod-mod-noncomplex-bounds (lib call context)
-  (h3-book-rounding-checked-pair
-   (h3-book-mod-mod-noncomplex-bounds-with-library lib call context)))
-
-(defun h3-book-mod-mod-bound-goal (lib goal context call)
-  (h3-book-rounding-checked-pair
-   (h3-book-mod-mod-bound-goal-with-library lib goal context call)))
-
-(defun h3-book-mod-mod-type-equivalence-forward (step lib call opened product numeric floor-type divisor predicate context)
-  (h3-book-rounding-checked-pair
-   (h3-book-mod-mod-type-equivalence-forward-with-library step lib call opened product numeric floor-type divisor predicate context)))
-
-(defun h3-book-mod-mod-type-equivalence (lib goal context)
-  (h3-book-rounding-checked-pair
-   (h3-book-mod-mod-type-equivalence-with-library lib goal context)))
-
-(defun h3-book-mod-mod-natural (lib call context)
-  (h3-book-rounding-checked-pair
-   (h3-book-mod-mod-natural-with-library lib call context)))
-
-(defun h3-book-mod-mod-theorem (lib name formula)
-  (h3-book-rounding-checked-pair
-   (h3-book-mod-mod-theorem-with-library lib name formula)))

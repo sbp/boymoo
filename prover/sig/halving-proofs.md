@@ -19,7 +19,6 @@ in place of its result.
 | `halving-proofs-take-step` | Library, fast pointer term, middle pointer term, fast cons step, fast tail cons step, weak length bound step | List of the new hypothesis step and middle length equality step |
 | `halving-proofs-halving-rule` | Library, splitter function symbol | The defining equation step or `nil` |
 | `halving-proofs-halving-lemma` | Library, defining equation step | Pair of the lemma label string and the library |
-| `halving-proofs-halving-descent` | Library, ordinal comparison term, Rulers | Pair of the comparison step or `nil` and the library |
 
 `halving-proofs-halving-descent-with-rulers` takes the same arguments
 and returns `(cons (list step rulers) lib)`. Its Rulers retain the

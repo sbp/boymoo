@@ -47,7 +47,3 @@ and `sums` accept the Library being extended as their first argument.
 The numeric sums context representation `(:number-sums lib)` also supplies the
 `"T3-NUMBER-"` specialization to these same functions.
 `(t3-rational-order-rational-sums-prefix sums)` returns the selected prefix.
-
-`(t3-rational-order-rational-sums-library-field sums name)` forwards Library data
-fields `"facts"`, `"definitions"`, `"primitives"` and `"entries"`.
-An unknown field name gives a generic failure.

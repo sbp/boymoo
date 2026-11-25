@@ -5,7 +5,7 @@
 (defconst *t3-book-sorted-lists-true-listp* *t3-book-lemmas-true-listp*)
 
 (defun t3-book-sorted-lists-combine (lib proofs)
-  (cond ((endp proofs) '(:failure "MissingProofInput" ""))
+  (cond ((endp proofs) '(:failure "missing-proof-input" ""))
         ((endp (cdr proofs)) (car proofs))
         (t
          (proof-with-checked-results ((rest (t3-book-sorted-lists-combine lib (cdr proofs))))
@@ -374,7 +374,7 @@
 
 (defun t3-book-sorted-lists-merge-ordered-cases (n merge left right progress)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "t3-book-sorted-lists-merge-ordered-cases"))
+  (cond ((zp n) '(:failure "fuel" "t3-book-sorted-lists-merge-ordered-cases"))
         ((failure-p progress) progress)
         ((eq (car progress) :done) (cadr progress))
         (t (t3-book-sorted-lists-merge-ordered-cases
@@ -444,7 +444,7 @@
 
 (defun t3-book-sorted-lists-ordered-sort-cases (n lib formula progress)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "t3-book-sorted-lists-ordered-sort-cases"))
+  (cond ((zp n) '(:failure "fuel" "t3-book-sorted-lists-ordered-sort-cases"))
         ((failure-p progress) progress)
         ((eq (car progress) :done) (cadr progress))
         (t (t3-book-sorted-lists-ordered-sort-cases

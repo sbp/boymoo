@@ -580,7 +580,7 @@
 (defun b1-conjunction-associated-conjunction-normalize (n lib goal rule replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-conjunction-associated-conjunction-normalize")
+      '(:failure "fuel" "b1-conjunction-associated-conjunction-normalize")
     (proof-with-checked-results
         ((result (b1-conjunction-associated-conjunction-normalize-attempt lib goal rule replies)))
       (if (b1-logic-call-p result)

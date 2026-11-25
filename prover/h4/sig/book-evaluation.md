@@ -14,7 +14,7 @@ accessors `h4-book-evaluation-closed-evaluation-p` and
 | `h4-book-evaluation-closed-evaluation-init` | `p` | ClosedEvaluation with its constructor provider. | From preparing the provider. |
 | `h4-book-evaluation-closed-evaluation-unfold-spine` | ClosedEvaluation, call term | Equality Step opening the first list step, or `nil` when the call has no such step. | From term operations, normalization or proof construction. |
 | `h4-book-evaluation-closed-evaluation-reduce` | ClosedEvaluation, term | Equality Step for normalization with the constructor and spine reductions. | From normalization or proof construction. |
-| `h4-book-evaluation-closed-evaluation-prove` | ClosedEvaluation, formula term | Step proving the formula if it reduces to a non-nil quotation. | `InapplicableTerm` when normalization leaves the required truth value unproved. Other failures can come from evaluation or proof construction. |
+| `h4-book-evaluation-closed-evaluation-prove` | ClosedEvaluation, formula term | Step proving the formula if it reduces to a non-nil quotation. | `inapplicable-term` when normalization leaves the required truth value unproved. Other failures can come from evaluation or proof construction. |
 | `h4-book-evaluation-closed-goal` | Formula term | Whether the formula is an equality or conditional that is closed and fits the size limit. | From the term size check. |
 | `h4-book-evaluation-closed-proof` | `p`, formula term | Step, or `nil` for an inapplicable goal or one of the fallback kinds in `prover/h4/notes/failures.md`. | Other failures from closed evaluation, or a failure from the goal test. |
 

@@ -31,7 +31,7 @@
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results
         ((terms (if (integerp call)
-                    '(:failure "MalformedTacticInput" "")
+                    '(:failure "malformed-tactic-input" "")
                   (proof-list-of-length (seq-slice call 1 3) 2)))
          (first (list *library-len* (car terms)))
          (second (list *library-len* (cadr terms)))
@@ -42,7 +42,7 @@
       (if smaller
           (proof-proof-transport proof smaller comparison)
         (proof-with-checked-results ((reversed (proof-proof-symmetric proof comparison)))
-          '(:failure "MalformedTacticInput" ""))))))
+          '(:failure "malformed-tactic-input" ""))))))
 
 (defun h3-merges-bind-arguments (keys values entries)
   (if (or (endp keys) (endp values))
@@ -86,7 +86,7 @@
 (defun h3-merges-induction (n lib formula measure ordinal replacements call rules result-and-replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h3-merges-induction")
+      '(:failure "fuel" "h3-merges-induction")
     (let ((result (car result-and-replies)))
       (if (h3-induction-request-p result)
           (h3-merges-induction
@@ -111,7 +111,7 @@
            (y (caddr call))
            (definition (assoc-equal head (proof-proof-definitions (library-library-proof lib)))))
       (if (not definition)
-          '(:failure "MissingProofData" "")
+          '(:failure "missing-proof-data" "")
         (let ((formals (cadr definition))
               (body (caddr definition)))
           (proof-with-checked-results

@@ -30,12 +30,6 @@ Pass `nil` for the default evidence and `7` for the default depth.
 | Call | Arguments and value |
 |---|---|
 | `(b2-numeric-types-types-prove types predicate value evidence depth)` | Predicate symbol, term, evidence Steps and depth. Step proving the type of the term. |
-| `(b2-numeric-types-types-infer types predicate value evidence depth)` | The same arguments. Step found by applying the result-type recipes. |
-| `(b2-numeric-types-types-power types call evidence depth)` | Exponentiation term, evidence Steps and depth. Two-element list of the integer Step and the positivity Step. |
-| `(b2-numeric-types-types-remainder-type types predicate value evidence depth)` | `NATP` or `BITP`, modulus term, evidence Steps and depth. Step proving the requested type. |
-| `(b2-numeric-types-types-reversal types call evidence depth)` | Bit-reversal term, evidence Steps and depth. Step proving a natural result. |
-| `(b2-numeric-types-types-positive types value evidence depth)` | Term, evidence Steps and depth. Step proving positivity. |
-| `(b2-numeric-types-types-by-value types predicate call evidence depth)` | Predicate symbol, application, evidence Steps and depth. Step proving the type from the value in each branch. |
 | `(b2-numeric-types-types-floor types i j)` | Dividend and divisor terms. Step proving the floor quotient integer. |
 | `(b2-numeric-types-types-quotient-integer types operation i j)` | Operation symbol, dividend and divisor terms. Step proving the quotient integer. |
 

@@ -26,13 +26,13 @@
   (proof-with-checked-results ((literal (proof-step-first step))
                                (head (proof-term-at literal 0)))
     (if (not (equal head *library-implies*))
-        '(:failure "RecipeMismatch" "")
+        '(:failure "recipe-mismatch" "")
       (proof-with-checked-results ((premise (proof-term-at literal 1))
                                    (first (proof-step-first evidence)))
         (if (equal premise first)
             (library-library-cite lib "IMPLICATION-CONSEQUENT" (cdr literal)
                                   (list step evidence))
-          '(:failure "RecipeMismatch" ""))))))
+          '(:failure "recipe-mismatch" ""))))))
 
 (defun t2-arithmetic-arithmetic-conjunct (lib step)
   (proof-with-checked-results ((literal (proof-step-first step))
@@ -43,7 +43,7 @@
               ((first (library-library-cite lib "CONJUNCTION-FIRST" args (list step)))
                (second (library-library-cite lib "CONJUNCTION-SECOND" args (list step))))
             (list first second)))
-      '(:failure "RecipeMismatch" ""))))
+      '(:failure "recipe-mismatch" ""))))
 
 ; Arithmetic uses the base constant rule and the arithmetic reflexivity rule.
 (mutual-recursion
@@ -51,9 +51,9 @@
    (declare (xargs :measure (nfix n)))
    (let ((head (proof-datum-head term)))
      (cond
-      ((zp n) '(:failure "Fuel" "t2-arithmetic-simplify-visit"))
+      ((zp n) '(:failure "fuel" "t2-arithmetic-simplify-visit"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
-      ((endp term) '(:failure "MissingTermPart" ""))
+      ((endp term) '(:failure "missing-term-part" ""))
       ((or (proof-compound head) (member-equal head definitions))
        (proof-with-checked-results
            ((expansion (proof-simplify-expansion proof term))
@@ -79,7 +79,7 @@
                  (t constant)))))))
  (defun t2-arithmetic-simplify-arguments (n proof term args index result evidence definitions)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "t2-arithmetic-simplify-arguments"))
+   (cond ((zp n) '(:failure "fuel" "t2-arithmetic-simplify-arguments"))
          ((endp args) result)
          (t (proof-with-checked-results
                 ((equality (t2-arithmetic-simplify-visit (1- n) proof (car args) evidence definitions))
@@ -102,7 +102,7 @@
 (defun t2-arithmetic-prove-visit (n proof term evidence definitions)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t2-arithmetic-arithmetic-prove")
+      '(:failure "fuel" "t2-arithmetic-arithmetic-prove")
     (cond
      ((equal term *proof-true*)
       (let ((name (proof-sym "SELF-TRUE" "ACL2")))
@@ -185,7 +185,7 @@
                                    (cdr term) steps)))
           ((proof-is-call term *proof-minus*)
            (if (endp (cdr term))
-               '(:failure "MissingTermPart" "")
+               '(:failure "missing-term-part" "")
              (proof-with-checked-results
                  ((step (t2-arithmetic-arithmetic-type-of lib (cadr term) evidence)))
                (library-library-cite lib "INTEGER-NEGATION" (cdr term) (list step)))))
@@ -221,7 +221,7 @@
 (defun t2-arithmetic-push-minus (n library term evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t2-arithmetic-push-minus")
+      '(:failure "fuel" "t2-arithmetic-push-minus")
     (let ((proof (library-library-proof library)))
       (cond
        ((proof-is-call term *proof-plus*)
@@ -279,7 +279,7 @@
 (defun t2-arithmetic-linear-combine (n library step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t2-arithmetic-linear-combine")
+      '(:failure "fuel" "t2-arithmetic-linear-combine")
     (proof-with-checked-results
      ((first (proof-step-first step))
       (node (library-linear-form-get first (cdr place))))
@@ -339,7 +339,7 @@
            (proof-proof-chain proof a (list symmetric))))
      (proof-with-checked-results ((a-text (proof-write a-normal))
                     (b-text (proof-write b-normal)))
-       '(:failure "RecipeMismatch" "")))))
+       '(:failure "recipe-mismatch" "")))))
 
 (defun t2-arithmetic-comparison (library a b integers)
   (proof-with-checked-results
@@ -1039,7 +1039,7 @@
                                (left-args (library-compare-chain-arguments p left-strict))
                                (right-args (library-compare-chain-arguments q right-strict)))
     (if (not (equal (cadr left-args) (car right-args)))
-        '(:failure "RecipeMismatch" "")
+        '(:failure "recipe-mismatch" "")
       (let ((args (append left-args (cdr right-args)))
             (name (if left-strict
                       (if right-strict "LESS-TRANSITIVE" "LESS-THEN-WEAK")
@@ -1085,7 +1085,7 @@
                        (proof-proof-rewrite proof same swap '(1 2 2 1))))
                     ((equal advanced (library-plus base *proof-one*))
                      (t2-arithmetic-arithmetic-reflexive lib after))
-                    (t '(:failure "RecipeMismatch" ""))))
+                    (t '(:failure "recipe-mismatch" ""))))
              (negated (library-library-cite lib "NEGATE-SUCCESSOR" (list base) nil))
              (step (proof-proof-rewrite proof step negated '(1 2 2)))
              (swap (library-library-cite lib "ADD-SWAP"
@@ -1117,34 +1117,8 @@
 
 (defconst *t2-arithmetic-gap-positions* '(:difference :upper-successor :outer-successor))
 
-(defun t2-arithmetic-gap-endpoint-list (bound negative positions)
-  (if (endp positions)
-      nil
-    (proof-with-checked-results
-        ((point (t2-arithmetic-gap-endpoint bound negative (car positions)))
-         (rest (t2-arithmetic-gap-endpoint-list bound negative (cdr positions))))
-      (if point (cons point rest) rest))))
-
-(defun t2-arithmetic-gap-endpoints (term)
-  (if (proof-is-call term *proof-plus*)
-      (proof-with-checked-results ((ends (proof-list-of-length (cdr term) 2)))
-        (t2-arithmetic-gap-endpoint-list (car ends) (cadr ends) *t2-arithmetic-gap-positions*))
-    nil))
-
 (defun t2-arithmetic-request-p (value)
   (and (consp value) (eq (car value) :t2-arithmetic-hypothesis-request)))
-
-(defun t2-arithmetic-request-operation (request)
-  (cadr request))
-
-(defun t2-arithmetic-request-term (request)
-  (caddr request))
-
-(defun t2-arithmetic-request-library (request)
-  (cadddr request))
-
-(defun t2-arithmetic-request-hypotheses (request)
-  (car (cddddr request)))
 
 (defmacro t2-arithmetic-with-queries (bindings result)
   (if (endp bindings)
@@ -1249,7 +1223,7 @@
 
 (defun t2-arithmetic-positive-gap-positions (lib before ends positions hypotheses integers replies)
   (cond
-   ((endp positions) '(:failure "RecipeMismatch" ""))
+   ((endp positions) '(:failure "recipe-mismatch" ""))
    (t (t2-arithmetic-with-queries
           ((point (t2-arithmetic-gap-endpoint (car ends) (cadr ends) (car positions))))
         (if (not point)
@@ -1268,10 +1242,7 @@
       (proof-with-checked-results ((ends (proof-list-of-length (cdr before) 2)))
         (t2-arithmetic-positive-gap-positions lib before ends *t2-arithmetic-gap-positions*
                                              hypotheses integers replies))
-    '(:failure "RecipeMismatch" "")))
-
-(defun t2-arithmetic-positive-gap (lib before hypotheses integers)
-  (t2-arithmetic-positive-gap-query lib before hypotheses integers :plain))
+    '(:failure "recipe-mismatch" "")))
 
 (defun t2-arithmetic-positive-countdown-query (lib before hypotheses integers replies)
   (t2-arithmetic-with-queries ((first (and (proof-is-call before *proof-plus*)
@@ -1289,9 +1260,6 @@
                                              (list integral (car result)))))
               (list step lib (cadr result)))
           (t2-arithmetic-positive-gap-query lib before (cadr result) integers (caddr result)))))))
-
-(defun t2-arithmetic-positive-countdown (lib before hypotheses integers)
-  (t2-arithmetic-positive-countdown-query lib before hypotheses integers :plain))
 
 (defun t2-arithmetic-rational-parts (lib rational)
   (proof-with-checked-results
@@ -1491,7 +1459,7 @@
     (if (equal right decremented)
         (t2-arithmetic-clipped-finish lib before (list (car required))
                                       pos step (cadr required))
-      '(:failure "RecipeMismatch" ""))))
+      '(:failure "recipe-mismatch" ""))))
 
 (defun t2-arithmetic-clipped-linear (lib before after decremented pos hypotheses replies)
   (t2-arithmetic-with-queries
@@ -1615,7 +1583,7 @@
              (increase (t2-arithmetic-less-from-difference
                         lib denominator sum (car positive) integers)))
           (list (car count) increase lib)))
-       (t '(:failure "RecipeMismatch" ""))))))
+       (t '(:failure "recipe-mismatch" ""))))))
 
 (defun t2-arithmetic-rational-count-step (lib child parent value rational noninteger)
   (let ((proof (library-library-proof lib)))

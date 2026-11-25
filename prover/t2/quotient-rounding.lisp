@@ -410,12 +410,6 @@
 (defun t2-quotient-rounding-quotient-cases-prove-with-library (cases replies split-integer-sign)
   (t2-quotient-rounding-quotient-cases-prove-branch cases nil replies split-integer-sign))
 
-(defun t2-quotient-rounding-quotient-cases-prove (cases replies split-integer-sign)
-  (t2-quotient-rounding-with-branch-results
-      ((result (t2-quotient-rounding-quotient-cases-prove-with-library
-                cases replies split-integer-sign)))
-    (car result)))
-
 (defun t2-quotient-rounding-rounded-quotients-for (cases floor increment functions)
   (declare (xargs :measure (acl2-count functions)))
   (if (endp functions)

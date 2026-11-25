@@ -30,9 +30,6 @@
                      (,object (cdr interval-result-pair)))
                  ,remaining)))))))))
 
-(defun h3-book-mod-interval-expose-result (result)
-  (if (failure-p (car result)) (car result) result))
-
 (defun h3-book-mod-interval-term-at (term path)
   (declare (xargs :measure (acl2-count path)))
   (if (endp path)
@@ -82,7 +79,7 @@
                (right-unit (proof-proof-chain proof swap-unit (list unit)))
                (terms (proof-proof-rewrite proof terms right-unit '(1 2 1))))
               (proof-proof-rewrite proof terms right-unit '(1 2 2))))
-           (t '(:failure "Unproved" ""))))))))
+           (t '(:failure "unproved" ""))))))))
 
 (defun h3-book-mod-interval-ratio-endpoint-types (lib terms ratio ratio-type)
   (declare (xargs :measure (acl2-count terms)))
@@ -209,7 +206,7 @@
 (defun h3-book-mod-interval-unchanged-orientations (orientations n d dividend divisor context)
   (declare (xargs :measure (acl2-count orientations)))
   (if (endp orientations)
-      (cons '(:failure "Unproved" "") (h3-book-order-bounds-lib context))
+      (cons '(:failure "unproved" "") (h3-book-order-bounds-lib context))
     (let* ((orientation (car orientations))
            (goals (if (< 0 orientation)
                       (list (library-le *proof-zero* n) (library-lt n d) (library-lt *proof-zero* d))
@@ -229,7 +226,7 @@
 
 (defun h3-book-mod-interval-unchanged-mod-request (n lib call context)
   (if (zp n)
-      (cons '(:failure "Fuel" "h3-book-mod-interval-unchanged-mod-request") lib)
+      (cons '(:failure "fuel" "h3-book-mod-interval-unchanged-mod-request") lib)
     (h3-book-mod-interval-with
       ((operands (h3-book-mod-interval-arguments call 2))
        (dividend-term (car operands))
@@ -378,7 +375,7 @@
      (name (proof-sym "MOD-SUM-ELIM-BOTH" "ACL2"))
      (proof (library-library-proof lib)))
     (if (not (assoc-equal name (proof-proof-facts proof)))
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
         ((bindings (list (list (proof-sym "A" "ACL2") a)
                          (list (proof-sym "B" "ACL2") b)
@@ -595,7 +592,7 @@
      (left-nonzero (h3-rewrite-search-known search (proof-neg (proof-eq left *proof-zero*)) evidence))
      (right-nonzero (h3-rewrite-search-known search (proof-neg (proof-eq right *proof-zero*)) evidence)))
     (if (not (and left-nonzero right-nonzero))
-        (cons '(:failure "Unproved" "") lib)
+        (cons '(:failure "unproved" "") lib)
       (h3-book-mod-interval-with
         ((factor-type (h3-book-order-bounds-numeric context factor))
          (factor-nonzero (h3-rewrite-search-known search (proof-neg (proof-eq factor *proof-zero*)) evidence))
@@ -869,47 +866,3 @@
        (answer (and step (h3-rewrite-implication lib guard step))))
       (cons answer lib))))
 
-(defun h3-book-mod-interval-ratio-from-scaled (lib ratio-type dividend divisor signs relation given)
-  (h3-book-mod-interval-expose-result
-   (h3-book-mod-interval-ratio-from-scaled-with-library lib ratio-type dividend divisor signs relation given)))
-
-(defun h3-book-mod-interval-remainder-in-interval (lib dividend divisor signs integer lower upper)
-  (h3-book-mod-interval-expose-result
-   (h3-book-mod-interval-remainder-in-interval-with-library lib dividend divisor signs integer lower upper)))
-
-(defun h3-book-mod-interval-inside-remainder (lib dividend divisor signs lower upper)
-  (h3-book-mod-interval-expose-result
-   (h3-book-mod-interval-inside-remainder-with-library lib dividend divisor signs lower upper)))
-
-(defun h3-book-mod-interval-unchanged-mod (n lib call context)
-  (h3-book-mod-interval-expose-result (h3-book-mod-interval-unchanged-mod-with-library n lib call context)))
-
-(defun h3-book-mod-interval-nested-remainder (lib call context)
-  (h3-book-mod-interval-expose-result (h3-book-mod-interval-nested-remainder-with-library lib call context)))
-
-(defun h3-book-mod-interval-move-sum-bound (lib bound target typed)
-  (h3-book-mod-interval-expose-result (h3-book-mod-interval-move-sum-bound-with-library lib bound target typed)))
-
-(defun h3-book-mod-interval-summed-remainder-bounds (lib first second divisor positive first-bounds second-bounds)
-  (h3-book-mod-interval-expose-result
-   (h3-book-mod-interval-summed-remainder-bounds-with-library
-    lib first second divisor positive first-bounds second-bounds)))
-
-(defun h3-book-mod-interval-mod-sum-cases (lib goal context)
-  (h3-book-mod-interval-expose-result (h3-book-mod-interval-mod-sum-cases-with-library lib goal context)))
-
-(defun h3-book-mod-interval-mod-cancel-divisor (lib goal)
-  (h3-book-mod-interval-expose-result (h3-book-mod-interval-mod-cancel-divisor-with-library lib goal)))
-
-(defun h3-book-mod-interval-scaled-remainder (lib goal context)
-  (h3-book-mod-interval-expose-result (h3-book-mod-interval-scaled-remainder-with-library lib goal context)))
-
-(defun h3-book-mod-interval-affine-literal-remainder (lib goal context)
-  (h3-book-mod-interval-expose-result (h3-book-mod-interval-affine-literal-remainder-with-library lib goal context)))
-
-(defun h3-book-mod-interval-parity-remainder (lib goal context)
-  (h3-book-mod-interval-expose-result (h3-book-mod-interval-parity-remainder-with-library lib goal context)))
-
-(defun h3-book-mod-interval-remainder-interval-theorem (lib name formula)
-  (h3-book-mod-interval-expose-result
-   (h3-book-mod-interval-remainder-interval-theorem-with-library lib name formula)))

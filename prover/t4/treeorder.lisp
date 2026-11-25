@@ -78,7 +78,7 @@
  (defund t4-treeorder-simplify-visit (n context term known definitions)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-treeorder-simplify-visit")
+       '(:failure "fuel" "t4-treeorder-simplify-visit")
      (t4-treeorder-with-results
          ((base (t4-treeorder-simplify-base (1- n) context term known definitions))
           (context (cdr base))
@@ -96,7 +96,7 @@
  (defund t4-treeorder-simplify-base (n context term known definitions)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-treeorder-simplify-base"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-treeorder-simplify-base"))
     ((or (not (proof-compound term)) (proof-is-call term *proof-quote*))
      (cons nil context))
     ((endp term) '(:failure "failure" ""))
@@ -120,7 +120,7 @@
  (defund t4-treeorder-simplify-arguments (n context term args index equality known definitions)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-treeorder-simplify-arguments"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-treeorder-simplify-arguments"))
     ((endp args)
      (t4-treeorder-with-results
          ((current (if equality (t4-treeorder-step-term equality 2) term))
@@ -147,7 +147,7 @@
 (defund t4-treeorder-prove-visit (n context term known definitions)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-treeorder-prove-visit")
+      '(:failure "fuel" "t4-treeorder-prove-visit")
     (t4-treeorder-with-results ((premise (t4-ordinals-prove-premise (car context) term known)))
       (if premise
           (cons premise context)
@@ -256,7 +256,7 @@
                        (list (proof-neg (list *t4-treeorder-symbol-less* y y)) known)))
          (context (cdr irreflexive)))
       (if (not (car irreflexive))
-          '(:failure "SearchMiss" "")
+          '(:failure "search-miss" "")
         (let ((evidence (append known (list (car irreflexive)))))
           (t4-treeorder-with-results
               ((if-true (proof-proof-if-true (t4-treeorder-proof context) left))
@@ -273,7 +273,7 @@
                (no-result (t4-treeorder-step-term (car no-eq) 2))
                (context (cdr no-eq)))
             (if (not (equal no-result right))
-                '(:failure "InferenceMismatch" "")
+                '(:failure "inference-mismatch" "")
               (let ((proof (t4-treeorder-proof context)))
                 (proof-with-checked-results
                     ((if-false (proof-proof-if-false proof left))
@@ -283,16 +283,16 @@
 
 (defun t4-treeorder-compared-literals (context left right known)
   (cond ((equal left right) (t4-treeorder-reflexive context left))
-        ((not (proof-is-call left *proof-if*)) '(:failure "SearchMiss" ""))
+        ((not (proof-is-call left *proof-if*)) '(:failure "search-miss" ""))
         (t
          (proof-with-checked-results ((test (proof-term-at left 1)))
            (if (not (proof-is-call test *proof-equal*))
-               '(:failure "SearchMiss" "")
+               '(:failure "search-miss" "")
              (proof-with-checked-results ((arms (proof-list-of-length (cdr left) 3)))
                (let ((yes (cadr arms))
                      (vars (cdr test)))
                  (if (not (or (equal yes test) (equal yes (cons *t4-treeorder-eq* vars))))
-                     '(:failure "SearchMiss" "")
+                     '(:failure "search-miss" "")
                    (proof-with-checked-results ((vars (proof-list-of-length vars 2)))
                      (t4-treeorder-compared-literals-branches
                       context left right known test yes (caddr arms) (car vars) (cadr vars)))))))))))
@@ -365,7 +365,7 @@
 (defun t4-treeorder-boolean-comparison-visit (n context left right known depth)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-treeorder-boolean-comparison-visit"))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-treeorder-boolean-comparison-visit"))
    ((equal left right) (t4-treeorder-reflexive context left))
    (t
     (t4-treeorder-with-results
@@ -386,7 +386,7 @@
              (seen (and (not (equal depth 4)) test
                         (t4-treeorder-boolean-comparison-known-p known test))))
           (if (or (equal depth 4) (not test) seen)
-              '(:failure "SearchMiss" "")
+              '(:failure "search-miss" "")
             (t4-treeorder-with-results
                 ((yes-premise (t4-treeorder-assume context test t))
                  (yes (t4-treeorder-boolean-comparison-visit
@@ -558,7 +558,7 @@
     (if reply
         (proof-with-checked-results ((result (cdr reply)))
           (cons (car result) (cons (cdr result) (cdr context))))
-      '(:failure "SearchMiss" ""))))
+      '(:failure "search-miss" ""))))
 
 (defun t4-treeorder-strict-atoms-atomic-left-atomic-right-compare (known context left right facts)
   (proof-with-checked-results
@@ -656,7 +656,7 @@
                    (list (proof-neg (list *t4-treeorder-symbol-less* y y)) types)))
        (context (cdr reflexive)))
     (if (not (car reflexive))
-        '(:failure "SearchMiss" "")
+        '(:failure "search-miss" "")
       (let ((proof (t4-treeorder-proof context)))
         (t4-treeorder-with-results
             ((reversed (proof-proof-symmetric proof equal-symbols))
@@ -784,7 +784,7 @@
  (defun t4-treeorder-type-cases-visit (n kinds denied context value leaf)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-treeorder-type-cases-visit"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-treeorder-type-cases-visit"))
     ((endp kinds) (t4-treeorder-type-cases-leaf (1- n) leaf denied context))
     (t
      (let ((test (list (car kinds) value)))
@@ -802,7 +802,7 @@
  (defun t4-treeorder-type-cases-leaf (n leaf known context)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-treeorder-type-cases-leaf")
+       '(:failure "fuel" "t4-treeorder-type-cases-leaf")
      (case (car leaf)
        (:atomic-order-atoms
         (t4-treeorder-atomic-order-atoms (1- n) known context (cadr leaf) (caddr leaf) (cadddr leaf)))
@@ -820,7 +820,7 @@
  (defun t4-treeorder-atomic-order-atoms (n x-types context fast opened y)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-treeorder-atomic-order-atoms")
+       '(:failure "fuel" "t4-treeorder-atomic-order-atoms")
      (let ((definitions (list *t4-treeorder-eq* *proof-not*)))
        (t4-treeorder-with-results
            ((fast-view (t4-treeorder-simplify-or-reflexive context fast x-types definitions))
@@ -840,7 +840,7 @@
      (n left-type context fast reversed-view direct x y)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-treeorder-strict-atoms-atomic-left")
+       '(:failure "fuel" "t4-treeorder-strict-atoms-atomic-left")
      (t4-treeorder-with-results
          ((at-x (t4-treeorder-simplify-or-reflexive
                  context fast left-type (list *proof-not* *t4-treeorder-eq* *t4-treeorder-num-eq*))))
@@ -897,7 +897,7 @@
 (defun t4-treeorder-tree-order-equivalence-smaller
     (selectors substitutions context first second tests formula x)
   (if (endp selectors)
-      '(:failure "SearchMiss" "")
+      '(:failure "search-miss" "")
     (proof-with-checked-results
         ((smaller (t4-treeorder-substitute formula (car substitutions))))
       (if (not (equal (proof-eq first second) smaller))
@@ -933,7 +933,7 @@
     (n first second tests context formula x y substitutions)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-treeorder-tree-order-equivalence-visit"))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-treeorder-tree-order-equivalence-visit"))
    ((equal first second) (t4-treeorder-reflexive context first))
    ((and (proof-is-call second *t4-treeorder-alphorder*) (equal (cdr second) (list x y)))
     (t4-treeorder-atomic-order context first second x y))

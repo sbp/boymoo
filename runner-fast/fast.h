@@ -7,7 +7,7 @@
 #include "fastrt.h"
 
 enum { O_CONST, O_VAR, O_PRIM, O_CALL, O_TCALL, O_JNIL, O_JMP, O_RET,
-       O_ENTER, O_LEAVE, O_REBIND };
+       O_ENTER, O_LEAVE, O_REBIND, O_JET };
 
 typedef struct {
     long *op;

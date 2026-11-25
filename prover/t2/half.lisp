@@ -330,7 +330,7 @@
       (claim (proof-step-first result))
       (head (proof-term-at claim 0)))
      (if (not (equal head *proof-ordinal-less*))
-         '(:failure "RecipeMismatch" "")
+         '(:failure "recipe-mismatch" "")
        (library-library-lemma lib "COUNT-FLOOR-HALF" claim result
                               (list (proof-neg (library-integer *library-x*))
                                     (proof-eq *library-x* *proof-zero*)
@@ -338,7 +338,7 @@
 
 (defun t2-half-signed-floor-decrease-query (lib value divisor hypotheses replies)
   (if (not (equal divisor *t2-half-two*))
-      '(:failure "RecipeMismatch" "")
+      '(:failure "recipe-mismatch" "")
     (descent-let*
      ((built (t2-half-build-halving lib))
       (hypotheses (t2-phase-hypotheses-after-library hypotheses lib built))

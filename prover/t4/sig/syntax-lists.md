@@ -27,17 +27,13 @@ binding is a list of two-element lists `(variable replacement)`.
 | `(t4-syntax-lists-projections lib equation pair)` | A Step for the equation after reducing selectors along the given cons term's spine. |
 | `(t4-syntax-lists-constructed-view lib call pair)` | A pair with the equation for the call on a constructed cons term. |
 | `(t4-syntax-lists-lift-proof lib step equations)` | The Step after applying the equation Steps in reverse direction, in list order. |
-| `(t4-syntax-lists-syntax-type lib call premises)` | A pair with a Step proving the recognizer call. Premises are an alist from terms to Steps in insertion order. |
 | `(t4-syntax-lists-recur lib formula obj selector number)` | `(list step binding)`, with the induction hypothesis Step for the given selector on `obj` and the built-in clause number. Defaults are `*library-cdr*` and 3. |
 | `(t4-syntax-lists-list-typing lib formula recursive replies)` | A pair with the proof of the typing formula for a recursive list map, or `nil`. |
-| `(t4-syntax-lists-evaluate lib call premises replies)` | A pair with the evaluator equation after reducing the projections. Premises are the extra Steps for this equation. |
 | `(t4-syntax-lists-binding-evaluation lib formula functions replies)` | A pair with the proof of the binding lookup formula, or `nil`. |
 | `(t4-syntax-lists-substitution-evaluation lib formula functions reapplications replies)` | A pair with the proof of the substitution formula, or `nil`. |
-| `(t4-syntax-lists-prove-substitution lib name joint term terms eval-before list-before replies)` | A pair with `nil` and the Library containing the joint substitution lemma. The name is an unprefixed string, the joint claim and the four calls are terms. |
 | `(t4-syntax-lists-iff-transitive lib first second replies)` | A pair with a Step composing the two equivalence Steps. |
 | `(t4-syntax-lists-evaluated-clause-map lib formula recursive functions replies)` | A pair with the proof of the disjoined clause comparison, or `nil`. |
 | `(t4-syntax-lists-iff-forward lib equivalence premise)` | A Step applying the forward direction of the given equivalence Step. |
-| `(t4-syntax-lists-disjunction lib evaluator list-evaluator clause environment replies)` | A pair with a Step for the disjunction evaluation theorem. The first two arguments after the Library are evaluator symbols. |
 | `(t4-syntax-lists-evaluated-clause-result lib formula reapplications replies)` | A pair with the proof of the clause processor formula, or `nil`. |
 
 The `recursive` and `functions` arguments stand for the sets of
@@ -68,14 +64,6 @@ Library-aware inherited `prove` with Ordinals simplification.
 `evidence` is a list of Steps. `definitions` is a list of symbols.
 Pass `1000000` for `n`. It returns the resulting Step or failure
 paired with the Library.
-
-The `t4-syntax-lists-spine-with-replies`,
-`t4-syntax-lists-constructed-view-with-replies`, and
-`t4-syntax-lists-syntax-type-with-replies` entry points add `replies` as
-their final argument and use the ordered `:prove` and `:constant`
-requests for BookLogic methods. The forms without replies use the
-inherited Ordinals methods. The syntax list theorem recipes use the
-BookLogic methods for their calls to these helpers.
 
 The following helpers take the terms, Steps and Library needed at their
 point in the proof.

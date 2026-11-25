@@ -14,11 +14,7 @@ kinds that allow another tactic are described in `prover/notes/failures.md`.
 |---|---|
 | `(termination-proofs-structural-decrease lib goal rulers)` | `(cons step lib)`. |
 | `(termination-proofs-count-or-length-sum term)` | Whether `term` is made of sums, counts, lengths and nonnegative integer literals. |
-| `(termination-proofs-length-decrease lib goal rulers)` | A step proving the comparison for a list tail, or `nil`. |
-| `(termination-proofs-sum-decrease lib clause rulers extra-descent)` | `(cons step lib)` for additive descent. |
 | `(termination-proofs-minimum-lemma lib)` | The library with the minimum comparison lemma. |
-| `(termination-proofs-minimum-decrease lib clause rulers extra-descent)` | `(cons step lib)` for minimum descent. |
-| `(termination-proofs-prove-decrease lib clause rulers extra-descent)` | `(cons (list step method) lib)`. `method` is the selected tactic's name as a string. |
 | `(termination-proofs-termination-proofs lib data stored-measures extra-descent extra-ordinality)` | `(cons (list entry methods measures) lib)`. `data` contains the ruler extenders followed by definition triples. `stored-measures` maps names to lists starting with a measure and relation. `entry` is the proof entry, `methods` is a comma-separated string and `measures` maps names to measures. |
 
 `extra-descent` and `extra-ordinality` hold callback replies. Use `nil`

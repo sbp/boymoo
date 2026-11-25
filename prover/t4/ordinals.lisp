@@ -140,7 +140,7 @@
  (defund t4-ordinals-simplify-visit (n lib term evidence definitions)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-ordinals-simplify-visit")
+       '(:failure "fuel" "t4-ordinals-simplify-visit")
      (proof-with-checked-results
          ((base (t4-ordinals-simplify-base (1- n) lib term evidence definitions))
           (lib (cdr base))
@@ -159,7 +159,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((proof (library-library-proof lib)))
      (cond
-      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-ordinals-simplify-base"))
+      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-ordinals-simplify-base"))
       ((or (not (proof-compound term)) (proof-is-call term *proof-quote*))
        (cons nil lib))
       ((atom term) (proof-term-at term 0))
@@ -193,7 +193,7 @@
  (defund t4-ordinals-simplify-arguments (n lib term args index result evidence definitions)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-ordinals-simplify-arguments"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-ordinals-simplify-arguments"))
     ((endp args) (cons result lib))
     (t
      (proof-with-checked-results
@@ -206,7 +206,7 @@
  (defund t4-ordinals-constant-visit (n lib term)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-ordinals-constant-visit")
+       '(:failure "fuel" "t4-ordinals-constant-visit")
      (proof-with-checked-results ((action (t4-ordinals-constant-action lib term)))
        (if (eq (car action) :true-boolean)
            (t4-ordinals-true-boolean-visit (1- n) lib (cadr action) (caddr action))
@@ -214,7 +214,7 @@
  (defund t4-ordinals-true-boolean-visit (n lib boolean truth)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-ordinals-true-boolean-visit"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-ordinals-true-boolean-visit"))
     ((t4-ordinals-has-lemma lib "TRUE-BOOLEAN-VALUE")
      (t4-ordinals-true-boolean-value lib boolean truth))
     (t
@@ -254,7 +254,7 @@
 (defun t4-ordinals-prove-visit (n lib term evidence definitions)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-ordinals-prove-visit")
+      '(:failure "fuel" "t4-ordinals-prove-visit")
     (proof-with-checked-results ((premise (t4-ordinals-prove-premise lib term evidence)))
       (if premise
           (cons premise lib)
@@ -362,7 +362,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-ordinals-push-minus"))
+     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-ordinals-push-minus"))
      ((proof-is-call term *proof-plus*)
       (proof-with-checked-results
           ((step (proof-proof-reflexive proof term))
@@ -433,7 +433,7 @@
 (defun t4-ordinals-linear-combine (n lib step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-ordinals-linear-combine")
+      '(:failure "fuel" "t4-ordinals-linear-combine")
     (let ((result (t4-ordinals-linear-combine-step lib step place evidence)))
       (if (eq (car result) :continue)
           (t4-ordinals-linear-combine (1- n) lib (cadr result) (caddr result) evidence)
@@ -460,7 +460,7 @@
         (proof-with-checked-results
             ((a-text (proof-write a-normal))
              (b-text (proof-write b-normal)))
-          '(:failure "SearchMiss" ""))))))
+          '(:failure "search-miss" ""))))))
 
 (defun t4-ordinals-ordinals-distinct (lib strict integers)
   (let ((proof (library-library-proof lib)))
@@ -510,7 +510,7 @@
 
 (defund t4-ordinals-rewrite-constructor (lib step term)
   (if (not (proof-is-call term *t4-ordinals-make*))
-      '(:failure "InferenceMismatch" "")
+      '(:failure "inference-mismatch" "")
     (t4-ordinals-rewrite-selectors lib step
      (list *t4-ordinals-finite* *t4-ordinals-exponent* *t4-ordinals-coefficient* *t4-ordinals-rest*)
      term)))
@@ -809,7 +809,7 @@
 (defun t4-ordinals-ordinals-phase-ordinal (lib term)
   (proof-with-checked-results ((parts (proof-list-of-length term 4)))
     (if (not (equal (cadr parts) *proof-one*))
-        '(:failure "InferenceMismatch" "")
+        '(:failure "inference-mismatch" "")
       (proof-with-checked-results
           ((size (proof-term-at (caddr parts) 2))
            (lib (if (t4-ordinals-has-lemma lib "PHASE-ORDINAL")
@@ -830,7 +830,7 @@
 (defun t4-ordinals-phase-measure-visit (n result)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-ordinals-phase-measure-visit"))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-ordinals-phase-measure-visit"))
    ((failure-p result) result)
    ((t4-structural-branch-request-p (car result))
     (t4-ordinals-phase-measure-visit (1- n)
@@ -906,7 +906,7 @@
 (defun t4-ordinals-phase-decrease-visit (n lib left right bound)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-ordinals-phase-decrease-visit")
+      '(:failure "fuel" "t4-ordinals-phase-decrease-visit")
     (let ((result (t4-ordinals-phase-decrease-step lib left right bound)))
       (if (not (eq (car result) :compare-phases))
           result
@@ -1026,7 +1026,7 @@
  (defund t4-ordinals-ordinals-compare-measures-compare (n left right branch-tests lib replies)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-ordinals-ordinals-compare-measures-compare")
+       '(:failure "fuel" "t4-ordinals-ordinals-compare-measures-compare")
      (proof-with-checked-results ((evidence (t4-structural-evidence-init lib branch-tests nil)))
        (cond
         ((proof-is-call left *proof-if*)
@@ -1037,7 +1037,7 @@
  (defund t4-ordinals-measure-case (n lib left right tests term index evidence replies)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-ordinals-measure-case")
+       '(:failure "fuel" "t4-ordinals-measure-case")
      (t4-ordinals-with-results
          ((test (proof-term-at term 1))
           (decision (t4-ordinals-ordinals-decide-test lib test evidence))
@@ -1059,7 +1059,7 @@
      (n holds left right branch-tests term index test decided lib replies)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-ordinals-ordinals-compare-measures-compare-branch")
+       '(:failure "fuel" "t4-ordinals-ordinals-compare-measures-compare-branch")
      (t4-ordinals-with-results
          ((opening (t4-ordinals-measure-branch-opening lib term test holds decided))
           (new-left (if (equal index 1) (caddr opening) left))

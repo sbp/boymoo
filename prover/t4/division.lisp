@@ -21,7 +21,7 @@
 (defun t4-division-pieces-loop (n proof step)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-division-pieces-loop")
+      '(:failure "fuel" "t4-division-pieces-loop")
     (proof-with-checked-results ((literal (proof-step-first step)))
       (if (not (proof-compound literal))
           (list step)
@@ -537,7 +537,7 @@
          (view (proof-proof-chain proof opened (list reduced)))
          (body (t4-division-step-at view 2)))
       (if (not (equal body (proof-ite less-d *proof-zero* (library-plus *proof-one* qsmaller))))
-          '(:failure "InferenceMismatch" "")
+          '(:failure "inference-mismatch" "")
         (proof-with-checked-results
             ((base (t4-division-quotient-base lib i-d nonnegative-n body view template))
              (lib (cdr base))
@@ -614,7 +614,7 @@
 (defun t4-division-floor-open (n proof opened)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-division-floor-open")
+      '(:failure "fuel" "t4-division-floor-open")
     (proof-with-checked-results
         ((source (t4-division-step-at opened 2))
          (head (proof-term-at source 0)))
@@ -644,9 +644,9 @@
                         '(:failure "failure" "")))
          (source-yes (if (equal test-result same)
                          (proof-term-at source 2)
-                       '(:failure "InferenceMismatch" ""))))
+                       '(:failure "inference-mismatch" ""))))
       (if (not (equal source-yes m))
-          '(:failure "InferenceMismatch" "")
+          '(:failure "inference-mismatch" "")
         (proof-with-checked-results
             ((body (proof-proof-rewrite proof opened test '(1 2 1)))
              (main (t4-division-step-at body 2))

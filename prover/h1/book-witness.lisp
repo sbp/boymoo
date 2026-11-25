@@ -63,7 +63,7 @@
   (if (and (proof-is-call result name)
            (member-equal premise (cdr result)))
       (list slot (seq-index (cdr result) premise))
-    '(:failure "Unproved" "")))
+    '(:failure "unproved" "")))
 
 (defun h1-book-witness-projection-result (result premise name)
   (if (proof-is-call result *h1-book-witness-mv-nth*)
@@ -74,25 +74,25 @@
               (result (proof-term-at result 2)))
              (if (and (integerp slot) (<= 0 slot) (<= slot 8))
                  (h1-book-witness-projection-choice result premise name slot)
-               '(:failure "Unproved" "")))
+               '(:failure "unproved" "")))
           (h1-book-witness-projection-choice result premise name :none)))
     (h1-book-witness-projection-choice result premise name :none)))
 
 (defund h1-book-witness-projection (formula name)
   (if (not (proof-is-call formula *library-implies*))
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (proof-with-checked-results ((parts (proof-list-of-length formula 3)))
       (let* ((premise (cadr parts))
              (conclusion (caddr parts))
              (head (h1-tactics-call-head premise)))
         (cond
          ((or (eq head :none) (not (equal (len premise) 2)))
-          '(:failure "Unproved" ""))
+          '(:failure "unproved" ""))
          ((integerp conclusion)
           '(:failure "failure" ""))
          ((or (not (equal (length conclusion) 2))
               (not (equal head (h1-tactics-call-head conclusion))))
-          '(:failure "Unproved" ""))
+          '(:failure "unproved" ""))
          (t (h1-book-witness-projection-result (cadr conclusion)
                                                (cadr premise) name)))))))
 
@@ -111,7 +111,7 @@
           (cdr formulas) name (table-put results slot position)))
         ((equal (cdr prior) position)
          (h1-book-witness-projection-results (cdr formulas) name results))
-        (t '(:failure "Unproved" "")))))))
+        (t '(:failure "unproved" "")))))))
 
 (defun h1-book-witness-projection-formals (indices)
   (if (endp indices)
@@ -138,10 +138,10 @@
     (cond
      (direct
       (if (not (equal (len results) 1))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results ((body (proof-term-at formals (cdr direct))))
           (list body nil))))
-     ((endp results) '(:failure "CandidateRejected" ""))
+     ((endp results) '(:failure "candidate-rejected" ""))
      (t
       (let ((maximum (h1-book-witness-projection-max-slot results 0)))
         (proof-with-checked-results
@@ -316,7 +316,7 @@
 
 (defun h1-book-witness-dispatch-keys (operations)
   (if (endp operations)
-      '(:failure "CandidateRejected" "")
+      '(:failure "candidate-rejected" "")
     (proof-with-checked-results
      ((name-width (h1-book-witness-dispatch-key-width operations 2 0))
       (package-width (h1-book-witness-dispatch-key-width operations 1 0)))
@@ -602,7 +602,7 @@
 (defun h1-book-witness-dispatch-define (n dispatch operations keys)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h1-book-witness-dispatch-define")
+      '(:failure "fuel" "h1-book-witness-dispatch-define")
     (let* ((definitions (h1-book-witness-dispatch-definitions dispatch))
            (identifier (concatenate 'string (h1-book-witness-dispatch-prefix dispatch)
                                     "-D" (decimal-text definitions)))
@@ -729,7 +729,7 @@
 (defun h1-book-witness-dispatch-evaluate-branches (n dispatch step key operation arguments)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h1-book-witness-dispatch-evaluate-branches")
+      '(:failure "fuel" "h1-book-witness-dispatch-evaluate-branches")
     (proof-with-checked-results
      ((result (h1-book-witness-dispatch-evaluate-branch dispatch step key operation arguments)))
      (if (car result)
@@ -740,7 +740,7 @@
 (defund h1-book-witness-dispatch-evaluate-leaf-test (proof step)
   (proof-with-checked-results ((right (h1-book-witness-step-value step)))
     (if (not (proof-is-call right *proof-if*))
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
        ((test (proof-term-at right 1))
         (value (h1-tactics-prover-constant proof test))
@@ -752,7 +752,7 @@
 (defun h1-book-witness-dispatch-evaluate-leaf (n proof step)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h1-book-witness-dispatch-evaluate-leaf")
+      '(:failure "fuel" "h1-book-witness-dispatch-evaluate-leaf")
     (proof-with-checked-results ((result (h1-book-witness-dispatch-evaluate-leaf-test proof step)))
       (if (car result)
           (cdr result)
@@ -870,7 +870,7 @@
             (cons (list *library-car* (h1-book-witness-tail *library-z* position))
                   (update-nth 7 positions witness))))
          ((or (atom term) (member-equal head (list value values :none)) (proof-compound head))
-          '(:failure "Unproved" ""))
+          '(:failure "unproved" ""))
          (t
           (proof-with-checked-results
            ((args (h1-book-witness-evaluator-on-arguments witness (cdr term))))
@@ -905,7 +905,7 @@
       ((parameters (and (member-equal evaluator (list value values))
                         (h1-book-witness-evaluator-parameters-p (cdr call)))))
       (if (not parameters)
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (let ((variables (list *library-x* *library-y*)))
           (proof-with-checked-results
            ((canonical (proof-subst formula (h1-book-witness-extend-bindings
@@ -920,10 +920,10 @@
 (defund h1-book-witness-evaluator-case (witness formula renamed)
   (proof-with-checked-results ((formula (h1-book-witness-rename-calls formula renamed)))
     (if (not (proof-is-call formula *library-implies*))
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results ((equation (proof-term-at formula 2)))
         (if (not (proof-is-call equation *proof-equal*))
-            '(:failure "Unproved" "")
+            '(:failure "unproved" "")
           (h1-book-witness-evaluator-canonical witness formula equation))))))
 
 (defund h1-book-witness-evaluator-register-case (witness obligation operations)
@@ -939,7 +939,7 @@
             ((not previous)
              (cons (table-put operations operation (car branch)) (cdr branch)))
             ((equal (cdr previous) (car branch)) (cons operations (cdr branch)))
-            (t '(:failure "Unproved" "")))))))))
+            (t '(:failure "unproved" "")))))))))
 
 (defun h1-book-witness-evaluator-cases (formulas renamed witness operations cases)
   (if (endp formulas)
@@ -1013,7 +1013,7 @@
    ((fields (proof-list-of-length fields 2))
     (arities (h1-book-witness-function-arities (car fields))))
    (if (not (equal arities '(2 2)))
-       '(:failure "Unproved" "")
+       '(:failure "unproved" "")
      (let* ((prefix (h1-book-witness-witness-prefix raw))
             (value (proof-sym prefix "ACL2"))
             (values (proof-sym (concatenate 'string prefix "-LIST") "ACL2"))
@@ -1280,7 +1280,7 @@
                                                        *h1-book-witness-quote-name*))))
          (h1-book-witness-requoted-value-steps lib (car sides) (cadr sides)
                                                (car parts) (cadr checks) list-lemma)
-       '(:failure "Unproved" "")))))
+       '(:failure "unproved" "")))))
 
 (defund h1-book-witness-application-outcome (lib equation holds)
   (proof-with-checked-results
@@ -1426,7 +1426,7 @@
 (defun h1-book-witness-structural-select (n proof context equation right)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h1-book-witness-structural-select")
+      '(:failure "fuel" "h1-book-witness-structural-select")
     (proof-with-checked-results
      ((result (h1-book-witness-structural-selection proof context equation right)))
      (if (car result)
@@ -1579,7 +1579,7 @@
   (let* ((terms (h1-tactics-subterms formula))
          (equations (proof-unique (h1-book-witness-equations-in-terms terms evaluators nil))))
     (if (endp equations)
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (let* ((p (h1-tactics-prover-proof proof))
              (definitions (proof-proof-definitions p))
              (rules (h1-tactics-rules-init proof))

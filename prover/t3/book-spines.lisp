@@ -56,7 +56,7 @@
            (let ((names (assoc-equal package (t3-book-spines-book-packages book-proofs))))
              (cond
               ((not names)
-               '(:failure "MissingProofInput" ""))
+               '(:failure "missing-proof-input" ""))
               ((equal function *t3-book-spines-imports*)
                (or (table-values (cdr names)) *proof-nil*))
               ((not (assoc-equal "ACL2-PKG-WITNESS" (cdr names)))
@@ -88,7 +88,7 @@
       (cond ((not (integerp byte))
              '(:failure "failure" ""))
             ((or (< byte 0) (< 255 byte))
-             '(:failure "Unproved" ""))
+             '(:failure "unproved" ""))
             (t (proof-with-checked-results ((rest (t3-book-spines-coerce-bytes (cdr codes))))
                  (cons (code-char byte) rest)))))))
 
@@ -183,7 +183,7 @@
           (proof (library-library-proof lib))
           (head (car term)))
      (cond
-      ((zp n) '(:failure "Fuel" "t3-book-spines-book-simplify"))
+      ((zp n) '(:failure "fuel" "t3-book-spines-book-simplify"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
       ((endp term) (proof-term-at term 0))
       ((or (proof-compound head) (member-equal head definitions))
@@ -216,7 +216,7 @@
  (defun t3-book-spines-simplify-arguments (n book-proofs term args index result evidence definitions)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t3-book-spines-book-simplify"))
+    ((zp n) '(:failure "fuel" "t3-book-spines-book-simplify"))
     ((endp args) result)
     (t
      (proof-with-checked-results
@@ -273,7 +273,7 @@
 (defun t3-book-spines-constructor-form-loop (n lib value evidence definitions)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-spines-constructor-form")
+      '(:failure "fuel" "t3-book-spines-constructor-form")
     (let ((proof (t3-book-spines-proof lib)))
       (proof-with-checked-results
        ((equation (t3-book-spines-library-normalize lib value evidence definitions))
@@ -716,7 +716,7 @@
      (n value recursive lib induction fix variable head replies)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t3-book-spines-commuting-list-fix-step-equation"))
+    ((zp n) '(:failure "fuel" "t3-book-spines-commuting-list-fix-step-equation"))
     ((or (not (proof-compound value)) (proof-is-call value *proof-quote*))
      (cons nil replies))
     (t
@@ -733,7 +733,7 @@
      (n args index result recursive lib induction fix variable head replies)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t3-book-spines-commuting-list-fix-step-equation"))
+    ((zp n) '(:failure "fuel" "t3-book-spines-commuting-list-fix-step-equation"))
     ((endp args) (cons result replies))
     (t
      (proof-with-checked-results

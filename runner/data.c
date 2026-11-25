@@ -278,7 +278,7 @@ static int hex2(void)
 }
 
 /* The characters of a string or of a name between bars, up to DELIM.
-   Returns their number, in *B. */
+   Returns their number, and puts them in *B unless B is NULL. */
 static size_t escaped(int delim, unsigned char **b, size_t *cap)
 {
     size_t n = 0;
@@ -297,8 +297,11 @@ static size_t escaped(int delim, unsigned char **b, size_t *cap)
                 bad("not in the format: a character escaped that is written as itself");
         } else
             rp++;
-        *b = grow(*b, cap, 1, n + 1);
-        (*b)[n++] = (unsigned char)c;
+        if (b != NULL) {
+            *b = grow(*b, cap, 1, n + 1);
+            (*b)[n] = (unsigned char)c;
+        }
+        n++;
     }
     rp++;
     return n;
@@ -345,8 +348,25 @@ static void read_atom(void)
     int c = AT(0);
     V v;
     if (c == '"') {
-        n = escaped('"', &buf1, &cap1);
-        push(mkstring(buf1, n));
+        /* The text of a string is read twice: once to check it and count
+           its characters, and once to put them into the string made in the
+           heap, so that a long string is held in no other copy. */
+        const unsigned char *start = rp;
+        size_t i, nw;
+        n = escaped('"', NULL, NULL);
+        rp = start + 1;
+        nw = 1 + (n + 3) / 4;
+        need(0, nw + 1);
+        v = mkbox(B_STRING, nw);
+        for (i = 1; i <= nw; i++)
+            BOX(v)[i] = 0;
+        BOX(v)[1] = (V)n;
+        for (i = 0; i < n; i++) {
+            int ch = *rp == '\\' ? (rp++, hex2()) : *rp++;
+            BOX(v)[2 + i / 4] |= (V)((unsigned long)ch << (8 * (i % 4)));
+        }
+        rp++;
+        push(v);
     } else if (c == '#' && AT(1) == '\\') {
         rp += 2;
         push(MKCHAR(hex2()));

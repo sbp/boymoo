@@ -33,7 +33,6 @@ their printed term representation.
 | `t2-structural-proof-reduction-form` | Reduction, term | `(cons step reduction)` for the normal form equality |
 | `t2-structural-proof-reduction-normalize` | Reduction, term, RulerFacts context, integer depth, list of already opened terms and operators | `(cons (list step context) reduction)` with the optional equality and the resulting context and Reduction |
 | `t2-structural-proof-reduction-can-open` | Reduction, term, list of already opened terms and operators | Boolean for whether to unfold the term |
-| `t2-structural-proof-reduction-replacement` | Reduction, term, RulerFacts context, integer depth, list of already opened terms and operators | `(cons (list step context) reduction)` with the optional equality and the resulting context and Reduction |
 | `t2-structural-proof-reduce` | Library, expansion predicate, tests, premises, equations, term | `(cons step lib)` for a freshly initialized Reduction's normal form equality |
 | `t2-structural-proof-congruence` | Library, first and second terms | Equality Step or `nil` |
 | `t2-structural-proof-solve` | Library, goal term, expansion predicate, tests, premises, equations, integer depth | `(cons step lib)`. Pass the search's depth bound as an integer. |

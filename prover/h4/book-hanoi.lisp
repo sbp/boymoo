@@ -124,7 +124,6 @@
 (defun h4-book-hanoi-transfer-state-natural (self) (nth 2 self))
 (defun h4-book-hanoi-transfer-state-true-list (self) (nth 3 self))
 (defun h4-book-hanoi-transfer-state-length (self) (nth 4 self))
-(defun h4-book-hanoi-transfer-state-permutation (self) (nth 5 self))
 (defun h4-book-hanoi-transfer-state-slots (self) (nth 6 self))
 (defun h4-book-hanoi-transfer-state-size (self) (nth 7 self))
 (defun h4-book-hanoi-transfer-state-base (self) (nth 8 self))
@@ -232,14 +231,14 @@
 (defun h4-book-hanoi-transfer-state-normalize-loop (n result self term evidence expand rewrites)
   (declare (xargs :measure (nfix n)))
   (cond ((not (eq (car result) :h4-hanoi-normalization-replies)) result)
-        ((zp n) '(:failure "Fuel" "h4-book-hanoi-transfer-state-normalize-loop"))
+        ((zp n) '(:failure "fuel" "h4-book-hanoi-transfer-state-normalize-loop"))
         (t (h4-book-hanoi-transfer-state-normalize-loop
             (1- n) (h4-book-hanoi-transfer-state-normalize-turn self term evidence expand rewrites (cdr result))
             self term evidence expand rewrites))))
 
 (defun h4-book-hanoi-transfer-state-normalize (n self term evidence expand rewrites replies)
   (if (zp n)
-      '(:failure "Fuel" "h4-book-hanoi-transfer-state-normalize")
+      '(:failure "fuel" "h4-book-hanoi-transfer-state-normalize")
     (h4-book-hanoi-transfer-state-normalize-loop
      (1- n) (h4-book-hanoi-transfer-state-normalize-turn self term evidence expand rewrites replies)
      self term evidence expand rewrites)))
@@ -640,13 +639,10 @@
         (let ((result (h4-book-hanoi-corollary-cases p formula condition size lemma evaluate provider)))
           (if (and (failure-p result)
                    (member-equal (cadr result)
-                                 '("InapplicableStep" "InapplicableTerm" "MissingProofInput"
-                                   "assertion" "value" "key" "Unproved")))
+                                 '("inapplicable-step" "inapplicable-term" "missing-proof-input"
+                                   "assertion" "value" "key" "unproved")))
               nil
             result)))))))
-
-(defun h4-book-hanoi-hanoi-corollary (p formula uses)
-  (h4-book-hanoi-hanoi-corollary-with-book-functions p formula uses nil))
 
 (defun h4-book-hanoi-hanoi-proof-with-book-functions (p formula uses book-functions)
   (cond
@@ -671,5 +667,3 @@
             (h4-book-hanoi-hanoi-corollary-with-book-functions p formula uses book-functions))))))
    (t nil)))
 
-(defun h4-book-hanoi-hanoi-proof (p formula uses)
-  (h4-book-hanoi-hanoi-proof-with-book-functions p formula uses nil))

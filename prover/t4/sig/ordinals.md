@@ -28,9 +28,9 @@ as an Evidence object.
 | `(t4-ordinals-ordinals-weak-distinct lib weak distinct evidence)` | `(cons step lib)` strengthening weak comparison Step `weak`, given a disequality Step and an integer evidence Step list. |
 | `(t4-ordinals-ordinals-phase-ordinal lib term)` | `(cons step lib)` for ordinality of the exponent-one MAKE-ORD term. returns a failure for another exponent. |
 | `(t4-ordinals-ordinals-phase-measure-ordinal lib measure)` | `(cons step lib)` for ordinality of the measure term, lifting the phase proof through conditionals and lambdas. |
-| `(t4-ordinals-ordinals-phase-decrease lib left right bound)` | `(cons step lib)` for the phase order between two phase measure terms, given an optional size bound Step. Can return a failure `Fuel` on exhaustion. |
+| `(t4-ordinals-ordinals-phase-decrease lib left right bound)` | `(cons step lib)` for the phase order between two phase measure terms, given an optional size bound Step. Can return a failure `fuel` on exhaustion. |
 | `(t4-ordinals-ordinals-decide-test lib test evidence)` | `(cons step (cons lib evidence))` for a decision about the test term, with `nil` as the Step if undecided, using and returning an Evidence object. |
-| `(t4-ordinals-ordinals-compare-measures lib goal tests replies)` | `(cons step lib)` for the comparison goal term, using a signed test list and the leaf replies described below. Can return a failure `Fuel` on exhaustion. |
+| `(t4-ordinals-ordinals-compare-measures lib goal tests replies)` | `(cons step lib)` for the comparison goal term, using a signed test list and the leaf replies described below. Can return a failure `fuel` on exhaustion. |
 | `(t4-ordinals-phase-measure size phase)` | The exponent-one measure term for the size and phase terms. No failure. |
 
 The comparison recipe requests leaf calls in traversal order. A request

@@ -21,7 +21,7 @@ new ones added in proof construction order.
 | `(t2-field-fixed term)` | The term `(FIX term)`. |
 | `(t2-field-reciprocal term)` | The term `(UNARY-/ term)`. |
 | `(t2-field-conjunction lib first second)` | Steps for the two conjuncts. Returns a Step for their conjunction with `first` as its test. |
-| `(t2-field-number lib term)` | A Step proving that a call of `FIX`, `UNARY-/`, `BINARY-+`, `BINARY-*` or `UNARY--` is numeric. Returns `MissingBinding` for an operator without a numeric closure rule. |
+| `(t2-field-number lib term)` | A Step proving that a call of `FIX`, `UNARY-/`, `BINARY-+`, `BINARY-*` or `UNARY--` is numeric. Returns `missing-binding` for an operator without a numeric closure rule. |
 | `(t2-field-numeric-fix lib term numeric)` | Evidence that `term` is numeric. Returns a Step proving `(FIX term) = term`. |
 | `(t2-field-identity lib term numeric operator)` | A term, its numeric Step and an operator symbol. Returns the right identity Step for addition when the operator is `BINARY-+`, or multiplication otherwise. |
 | `(t2-field-remove-fixed-operand lib operator x y)` | An operator symbol and two terms. Returns the Step that removes the `FIX` of the second operand, for addition when the operator is `BINARY-+`, or multiplication otherwise. |

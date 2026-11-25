@@ -30,7 +30,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((not (o< (nfix (1- n)) (nfix n)))
-     (cons '(:failure "Fuel" "countdowns-natural-visit") lib))
+     (cons '(:failure "fuel" "countdowns-natural-visit") lib))
     ((eq (proof-proof-kind (library-library-proof lib)) :base)
      (cons (library-library-natural lib term) lib))
     (t
@@ -52,7 +52,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((not (o< (nfix (1- n)) (nfix n)))
-     (cons '(:failure "Fuel" "countdowns-natural-arguments") lib))
+     (cons '(:failure "fuel" "countdowns-natural-arguments") lib))
     ((endp terms) (cons nil lib))
     (t
      (countdowns-bind lib
@@ -64,7 +64,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((not (o< (nfix (1- n)) (nfix n)))
-     (cons '(:failure "Fuel" "countdowns-natural-leaves") lib))
+     (cons '(:failure "fuel" "countdowns-natural-leaves") lib))
     ((endp requests) (cons nil lib))
     (t
      (countdowns-bind lib
@@ -310,7 +310,7 @@
 (defun countdowns-push-minus (n lib term evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      (cons '(:failure "Fuel" "countdowns-push-minus") lib)
+      (cons '(:failure "fuel" "countdowns-push-minus") lib)
     (let ((proof (library-library-proof lib)))
       (cond
        ((proof-is-call term *proof-plus*)
@@ -352,7 +352,7 @@
 (defun countdowns-linear-combine (n lib step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      (cons '(:failure "Fuel" "countdowns-linear-combine") lib)
+      (cons '(:failure "fuel" "countdowns-linear-combine") lib)
     (let ((proof (library-library-proof lib)))
       (countdowns-bind lib
        ((first (proof-step-first step))
@@ -572,10 +572,6 @@
                     (step (proof-proof-tidy proof result)))
                    (cons (list step rulers) lib))))))))))))
 
-(defun countdowns-wrapped-countdown (lib goal rulers)
-  (proof-with-checked-results ((result (countdowns-wrapped-countdown-with-rulers lib goal rulers)))
-    (cons (caar result) (cdr result))))
-
 (defun countdowns-clipped-simplify-tests (lib value definitions derived integral positive-value)
   (declare (xargs :measure (acl2-count derived)))
   (if (endp derived)
@@ -657,6 +653,3 @@
                 (step (proof-proof-tidy (library-library-proof updated) result)))
                (cons (list step (countdowns-update-rulers rulers lib updated)) updated))))))))))
 
-(defun countdowns-clipped-decrease (lib goal rulers)
-  (proof-with-checked-results ((result (countdowns-clipped-decrease-with-rulers lib goal rulers)))
-    (cons (caar result) (cdr result))))

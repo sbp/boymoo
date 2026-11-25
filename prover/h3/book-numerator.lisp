@@ -129,10 +129,6 @@
          (value (h3-book-quotient-step-at rational 1)))
       (library-library-cite lib label (list value) (list rational positive)))))
 
-(defun h3-book-numerator-positive-reciprocal (lib rational positive)
-  (h3-book-quotient-checked-pair
-   (h3-book-numerator-positive-reciprocal-with-library lib rational positive)))
-
 (defun h3-book-numerator-numerator-sign-lemma (lib label orientation)
   (h3-book-quotient-with-library lib
       ((given (proof-proof-assume (library-library-proof lib) (list *library-rationalp* *library-x*) t))
@@ -174,10 +170,6 @@
        (value (h3-book-quotient-step-at rational 1)))
     (library-library-cite lib label (list value) (list rational))))
 
-(defun h3-book-numerator-numerator-sign (lib rational orientation)
-  (h3-book-quotient-checked-pair
-   (h3-book-numerator-numerator-sign-with-library lib rational orientation)))
-
 (defun h3-book-numerator-num-nonzero-forward-with-library (lib formula)
   (h3-book-quotient-with-library lib
       ((parts (h3-book-quotient-tail-of-size formula 2))
@@ -201,10 +193,6 @@
        (number (h3-book-signs-number lib rational))
        (result (car (h3-rewrite-search-prove search target (list bound number)))))
     (h3-rewrite-implication lib guard result)))
-
-(defun h3-book-numerator-num-nonzero-forward (lib formula)
-  (h3-book-quotient-checked-pair
-   (h3-book-numerator-num-nonzero-forward-with-library lib formula)))
 
 (defun h3-book-numerator-reciprocal-sign-negative (lib signs given guard value reciprocal rational)
   (h3-book-quotient-with-library lib
@@ -265,10 +253,6 @@
                 lib numeric h3-book-quotient-sign-callback h3-book-numerator-reciprocal-sign-case
                 given guard value reciprocal rational orientation) :paired))
     (h3-rewrite-implication lib guard result)))
-
-(defun h3-book-numerator-reciprocal-sign (lib formula orientation)
-  (h3-book-quotient-checked-pair
-   (h3-book-numerator-reciprocal-sign-with-library lib formula orientation)))
 
 (defun h3-book-numerator-denominator-one-integral (lib right integer)
   (h3-book-quotient-with-library lib
@@ -338,10 +322,6 @@
        (noninteger (proof-proof-cases proof rational-test fractions other)))
     (proof-proof-cases proof integer-test whole noninteger)))
 
-(defun h3-book-numerator-denominator-one (lib formula)
-  (h3-book-quotient-checked-pair
-   (h3-book-numerator-denominator-one-with-library lib formula)))
-
 (defun h3-book-numerator-reconstruct-numerator-with-library (lib formula)
   (h3-book-quotient-with-library lib
       ((parts (h3-book-quotient-tail-of-size formula 2))
@@ -382,10 +362,6 @@
        (untyped (proof-proof-symmetric proof untyped))
        (empty (proof-proof-chain proof empty (list unit untyped))))
     (proof-proof-cases proof test known empty)))
-
-(defun h3-book-numerator-reconstruct-numerator (lib formula)
-  (h3-book-quotient-checked-pair
-   (h3-book-numerator-reconstruct-numerator-with-library lib formula)))
 
 (defun h3-book-numerator-theorem-signed-value (guard)
   (proof-with-checked-results ((head (proof-term-at guard 0)))
@@ -467,6 +443,3 @@
           (h3-book-numerator-numerator-theorem-sign lib name formula (cdr sign))
         (cons nil lib))))))
 
-(defun h3-book-numerator-numerator-theorem (lib name formula)
-  (h3-book-quotient-checked-pair
-   (h3-book-numerator-numerator-theorem-with-library lib name formula)))

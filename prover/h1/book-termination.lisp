@@ -54,7 +54,7 @@
 (defun h1-book-termination-logical-expansion (n proof test step place)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h1-book-termination-logical-expansion"))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h1-book-termination-logical-expansion"))
    ((or (proof-is-call test *termination-return-last*)
         (proof-compound (h1-tactics-call-head test)))
     (proof-with-checked-results
@@ -69,7 +69,7 @@
 (defun h1-book-termination-logical-negative-choices (n lib step rulers)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h1-book-termination-logical-negative-choices")
+      '(:failure "fuel" "h1-book-termination-logical-negative-choices")
     (proof-with-checked-results
         ((literal (proof-step-first step))
          (choice (if (proof-is-call literal *proof-not*) (proof-term-at literal 1) nil)))
@@ -95,7 +95,7 @@
 (defun h1-book-termination-logical-conjuncts (n lib step rulers)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h1-book-termination-logical-conjuncts")
+      '(:failure "fuel" "h1-book-termination-logical-conjuncts")
     (proof-with-checked-results
         ((literal (proof-step-first step))
          (no (if (proof-is-call literal *proof-if*) (proof-term-at literal 3) nil)))
@@ -274,7 +274,7 @@
 
 (defun h1-book-termination-rulers-require (rulers term)
   (proof-with-checked-results ((answer (h1-book-termination-rulers-find rulers term)))
-    (if (car answer) answer '(:failure "CandidateRejected" ""))))
+    (if (car answer) answer '(:failure "candidate-rejected" ""))))
 
 (defun h1-book-termination-install-selector-rules (prover names)
   (declare (xargs :measure (acl2-count names)))
@@ -302,7 +302,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h1-book-termination-length-integer-value"))
+     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h1-book-termination-length-integer-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((parts (proof-list-of-length (cdr value) 3))
@@ -378,7 +378,7 @@
    (let ((proof (h1-tactics-prover-proof prover))
          (head (car term)))
      (cond
-      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h1-book-termination-simplify"))
+      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h1-book-termination-simplify"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
       ((endp term) '(:failure "failure" ""))
       ((or (proof-compound head) (member-equal head definitions))
@@ -411,7 +411,7 @@
  (defun h1-book-termination-simplify-arguments (n prover term args index result definitions)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h1-book-termination-simplify-arguments"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h1-book-termination-simplify-arguments"))
     ((endp args) result)
     (t
      (proof-with-checked-results
@@ -429,13 +429,13 @@
   (let ((proof (h1-tactics-prover-proof prover))
         (definitions (list *library-natp* *proof-not*)))
     (cond
-     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h1-book-termination-prove-natural"))
+     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h1-book-termination-prove-natural"))
      ((equal literal *proof-true*) (proof-proof-prove proof literal nil definitions))
      (t
       (proof-with-checked-results
           ((equation (h1-book-termination-simplify 1000000 prover literal definitions))
            (right (if equation (h1-tactics-step-at equation 2) nil)))
-        (cond ((or (not equation) (equal literal right)) '(:failure "CandidateRejected" ""))
+        (cond ((or (not equation) (equal literal right)) '(:failure "candidate-rejected" ""))
               ((equal right *proof-true*) (proof-proof-true-from-eq proof equation))
               (t (proof-with-checked-results
                      ((step (h1-book-termination-prove-natural (1- n) prover right)))
@@ -482,7 +482,7 @@
 (defun h1-book-termination-selector-replies (n lib args rulers proxy replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h1-book-termination-selector-replies")
+      '(:failure "fuel" "h1-book-termination-selector-replies")
     (proof-with-checked-results ((answer (descent-query-recipe :selector-chain lib args proxy replies)))
       (if (descent-request-p answer)
           (let ((term (descent-request-term answer)))
@@ -599,7 +599,7 @@
  (defun h1-book-termination-count-descent-value (n prover value template tests parent root call openings)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "h1-book-termination-count-descent-value")
+       '(:failure "fuel" "h1-book-termination-count-descent-value")
      (let ((proof (h1-tactics-prover-proof prover)))
        (cond
         ((proof-is-call value *proof-if*)
@@ -634,7 +634,7 @@
  (defun h1-book-termination-count-descent-leaf (n actual tests prover call parent root openings template)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "h1-book-termination-count-descent-leaf")
+       '(:failure "fuel" "h1-book-termination-count-descent-leaf")
      (let ((lib (h1-tactics-prover-library prover))
            (proof (h1-tactics-prover-proof prover)))
        (proof-with-checked-results
@@ -662,7 +662,7 @@
                      (h1-book-termination-selector-descent prover goal (cdr root-cons))))
                   ((equal simplified *proof-false*)
                    (h1-book-termination-count-zero prover parent root (cdr direct)))
-                  (t '(:failure "Unproved" ""))))))))
+                  (t '(:failure "unproved" ""))))))))
          (h1-book-termination-count-finish proof step reduced))))))
 
 (defun h1-book-termination-count-descent (prover clause call)
@@ -726,7 +726,7 @@
       (if (not (and (equal (cadr child-parts) bound)
                     (member-equal after (list (library-plus *proof-one* before)
                                               (library-plus before *proof-one*)))))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((rulers (h1-book-termination-rulers-init prover (termination-call-tests call)))
              (typed (h1-book-termination-rulers-require rulers (library-integer before)))
@@ -739,11 +739,11 @@
                           (proof-proof-rewrite proof advance commute '(1 2)))))
              (inside (h1-book-termination-next-position-inside prover (cdr typed) before bound (car typed))))
           (if (not (car inside))
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (proof-with-checked-results
                 ((bound-integer (h1-book-termination-next-position-bound-type prover (cdr inside) bound)))
               (if (not bound-integer)
-                  '(:failure "Unproved" "")
+                  '(:failure "unproved" "")
                 (proof-with-checked-results ((after-integer (library-library-type-of lib after (list (car typed)))))
                   (library-library-cite lib "GAP-DECREASE" (list bound before after)
                                         (list bound-integer (car typed) after-integer (car inside) advance)))))))))))
@@ -781,7 +781,7 @@
         (cond (length-decrease (h1-book-termination-length-descent prover child parent call))
               ((and (proof-is-call child *library-gap*) (proof-is-call parent *library-gap*))
                (h1-book-termination-next-position prover child parent call))
-              (t '(:failure "Unproved" ""))))))))
+              (t '(:failure "unproved" ""))))))))
 
 (defun h1-book-termination-measure-ordinal (prover measure)
   (let ((lib (h1-tactics-prover-library prover)))
@@ -946,7 +946,7 @@
 (defun h1-book-termination-next-measure (n stage definitions calls measures formals)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h1-book-termination-next-measure")
+      '(:failure "fuel" "h1-book-termination-next-measure")
     (case stage
       (:bounded
        (proof-with-checked-results
@@ -981,31 +981,13 @@
       :bounded
     :selectors))
 
-(defun h1-book-termination-proof-measures-visit (n stage definitions calls measures formals)
-  (declare (xargs :measure (nfix n)))
-  (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h1-book-termination-proof-measures-visit")
-    (proof-with-checked-results
-        ((candidate (h1-book-termination-next-measure 1000000 stage definitions calls measures formals)))
-      (if (eq candidate :none)
-          nil
-        (proof-with-checked-results
-            ((rest (h1-book-termination-proof-measures-visit
-                    (1- n) (cadr candidate) definitions calls measures (caddr candidate))))
-          (cons (car candidate) rest))))))
-
-(defun h1-book-termination-proof-measures (prover definitions calls stored)
-  (proof-with-checked-results ((measures (h1-book-termination-stored-measures definitions stored nil)))
-    (h1-book-termination-proof-measures-visit 1000000
-     (h1-book-termination-measure-stage prover definitions measures) definitions calls measures :none)))
-
 (defun h1-book-termination-prove-candidate-case (prover case seen proofs)
   (let ((clause (car case)))
     (if (member-equal clause seen)
         (cons seen proofs)
       (proof-with-checked-results ((step (h1-book-termination-prove-measure-clause prover clause (cadr case))))
         (if (not (subsetp-equal (proof-step-clause step) (cons *proof-false* clause)))
-            '(:failure "Unproved" "")
+            '(:failure "unproved" "")
           (proof-with-checked-results
               ((step (proof-proof-subsume (h1-tactics-prover-proof prover) step clause)))
             (cons (cons clause seen) (cons step proofs))))))))
@@ -1046,15 +1028,15 @@
 (defun h1-book-termination-termination-entry-visit (n prover stage definitions calls measures formals)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h1-book-termination-termination-entry-visit")
+      '(:failure "fuel" "h1-book-termination-termination-entry-visit")
     (proof-with-checked-results
         ((candidate (h1-book-termination-next-measure 1000000 stage definitions calls measures formals)))
       (if (eq candidate :none)
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (let ((proofs (h1-book-termination-prove-candidate prover definitions calls (car candidate))))
           (cond
            ((failure-p proofs)
-            (if (member-equal (cadr proofs) '("Unproved" "CandidateRejected" "value"))
+            (if (member-equal (cadr proofs) '("unproved" "candidate-rejected" "value"))
                 (h1-book-termination-termination-entry-visit
                  (1- n) prover (cadr candidate) definitions calls measures (caddr candidate))
               proofs))

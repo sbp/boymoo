@@ -32,7 +32,7 @@
  (defun t3-books-obligation-walk (n term env ruled rulers names)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-books-obligation")
+       '(:failure "fuel" "t3-books-obligation")
      (proof-with-checked-results ((action (t3-books-obligation-action term ruled names)))
        (cond
         ((not action) nil)
@@ -72,7 +72,7 @@
             rulers names))))))
  (defun t3-books-obligation-walk-args (n args env ruled rulers names)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "t3-books-obligation"))
+   (cond ((zp n) '(:failure "fuel" "t3-books-obligation"))
          ((endp args) nil)
          (t (or (t3-books-obligation-walk (1- n) (car args) env ruled rulers names)
                 (t3-books-obligation-walk-args (1- n) (cdr args) env ruled rulers names))))))
@@ -100,23 +100,6 @@
                                  (found (t3-books-obligation-definitions (cdr data) rulers names)))
       (and found (proof-term-at (cadr data) 0))))
    (t nil)))
-
-(defun t3-books-read-measures-collect (records measures)
-  (if (endp records)
-      measures
-    (proof-with-checked-results ((record (proof-list-of-length (car records) 3)))
-      (let ((kind (cadr record))
-            (data (caddr record)))
-        (if (equal kind "measure")
-            (proof-with-checked-results ((relation (proof-term-at data 2)))
-              (if (equal relation *proof-ordinal-less*)
-                  (t3-books-read-measures-collect
-                   (cdr records) (table-put measures (car data) (cadr data)))
-                (t3-books-read-measures-collect (cdr records) measures)))
-          (t3-books-read-measures-collect (cdr records) measures))))))
-
-(defun t3-books-read-measures (records)
-  (t3-books-read-measures-collect records nil))
 
 (defun t3-books-zip-bindings (keys values bindings)
   (if (or (endp keys) (endp values))
@@ -246,15 +229,6 @@
 (defun t3-books-fragment-entries (fragment)
   (cadr fragment))
 
-(defun t3-books-fragment-facts (fragment)
-  (caddr fragment))
-
-(defun t3-books-fragment-packages (fragment)
-  (cadddr fragment))
-
-(defun t3-books-fragment-reason (fragment)
-  (nth 4 fragment))
-
 (defun t3-books-admit-definitions (definitions proof)
   (if (endp definitions)
       proof
@@ -317,31 +291,12 @@
     (list (if (member-equal package visible) t nil)
           (table-values (table-get exports package nil)))))
 
-(defun t3-books-fragment-facts-available-p (needed facts)
-  (if (endp needed)
-      t
-    (and (equal (table-get facts (caar needed) nil) (cdar needed))
-         (t3-books-fragment-facts-available-p (cdr needed) facts))))
-
-(defun t3-books-fragment-packages-available-p (needed lib)
-  (if (endp needed)
-      t
-    (and (equal (t3-books-package-state lib (caar needed)) (cdar needed))
-         (t3-books-fragment-packages-available-p (cdr needed) lib))))
-
-(defun t3-books-fragment-available (fragment lib)
-  (let* ((library (t3-book-values-book-proofs-library lib))
-         (proof (library-library-proof library)))
-    (and (t3-books-fragment-facts-available-p (t3-books-fragment-facts fragment)
-                                             (proof-proof-facts proof))
-         (t3-books-fragment-packages-available-p (t3-books-fragment-packages fragment) lib))))
-
 (defun t3-books-failure-kind-p (result kinds)
   (and (failure-p result) (member-equal (cadr result) kinds)))
 
 (defun t3-books-recoverable-proof-failure-p (result)
   (t3-books-failure-kind-p
-   result '("Unproved" "Unsupported" "MissingProofInput" "ProofMismatch"
+   result '("unproved" "unsupported" "missing-proof-input" "proof-mismatch"
             "value" "index" "key" "assertion")))
 
 (defun t3-books-theorem-search (lib search name formula)
@@ -351,7 +306,7 @@
 (defun t3-books-theorem-proof (lib search name formula)
   (let* ((selected (t3-book-recipes-theorem-tactic formula))
          (tactic (if (t3-books-failure-kind-p selected
-                     '("MalformedLambdaFormals" "Unsupported" "index" "type" "value"))
+                     '("malformed-lambda-formals" "unsupported" "index" "type" "value"))
                      nil
                    selected)))
     (cond
@@ -362,8 +317,8 @@
         (cond
          ((t3-books-recoverable-proof-failure-p proved)
           (let ((found (t3-books-theorem-search lib search name formula)))
-            (if (t3-books-failure-kind-p found '("Unsupported"))
-                '(:failure "Unsupported" "")
+            (if (t3-books-failure-kind-p found '("unsupported"))
+                '(:failure "unsupported" "")
               found)))
          ((failure-p proved) proved)
          (t (cons (car proved) (t3-book-values-book-proofs-with-library lib (cdr proved))))))))))
@@ -445,7 +400,7 @@
           (t3-books-fragment-init entries facts (t3-books-generate-packages package-names lib nil) ""))))))
 
 (defun t3-books-generate-result (result name)
-  (if (t3-books-failure-kind-p result '("Unproved" "Unsupported" "value"))
+  (if (t3-books-failure-kind-p result '("unproved" "unsupported" "value"))
       (proof-with-checked-results ((source (proof-line "skip" (list name))))
         (t3-books-fragment-init (list (list "skip" name nil source)) nil nil "unproved"))
     result))
@@ -462,131 +417,3 @@
     (if (failure-p discarded) discarded result)))
 
 ; The prefix stores admitted source lines in reverse admission order.
-(defun t3-books-prefix-digest (prefix)
-  (siphash-hexdigest (text-join "" (reverse prefix))))
-
-(defun t3-books-book-proofs-available (fragments lib)
-  (if (endp fragments)
-      nil
-    (if (t3-books-fragment-available (car fragments) lib)
-        (car fragments)
-      (t3-books-book-proofs-available (cdr fragments) lib))))
-
-(defun t3-books-book-proofs-fragment (raw kind name data lib search measures prefix cache failures)
-  (let* ((candidates (table-get cache raw nil))
-         (available (t3-books-book-proofs-available candidates lib)))
-    (if available
-        (list available cache failures)
-      (let* ((key (list raw (t3-books-prefix-digest prefix) (table-get measures name nil)))
-             (failed (table-get failures key nil)))
-        (if failed
-            (list failed cache failures)
-          (proof-with-checked-results ((fragment (t3-books-generate lib search kind name data measures)))
-            (if (equal (t3-books-fragment-reason fragment) "")
-                (list fragment (table-put cache raw (append candidates (list fragment))) failures)
-              (list fragment cache (table-put failures key fragment)))))))))
-
-(defun t3-books-book-proofs-step-count (counts)
-  (if (endp counts)
-      0
-    (+ (car counts) (t3-books-book-proofs-step-count (cdr counts)))))
-
-(defun t3-books-book-proofs-emit (entries emitted chunks steps bytes)
-  (if (endp entries)
-      (list emitted chunks steps bytes)
-    (proof-with-checked-results ((entry (proof-list-of-length (car entries) 4)))
-      (let* ((kind (car entry))
-             (name (cadr entry))
-             (counts (caddr entry))
-             (chunk (cadddr entry))
-             (auxiliary (member-equal kind '("lemma" "define")))
-             (retained (and auxiliary (assoc-equal name emitted))))
-        (cond
-         ((not retained)
-          (t3-books-book-proofs-emit
-           (cdr entries) (if auxiliary (table-put emitted name chunk) emitted)
-           (cons chunk chunks) (+ steps (t3-books-book-proofs-step-count counts)) (+ bytes (length chunk))))
-         ((equal (cdr retained) chunk)
-          (t3-books-book-proofs-emit (cdr entries) emitted chunks steps bytes))
-         (t (proof-with-checked-results ((symbol-text (proof-write name)))
-              '(:failure "failure" ""))))))))
-
-(defun t3-books-book-proofs-helpers (lib kind data)
-  (if (not (equal kind "define"))
-      lib
-    (proof-with-checked-results ((names (termination-definition-names (cdr data))))
-      (let ((library (t3-book-values-book-proofs-library lib)))
-        (proof-with-checked-results
-            ((library (if (member-equal *t3-book-lemmas-set-tail* names)
-                          (t3-book-lemmas-set-tail library)
-                        library))
-             (library (if (member-equal *t3-book-halves-halve* names)
-                          (t3-book-halves-halves library)
-                        library)))
-          (t3-book-values-book-proofs-with-library lib library))))))
-
-(defun t3-books-book-proofs-index (search lib kind data)
-  (let ((search (t3-book-theorems-theorems-with-lib search lib)))
-    (if (equal kind "choose")
-        (let* ((name (car data))
-               (library (t3-book-values-book-proofs-library lib))
-               (proof (library-library-proof library))
-               (fact (assoc-equal name (proof-proof-facts proof))))
-          (if fact
-              (proof-with-checked-results ((formula (proof-term-at (cdr fact) 0)))
-                (t3-book-theorems-theorems-index-fact search name formula))
-            '(:failure "failure" "")))
-      (t3-book-theorems-theorems-add search kind data))))
-
-(defun t3-books-book-proofs-row (fragment book name emitted chunks rows distinct raw)
-  (let* ((reason (t3-books-fragment-reason fragment))
-         (proved (equal reason ""))
-         (distinct (table-put distinct raw proved)))
-    (proof-with-checked-results
-        ((result (t3-books-book-proofs-emit (t3-books-fragment-entries fragment) emitted chunks 0 0))
-         (written (proof-write name)))
-      (let ((row (text-join (coerce (list #\Tab) 'string)
-                          (list book written (if proved "proved" "skipped")
-                                (decimal-text (caddr result)) (decimal-text (cadddr result)) reason))))
-        (list (car result) (cadr result) (cons row rows) distinct)))))
-
-(defun t3-books-book-proofs-statements (records book lib search measures seen prefix cache failures
-                                              emitted chunks rows distinct)
-  (declare (xargs :measure (acl2-count records)))
-  (if (endp records)
-      (list chunks rows distinct cache failures)
-    (proof-with-checked-results ((record (proof-list-of-length (car records) 3)))
-      (let ((raw (car record)) (kind (cadr record)) (data (caddr record)))
-        (if (member-equal raw seen)
-            (t3-books-book-proofs-statements (cdr records) book lib search measures seen prefix cache failures
-                                             emitted chunks rows distinct)
-          (proof-with-checked-results
-              ((name (t3-books-obligation kind data))
-               (candidate (if name
-                              (t3-books-book-proofs-fragment
-                               raw kind name data lib search measures prefix cache failures)
-                            (list nil cache failures)))
-               (output (if name
-                           (t3-books-book-proofs-row (car candidate) book name emitted chunks rows distinct raw)
-                         (list emitted chunks rows distinct)))
-               (lib (t3-books-admit lib kind data))
-               (lib (t3-books-book-proofs-helpers lib kind data))
-               (search (t3-books-book-proofs-index search lib kind data)))
-            (t3-books-book-proofs-statements
-             (cdr records) book lib search measures (cons raw seen) (cons raw prefix)
-             (cadr candidate) (caddr candidate)
-             (car output) (cadr output) (caddr output) (cadddr output))))))))
-
-(defun t3-books-book-proofs (book expected base library-lines library-measures cache failures statements aids)
-  (proof-with-checked-results
-      ((book-measures (t3-books-read-measures aids))
-       (search (t3-book-theorems-theorems-init base))
-       (result (t3-books-book-proofs-statements
-                statements book base search (table-update library-measures book-measures)
-                library-lines nil cache failures nil nil nil nil)))
-    (let ((rows (cadr result)))
-      (if (equal (len rows) expected)
-          (list (list (concatenate 'string *t3-books-books* "/" book ".statements")
-                      (text-join "" (reverse (car result))) (reverse rows) (caddr result))
-                (cadddr result) (nth 4 result))
-        '(:failure "failure" "")))))

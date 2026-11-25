@@ -30,7 +30,7 @@
           ((equality (car (h3-rewrite-search-reduce search literal nil nil nil)))
            (opened (if equality
                        (proof-proof-rewrite proof as-nil equality '(1))
-                     '(:failure "MalformedTacticInput" ""))))
+                     '(:failure "malformed-tactic-input" ""))))
         (proof-proof-tidy proof opened)))))
 
 (defun h3-state-true-list-not-string (lib)

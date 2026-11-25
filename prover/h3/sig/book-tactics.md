@@ -7,13 +7,6 @@ ordered list of arguments to the statement. `aids` is the list of parsed
 `(kind fields)` records in input order. An entry has the four fields
 returned by `proof-proof-entry`.
 
-`(h3-book-tactics-solve-book-statement lib kind fields aids)` returns
-`(cons value lib)`, with an entry or failure in the result position and the
-Library after the call. The Library contains auxiliary definitions and
-lemmas in insertion order. `(h3-book-tactics-solve-theorem lib name formula
-aids)` has the same result convention, with a proof Step or failure as its
-value.
-
 ## Search
 
 A book search is the Search of `prover/h3/sig/rewrite.md` with its book
@@ -26,13 +19,7 @@ the list of recorded tests are returned even when the result is a failure.
 | ACL2 call | Result |
 |---|---|
 | `(h3-book-tactics-book-search-init lib definitions calls rules budget inference-budget deep inside-first)` | A book search. |
-| `(h3-book-tactics-book-search-arguments-first search term)` | Whether to reduce arguments before unfolding the term. Does not produce a failure. |
-| `(h3-book-tactics-book-search-rewrite-atom search value evidence)` | The equality Step, `nil`, or a failure. |
-| `(h3-book-tactics-book-search-visit-term search)` | `(cons value search)` with `nil` or an `Unproved` failure as `value`. |
-| `(h3-book-tactics-book-search-evaluate search term)` | The primitive computation Step, `nil`, or a failure. |
-| `(h3-book-tactics-book-search-should-unfold search term)` | Whether to open the call, or a failure. The constructor classification is computed from the definition body. |
 | `(h3-book-tactics-book-search-reduce search term evidence tests active)` | `(list value search tests)` with an equality Step, `nil`, or a failure as `value`. |
-| `(h3-book-tactics-book-search-derive search term evidence active tests)` | `(list value search tests)` with a Step or failure as `value`. |
 
 ## Fact index
 
@@ -59,7 +46,6 @@ fact insertion order. The head of an atomic term is `nil`. Use
 | `(h3-book-tactics-decreasing-equation term)` | Whether the equation is directed toward a smaller term, or a failure. |
 | `(h3-book-tactics-small-definitions lib terms)` | The ordered list of at most 35 small applications, or a failure. |
 | `(h3-book-tactics-induction-candidates lib calls)` | A list of `(variable replacements)` pairs in source order, or a failure. Each replacement is `(mapping reason)` as in `prover/h3/sig/induction.md`. Substitution maps retain formal order. |
-| `(h3-book-tactics-matching-theorem lib formula index)` | The matching theorem Step, `nil`, or a failure. |
 | `(h3-book-tactics-guarded-instance lib formula index)` | The guarded theorem Step, `nil`, or a failure. |
 | `(h3-book-tactics-lookup-on-cons lib formula)` | The association-list lookup Step, `nil`, or a failure. |
 | `(h3-book-tactics-structural-arithmetic lib formula)` | `(cons value lib)`, with a proof Step, `nil`, or a failure as `value`. |
@@ -85,7 +71,6 @@ All three callbacks return a Step or a failure.
 |---|---|
 | `(h3-book-tactics-solve-theorem-prove-case evidence lib available calls rules inside-first formula)` | The proof of `formula` for a structural induction case. |
 | `(h3-book-tactics-prove-clause-type-prove-case evidence lib calls rules formula)` | The proof of the clause type formula for the case. |
-| `(h3-book-tactics-solve-book-statement-prove instance witnesses lib)` | The proof of the witness instance with the selected witness names in order. |
 
 `(h3-book-tactics-matching-theorem-with-index lib formula index)` pairs
 the result of matching with the fact index reached by its exact lookups.
@@ -109,8 +94,3 @@ updates that value for the new Proof. `names` lists the added or updated
 fact names in order of admission. Updating an existing fact keeps its
 position. The caller supplies all names whose clause or definition
 status may have changed.
-
-`(h3-book-tactics-solve-book-statement-prepared lib kind fields aids prepared)`
-has the result of `h3-book-tactics-solve-book-statement` and uses the
-prepared facts for `lib`. A `nil` prepared value supplies the ordinary
-per-call index construction.

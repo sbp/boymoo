@@ -32,44 +32,45 @@ prints `(1 2 3)`. The packages are needed because `intern-in-package-of-symbol`,
 |---|---|
 | `-l` | Read and compile every definition when the files are read, not when each is first called. |
 | `-v` | At the end, write to standard error the processor time taken to read the files and to compute, the number of definitions compiled and of collections, and the peak of memory held. |
-| `-j` | Start with the prelude, below: `ash` and `binary-logxor`, defined. |
+| `-j` | Start with the prelude, below: `ash`, `binary-logxor`, `length`, `char` and `subseq`, defined. |
 | `-m N` | Hold at most `N` megabytes (default 4096): the heap, the stacks, the program text and every table. |
 
 The exit status is 0 when every term has a value, and otherwise that of the first stop, below.
 
 ## The prelude
 
-With `-j` the runner starts with two functions defined, as if it had read two define lines before its first file: `COMMON-LISP::ASH` and `ACL2::BINARY-LOGXOR`, each of two arguments. It computes them itself, in `num.c`, and gives for every argument the value that the function's definition in ACL2 gives:
+With `-j` the runner starts with five functions defined: `COMMON-LISP::ASH` and `ACL2::BINARY-LOGXOR`, of two arguments each, `COMMON-LISP::LENGTH`, of one, `COMMON-LISP::CHAR`, of two, and `COMMON-LISP::SUBSEQ`, of three. It computes them itself, the first two in `num.c` and the other three in `prelude.c`, and gives for every argument the value that the function's definition in ACL2 gives:
 
 - `(ash i c)` is the greatest integer not above `i` times 2 to the power `c`, where an argument that is not an integer counts as 0.
 - `(binary-logxor i j)` is the integer whose bits, in two's complement, are those in which `i` and `j` differ, where an argument that is not an integer counts as 0.
+- `(length x)` is the number of characters of `x` if it is a string, and otherwise the number of conses in the chain of its `cdr`s.
+- `(char s n)` is the character of the string `s` at the index `n`, counted from 0, and `nil` if `s` is not a string or has no character there; an `n` that is not a positive integer counts as 0.
+- `(subseq seq start end)` takes the elements of `seq`, the characters of a string or the elements of any other datum as a list: of what is left after the first `start` of them, the first `e` minus `start`, where `e` is `end`, or the length of `seq` if `end` is `nil`, and where the elements run out it goes on with `nil`. Each count that is not a positive integer counts as 0. If `seq` is a string, the result is the string of those elements, with the character of code 0 for each `nil`; otherwise it is their list. These are the definitions of `subseq-list`, `take` and `nthcdr`.
 
-Nothing else sets them apart. A define line for one of them is in force in its place, as a later define line is in force in the place of an earlier one, and the other stays; an `attach` line names one as it names any function. The library's program text defines both, each on a line of its own, so the prelude computes them only for program text that leaves those lines out:
+**A define line for one of them is read and not used.** With `-j` the runner computes the five functions itself whatever the program text says, as ACL2 computes them by the code of the Lisp under it and not by their definitions (`EDGE-CASES.md`, entry 3.3). It needs no test of such a line, because in program text made from inputs that a checker admits, a definition of one of them can only be ACL2's own: no book may define a function of the package `COMMON-LISP` (`spec/language.md`, section 6), which leaves `ash`, `length`, `char` and `subseq` to the ground theory and the library, which are ACL2's; and `binary-logxor`, of the package `ACL2`, is defined by the library, after which no book may take its name. So the library's program text, which defines all five, is given as it stands: with `-j` the runner computes the five itself, and without it, by their definitions. An `attach` line names one as it names any function.
 
-```
-grep -v -e '^(define COMMON-LISP::NIL (COMMON-LISP::ASH ' \
-    -e '^(define COMMON-LISP::NIL (ACL2::BINARY-LOGXOR ' \
-    build/export/library.program > build/runner/library-prelude.program
-```
-
-To leave out one line only is to take the prelude's form of that function and ACL2's definition of the other.
-
-**Why these two.** ACL2 defines `ash` as the `floor` of a product with a power of 2, and `binary-logxor` through functions that halve their arguments with `floor` once for each bit; and it defines `floor` through `nonnegative-integer-quotient`, which subtracts the divisor once for each unit of the quotient and returns through as many calls. Run by those definitions, a shift to the right, or a call of `binary-logxor`, on integers of ordinary size takes memory in proportion to a quotient, and does not finish. A program that hashes text needs both. `sh runner/prelude.sh` times calls of each function both ways, each with only that function taken from the prelude; run on 2026-11-24 it printed, in microseconds of processor time a call, with 1,000 megabytes given to a run:
+**Why these five.** ACL2 defines `ash` as the `floor` of a product with a power of 2, and `binary-logxor` through functions that halve their arguments with `floor` once for each bit; and it defines `floor` through `nonnegative-integer-quotient`, which subtracts the divisor once for each unit of the quotient and returns through as many calls. Run by those definitions, a shift to the right, or a call of `binary-logxor`, on integers of ordinary size takes memory in proportion to a quotient, and does not finish. A program that hashes text needs both. ACL2 defines `length`, `char` and `subseq` on a string through the list of its characters, which `coerce` makes, so that each call takes time and memory in proportion to the length of the string, and a program that reads a string by position, as the checker reads its inputs, takes time in proportion to the square of the length. `sh runner/prelude.sh` times calls of each function both ways; run on 2026-11-25 it printed, in microseconds of processor time a call, with 1,000 megabytes given to a run:
 
 | Function | Arguments | By its definition | By the prelude |
 |---|---|---:|---:|
-| `ash` | an integer of 64 bits, left by 13 bits | 1.8 | 0.34 |
-| `ash` | an integer of 64 bits, right by 51 bits | 1955 | 0.56 |
-| `ash` | an integer of 64 bits, right by 43 bits | 486000 | 0.56 |
-| `ash` | an integer of 64 bits, right by 32 bits | 1,000 megabytes exhausted | 0.46 |
-| `binary-logxor` | two integers of 8 bits | 198 | 0.08 |
-| `binary-logxor` | two integers of 16 bits | 11560 | 0.09 |
-| `binary-logxor` | two integers of 24 bits | 2446000 | 0.08 |
+| `ash` | an integer of 64 bits, left by 13 bits | 1.7 | 0.33 |
+| `ash` | an integer of 64 bits, right by 51 bits | 1935 | 0.58 |
+| `ash` | an integer of 64 bits, right by 43 bits | 479000 | 0.57 |
+| `ash` | an integer of 64 bits, right by 32 bits | 1,000 megabytes exhausted | 0.47 |
+| `binary-logxor` | two integers of 8 bits | 182 | 0.09 |
+| `binary-logxor` | two integers of 16 bits | 11440 | 0.09 |
+| `binary-logxor` | two integers of 24 bits | 2377000 | 0.09 |
 | `binary-logxor` | two integers of 64 bits | 1,000 megabytes exhausted | 0.11 |
+| `length` | a string of 1,000 characters | 23.0 | 0.02 |
+| `length` | a string of 100,000 characters | 2350 | 0.01 |
+| `char` | a string of 1,000 characters, at its end | 83.5 | 0.02 |
+| `char` | a string of 100,000 characters, at its end | 8300 | 0.01 |
+| `subseq` | a string of 1,000 characters, 10 from its middle | 28.0 | 0.06 |
+| `subseq` | a string of 100,000 characters, 10 from its middle | 2750 | 0.06 |
 
 `floor` itself is not in the prelude: the runner runs it by its definition, so a call of `floor` or of `mod` takes time and memory in proportion to its quotient ("Where it and ACL2 part", below).
 
-**What it asks a reader to trust.** Without `-j` the runner computes nothing itself but the 32 primitives. With `-j` it is also trusted that the two functions of `num.c` compute what ACL2's definitions define; the tests below compare them with ACL2. The checker calls neither, and `checker/check.sh` does not give `-j`.
+**What it asks a reader to trust.** Without `-j` the runner computes nothing itself but the 32 primitives. With `-j` it is also trusted that the five functions of `num.c` and `prelude.c` compute what ACL2's definitions define, as ACL2 trusts the code of the Lisp under it for these functions; the tests below compare them with ACL2. The checker calls `length` and `char`, and `checker/check.sh` gives `-j`.
 
 ## The stops
 
@@ -85,11 +86,11 @@ Every run ends in values or in a stop: a message on standard error, which names 
 
 ## How it works
 
-The sources are `run.h`, the declarations; `heap.c`, memory; `num.c`, numbers; `data.c`, symbols, packages and the text of data; `eval.c`, definitions, the compiler and the machine; and `sys.c`, the only file that touches the system. The size, in lines that are neither blank nor wholly comment, is printed by `sh runner/size.sh`.
+The sources are `run.h`, the declarations; `heap.c`, memory; `num.c`, numbers; `data.c`, symbols, packages and the text of data; `eval.c`, definitions, the compiler and the machine; `prelude.c` and `prelude.h`, the functions of the prelude on strings and lists; and `sys.c`, the only file that touches the system. The size, in lines that are neither blank nor wholly comment, is printed by `sh runner/size.sh`.
 
 **Data.** A datum is a word of 32 bits. Its low bits tell an immediate integer from -2<sup>29</sup> to 2<sup>29</sup> - 1, a character, a symbol (an index into a table of symbols that is never collected), a cons (an index into the space of conses) or a box (an offset into the space of boxes, which holds larger integers, fractions, complex rationals and strings). Every datum has one representation, so data that are not conses or boxes are equal exactly when their words are. A larger integer holds its magnitude in base 10<sup>9</sup>, so that reading and writing a number takes time in proportion to its length; multiplication and division are the schoolbook's and Knuth's, greatest common divisors are Euclid's, and fractions are added and multiplied by Knuth's method, which divides out only what can be common.
 
-**Memory.** The two spaces are collected by copying, by Cheney's method, which needs no stack however deep the data. The roots are the machine's value stack, on which every datum in use is kept, and the table of the program's constants. After a collection each space is made large enough that at least half of it is free. The program text, the compiled code and the symbols are kept to the end. Every block the runner holds is counted against the limit of `-m`.
+**Memory.** The two spaces are collected by copying, by Cheney's method, which needs no stack however deep the data. The roots are the machine's value stack, on which every datum in use is kept, and the table of the program's constants. After a collection each space is made large enough that at least half of it is free. The program text, the compiled code and the symbols are kept to the end. A line of standard input is held only until its term is read: the runner lets its buffer go before it computes the term. The text of a string is read twice, once to check it and count its characters and once to put them into the string made in the heap, so that a long string, such as an input of the checker, is held in no other copy. Every block the runner holds is counted against the limit of `-m`.
 
 **Loading.** The library's program text is 48,361,580 bytes in 5,879 lines. Reading it only indexes each define line, by scanning for the names and numbers of arguments of its functions, and keeps the text; a line is read in full and compiled when one of its functions is first called. Measured with `-v` on 2026-11-20 (the command at the end of this section), reading the library and its packages this way took 0.08 seconds of processor time and a peak of 66 MB, nearly all of it the text; with `-l`, which reads and compiles all 6,187 definitions, it took 0.35 seconds and a peak of 224 MB. The runner therefore compiles each definition when it is first called.
 
@@ -111,8 +112,9 @@ The runner gives ACL2 Core's value. Where ACL2's own evaluator differs, `EDGE-CA
 - **Depth.** ACL2 exhausts its stack on a deep recursion (entry 2.6); the runner computes it, in memory.
 - **The executable half of an `mbe`** in a function whose guards are verified, which ACL2 runs and the runner does not (entry 2.5).
 - **ACL2's own functions in program mode.** ACL2 runs the functions in program mode that it starts with as their Common Lisp code even with guard checking `:none`, where `eq` of two strings with the same characters can be false: `(first-assoc-eq '("") '(("" . -2)))` gives `NIL` in ACL2, and `("" . -2)` by the definitions. A function in program mode defined in a book does not do this (entry 10.2). The tests call such functions within their guards.
-- **Speed.** ACL2 computes functions such as `floor`, `mod` and `nonnegative-integer-quotient` with code of the Lisp under it (entry 3.3); the runner runs their definitions, by which `(nonnegative-integer-quotient i j)` subtracts `j` from `i` once for each unit of the quotient. With `-j` it computes two functions of that kind itself, `ash` and `binary-logxor` (the prelude, above).
-- **A shift of 0.** By its definition `(ash 0 c)` is 0 for every `c`, and the prelude gives 0. The Lisp under ACL2, whose code ACL2 relies on for `ash` (entry 3.3), does not shift by every count: on `(ash 0 100000000000000000000)` ACL2 8.7 aborts with the message of that Lisp, `can't represent result of left shift`.
+- **Speed.** ACL2 computes functions such as `floor`, `mod` and `nonnegative-integer-quotient` with code of the Lisp under it (entry 3.3); the runner runs their definitions, by which `(nonnegative-integer-quotient i j)` subtracts `j` from `i` once for each unit of the quotient. With `-j` it computes five functions of that kind itself (the prelude, above).
+- **A shift of 0.** By its definition `(ash 0 c)` is 0 for every `c`, and the prelude gives 0. The Lisp under ACL2, whose code ACL2 relies on for `ash` (entry 3.3), does not shift by every count: on `(ash 0 100000000000000000000)` ACL2 8.7 aborts with the message of that Lisp, `can't represent result of left shift` (`EDGE-CASES.md`, entry 2.10).
+- **A start beyond every list.** `(subseq x start end)` drops the first `start` elements of `x` with `nthcdr`, which by its definition takes one step for each unit of `start`, after the list has run out as before. When `x` is neither a string nor a list that ends in `nil`, the guard of `nthcdr` fails and ACL2 runs that definition: for a `start` of 2<sup>64</sup> it takes 2<sup>64</sup> steps and does not finish. The prelude gives the definition's value at once (`EDGE-CASES.md`, entry 2.11).
 
 ## Conformance
 
@@ -120,7 +122,7 @@ The runner gives ACL2 Core's value. Where ACL2's own evaluator differs, `EDGE-CA
   1. the characters of the source and of execution are those of ASCII, so that the bytes read can be compared with character constants such as `'('`;
   2. standard input and output, which are text streams, carry every byte unchanged, and a line ends with the byte 10, as POSIX requires;
   3. the statuses 1, 2 and 3 given to `exit` reach the caller as those numbers, as POSIX requires.
-- **Evidence.** The machine on which it was written has one C compiler, Apple clang 15.0.0, under the names `cc`, `gcc`, `clang` and `c99`. On 2026-11-24 it built with no diagnostic under `-std=c99 -pedantic-errors -Wall -Wextra -Werror -Wvla -O2` as `cc`, `gcc` and `clang`, and by the `Makefile` as it stands, with `c99 -O 1`, whose driver accepts only the options of POSIX; and `sh runner/test.sh` passed in full both with that build and with a build by `clang` with `-fsanitize=address,undefined -fno-sanitize-recover=all` added to those options.
+- **Evidence.** The machine on which it was written has one C compiler, Apple clang 15.0.0, under the names `cc`, `gcc`, `clang` and `c99`. On 2026-11-25 it built with no diagnostic under `-std=c99 -pedantic-errors -Wall -Wextra -Werror -Wvla -O2` as `cc`, `gcc` and `clang`, and by the `Makefile` as it stands, with `c99 -O 1`, whose driver accepts only the options of POSIX; and `sh runner/test.sh` passed in full both with that build and with a build by `clang` with `-fsanitize=address,undefined -fno-sanitize-recover=all` added to those options.
 - **The build and the tests** use the `make` of POSIX.1-2001, POSIX `sh` and POSIX utilities. ACL2 and `python3` are needed only by the tests that compare with ACL2.
 
 ## Testing
@@ -135,12 +137,12 @@ builds the runner, unless one is named, and compares it with ACL2 8.7. It needs 
 - the calls of `runner/test/book.lisp`, a book that ACL2 certifies and the exporter exports: a constrained function with no attachment and one that calls it, an attachment in force, `hard-error` and `illegal` reached and not, a function that is not executable, one introduced by choice, an `mbe`, deep and mutual recursion, a loop, and a function in program mode;
 - 2,150 calls of 86 functions of ACL2's library, in logic mode and in program mode, on arguments that `runner/test/gen.py` generates with a fixed seed, run from the library's program text;
 - 4,000 calls of the arithmetic primitives on generated integers of up to 120 digits, fractions and complex rationals, and a few arguments that are not numbers;
-- 2,244 calls of the two functions of the prelude, run with `-j` from the library's program text less their two lines: on integers at the edges of the runner's representations (2<sup>29</sup>, 10<sup>9</sup>, 2<sup>32</sup>, 10<sup>18</sup>, 2<sup>64</sup> and 2<sup>128</sup>), on fractions, on complex rationals and on data that are not numbers, with shifts of up to 200 bits and, for an integer, of more bits than it has;
+- 3,349 calls of the five functions of the prelude, run with `-j` from the library's program text, which defines all five: 2,244 of `ash` and `binary-logxor` on integers at the edges of the runner's representations (2<sup>29</sup>, 10<sup>9</sup>, 2<sup>32</sup>, 10<sup>18</sup>, 2<sup>64</sup> and 2<sup>128</sup>), on fractions, on complex rationals and on data that are not numbers, with shifts of up to 200 bits and, for an integer, of more bits than it has; and 1,105 of `length`, `char` and `subseq` on strings, lists, an improper list and data that are neither, with indices within and beyond the data, negative, above 2<sup>64</sup>, fractions, complex rationals and data that are not numbers, and ends past the data, a start above 2<sup>64</sup> only on a string or a list that ends in `nil` ("Where it and ACL2 part", above);
 - 996 calls of `ash` and `binary-logxor` on integers of up to 200 bits: those of the calls that `runner-fast/test/gen.awk` writes for the fast runner, with the values of ACL2 that `runner-fast/test/expected/large.txt` records;
-- cases of the runner alone: a recursion a million calls deep, a term nested a thousand levels deep, one nested twenty thousand levels deep (a stop), a datum nested a million levels deep, numbers of a million digits, memory exhausted by a recursion and by a list under `-m 64`, texts that are not in the format and terms that are not terms, and the prelude: without `-j` its functions have no definition; with it they are called from a term and from a definition, a define line is in force in the place of one, a call with one argument is no term, and `(ash 0 c)` is 0 for a `c` that ACL2 does not compute;
+- cases of the runner alone: a recursion a million calls deep, a term nested a thousand levels deep, one nested twenty thousand levels deep (a stop), a datum nested a million levels deep, numbers of a million digits, memory exhausted by a recursion and by a list under `-m 64`, texts that are not in the format and terms that are not terms, and the prelude: without `-j` its functions have no definition; with it they are called from a term and from a definition, define lines for `ash` and `char` are read and not used, a call with one argument is no term, and `(ash 0 c)` is 0 for a `c` that ACL2 does not compute;
 - the reading and compiling (`-l`) of every definition of the library, alone and after the prelude, and of every book that `export/run.sh` has exported.
 
-ACL2 computes the expected values of the generated calls with `runner/test/expect.lsp`, at its top level, with attachments in force and guard checking `:none`. Run on 2026-11-24, every line was `ok`: 153 values and 4 stops of `facts.txt`, 75 values and 1 stop of `edge.txt`, 11 values and 7 stops of the book, 2,150 library calls, 4,000 arithmetic calls, 2,244 calls of the prelude's functions and 996 calls on integers of up to 200 bits agreed with ACL2, and the program text of the library and of all 460 exported books compiled.
+ACL2 computes the expected values of the generated calls with `runner/test/expect.lsp`, at its top level, with attachments in force and guard checking `:none`. Run on 2026-11-25, every line was `ok`: 153 values and 4 stops of `facts.txt`, 75 values and 1 stop of `edge.txt`, 11 values and 7 stops of the book, 2,150 library calls, 4,000 arithmetic calls, 3,349 calls of the prelude's functions and 996 calls on integers of up to 200 bits agreed with ACL2, and the program text of the library and of all 460 exported books compiled.
 
 ## Benchmarks
 

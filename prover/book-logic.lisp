@@ -48,7 +48,7 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((endp pending) size)
-   ((zp n) (list :failure "Fuel" "book-logic-term-size-pending"))
+   ((zp n) (list :failure "fuel" "book-logic-term-size-pending"))
    ((< limit (1+ size)) (1+ size))
    (t
     (let ((item (car pending))
@@ -343,7 +343,7 @@
                (update-nth 1 (cdr reply) reducer) (cons t (cdr replies))))))))
 
 (defun book-logic-reducer-fuel (name reducer)
-  (cons (list :failure "Fuel" name) reducer))
+  (cons (list :failure "fuel" name) reducer))
 
 (defconst *book-logic-coerce* (proof-cl "COERCE"))
 (defconst *book-logic-char-code* (proof-cl "CHAR-CODE"))
@@ -601,15 +601,6 @@
 
 (defun book-logic-reducer-reduce (reducer term active)
   (book-logic-reducer-reduce-in 1000000 reducer term active))
-
-(defun book-logic-reducer-reduction (reducer term active)
-  (book-logic-reducer-reduction-in 1000000 reducer term active))
-
-(defun book-logic-reducer-completion (reducer term active)
-  (book-logic-reducer-completion-in 1000000 reducer term active))
-
-(defun book-logic-reducer-conditional (reducer term active)
-  (book-logic-reducer-conditional-in 1000000 reducer term active))
 
 (defun book-logic-reducer-prove (reducer term)
   (termination-proofs-check-in reducer

@@ -32,10 +32,6 @@
   (prove-entry (prove-entry-number entry) (prove-entry-name entry)
                blocks (prove-entry-failure entry)))
 
-(defun prove-entry-with-failure (entry failure)
-  (prove-entry (prove-entry-number entry) (prove-entry-name entry)
-               (prove-entry-blocks entry) failure))
-
 (defun prove-target (entry statement line aids order)
   (list :target entry statement line aids order))
 
@@ -44,10 +40,6 @@
 (defun prove-target-line (target) (fourth target))
 (defun prove-target-aids (target) (fifth target))
 (defun prove-target-order (target) (sixth target))
-
-(defun prove-target-with-entry (target entry)
-  (prove-target entry (prove-target-statement target) (prove-target-line target)
-                (prove-target-aids target) (prove-target-order target)))
 
 (defun prove-target-pending (target)
   (let ((entry (prove-target-entry target)))
@@ -81,7 +73,7 @@
 (defun prove-support-blocks-p (support)
   (or (endp support)
       (and (prove-block-content-p (car support))
-           (text-starts-with (car support) '("(define " "(lemma "))
+           (text-starts-with (car support) '("(define " "(lemma " "(choose "))
            (prove-support-blocks-p (cdr support)))))
 
 (defun prove-valid-blocks (answer statement)
@@ -134,7 +126,7 @@
       (cond ((stringp name)
              (prove-aids-index (cdr lines) (1+ index)
                                (prove-aids-add-row rows name (list index line))))
-            ((and (failure-p name) (equal (cadr name) "Fuel")) name)
+            ((and (failure-p name) (equal (cadr name) "fuel")) name)
             (t (prove-aids-index (cdr lines) (1+ index) rows))))))
 
 (defun prove-aids (lines)
@@ -175,17 +167,6 @@
   (list :prefix (cons line (second prefix))))
 
 (defun prove-prefix-lines (prefix) (reverse (second prefix)))
-
-(defun prove-index-prefix-lines (lines prefix)
-  (if (endp lines)
-      prefix
-    (let ((statement (worklist-statement-info (car lines))))
-      (if (failure-p statement)
-          statement
-        (prove-index-prefix-lines (cdr lines) (prove-prefix-add prefix (car lines) statement))))))
-
-(defun prove-index-prefix (lines)
-  (prove-index-prefix-lines lines (prove-prefix)))
 
 (defun prove-preferred-set (kind obligation line)
   (cond ((and (equal kind "theorem") (<= 0 (text-find line *prove-warrant*))) "H4")
@@ -444,7 +425,7 @@
 (defun cache-dependency-scan (n chars names packages needed)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "cache-dependency-scan"))
+   ((zp n) '(:failure "fuel" "cache-dependency-scan"))
    ((endp chars) needed)
    ((eql (car chars) #\")
     (let ((quoted (cache-dependency-escaped-part (cdr chars) #\" (list #\"))))

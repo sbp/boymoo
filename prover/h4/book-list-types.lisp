@@ -18,7 +18,7 @@
 (defun h4-book-list-types-conjunct-proofs-visit (n p step)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h4-book-list-types-conjunct-proofs-visit")
+      '(:failure "fuel" "h4-book-list-types-conjunct-proofs-visit")
     (proof-with-checked-results ((formula (proof-step-first step)))
       (if (proof-is-call formula *proof-if*)
           (proof-with-checked-results ((otherwise-term (proof-term-at formula 3)))
@@ -76,20 +76,6 @@
           nil))
     nil))
 
-(defun h4-book-list-types-matches (members item components)
-  (if (endp members)
-      nil
-    (proof-with-checked-results
-        ((here (h4-book-list-types-matches-for-member
-                (car members) item components))
-         (rest (h4-book-list-types-matches (cdr members) item components)))
-      (append here rest))))
-
-(defun h4-book-list-types-syntax-guarded-member-types (formula)
-  (proof-with-checked-results ((context (h4-book-list-types-syntax-context formula)))
-    (and context
-         (h4-book-list-types-matches (cadr context) (cadar context) (cadr context)))))
-
 (defun h4-book-list-types-membership-induction-opened (step shape p)
   (let ((pr (library-library-proof p)))
     (proof-with-checked-results
@@ -114,7 +100,7 @@
               ((conclusion (proof-proof-subsume
                             pr impossible (cons goal (cdr (proof-step-clause impossible))))))
             (h4-tactics-tactics-imply p statement conclusion))
-        '(:failure "InapplicableStep" "")))))
+        '(:failure "inapplicable-step" "")))))
 
 (defun h4-book-list-types-membership-induction-pair-present
     (equality p head-type item)
@@ -146,13 +132,13 @@
          (predicate (proof-term-at goal 0)))
       (let ((head (list *library-car* items)))
         (if (not (equal head-literal (list predicate head)))
-            '(:failure "InapplicableStep" "")
+            '(:failure "inapplicable-step" "")
           (proof-with-checked-results
               ((lookup-literal (proof-step-first lookup))
                (match (proof-term-at lookup-literal 1)))
             (if (not (or (equal match (proof-eq item head))
                          (equal match (proof-eq head item))))
-                '(:failure "InapplicableStep" "")
+                '(:failure "inapplicable-step" "")
               (proof-with-checked-results
                   ((builtin (library-library-builtin p 3 items))
                    (descent (proof-proof-discharge pr builtin shape))
@@ -234,7 +220,7 @@
                         p member-term list-test (caddr formula))))
             (cond ((not (failure-p lemma))
                    (h4-book-list-types-from-induction p formula member-term list-test lemma))
-                  ((member-equal (cadr lemma) '("InapplicableStep" "assertion"))
+                  ((member-equal (cadr lemma) '("inapplicable-step" "assertion"))
                    (h4-book-list-types-member-type-proof-tests p formula (cdr matches)))
                   (t lemma)))
         (h4-book-list-types-member-type-proof-tests p formula (cdr matches))))))

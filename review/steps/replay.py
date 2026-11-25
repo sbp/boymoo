@@ -106,16 +106,19 @@ def specimens():
 
 
 def self_input():
+    library = Path("build/checker/library.statements")
     statements = Path("build/checker/checker.statements")
     proofs = Path("build/self/checker.proofs")
-    if not all(path.is_file() and path.stat().st_size for path in (statements, proofs)):
+    library_proofs = Path("build/self/library/checker.proofs")
+    if not all(path.is_file() and path.stat().st_size
+               for path in (library, statements, proofs, library_proofs)):
         log = BUILD / "self-build.log"
         with log.open("wb") as stream:
             result = subprocess.run(["sh", "review/self/run.sh"], stdout=stream,
                                     stderr=subprocess.STDOUT)
         if result.returncode:
             raise RuntimeError(f"Could not build the checker's source proof. See {log}.")
-    return Case("self", [EMPTY, statements, proofs, EMPTY], "accepted")
+    return Case("self", [library, statements, proofs, library_proofs], "accepted")
 
 
 def collect(cases, log):

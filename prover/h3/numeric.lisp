@@ -14,7 +14,7 @@
 (defun h3-numeric-reverse-reduction (proof reduced)
   (if reduced
       (proof-proof-symmetric proof reduced)
-    '(:failure "MalformedTacticInput" "")))
+    '(:failure "malformed-tactic-input" "")))
 
 (defun h3-numeric-complex-zero (lib term)
   (let ((proof (library-library-proof lib)))
@@ -111,7 +111,7 @@
 
 (defun h3-numeric-tail (term)
   (if (integerp term)
-      '(:failure "MalformedTacticInput" "")
+      '(:failure "malformed-tactic-input" "")
     (cdr term)))
 
 (defun h3-numeric-operands (term count)
@@ -308,7 +308,7 @@
          (literal (proof-step-first other))
          (other-left (proof-term-at literal 1)))
       (if (not (equal other-left right))
-          '(:failure "ProofMismatch" "")
+          '(:failure "proof-mismatch" "")
         (proof-with-checked-results
             ((multiplier (proof-term-at p 1))
              (factor-p (proof-term-at p 2))

@@ -127,7 +127,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-recipes-oracle-state-by-value"))
+     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-recipes-oracle-state-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))

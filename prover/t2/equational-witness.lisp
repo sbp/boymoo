@@ -46,7 +46,7 @@
 (defun t2-equational-witness-defining-equation (lib name arity formulas)
   (declare (xargs :measure (acl2-count formulas)))
   (if (endp formulas)
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (let ((formula (car formulas)))
       (if (not (proof-is-call formula *proof-equal*))
           (t2-equational-witness-defining-equation lib name arity (cdr formulas))
@@ -63,7 +63,7 @@
   (if (stringp row)
       (if (equal (length row) 2)
           (list (subseq row 0 1) (subseq row 1 2))
-        '(:failure "RecipeMismatch" ""))
+        '(:failure "recipe-mismatch" ""))
     (proof-list-of-length row 2)))
 
 (defun t2-equational-witness-formulas (claims)
@@ -133,5 +133,3 @@
        (entry (proof-proof-entry "witness" name (cons name names) (car proved))))
     (cons entry (cdr proved))))
 
-(defun t2-equational-witness-witness (lib data)
-  (t2-equational-witness-with-prepared-rules lib data nil))

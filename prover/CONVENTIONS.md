@@ -29,7 +29,7 @@ Every book begins `(in-package "BOYMOO-PROVER")`, the package of `prover/package
 
 - The functions that are there when ACL2 starts and are in logic mode, and the functions of the books before it. No `include-book` of a book outside `prover/`. No `state`, no stobj, no array, no `hons`, no `memoize`; `defmacro` for plain abbreviation only.
 - No `mv` and no `mv-let`: return a list or a pair.
-- Every function is in logic mode, and ACL2 must admit it with at most a declared measure: no hint, no lemma. A recursion that has no such measure takes a counter (`prover/FAILURES.md`, "Fuel").
+- Every function is in logic mode, and ACL2 must admit it with at most a declared measure: no hint, no lemma. A recursion that has no such measure takes a counter (`prover/FAILURES.md`, "fuel").
 - No guard is verified. Each book has `(set-verify-guards-eagerness 0)` after its `in-package`, and its functions declare no guard.
 - A function keeps no memory between calls. What is worth keeping across the statements of one book is carried in a session (`prover/OPEN.md`).
 - **A text is walked as a list of characters.** `(coerce text 'list)` is made once, and the walk goes down that list. No loop asks a string for its length, for the character at a position or for a part of it: ACL2 defines `length`, `char` and `subseq` on a string by walking the list of its characters from the start, so such a loop takes time in proportion to the square of the text's length on a runner that runs definitions. A test of one character's code compares it with the ends of ranges instead of searching a list of codes.
@@ -40,6 +40,7 @@ Every book begins `(in-package "BOYMOO-PROVER")`, the package of `prover/package
 From the root, with ACL2 8.7:
 
 - `sh prover/build.sh` certifies the shared books and T1's and exports the last; `sh prover/SET/build.sh` does the same for a set, and `sh prover/driver/build.sh` for the driver, once every set is built.
+- `sh prover/build-all.sh` does all of that in order, the ten other sets four at a time, and `sh prover/test-all.sh` runs the driver's test and then the tests of the eleven sets, three at a time; the driver's table has inputs that are lines of the library, whose aids `sh review/termination/run.sh` writes, so that command must have been run first.
 - `sh prover/SET/run.sh -v` (`sh prover/run.sh -v` for T1) reads one term a line and prints each value; `RUNNER` names the runner. `RUNNER=prover/tools/reference.sh` is the reference runner with its prelude, which computes `ash` and `binary-logxor`; every set runs on it.
 - **The checkers judge.** `sh prover/driver/test.sh` has the driver write a proof file for each input of `prover/driver/expected.tsv`, and has the checker in ACL2 Core and the second checker judge it. The two must give the same verdict, and the verdict and the number of obligations proved must be the table's. `sh prover/SET/test.sh` (`sh prover/test.sh` for T1) is the same test with that set alone and the table `prover/SET/expected.tsv`; it needs the driver built.
 - **What makes a change right.** A proof is right when both checkers accept it, whatever its text. A change to a set is right when every row of the tables still holds, or holds with more obligations proved, in which case the row is written again with `sh prover/driver/test.sh --sets SET --record`.

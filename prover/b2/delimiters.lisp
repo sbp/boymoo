@@ -199,7 +199,7 @@
 (defun b2-delimiters-property-lookup-by-value (n lib value template signed boolean)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b2-delimiters-property-lookup-by-value")
+      '(:failure "fuel" "b2-delimiters-property-lookup-by-value")
     (let* ((proof (library-library-proof lib))
            (node (b2-delimiters-property-lookup-node proof value)))
       (cond

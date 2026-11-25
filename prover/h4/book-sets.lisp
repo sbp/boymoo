@@ -318,14 +318,14 @@
     (cond ((or (equal value *proof-true*) (equal value *proof-false*))
            (h4-tactics-tactics-establish p target nil
                                             (list *h4-book-sets-boolean* (proof-cl "EQ")) nil nil))
-          ((null induction) '(:failure "InapplicableStep" ""))
+          ((null induction) '(:failure "inapplicable-step" ""))
           (t (proof-with-checked-results ((literal (proof-step-first induction)))
-               (if (equal target literal) induction '(:failure "InapplicableStep" "")))))))
+               (if (equal target literal) induction '(:failure "inapplicable-step" "")))))))
 
 (defun h4-book-sets-boolean-result-by-value (n p value tests induction)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h4-book-sets-boolean-result-by-value")
+      '(:failure "fuel" "h4-book-sets-boolean-result-by-value")
     (let ((pr (library-library-proof p))
           (template (list *h4-book-sets-boolean* *proof-result*)))
       (cond
@@ -485,7 +485,7 @@
                            (h4-book-sets-set-equivalence p)))
                    (first (if (failure-p step) step (proof-step-first step))))
               (cond ((not (failure-p first)) (and (equal first formula) step))
-                    ((member-equal (cadr first) '("InapplicableStep" "assertion")) nil)
+                    ((member-equal (cadr first) '("inapplicable-step" "assertion")) nil)
                     (t first)))
           nil))
     nil))

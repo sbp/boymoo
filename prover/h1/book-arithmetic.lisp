@@ -11,9 +11,6 @@
 (defun h1-book-arithmetic-rational-constant (term)
   (h1-tactics-rational-constant term))
 
-(defun h1-book-arithmetic-compute-rational (proof term)
-  (h1-tactics-compute-rational proof term))
-
 (defun h1-book-arithmetic-operator-name (prefix operator)
   (let ((entry (assoc-equal operator *h1-book-arithmetic-operators*)))
     (if entry
@@ -530,7 +527,7 @@
 
 (defun h1-book-arithmetic-algebra-associate-loop (n self head cursor)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h1-book-arithmetic-algebra-associate-loop"))
+  (cond ((zp n) '(:failure "fuel" "h1-book-arithmetic-algebra-associate-loop"))
         ((failure-p cursor) cursor)
         ((not (car cursor)) (cadr cursor))
         (t (h1-book-arithmetic-algebra-associate-loop
@@ -605,7 +602,7 @@
 
 (defun h1-book-arithmetic-algebra-sort-pass (n self head cursor)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h1-book-arithmetic-algebra-sort-pass"))
+  (cond ((zp n) '(:failure "fuel" "h1-book-arithmetic-algebra-sort-pass"))
         ((failure-p cursor) cursor)
         ((not (car cursor)) (cons (cadr cursor) (caddr cursor)))
         (t (h1-book-arithmetic-algebra-sort-pass
@@ -615,7 +612,7 @@
 
 (defun h1-book-arithmetic-algebra-sort-loop (n self head result)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h1-book-arithmetic-algebra-sort-loop"))
+  (cond ((zp n) '(:failure "fuel" "h1-book-arithmetic-algebra-sort-loop"))
         ((failure-p result) result)
         ((not (cdr result)) (car result))
         (t (h1-book-arithmetic-algebra-sort-loop
@@ -720,7 +717,7 @@
 (defun h1-book-arithmetic-algebra-cancel-reciprocal-loop (n self left right)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) (cons '(:failure "Fuel" "h1-book-arithmetic-algebra-cancel-reciprocal-loop") self))
+   ((zp n) (cons '(:failure "fuel" "h1-book-arithmetic-algebra-cancel-reciprocal-loop") self))
    ((equal right (list *h1-book-arithmetic-reciprocal* left))
     (let* ((proof (h1-book-arithmetic-algebra-proof self))
            (lib (h1-tactics-prover-library proof)))
@@ -793,11 +790,11 @@
  (defun h1-book-arithmetic-algebra-normal-loop (n self term)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "h1-book-arithmetic-algebra-normal-loop") self)
+       (cons '(:failure "fuel" "h1-book-arithmetic-algebra-normal-loop") self)
      (let ((self (h1-book-arithmetic-algebra-with-work
                   self (1- (h1-book-arithmetic-algebra-work self)))))
        (if (< (h1-book-arithmetic-algebra-work self) 0)
-           (cons '(:failure "Unproved" "") self)
+           (cons '(:failure "unproved" "") self)
          (let* ((proof (h1-book-arithmetic-algebra-proof self))
                 (base (h1-tactics-prover-proof proof))
                 (lib (h1-tactics-prover-library proof))
@@ -827,7 +824,7 @@
  (defun h1-book-arithmetic-algebra-normal-follow (n self equation before)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "h1-book-arithmetic-algebra-normal-follow") self)
+       (cons '(:failure "fuel" "h1-book-arithmetic-algebra-normal-follow") self)
      (h1-book-arithmetic-with-algebra self
          ((term (h1-book-arithmetic-right-side equation)))
        (let* ((result (h1-book-arithmetic-algebra-normal-loop (1- n) self term))
@@ -842,7 +839,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((not (o< (nfix (1- n)) (nfix n)))
-     (cons '(:failure "Fuel" "h1-book-arithmetic-algebra-normal-args") self))
+     (cons '(:failure "fuel" "h1-book-arithmetic-algebra-normal-args") self))
     ((endp args) (h1-book-arithmetic-algebra-normal-reduce (1- n) self step head))
     (t
      (let* ((arg (car args))
@@ -862,7 +859,7 @@
  (defun h1-book-arithmetic-algebra-normal-reduce (n self step head)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "h1-book-arithmetic-algebra-normal-reduce") self)
+       (cons '(:failure "fuel" "h1-book-arithmetic-algebra-normal-reduce") self)
      (h1-book-arithmetic-with-algebra self
          ((current (h1-book-arithmetic-right-side step)))
        (let* ((result (h1-book-arithmetic-algebra-shortcut self head current))
@@ -893,7 +890,7 @@
  (defun h1-book-arithmetic-algebra-combine-loop (n self step head place)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "h1-book-arithmetic-algebra-combine-loop") self)
+       (cons '(:failure "fuel" "h1-book-arithmetic-algebra-combine-loop") self)
      (let ((base (h1-tactics-prover-proof (h1-book-arithmetic-algebra-proof self))))
        (h1-book-arithmetic-with-algebra self
            ((node (h1-book-arithmetic-spine-node step place)))
@@ -924,9 +921,6 @@
 (defun h1-book-arithmetic-algebra-normal (self term)
   (h1-book-arithmetic-algebra-normal-loop 1000000 self term))
 
-(defun h1-book-arithmetic-algebra-combine (self step head)
-  (h1-book-arithmetic-algebra-combine-loop 1000000 self step head '(1 2)))
-
 (defun h1-book-arithmetic-algebra-equality (self left right)
   (let* ((left-result (h1-book-arithmetic-algebra-normal self left))
          (a (car left-result)))
@@ -942,7 +936,7 @@
               ((left-value (h1-book-arithmetic-right-side a))
                (right-value (h1-book-arithmetic-right-side b)))
             (if (not (equal left-value right-value))
-                (cons '(:failure "Unproved" "") self)
+                (cons '(:failure "unproved" "") self)
               (h1-book-arithmetic-with-algebra self
                   ((reversed (h1-propositions-proof-symmetric base b)))
                 (cons (proof-proof-chain base a (list reversed)) self)))))))))
@@ -994,7 +988,7 @@
   (declare (xargs :measure (acl2-count evidence)))
   (cond ((car result) result)
         ((endp evidence)
-         (cons '(:failure "Unproved" "") (cdr result)))
+         (cons '(:failure "unproved" "") (cdr result)))
         (t (h1-book-arithmetic-algebra-order-evidence
             (h1-book-arithmetic-algebra-order-candidate
              (cdr result) (car evidence) comparison normalized negative)
@@ -1079,9 +1073,9 @@
       (cond
        ((not (or order (proof-is-call goal *proof-equal*)
                  (proof-is-call goal *h1-book-arithmetic-iff*)))
-        '(:failure "Unproved" ""))
+        '(:failure "unproved" ""))
        ((not (h1-book-arithmetic-operator-occurs-p (h1-tactics-subterms goal)))
-        '(:failure "Unproved" ""))
+        '(:failure "unproved" ""))
        (t
         (proof-with-checked-results
             ((self (h1-book-arithmetic-algebra-init

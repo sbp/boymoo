@@ -193,7 +193,7 @@
 (defun h2-compression-lookup-heading-facts-run (n context library replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "h2-compression-lookup-heading-facts-run") context)
+      (cons '(:failure "fuel" "h2-compression-lookup-heading-facts-run") context)
     (h2-compression-lookup-with-calls
         ((next (h2-compression-lookup-heading-facts-step context library replies)))
       (if (eq (car next) :reply)
@@ -850,7 +850,7 @@
        header-law key-type typed alist lower within)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "h2-compression-lookup-by-value") context)
+      (cons '(:failure "fuel" "h2-compression-lookup-by-value") context)
     (cond
      ((proof-is-call value *proof-if*)
       (h2-compression-lookup-check ((branches (h2-compression-lookup-arguments value 3)))
@@ -1203,7 +1203,7 @@
       result
     (let ((value (car result)))
       (if (and (failure-p value)
-               (not (and keep-unproved (equal (cadr value) "Unproved"))))
+               (not (and keep-unproved (equal (cadr value) "unproved"))))
           value
         (cons value (cadr result))))))
 
@@ -1228,15 +1228,6 @@
 
 (h2-compression-lookup-expose h2-compression-lookup-within-array-lookup
   h2-compression-lookup-within-array-lookup-run (goal natural typed alist within))
-
-(defun h2-compression-lookup-within-array-lookup-leaf
-    (value choices proof key name data old-lookup header header-view
-           header-law key-type typed alist lower within target)
-  (h2-compression-lookup-output
-   (h2-compression-lookup-within-array-lookup-leaf-run
-    value choices (list proof) key name data old-lookup header header-view
-    header-law key-type typed alist lower within target)
-   nil))
 
 (h2-compression-lookup-expose h2-compression-lookup-compression-lookup-theorem
   h2-compression-lookup-compression-lookup-theorem-run (theorem formula))

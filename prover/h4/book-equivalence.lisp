@@ -130,7 +130,7 @@
           (h4-tactics-tactics-conjunct p (cadr reflexive-and-rest)))
          (reflexive (proof-step-first (car reflexive-and-rest))))
       (if (not (proof-is-call reflexive relation))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((rules
               (proof-unique
@@ -144,12 +144,7 @@
                   rules (proof-unique inverses) (car lookup))))))))
 
 (defun h4-book-equivalence-unproved-p (result)
-  (and (failure-p result) (equal (cadr result) "Unproved")))
-
-(defun h4-book-equivalence-finish (result)
-  (if (failure-p (car result))
-      (car result)
-    result))
+  (and (failure-p result) (equal (cadr result) "unproved")))
 
 (defmacro h4-book-equivalence-with-result (self value form body)
   `(let ((h4-book-equivalence-outcome ,form))
@@ -165,7 +160,7 @@
        (match (h4-tactics-match-term target literal nil)))
     (if (car match)
         (cdr match)
-      '(:failure "InapplicableStep" ""))))
+      '(:failure "inapplicable-step" ""))))
 
 (defun h4-book-equivalence-equivalence-reverse (self step)
   (let* ((p (h4-book-equivalence-library self))
@@ -187,7 +182,7 @@
        (match (h4-tactics-match-term next-target literal bindings)))
     (if (car match)
         (cdr match)
-      '(:failure "InapplicableStep" ""))))
+      '(:failure "inapplicable-step" ""))))
 
 (defun h4-book-equivalence-equivalence-compose (self first second)
   (let* ((p (h4-book-equivalence-library self))
@@ -207,7 +202,7 @@
 (defun h4-book-equivalence-trace (n paths left right trace)
   (declare (xargs :measure (nfix n)))
   (cond ((equal left right) trace)
-        ((zp n) '(:failure "Fuel" "h4-book-equivalence-trace"))
+        ((zp n) '(:failure "fuel" "h4-book-equivalence-trace"))
         (t (let ((link (assoc-equal right paths)))
              (if link
                  (proof-with-checked-results
@@ -281,9 +276,6 @@
              (if (failure-p query)
                  (cons query self)
                (h4-book-equivalence-lookup-new-evidence self (car query) (cadr query) 3)))))))))
-
-(defun h4-book-equivalence-equivalence-lift (self term place step)
-  (h4-book-equivalence-finish (h4-book-equivalence-lift self term place step)))
 
 (defun h4-book-equivalence-contains-call (head terms)
   (and (consp terms)
@@ -367,7 +359,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((zp n)
-     (cons '(:failure "Fuel" "h4-book-equivalence-replay-rewrite") self))
+     (cons '(:failure "fuel" "h4-book-equivalence-replay-rewrite") self))
     ((h4-book-equivalence-guarded-rule-p rule)
      (let* ((p (h4-book-equivalence-library self))
             (step (proof-proof-fact
@@ -397,7 +389,7 @@
          (reverse-p (caddr cursor)))
      (cond
       ((zp n)
-       (cons '(:failure "Fuel" "h4-book-equivalence-at-root-next") self))
+       (cons '(:failure "fuel" "h4-book-equivalence-at-root-next") self))
       ((and (endp premises) (endp rules)) (cons nil self))
       (t (let* ((next (h4-book-equivalence-next-root-cursor premises rules reverse-p))
                 (rule (car rules))
@@ -429,7 +421,7 @@
  (defun h4-book-equivalence-rewrite (n self left right)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "h4-book-equivalence-rewrite") self))
+    ((zp n) (cons '(:failure "fuel" "h4-book-equivalence-rewrite") self))
     ((equal left right) (cons (h4-book-equivalence-reflexivity self left) self))
     (t (let ((relation (h4-book-equivalence-equivalence-relation self))
              (evidence (h4-book-equivalence-equivalence-premises self)))
@@ -452,9 +444,9 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((zp n)
-     (cons '(:failure "Fuel" "h4-book-equivalence-rewrite-pending") self))
+     (cons '(:failure "fuel" "h4-book-equivalence-rewrite-pending") self))
     ((or (zp remaining) (endp pending))
-     (cons '(:failure "Unproved" "") self))
+     (cons '(:failure "unproved" "") self))
     (t (let* ((term (caddar pending))
               (budget (- bound (h4-book-tactics-size term 150)))
               (positions (h4-book-equivalence-positions term nil)))
@@ -467,7 +459,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((zp n)
-     (cons '(:failure "Fuel" "h4-book-equivalence-rewrite-positions") self))
+     (cons '(:failure "fuel" "h4-book-equivalence-rewrite-positions") self))
     ((endp positions)
      (h4-book-equivalence-rewrite-pending
       (1- n) self left right bound paths pending order remaining))
@@ -508,7 +500,7 @@
  (defun h4-book-equivalence-establish-guard (n self guard)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-equivalence-establish-guard") self)
+       (cons '(:failure "fuel" "h4-book-equivalence-establish-guard") self)
      (let ((tail (and (proof-is-call guard *proof-if*) (proof-term-at guard 3))))
        (cond
         ((failure-p tail) (cons tail self))
@@ -526,17 +518,17 @@
             (cond
              (step (cons step self))
              ((not (proof-is-call guard (h4-book-equivalence-equivalence-relation self)))
-              (cons '(:failure "Unproved" "") self))
+              (cons '(:failure "unproved" "") self))
              ((equal (len guard) 3)
               (h4-book-equivalence-rewrite (1- n) self (cadr guard) (caddr guard)))
              (t (cons '(:failure "failure" "") self)))))))))
  (defun h4-book-equivalence-guarded-rules (n self left right rules reverse-p)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "h4-book-equivalence-guarded-rules") self))
+    ((zp n) (cons '(:failure "fuel" "h4-book-equivalence-guarded-rules") self))
     ((endp rules)
      (if reverse-p
-         (cons '(:failure "Unproved" "") self)
+         (cons '(:failure "unproved" "") self)
        (h4-book-equivalence-guarded-rules
         (1- n) self right left (h4-book-equivalence-equivalence-rules self) t)))
     (t (let* ((rule (car rules))
@@ -572,42 +564,9 @@
                              result)
                            self))))))))))))
 
-(defun h4-book-equivalence-at-root-collect (n term bound reply proofs)
-  (declare (xargs :measure (nfix n)))
-  (let ((item (car reply))
-        (self (cdr reply)))
-    (cond ((failure-p item) reply)
-          ((null item) (cons (reverse proofs) self))
-          ((zp n) (cons '(:failure "Fuel" "h4-book-equivalence-at-root-collect") self))
-          (t (h4-book-equivalence-at-root-collect
-              (1- n) term bound
-              (h4-book-equivalence-at-root-next (1- n) self term bound (cdr item))
-              (cons (car item) proofs))))))
-
-(defun h4-book-equivalence-equivalence-at-root (self term bound)
-  (h4-book-equivalence-finish
-   (h4-book-equivalence-at-root-collect
-    1000000 term bound
-    (h4-book-equivalence-at-root-next 1000000 self term bound
-                                      (h4-book-equivalence-root-cursor self))
-    nil)))
-
-(defun h4-book-equivalence-equivalence-replay-rewrite (self rule bindings)
-  (h4-book-equivalence-finish
-   (h4-book-equivalence-replay-rewrite 1000000 self rule bindings)))
-
-(defun h4-book-equivalence-equivalence-rewrite (self left right)
-  (h4-book-equivalence-finish (h4-book-equivalence-rewrite 1000000 self left right)))
-
-(defun h4-book-equivalence-equivalence-establish-guard (self guard)
-  (h4-book-equivalence-finish (h4-book-equivalence-establish-guard 1000000 self guard)))
-
 (defun h4-book-equivalence-guarded (self left right)
   (h4-book-equivalence-guarded-rules
    1000000 self left right (h4-book-equivalence-equivalence-rules self) nil))
-
-(defun h4-book-equivalence-equivalence-guarded (self left right)
-  (h4-book-equivalence-finish (h4-book-equivalence-guarded self left right)))
 
 (defun h4-book-equivalence-reset-matches (self)
   (h4-book-equivalence-equivalence-with-search
@@ -735,7 +694,7 @@
 (defun h4-book-equivalence-cancel-evidence (self evidence left right)
   (declare (xargs :measure (acl2-count evidence)))
   (if (endp evidence)
-      (cons '(:failure "Unproved" "") self)
+      (cons '(:failure "unproved" "") self)
     (let* ((step (car evidence))
            (literal (proof-step-first step))
            (parts (cond ((failure-p literal) literal)
@@ -760,10 +719,6 @@
        (table-values (h4-book-equivalence-equivalence-premises self))
      evidence)
    left right))
-
-(defun h4-book-equivalence-equivalence-cancel-factor (self left right evidence)
-  (h4-book-equivalence-finish
-   (h4-book-equivalence-cancel-factor self left right evidence)))
 
 (defun h4-book-equivalence-left-inverse-product (premise)
   (proof-with-checked-results
@@ -791,7 +746,7 @@
            (h4-book-equivalence-with-result
             self changed (h4-book-equivalence-lift self context '(2) premise)
             (if (not (and identity-product changed))
-                (cons '(:failure "Unproved" "") self)
+                (cons '(:failure "unproved" "") self)
               (let ((subject
                      (proof-with-checked-results
                          ((literal (proof-step-first identity-product)))
@@ -808,10 +763,6 @@
                        (reversed (h4-book-equivalence-equivalence-reverse self cancelled)))
                     (h4-book-equivalence-equivalence-compose self reversed changed))
                   self))))))))))))
-
-(defun h4-book-equivalence-equivalence-cancel-left-inverse (self premise inverse identity)
-  (h4-book-equivalence-finish
-   (h4-book-equivalence-cancel-left-inverse self premise inverse identity)))
 
 (defun h4-book-equivalence-inverse-goal-target (other candidate triple)
   (let ((operator (car triple))
@@ -870,10 +821,7 @@
          (cons forward self)
        (h4-book-equivalence-with-result
         self backward (h4-book-equivalence-inverse-goal-inverses self right left t triples)
-        (cons (or backward '(:failure "Unproved" "")) self))))))
-
-(defun h4-book-equivalence-equivalence-inverse-goal (self left right)
-  (h4-book-equivalence-finish (h4-book-equivalence-inverse-goal self left right)))
+        (cons (or backward '(:failure "unproved" "")) self))))))
 
 (defun h4-book-equivalence-inverse-bridge-orientation (self inverse first second reverse-p)
   (let* ((middle (list inverse (list inverse second)))
@@ -898,7 +846,7 @@
 (defun h4-book-equivalence-inverse-bridge-inverses (self left right triples)
   (declare (xargs :measure (acl2-count triples)))
   (if (endp triples)
-      (cons '(:failure "Unproved" "") self)
+      (cons '(:failure "unproved" "") self)
     (let ((inverse (cadar triples)))
       (h4-book-equivalence-with-result
        self forward (h4-book-equivalence-inverse-bridge-orientation self inverse left right nil)
@@ -910,15 +858,10 @@
               (cons backward self)
             (h4-book-equivalence-inverse-bridge-inverses self left right (cdr triples)))))))))
 
-(defun h4-book-equivalence-equivalence-inverse-bridge (self left right)
-  (h4-book-equivalence-finish
-   (h4-book-equivalence-inverse-bridge-inverses
-    self left right (h4-book-equivalence-equivalence-inverses self))))
-
 (defun h4-book-equivalence-prove-in-order (self left right tactics)
   (declare (xargs :measure (acl2-count tactics)))
   (if (endp tactics)
-      (cons '(:failure "Unproved" "") self)
+      (cons '(:failure "unproved" "") self)
     (let* ((self (h4-book-equivalence-reset-matches self))
            (reply (case (car tactics)
                     (:rewrite (h4-book-equivalence-rewrite 1000000 self left right))
@@ -935,9 +878,6 @@
 (defun h4-book-equivalence-prove (self left right)
   (h4-book-equivalence-prove-in-order
    self left right '(:rewrite :guarded :cancel-factor :inverse-goal :inverse-bridge)))
-
-(defun h4-book-equivalence-equivalence-prove (self left right)
-  (h4-book-equivalence-finish (h4-book-equivalence-prove self left right)))
 
 (defun h4-book-equivalence-equivalence-true-value (self step)
   (let* ((p (h4-book-equivalence-library self))
@@ -1031,14 +971,10 @@
                      p forward left right right-true left-true))
                   search)))))))
 
-(defun h4-book-equivalence-equivalence-equality (search relation name premises left right)
-  (h4-book-equivalence-finish
-   (h4-book-equivalence-equivalence-equality-run search relation name premises left right)))
-
 (defun h4-book-equivalence-setoid-split (n goal conclusions)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h4-book-equivalence-setoid-split"))
+   ((zp n) '(:failure "fuel" "h4-book-equivalence-setoid-split"))
    ((proof-is-call goal *library-implies*)
     (proof-with-checked-results ((next (proof-term-at goal 2)))
       (h4-book-equivalence-setoid-split (1- n) next (cons goal conclusions))))
@@ -1107,7 +1043,7 @@
                      (proof-proof-subsume proof implication (list formula))))))
     (cond ((or (h4-book-equivalence-unproved-p result)
                (and (failure-p result)
-                    (member-equal (cadr result) '("InapplicableStep" "assertion"))))
+                    (member-equal (cadr result) '("inapplicable-step" "assertion"))))
            (cons nil (cdr reply)))
           ((failure-p result) result)
           (t (cons result (cdr reply))))))

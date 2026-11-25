@@ -141,10 +141,11 @@ static void load(int file, int packages)
 
 static int usage(void)
 {
-    fputs("usage: boymoo-run [-l] [-v] [-m megabytes] [-p packages] ... program ...\n"
+    fputs("usage: boymoo-run [-l] [-v] [-j] [-m megabytes] [-p packages] ... program ...\n"
           "Reads the packages of each file named by -p and the program text of each\n"
           "other file, in order; then computes the value of the term on each line of\n"
-          "standard input and writes it on a line of standard output.\n", stderr);
+          "standard input and writes it on a line of standard output.  With -j it\n"
+          "starts with the prelude: ash, binary-logxor, length, char and subseq, defined.\n", stderr);
     return S_INPUT;
 }
 
@@ -153,14 +154,15 @@ static int real_main(int argc, char **argv)
     int i = 1, eager = 0, stats = 0, c, nprog = 0;
     unsigned long mb = 4096;
     char *rest;
-    unsigned char *buf = NULL;
-    size_t n, cap = 0;
+    size_t n;
     clock_t t0, t1, t2;
     for (; i < argc && argv[i][0] == '-' && strcmp(argv[i], "-p") != 0; i++) {
         if (strcmp(argv[i], "-l") == 0)
             eager = 1;
         else if (strcmp(argv[i], "-v") == 0)
             stats = 1;
+        else if (strcmp(argv[i], "-j") == 0)
+            prelude = 1;
         else if (strcmp(argv[i], "-m") == 0 && i + 1 < argc) {
             mb = strtoul(argv[++i], &rest, 10);
             if (*rest != '\0' || mb == 0)
@@ -190,7 +192,8 @@ static int real_main(int argc, char **argv)
     {
         /* Standard input is read whole first, so that the functions its
            terms name can be compiled; it is then taken line by line
-           exactly as the reference does. */
+           exactly as the reference does, each line read where it lies, and
+           let go once its last line is read. */
         unsigned char *in = NULL;
         size_t in_n = 0, in_cap = 0, got, pos = 0;
         const char *e = getenv("BOYMOO_FAST");
@@ -212,23 +215,25 @@ static int real_main(int argc, char **argv)
         }
         t1 = clock();
         for (;;) {
+            const unsigned char *line = in + pos;
             n = 0;
-            c = EOF;
-            while (pos < in_n && (c = in[pos++]) != '\n') {
-                if (n == cap) {
-                    size_t m = cap ? 2 * cap : 4096;
-                    buf = xalloc(buf, cap, m);
-                    cap = m;
-                }
-                buf[n++] = (unsigned char)c;
+            while (pos < in_n && in[pos] != '\n') {
+                pos++;
+                n++;
             }
-            if (pos >= in_n && c != '\n')
-                c = EOF;
+            c = pos < in_n ? '\n' : EOF;
+            if (c == '\n')
+                pos++;
             if (c == EOF && n == 0)
                 break;
             term_line++;
-            if (n == 0 || !printable(buf, buf + n) || read_datum(buf, buf + n) != buf + n)
+            if (n == 0 || !printable(line, line + n) || read_datum(line, line + n) != line + n)
                 stop(S_INPUT, "not in the format: a line that is not one datum", NOV);
+            if (pos >= in_n) {
+                free(in);
+                in = NULL;
+                in_n = pos = 0;
+            }
             out_len = 0;
             print_datum(run_term());
             out_put("\n", 1);

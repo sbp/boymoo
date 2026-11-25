@@ -99,7 +99,7 @@
 (defun b1-clause-processors-branch-facts-fields (n lib evidence)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-clause-processors-branch-facts-fields")
+      '(:failure "fuel" "b1-clause-processors-branch-facts-fields")
     (let ((proof (library-library-proof lib)))
       (proof-with-checked-results
           ((literal (proof-step-first evidence))
@@ -350,7 +350,7 @@
 (defun b1-clause-processors-normalize-with-rule-visit
     (n result lib term unfold id inspect-branches replies)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "b1-clause-processors-normalize-with-rule-visit"))
+  (cond ((zp n) '(:failure "fuel" "b1-clause-processors-normalize-with-rule-visit"))
         ((failure-p result) result)
         ((not (b1-logic-call-p result)) (car result))
         (t (let* ((callback-term (b1-logic-call-term result))
@@ -363,7 +363,7 @@
                   (reply (if (failure-p step) step (cons step callback-lib)))
                   (replies (append replies (list reply))))
              (if (equal n 1)
-                 '(:failure "Fuel" "b1-clause-processors-normalize-with-rule-visit")
+                 '(:failure "fuel" "b1-clause-processors-normalize-with-rule-visit")
                (b1-clause-processors-normalize-with-rule-visit
                 (1- n)
                 (b1-logic-bookproof-normalize-with-library
@@ -372,7 +372,7 @@
 
 (defun b1-clause-processors-normalize-with-rule (n lib term unfold id inspect-branches replies)
   (if (zp n)
-      '(:failure "Fuel" "b1-clause-processors-normalize-with-rule")
+      '(:failure "fuel" "b1-clause-processors-normalize-with-rule")
     (b1-clause-processors-normalize-with-rule-visit
      n (b1-logic-bookproof-normalize-with-library
         lib term nil unfold (list (list :callback id)) nil nil inspect-branches replies)

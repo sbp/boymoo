@@ -22,10 +22,10 @@
         (proof-cl "STRINGP") *b2-tactics-symbolp*))
 
 (defun b2-tactics-unproved ()
-  '(:failure "Unproved" ""))
+  '(:failure "unproved" ""))
 
 (defun b2-tactics-unproved-p (value)
-  (and (failure-p value) (equal (cadr value) "Unproved")))
+  (and (failure-p value) (equal (cadr value) "unproved")))
 
 (defun b2-tactics-tag (datum name)
   (and (consp datum) (equal (car datum) name)))
@@ -321,7 +321,7 @@
 (defun b2-tactics-evidence-pending (n proof pending found)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-tactics-evidence-pending"))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-tactics-evidence-pending"))
    ((endp pending) found)
    (t
     (let ((step (car pending)))
@@ -610,7 +610,7 @@
  (defun b2-tactics-tactics-normalize-visit (n node blocked lib known equations enabled branches budget)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-tactics-tactics-normalize-visit"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-tactics-tactics-normalize-visit"))
     ((< (1- budget) 0) (b2-tactics-unproved))
     (t
      (let ((budget (1- budget)))
@@ -659,7 +659,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((proof (library-library-proof lib)))
      (cond
-      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-tactics-tactics-normalize-rewrite-args"))
+      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-tactics-tactics-normalize-rewrite-args"))
       ((endp indexes)
        (proof-with-checked-results ((result (and step (proof-proof-tidy proof step))))
          (cons result budget)))
@@ -680,7 +680,7 @@
  (defun b2-tactics-normalize-follow (n step first blocked lib known equations enabled branches budget)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-tactics-normalize-follow")
+       '(:failure "fuel" "b2-tactics-normalize-follow")
      (let ((proof (library-library-proof lib)))
        (proof-with-checked-results
            ((result (b2-tactics-step-result step))
@@ -693,7 +693,7 @@
  (defun b2-tactics-normalize-if (n node blocked lib known equations enabled branches budget)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-tactics-normalize-if")
+       '(:failure "fuel" "b2-tactics-normalize-if")
      (let ((proof (library-library-proof lib)))
        (proof-with-checked-results
            ((test (proof-term-at node 1))
@@ -723,7 +723,7 @@
  (defun b2-tactics-normalize-ordinary (n node head blocked lib known equations enabled branches budget)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-tactics-normalize-ordinary")
+       '(:failure "fuel" "b2-tactics-normalize-ordinary")
      (proof-with-checked-results
          ((reduced (b2-tactics-tactics-normalize-rewrite-args
                     (1- n) node (seq-range 1 (len node) 1) blocked lib known equations enabled branches
@@ -782,7 +782,7 @@
 (defun b2-tactics-solve-split (n lib normal evidence unfold rules splits branches)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-tactics-solve-split")
+      '(:failure "fuel" "b2-tactics-solve-split")
     (proof-with-checked-results ((known (b2-tactics-tactics-evidence lib evidence)))
       (let ((entry (assoc-equal normal known)))
         (if entry
@@ -990,7 +990,7 @@
 (defun b2-tactics-push-minus (n lib term evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-tactics-push-minus")
+      '(:failure "fuel" "b2-tactics-push-minus")
     (let ((proof (library-library-proof lib)))
       (cond
        ((proof-is-call term *proof-plus*)
@@ -1020,7 +1020,7 @@
 (defun b2-tactics-linear-combine (n lib step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-tactics-linear-combine")
+      '(:failure "fuel" "b2-tactics-linear-combine")
     (let ((proof (library-library-proof lib)))
       (proof-with-checked-results ((first (proof-step-first step))
                                    (node (library-linear-form-get first (cdr place))))
@@ -1076,7 +1076,7 @@
 (defun b2-tactics-linear-repeat (n lib step evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-tactics-linear-repeat")
+      '(:failure "fuel" "b2-tactics-linear-repeat")
     (proof-with-checked-results ((changed (b2-tactics-linear-changed-p step)))
       (if (not changed)
           step

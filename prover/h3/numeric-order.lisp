@@ -128,7 +128,7 @@
 (defun h3-numeric-order-linear-combine (n sums step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h3-numeric-order-linear-combine")
+      '(:failure "fuel" "h3-numeric-order-linear-combine")
     (proof-with-checked-results ((result (h3-numeric-order-linear-combination sums step place evidence)))
       (if (cdr result)
           (h3-numeric-order-linear-combine (1- n) sums (car result) (cdr result) evidence)
@@ -154,7 +154,7 @@
      (if (equal a-normal b-normal)
          (proof-with-checked-results ((symmetric (proof-proof-symmetric proof b)))
            (proof-proof-chain proof a (list symmetric)))
-       '(:failure "DifferentNormalForms" "")))))
+       '(:failure "different-normal-forms" "")))))
 
 (defun h3-numeric-order-add-zero (lib number)
   (let ((proof (library-library-proof lib)))

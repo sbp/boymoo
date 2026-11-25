@@ -10,9 +10,7 @@ the order in which the traversal learns the shapes.
 |---|---|---|
 | `(t4-relations-paired-view lib call)` | Library and a term. The Step for opening a paired list relation, or `nil` when its definition does not have that form. | A failure from opening the relation or inspecting its body. |
 | `(t4-relations-paired-branch lib opening left right)` | Library, the opening Step, a Step for the left shape and a Step for the right shape or `nil`. The equality Step for the selected branch. | A failure from constructing the Step or inspecting the shapes. |
-| `(t4-relations-list-equivalence lib formula)` | Library and claim term. A pair of the induction Step or `nil` and the resulting Library. | A failure from constructing the Step, including a failure for a missing element law. |
 | `(t4-relations-paired-boolean lib formula opening)` | Library, Boolean-valuedness claim and relation opening Step. The induction Step. | A failure from constructing the Step, including a failure for a non-Boolean returned value. |
-| `(t4-relations-equivalence-conjunction lib formula)` | Library and claim term. A pair of the Step or `nil` and the resulting Library. | A failure from constructing the Step, including a failure for a missing admitted equivalence law. |
 
 A failure is the entire result. The two tactics that consult admitted laws
 also have query entry points for dispatch through the library's fact search.

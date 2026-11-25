@@ -48,7 +48,7 @@
   (let ((proof (library-library-proof p)))
     (cond
      ((equal value *proof-false*) (proof-proof-reflexive proof *proof-false*))
-     ((endp tests) '(:failure "InapplicableStep" ""))
+     ((endp tests) '(:failure "inapplicable-step" ""))
      (t
       (let ((test (caar tests)))
         (if (and (cadar tests) (proof-is-call test *proof-consp*))
@@ -75,7 +75,7 @@
 (defun h4-book-folds-false-on-empty-state-visit (n proof value template tests p)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h4-book-folds-false-on-empty-state-visit"))
+   ((zp n) '(:failure "fuel" "h4-book-folds-false-on-empty-state-visit"))
    ((proof-is-call value *proof-if*)
     (proof-with-checked-results
         ((parts (proof-list-of-length (cdr value) 3))
@@ -103,7 +103,7 @@
           ((step (h4-book-folds-false-on-empty-state-leaf value tests p))
            (first (proof-step-first step))
            (target (proof-subst template (list (cons *proof-result* value)))))
-        (if (equal first target) step '(:failure "InapplicableStep" ""))))))
+        (if (equal first target) step '(:failure "inapplicable-step" ""))))))
 
 (defun h4-book-folds-false-on-empty-state (p condition)
   (let ((proof (library-library-proof p)))
@@ -123,7 +123,7 @@
         ((opened (h4-book-updates-select-result p call shape))
          (value (h4-book-folds-value opened)))
       (if (not (proof-is-call value *proof-if*))
-          '(:failure "InapplicableStep" "")
+          '(:failure "inapplicable-step" "")
         (proof-with-checked-results
             ((condition (proof-term-at value 1))
              (illegal (h4-book-folds-false-on-empty-state p condition))
@@ -270,6 +270,6 @@
                                                  (nth 5 plan) (nth 6 plan))))
         (if (and (failure-p result)
                  (member-equal (cadr result)
-                               '("InapplicableStep" "InapplicableTerm" "assertion" "value")))
+                               '("inapplicable-step" "inapplicable-term" "assertion" "value")))
             nil
           result)))))

@@ -9,7 +9,7 @@ is its symbol. An entry is `(kind name counts source)` as in
 |---|---|
 | `(t3-book-term-collections-append-lists lib)` | Library with the pseudo-term-list lemma for append. |
 | `(t3-book-term-collections-leaf-types lib name formula)` | `(cons entry lib)` with the theorem entry and the Library including the append lemma. |
-| `(t3-book-term-collections-constructed-type n lib predicate value known)` | Step for `(predicate value)`, using `known`, an ordered list of Steps. Start with natural-number fuel `1000000`. Returns `Unsupported` for an unrecognized constructor, `Fuel` on exhaustion, or a failure from constructing the proof. |
+| `(t3-book-term-collections-constructed-type n lib predicate value known)` | Step for `(predicate value)`, using `known`, an ordered list of Steps. Start with natural-number fuel `1000000`. Returns `unsupported` for an unrecognized constructor, `fuel` on exhaustion, or a failure from constructing the proof. |
 | `(t3-book-term-collections-aligned-types lib operation)` | Step proving type preservation of the binary list traversal named by the symbol `operation`. |
 | `(t3-book-term-collections-typed-conjunction lib)` | Library with the binary and list conjunction lemmas in that order. |
 | `(t3-book-term-collections-equality-types lib name formula)` | `(cons entry lib)` with the theorem entry and the Library including the aligned-equality lemma and any conjunction lemmas. |

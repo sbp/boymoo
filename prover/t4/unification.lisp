@@ -71,11 +71,6 @@
                                   (car yes) (car no))))
       (list step (cadr no) (caddr no)))))
 
-(defun t4-unification-boolean-count (lib test obj evidence)
-  (proof-with-checked-results
-      ((result (t4-unification-boolean-count-with-evidence lib test obj evidence)))
-    (cons (car result) (cadr result))))
-
 (defun t4-unification-subproblem-bound-result-value (fields)
   (if (endp fields)
       *proof-false*
@@ -137,7 +132,7 @@
           ((args (proof-list-of-length (cdr value) 2))
            (rest (t4-unification-subproblem-bound-contents (caddr value))))
         (cons (car args) rest))
-    (if (equal value *proof-false*) nil '(:failure "InferenceMismatch" ""))))
+    (if (equal value *proof-false*) nil '(:failure "inference-mismatch" ""))))
 
 (defund t4-unification-subproblem-bound-leaf-proof (lib child evidence)
   (if (proof-is-call child *t4-structural-eq*)
@@ -161,7 +156,7 @@
       ((facts (t4-structural-evidence-init lib nil (list cons-step)))
        (contents (t4-unification-subproblem-bound-contents value)))
     (if (not (equal (len contents) (len fields)))
-        '(:failure "InferenceMismatch" "")
+        '(:failure "inference-mismatch" "")
       (proof-with-checked-results
           ((steps (t4-unification-subproblem-bound-leaf-proofs
                    lib *t4-unification-fields* contents facts))
@@ -174,7 +169,7 @@
 (defun t4-unification-subproblem-bound-branches (n result cons-step fields)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-unification-subproblem-bound-branches")
+      '(:failure "fuel" "t4-unification-subproblem-bound-branches")
     (proof-with-checked-results ((result result))
       (if (t4-structural-branch-request-p (car result))
           (proof-with-checked-results
@@ -228,7 +223,7 @@
           (obj (caddr call))
           (name "UNIFICATION-SUBPROBLEMS-SMALL"))
       (if (not (equal pat parent))
-          '(:failure "InferenceMismatch" "")
+          '(:failure "inference-mismatch" "")
         (proof-with-checked-results
             ((lib (if (assoc-equal (proof-sym "SELF-UNIFICATION-SUBPROBLEMS-SMALL" "ACL2")
                                   (proof-proof-facts (library-library-proof lib)))
@@ -245,7 +240,7 @@
              (pieces (proof-proof-conjunct proof rewritten)))
           (cond ((equal index (car *t4-unification-fields*)) (cons (car pieces) lib))
                 ((equal index (cadr *t4-unification-fields*)) (cons (cadr pieces) lib))
-                (t '(:failure "SearchMiss" ""))))))))
+                (t '(:failure "search-miss" ""))))))))
 
 (defun t4-unification-descent-pattern (measure)
   (proof-with-checked-results
@@ -284,7 +279,7 @@
 (defun t4-unification-descent-compare (n lib goal tests call replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-unification-descent-compare")
+      '(:failure "fuel" "t4-unification-descent-compare")
     (proof-with-checked-results
         ((result (t4-ordinals-ordinals-compare-measures lib goal tests replies)))
       (if (t4-ordinals-request-p result)

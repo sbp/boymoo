@@ -12,7 +12,7 @@
 (defconst *t4-lexicographic-do* (proof-sym "DO$" "ACL2"))
 
 (defun t4-lexicographic-conjunction (terms)
-  (cond ((endp terms) '(:failure "MalformedCandidate" ""))
+  (cond ((endp terms) '(:failure "malformed-candidate" ""))
         ((endp (cdr terms)) (car terms))
         (t (proof-ite (car terms)
                       (t4-lexicographic-conjunction (cdr terms))
@@ -221,11 +221,6 @@
     (parts (proof-proof-conjunct proof branch)))
    (cons parts lib)))
 
-(defun t4-lexicographic-lexicographic-nat-list-fields (lib obj natural-list cons-proof)
-  (proof-with-checked-results
-   ((result (t4-lexicographic-nat-list-fields-with-library lib obj natural-list cons-proof)))
-   (car result)))
-
 (defun t4-lexicographic-lexicographic-tail-lengths-equal (lib same-length cons-x cons-y)
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results
@@ -403,11 +398,6 @@
          (no-nat (proof-proof-front proof no-nat (proof-neg nat))))
         (t4-ordinals-ordinals-simplify-first lib lex-proof (list cons-proof no-nat) definitions))))))
 
-(defun t4-lexicographic-lexicographic-lex-parts (lib obj lex-proof cons-proof)
-  (proof-with-checked-results
-   ((result (t4-lexicographic-lex-parts-with-library lib obj lex-proof cons-proof)))
-   (car result)))
-
 (defun t4-lexicographic-lexicographic-lex-order-impossible (positive negative lib claim)
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results
@@ -556,7 +546,7 @@
     (rhs (cadr operands))
     (old (proof-term-at rhs 1))
     (branches (if (integerp old)
-                  '(:failure "MalformedCandidate" "")
+                  '(:failure "malformed-candidate" "")
                 (proof-list-of-length (cdr old) 3))))
    (let ((p (car branches))
          (yes (cadr branches))
@@ -575,9 +565,9 @@
            (sameness (proof-proof-cases proof p true-case old-false))
            (assumed (proof-proof-assume proof test t))
            (less (proof-proof-rewrite proof assumed sameness '(1 2 1)))
-           (left-args (if (integerp lhs) '(:failure "MalformedCandidate" "")
+           (left-args (if (integerp lhs) '(:failure "malformed-candidate" "")
                         (cdr lhs)))
            (type-left (library-library-cite lib "LEX-FIX-TYPE" left-args nil))
            (type-right (library-library-cite lib "LEX-FIX-TYPE" (cdr right) nil)))
           (library-library-cite lib "LEX-ORDER" (list left right) (list type-left type-right less)))
-       '(:failure "InferenceMismatch" "")))))
+       '(:failure "inference-mismatch" "")))))

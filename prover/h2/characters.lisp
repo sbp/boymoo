@@ -51,7 +51,7 @@
 
 (defun h2-characters-cons-with-base-folds (n proof fixed formula result)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) (cons '(:failure "Fuel" "h2-characters-cons-with-base-folds") proof))
+  (cond ((zp n) (cons '(:failure "fuel" "h2-characters-cons-with-base-folds") proof))
         ((eq (car result) :continue)
          (h2-characters-cons-with-base-folds
           (1- n) proof fixed formula
@@ -101,11 +101,6 @@
       ((typed (h2-list-counts-inherited proof-proof-compute proof
                                          (list *h2-characters-char* value) *proof-t*)))
     (h2-list-counts-inherited proof-proof-true-from-eq proof typed)))
-
-(defun h2-characters-character-digits-recognize (claim evidence proof rules)
-  (h2-list-counts-derive proof claim "CHARACTER-LISTP"
-                        (cons "SELF-H2-DIGIT-IS-CHARACTER" rules)
-                        nil "CHARACTER-LISTP" (list evidence)))
 
 (mutual-recursion
  (defun h2-characters-character-value (proof value rules leaves evidence)
@@ -167,7 +162,7 @@
 (defun h2-characters-by-value (n proof value template leaf tests rules leaves evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      (cons '(:failure "Fuel" "h2-characters-by-value") proof)
+      (cons '(:failure "fuel" "h2-characters-by-value") proof)
     (h2-book-logic-with-saved-result proof
       (cond
        ((proof-is-call value *proof-if*)

@@ -28,7 +28,7 @@
 (defun h4-recipes-rationalize-round-trip-normalize
     (n p term known definitions equations replies result)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h4-recipes-rationalize-round-trip-normalize"))
+  (cond ((zp n) '(:failure "fuel" "h4-recipes-rationalize-round-trip-normalize"))
         ((not (h4-tactics-request-p result)) result)
         (t (let* ((request (h4-tactics-request-term result))
                   (reply (h4-tactics-tactics-fact-instance p request known equations t))

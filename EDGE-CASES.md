@@ -10,7 +10,7 @@ Every example was run in ACL2 8.7. One command confirms every entry, from the ro
 sh checks/run.sh
 ```
 
-Its line `checks/expected/edge.txt is what ACL2 says on each entry of EDGE-CASES.md` comes from [`checks/edge.lsp`](checks/edge.lsp), which writes one line for each fact below. The label of each line begins with the number of its entry, except that the lines `value`, `no-value`, `read` and `no-read` name the call or the text instead. Some entries also rest on lines of `checks/expected/facts.txt`, which [`checks/facts.lsp`](checks/facts.lsp) writes. The checks were last run on 2026-11-21, with ACL2 8.7 built on SBCL 2.5.5, and printed `all checks passed`.
+Its line `checks/expected/edge.txt is what ACL2 says on each entry of EDGE-CASES.md` comes from [`checks/edge.lsp`](checks/edge.lsp), which writes one line for each fact below. The label of each line begins with the number of its entry, except that the lines `value`, `no-value`, `read` and `no-read` name the call or the text instead. Some entries also rest on lines of `checks/expected/facts.txt`, which [`checks/facts.lsp`](checks/facts.lsp) writes. The checks were last run on 2026-11-25, with ACL2 8.7 built on SBCL 2.5.5, and printed `all checks passed`.
 
 ## Terms
 
@@ -59,6 +59,8 @@ In the third column, "Yes" means that ACL2 Core gives ACL2's answer; "Yes, and a
 | 2.7 Single-threaded objects at run time | 2 | No counterpart |
 | 2.8 `pkg-imports` and `pkg-witness` on a name that is no package | 2 | Yes |
 | 2.9 `symbol-package-name` at a symbol of a hidden package | 2 | Yes |
+| 2.10 A shift by a count that the Lisp under ACL2 cannot make | 2 | Yes, in kind, without `-j`; with it, the axioms' value |
+| 2.11 `nthcdr` by a count far beyond a list that does not end in `nil` | 2 | Yes, in kind, without `-j`; with it, the axioms' value |
 | 3.1 Attachments | 3 | Yes |
 | 3.2 `apply$` and warrants | 3 | No |
 | 3.3 Functions whose Common Lisp code is not their definition | 3 | Yes, except 1.4, 1.5 and 3.2 |
@@ -109,7 +111,7 @@ In the third column, "Yes" means that ACL2 Core gives ACL2's answer; "Yes, and a
 | 10.2 Primitives outside their guards in program mode | 10 | Yes, as under `:none` |
 | 10.3 Functions in program mode with Common Lisp code only | 10 | No |
 
-The kinds, with the number of entries of each: 1, the axioms leave a value open and ACL2 computes one (5); 2, the axioms give a value and ACL2 computes none (9); 3, ACL2 computes a value that the axioms do not prove (5); 4, the values the axioms give to arguments outside the guards (2); 5, data (7); 6, admission, where ACL2's tests are not the logic's (14); 7, packages (6); 8, ways a session leaves the axioms (6); 9, where the logic is not a set of axioms (6); 10, program mode (3). That is 63 entries.
+The kinds, with the number of entries of each: 1, the axioms leave a value open and ACL2 computes one (5); 2, the axioms give a value and ACL2 computes none (11); 3, ACL2 computes a value that the axioms do not prove (5); 4, the values the axioms give to arguments outside the guards (2); 5, data (7); 6, admission, where ACL2's tests are not the logic's (14); 7, packages (6); 8, ways a session leaves the axioms (6); 9, where the logic is not a set of axioms (6); 10, program mode (3). That is 65 entries.
 
 ## 1. The axioms leave a value open and ACL2 computes one
 
@@ -226,6 +228,22 @@ The kinds, with the number of entries of each: 1, the axioms leave a value open 
 - **Example.** `(symbol-package-name (bm-hidden-symbol))` has no value, and ACL2 refuses `(equal (symbol-package-name (bm-hidden-symbol)) "BM-HIDDEN")`. `(symbol-name (bm-hidden-symbol))` gives `"FOO"`.
 - **ACL2 Core.** Does not compute it ([`spec/language.md`](spec/language.md), sections 3 and 4).
 - **Check.** Lines 2.9 and 1.3.
+
+### 2.10 A shift by a count that the Lisp under ACL2 cannot make
+
+- **The axioms.** `ash` is defined: `(ash i c)` is the floor of `i` times 2 to the power `c`, where an argument that is not an integer counts as 0. So `(ash 0 c)` is 0 for every `c`.
+- **ACL2.** It computes `ash` by the code of the Lisp under it (entry 3.3), which refuses a left shift by a count too large to represent, even of 0, and ACL2 aborts.
+- **Example.** ACL2 proves `(implies (integerp c) (equal (ash 0 c) 0))`. With guard checking `:none`, `(ash 0 100000000000000000000)` has no value: ACL2 8.7 aborts with the message of the Lisp under it, `can't represent result of left shift`.
+- **ACL2 Core.** A checker never computes `ash`: a `compute` step evaluates only a primitive ([`spec/logic.md`](spec/logic.md), section 5), and a proof reasons about `ash` from its definition, as ACL2 proves the theorem above. A runner run without `-j` runs ACL2's definition, which makes 2 to the power `c` by one multiplication for each unit of `c`, and gives no value either. With `-j` the runner computes `ash` itself and gives 0, the value that the definition gives ([`runner/README.md`](runner/README.md), "The prelude").
+- **Check.** Lines 2.10.
+
+### 2.11 `nthcdr` by a count far beyond a list that does not end in `nil`
+
+- **The axioms.** `nthcdr` is defined: `(nthcdr n l)` is `l` when `n` is not a positive integer, and otherwise `(nthcdr (- n 1) (cdr l))`. The `cdr` of an atom is `nil`, so it is `nil` for every `n` greater than the length of `l`, whatever atom ends `l`.
+- **ACL2.** Where the guard of `nthcdr` holds, `n` a natural number and `l` a list that ends in `nil`, ACL2 computes it by the code of the Lisp under it, at once. Otherwise, with guard checking `:none`, it runs the definition (entry 2.4), one call for each unit of `n`, about 6 nanoseconds each: for a count of 2<sup>64</sup> that is some 3,500 years. `subseq` on a datum that is not a string drops its first elements with `nthcdr`, and does the same.
+- **Example.** ACL2 proves `(implies (and (natp n) (< (len l) n)) (equal (nthcdr n l) nil))`. `(true-listp '(1 . 2))` is `NIL`. With guard checking `:none`, `(nthcdr (expt 2 64) '(1 2))` gives `NIL` at once, `(nthcdr 10000000 '(1 . 2))` gives `NIL` in 0.06 seconds, and `(nthcdr (expt 2 64) '(1 . 2))` and `(subseq '(1 . 2) (expt 2 64) nil)` do not finish.
+- **ACL2 Core.** A checker never computes `nthcdr` or `subseq` (entry 2.10). A runner run without `-j` runs their definitions, as ACL2 does, and does not finish either. With `-j` the runner computes `subseq` itself and gives `nil`, the value that the definition gives, at once ([`runner/README.md`](runner/README.md), "The prelude"); `nthcdr` is not one of the functions of the prelude.
+- **Check.** Lines 2.11. The runs that do not finish are not made; the run of 10<sup>7</sup> calls gives the rate.
 
 ## 3. ACL2 computes a value that the axioms do not prove
 

@@ -51,25 +51,8 @@
            (table-get *h1-books-constraint-tactics* name nil)))
         (t nil)))
 
-(defun h1-books-fact-key (term)
-  (proof-with-checked-results ((key (h1-tactics-fact-key term)))
-    (list (if (eq (car key) :none) nil (car key))
-          (if (eq (cadr key) :none) nil (cadr key)))))
-
-(defun h1-books-book-prover-available (proof)
-  (h1-tactics-prover-available proof))
-
-(defun h1-books-book-prover-schemas (proof)
-  (h1-tactics-prover-schemas proof))
-
 (defun h1-books-book-prover-evaluators (proof)
   (h1-tactics-prover-evaluators proof))
-
-(defun h1-books-book-prover-search-work (proof)
-  (h1-tactics-prover-search-work proof))
-
-(defun h1-books-book-prover-case-limit (proof)
-  (h1-tactics-prover-case-limit proof))
 
 (defun h1-books-book-prover-with-search-work (proof search-work)
   (h1-tactics-prover-with-search-work proof search-work))
@@ -105,7 +88,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((head (car term)))
      (cond
-      ((zp n) '(:failure "Fuel" "h1-books-library-simplify-visit"))
+      ((zp n) '(:failure "fuel" "h1-books-library-simplify-visit"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
       ((endp term) '(:failure "failure" ""))
       ((or (proof-compound head) (member-equal head definitions))
@@ -138,7 +121,7 @@
  (defun h1-books-library-simplify-args (n proof term args index result evidence definitions)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h1-books-library-simplify-args"))
+    ((zp n) '(:failure "fuel" "h1-books-library-simplify-args"))
     ((endp args) result)
     (t (proof-with-checked-results
            ((equality (h1-books-library-simplify-visit (1- n) proof (car args) evidence definitions))
@@ -165,7 +148,7 @@
 (defun h1-books-library-prove-visit (n proof term evidence definitions)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h1-books-library-prove-visit"))
+   ((zp n) '(:failure "fuel" "h1-books-library-prove-visit"))
    ((equal term *proof-true*) (proof-prove-step proof term evidence definitions))
    (t
     (proof-with-checked-results ((premise (proof-find-evidence evidence (list term))))
@@ -269,7 +252,7 @@
 (defun h1-books-library-push-minus (n library term evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h1-books-library-push-minus")
+      '(:failure "fuel" "h1-books-library-push-minus")
     (let ((proof (library-library-proof library)))
       (cond
        ((proof-is-call term *proof-plus*)
@@ -341,7 +324,7 @@
 (defun h1-books-library-linear-combine (n library step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h1-books-library-linear-combine")
+      '(:failure "fuel" "h1-books-library-linear-combine")
     (proof-with-checked-results
      ((first (proof-step-first step))
       (node (library-linear-form-get first (cdr place))))
@@ -864,7 +847,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof library)))
     (cond
-     ((zp n) '(:failure "Fuel" "h1-books-library-count-visit"))
+     ((zp n) '(:failure "fuel" "h1-books-library-count-visit"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((parts (proof-list-of-length (cdr value) 3))
@@ -1064,19 +1047,6 @@
      (h1-tactics-prover-with-library proof library)
      (table-keys (proof-proof-definitions (library-library-proof library))))))
 
-(defun h1-books-book-prover-solve (proof formula openings limit)
-  (h1-tactics-prover-solve proof formula openings limit))
-
-(defun h1-books-book-prover-constant (proof term)
-  (h1-tactics-prover-constant proof term))
-
-(defun h1-books-book-prover-by-induction
-    (proof formula measure substitutions openings ordinal limit assume-premise preserve split-on)
-  (h1-tactics-prover-by-induction
-   proof formula measure substitutions openings ordinal
-   (if (eq limit :none) (h1-books-book-prover-case-limit proof) limit)
-   assume-premise preserve split-on))
-
 (defun h1-books-book-prover-index-fact (proof name formula)
   (proof-with-checked-results ((key (h1-tactics-fact-key formula)))
     (if (eq (car key) :none)
@@ -1086,9 +1056,6 @@
              (record (list name formula (h1-tactics-variables formula))))
         (h1-tactics-prover-with-schemas
          proof (table-put schemas key (append prior (list record))))))))
-
-(defun h1-books-book-prover-record-formula (proof label step rewrite)
-  (h1-tactics-prover-record-formula proof label step rewrite))
 
 (defun h1-books-book-prover-prior-fact (proof term)
   (h1-tactics-prover-prior-fact proof term))
@@ -1404,7 +1371,7 @@
         ((entries (if (eq used-entries :used-entries)
                       (h1-books-used-entries available entry)
                     (table-get used-entries (list available entry)
-                                 '(:failure "CandidateRejected" ""))))
+                                 '(:failure "candidate-rejected" ""))))
          (local (h1-books-entry-list-names entries))
          (dependencies (h1-books-entry-dependencies
                         entries local (proof-proof-facts (h1-tactics-prover-proof proof)) nil)))
@@ -1416,7 +1383,7 @@
      (list (list "skip" name nil source)) nil *h1-books-skip-reason*)))
 
 (defun h1-books-unproved (result)
-  (and (failure-p result) (equal (cadr result) "Unproved")))
+  (and (failure-p result) (equal (cadr result) "unproved")))
 
 (defun h1-books-proof-pair (proof result)
   (if (failure-p result) (cons result proof) result))
@@ -1540,7 +1507,7 @@
                  (certificate (proof-with-checked-results ((entry (car produced)))
                                 (h1-books-certificate proof entry used-entries))))
             (cond ((and (failure-p certificate)
-                        (member-equal (cadr certificate) '("Unproved" "CandidateRejected" "value")))
+                        (member-equal (cadr certificate) '("unproved" "candidate-rejected" "value")))
                    (proof-with-checked-results
                        ((row (if report
                                  (proof-with-checked-results ((written (proof-write name)))
@@ -1556,39 +1523,6 @@
                         memo)
                       nil)))))))))
 
-(defun h1-books-decimal-character (char)
-  (let ((digit (- (char-code char) (char-code #\0))))
-    (if (and (<= 0 digit) (<= digit 9)) digit nil)))
-
-(defun h1-books-integer-digits (chars value digits previous-digit)
-  (if (endp chars)
-      (and previous-digit (list value digits))
-    (let ((digit (h1-books-decimal-character (car chars))))
-      (cond (digit (h1-books-integer-digits (cdr chars) (+ (* value 10) digit) (1+ digits) t))
-            ((and previous-digit (eql (car chars) #\_))
-             (h1-books-integer-digits (cdr chars) value digits nil))
-            (t nil)))))
-
-(defun h1-books-worklist-integer (text)
-  (let* ((chars (coerce (text-strip text :none) 'list))
-         (signed (member-equal (car chars) '(#\+ #\-)))
-         (result (h1-books-integer-digits (if signed (cdr chars) chars) 0 0 nil)))
-    (cond ((or (not result) (< 4300 (cadr result))) '(:failure "failure" ""))
-          ((eql (car chars) #\-) (- (car result)))
-          (t (car result)))))
-
-(defun h1-books-worklist-rows (lines count index)
-  (cond ((endp lines) nil)
-        ((and (not (eq count :none)) (>= index count)) nil)
-        (t (proof-with-checked-results
-               ((fields (proof-list-of-length (text-split (car lines) *h1-books-tab*) 2))
-                (expected (h1-books-worklist-integer (cadr fields)))
-                (rest (h1-books-worklist-rows (cdr lines) count (1+ index))))
-             (cons (list (car fields) expected) rest)))))
-
-(defun h1-books-worklist (source count)
-  (h1-books-worklist-rows (text-lines source) count 0))
-
 (defun h1-books-aids-for (book aids)
   (h1-books-parse-measures (table-get aids book nil)))
 
@@ -1598,18 +1532,6 @@
       proof
     (proof-with-checked-results ((proof (h1-books-install proof (car installers))))
       (h1-books-install-list proof (cdr installers)))))
-
-(defun h1-books-admit-library (proof lines seen register-theorem)
-  (declare (xargs :measure (len lines)))
-  (if (endp lines)
-      (cons proof seen)
-    (let ((raw (car lines)))
-      (proof-with-checked-results ((parsed (h1-books-parse-line (seq-slice raw 0 -1))))
-        (if (member-equal raw seen)
-            (h1-books-admit-library proof (cdr lines) seen register-theorem)
-          (proof-with-checked-results
-              ((proof (h1-books-admit proof (car parsed) (cadr parsed) register-theorem)))
-            (h1-books-admit-library proof (cdr lines) (cons raw seen) register-theorem)))))))
 
 (defun h1-books-step-count (counts)
   (if (endp counts) 0 (+ (car counts) (h1-books-step-count (cdr counts)))))
@@ -1694,27 +1616,3 @@
           (proof-with-checked-results ((source (text-join "" (reverse (cadr output)))))
             (list (list book source rows (cadddr output)) (cadr generated) (caddr generated))))))))
 
-(defun h1-books-generate-worklist (rows statement-lines aid-lines base seen memo
-                                        register-theorem used-entries report reports)
-  (declare (xargs :measure (len rows)))
-  (if (endp rows)
-      (cons nil (reverse reports))
-    (proof-with-checked-results
-        ((book (h1-books-generate-book (car rows) statement-lines aid-lines base seen memo
-                                       register-theorem used-entries report reports))
-         (rest (h1-books-generate-worklist (cdr rows) statement-lines aid-lines base seen (cadr book)
-                                          register-theorem used-entries report (caddr book))))
-      (cons (cons (car book) (car rest)) (cdr rest)))))
-
-(defun h1-books-generate-books (library worklist statement-lines aid-lines count
-                                        register-theorem used-entries report)
-  (proof-with-checked-results
-      ((base (h1-books-book-prover-init))
-       (base (h1-tactics-prover-setup-rules base))
-       (base (h1-books-book-prover-build base))
-       (base (h1-book-termination-install-selector-tests base))
-       (admitted (h1-books-admit-library base library nil register-theorem))
-       (base (h1-books-install-list (car admitted) *h1-books-base-tactics*))
-       (rows (h1-books-worklist worklist count)))
-    (h1-books-generate-worklist rows statement-lines aid-lines base (cdr admitted) nil
-                                register-theorem used-entries report nil)))

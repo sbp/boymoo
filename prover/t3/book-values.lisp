@@ -14,9 +14,6 @@
 (defconst *t3-book-values-intern* *t3-book-spines-intern*)
 (defconst *t3-book-values-bad-atom* *t3-book-spines-bad-atom*)
 
-(defun t3-book-values-tagged (value tag)
-  (t3-book-spines-tagged value tag))
-
 (defun t3-book-values-make-book-proofs (library packages visible)
   (t3-book-spines-make-book-proofs library packages visible))
 
@@ -76,12 +73,6 @@
     (t3-logic-libraryproofs-for-book (library-library-init (proof-proof-init))) nil nil)
    ground))
 
-(defun t3-book-values-book-proofs-package-value (book-proofs function datum)
-  (t3-book-spines-book-package-value book-proofs function datum))
-
-(defun t3-book-values-book-proofs-coerce (datum kind)
-  (t3-book-spines-book-coerce datum kind))
-
 (defun t3-book-values-book-proofs-constant (book-proofs term)
   (t3-book-spines-book-constant book-proofs term))
 
@@ -110,7 +101,7 @@
 (defun t3-book-values-prove-visit (n book-proofs term evidence definitions)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-values-book-proofs-prove")
+      '(:failure "fuel" "t3-book-values-book-proofs-prove")
     (let ((next (t3-book-values-prove-step book-proofs term evidence definitions)))
       (if (eq (car next) :transport)
           (proof-with-checked-results
@@ -167,7 +158,7 @@
  (defun t3-book-values-natural-visit (n book-proofs term)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-book-values-book-proofs-natural")
+       '(:failure "fuel" "t3-book-values-book-proofs-natural")
      (let ((lib (t3-book-values-book-proofs-library book-proofs))
            (next (t3-book-values-natural-step book-proofs term)))
        (case (car next)
@@ -185,7 +176,7 @@
  (defun t3-book-values-natural-arguments (n book-proofs terms)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t3-book-values-book-proofs-natural"))
+    ((zp n) '(:failure "fuel" "t3-book-values-book-proofs-natural"))
     ((endp terms) nil)
     (t
      (proof-with-checked-results
@@ -196,7 +187,7 @@
  (defun t3-book-values-natural-by-value (n book-proofs value)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-book-values-book-proofs-natural")
+       '(:failure "fuel" "t3-book-values-book-proofs-natural")
      (let* ((proof (library-library-proof (t3-book-values-book-proofs-library book-proofs)))
             (template (list *library-natp* *proof-result*))
             (next (t3-book-values-value-step proof value)))

@@ -71,7 +71,7 @@
           ((test (proof-term-at branch 1))
            (found (h1-book-expt-open-power-evidence lib test normalizer)))
         (if (not (car found))
-            '(:failure "Unproved" "")
+            '(:failure "unproved" "")
           (proof-with-checked-results
               ((choice (h1-propositions-propositional-proof-select lib branch (car found)))
                (next (proof-proof-chain (library-library-proof lib) equation (list choice))))
@@ -79,7 +79,7 @@
 
 (defun h1-book-expt-open-power-branches (n lib next)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h1-book-expt-open-power-branches"))
+  (cond ((zp n) '(:failure "fuel" "h1-book-expt-open-power-branches"))
         ((eq (car next) :continue)
          (h1-book-expt-open-power-branches
           (1- n) lib (h1-book-expt-open-power-next lib (cadr next) (cddr next))))
@@ -200,7 +200,7 @@
 
 (defun h1-book-expt-arithmetic-loop (n recipe exponent library next)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) (cons '(:failure "Fuel" "h1-book-expt-arithmetic-loop")
+  (cond ((zp n) (cons '(:failure "fuel" "h1-book-expt-arithmetic-loop")
                       (if (eq (car next) :continue) (cadr next) (cdr next))))
         ((eq (car next) :continue)
          (h1-book-expt-arithmetic-loop
@@ -235,7 +235,7 @@
   (declare (xargs :measure (acl2-count operands)))
   (cond ((failure-p result) result)
         ((endp operands) (cons (reverse steps) (cdr result)))
-        ((zp count) '(:failure "CandidateRejected" ""))
+        ((zp count) '(:failure "candidate-rejected" ""))
         (t (let ((next (h1-book-expt-unfold-powers proof (car operands) powers (cdr result))))
              (h1-book-expt-unfold-operands proof (cdr operands) powers (1- count)
                                           next (cons (car next) steps))))))
@@ -293,20 +293,20 @@
 
 (defun h1-book-expt-power-equality-setup (formula)
   (if (not (proof-is-call formula *proof-equal*))
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (let ((powers (proof-unique (h1-book-expt-powers (h1-tactics-subterms formula)))))
       (proof-with-checked-results ((exponents (h1-book-expt-exponents powers)))
         (let ((exponents (proof-unique exponents)))
           (proof-with-checked-results
               ((nested (and (equal (len exponents) 1) (h1-book-expt-nested-powers powers))))
             (cond ((or (not (equal (len exponents) 1)) nested)
-                   '(:failure "Unproved" ""))
+                   '(:failure "unproved" ""))
                   ((not (eq (h1-tactics-call-head (car exponents)) :none))
-                   '(:failure "Unproved" ""))
+                   '(:failure "unproved" ""))
                   (t (proof-with-checked-results ((factors (h1-book-expt-power-factors powers)))
                        (let ((factors (proof-unique factors)))
                          (if (< 2 (len factors))
-                             '(:failure "Unproved" "")
+                             '(:failure "unproved" "")
                            (list powers (car exponents) (h1-book-expt-zero-tests factors)))))))))))))
 
 (defun h1-book-expt-power-equality (proof formula)

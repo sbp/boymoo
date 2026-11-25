@@ -14,7 +14,7 @@
   (let ((entry (assoc-equal term facts)))
     (if entry
         (cdr entry)
-      '(:failure "MissingProofInput" ""))))
+      '(:failure "missing-proof-input" ""))))
 
 (defun t3-book-function-terms-theorem-from (lib name target facts)
   (let ((proof (library-library-proof lib)))
@@ -24,7 +24,7 @@
          (pattern (proof-term-at literal 2))
          (matched (t3-book-theorems-match pattern target nil)))
       (if (not (car matched))
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (proof-with-checked-results
             ((theorem (proof-proof-fact proof name (table-items (cdr matched))))
              (source (proof-step-first theorem))
@@ -135,7 +135,7 @@
  (defun t3-book-function-terms-book-checks (n book value evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-book-function-terms-book-checks")
+       '(:failure "fuel" "t3-book-function-terms-book-checks")
      (proof-with-checked-results
          ((equation (t3-book-function-terms-book-check book value evidence))
           (current (if equation (proof-rewritten-term equation) value)))
@@ -149,7 +149,7 @@
  (defun t3-book-function-terms-book-checks-branches (n book value current evidence positions equation)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t3-book-function-terms-book-checks"))
+    ((zp n) '(:failure "fuel" "t3-book-function-terms-book-checks"))
     ((endp positions) equation)
     (t
      (proof-with-checked-results

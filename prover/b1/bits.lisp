@@ -53,7 +53,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((proof (library-library-proof lib))
          (head (car term)))
-     (cond ((zp n) '(:failure "Fuel" "b1-bits-simplify"))
+     (cond ((zp n) '(:failure "fuel" "b1-bits-simplify"))
            ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
            ((endp term) '(:failure "failure" ""))
            ((or (proof-compound head) (member-equal head definitions))
@@ -80,7 +80,7 @@
                       (t constant)))))))
  (defun b1-bits-simplify-arguments (n lib term args index result definitions)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "b1-bits-simplify-arguments"))
+   (cond ((zp n) '(:failure "fuel" "b1-bits-simplify-arguments"))
          ((endp args) result)
          (t (proof-with-checked-results
                 ((equality (b1-bits-simplify (1- n) lib (car args) definitions))
@@ -94,7 +94,7 @@
 (defun b1-bits-prove-bound (n lib term definitions)
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
-    (cond ((zp n) '(:failure "Fuel" "b1-bits-prove-bound"))
+    (cond ((zp n) '(:failure "fuel" "b1-bits-prove-bound"))
           ((equal term *proof-true*) (proof-proof-prove proof term nil definitions))
           (t (proof-with-checked-results
                  ((equality (b1-bits-bound-equality lib term definitions))

@@ -20,7 +20,7 @@
   (proof-with-checked-results ((found (h1-book-field-find normalizer literal)))
     (if (car found)
         found
-      '(:failure "Unproved" ""))))
+      '(:failure "unproved" ""))))
 
 (defun h1-book-field-remember (normalizer steps)
   (declare (xargs :measure (acl2-count steps)))
@@ -447,7 +447,7 @@
     (h1-book-order-add-signed-evidence proof normalizer)))
 
 (defun h1-book-field-unproved-p (value)
-  (and (failure-p value) (equal (cadr value) "Unproved")))
+  (and (failure-p value) (equal (cadr value) "unproved")))
 
 (defun h1-book-field-imply-lift (proof first given last left change swap)
   (let ((logic (h1-tactics-prover-proof proof))
@@ -483,7 +483,7 @@
 (defun h1-book-field-imply-transformations (changes proof given antecedent conclusion tests)
   (declare (xargs :measure (acl2-count changes)))
   (if (endp changes)
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (let ((change (car changes)))
       (proof-with-checked-results
           ((normalizer (h1-book-field-field-normalizer proof tests))
@@ -554,7 +554,7 @@
 (defun h1-book-field-equality-false (operands proof left index normalizer)
   (declare (xargs :measure (acl2-count operands)))
   (if (endp operands)
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (let ((opposite-index (- 3 index)))
       (proof-with-checked-results
           ((typed (h1-book-field-find normalizer (list *library-numberp* (car operands))))
@@ -631,7 +631,7 @@
 (defun h1-book-field-order-alternatives (directions proof tests normalizer)
   (declare (xargs :measure (acl2-count directions)))
   (if (endp directions)
-      (cons '(:failure "Unproved" "") normalizer)
+      (cons '(:failure "unproved" "") normalizer)
     (let* ((direction (car directions))
            (source (car direction))
            (other (cadr direction))
@@ -668,7 +668,7 @@
  (defun h1-book-field-field-equality (n proof left right tests)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h1-book-field-field-equality"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h1-book-field-field-equality"))
     ((proof-is-call left *proof-if*)
      (h1-book-field-field-equality-by-value
       (1- n) proof left right tests t (proof-eq *proof-result* right)))
@@ -701,13 +701,13 @@
              (h1-book-field-equality-of-equalities proof left right tests))
             ((and (proof-is-call left *proof-equal*) (equal right *proof-false*))
              (h1-book-field-equality-false (cdr left) proof left 1 updated))
-            (t '(:failure "Unproved" ""))))))))
+            (t '(:failure "unproved" ""))))))))
 
  (defun h1-book-field-field-equality-by-value (n proof value other tests leftp template)
    (declare (xargs :measure (nfix n)))
    (let ((logic (h1-tactics-prover-proof proof)))
      (cond
-      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h1-book-field-field-equality-by-value"))
+      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h1-book-field-field-equality-by-value"))
       ((proof-is-call value *proof-if*)
        (proof-with-checked-results
            ((branches (proof-list-of-length (cdr value) 3))
@@ -740,7 +740,7 @@
  (defun h1-book-field-field-order (n proof left right tests normalizer)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "h1-book-field-field-order")
+       '(:failure "fuel" "h1-book-field-field-order")
      (let ((compared (h1-book-order-compare-orders proof left right normalizer)))
        (if (h1-book-field-unproved-p (car compared))
            (proof-with-checked-results
@@ -806,4 +806,4 @@
                     ((result (h1-book-field-field-equality 1000000 proof (cadr goal) (caddr goal) tests)))
                   (h1-book-field-restore-premises (h1-tactics-prover-library proof) premises result))
               '(:failure "failure" "")))
-        '(:failure "Unproved" "")))))
+        '(:failure "unproved" "")))))

@@ -33,9 +33,9 @@
    ((left (t4-field-side product 1))
     (factors (proof-list-of-length left 3)))
    (if (not (equal (car factors) *proof-times*))
-       '(:failure "InferenceMismatch" "")
+       '(:failure "inference-mismatch" "")
      (proof-with-checked-results ((right (t4-field-side product 2)))
-       (if (equal right *proof-one*) factors '(:failure "InferenceMismatch" ""))))))
+       (if (equal right *proof-one*) factors '(:failure "inference-mismatch" ""))))))
 
 (defun t4-field-inverse-from-product-with-replies (lib product replies)
   (t4-algebra-with-library lib ((factors (t4-field-unit-product product)))
@@ -76,17 +76,11 @@
            (left (proof-proof-symmetric (library-library-proof lib) left)))
         (cons (proof-proof-chain (library-library-proof lib) left (list joined right)) lib)))))
 
-(defun t4-field-inverse-from-product (lib product)
-  (t4-field-inverse-from-product-with-replies lib product nil))
-
 (defun t4-field-simplified-with-replies (lib proof premises replies)
   (t4-algebra-with-library lib
       ((right (t4-field-side proof 2))
        (normalized (t4-algebra-normal-with-replies lib right premises replies) :library))
     (cons (proof-proof-chain (library-library-proof lib) proof (list normalized)) lib)))
-
-(defun t4-field-simplified (lib proof premises)
-  (t4-field-simplified-with-replies lib proof premises nil))
 
 (defun t4-field-reciprocal-terms (terms)
   (if (endp terms)
@@ -116,7 +110,7 @@
            (normalized (t4-algebra-normal-with-replies lib product premises replies) :library)
            (answer (t4-field-side normalized 2)))
         (if (not (equal answer *proof-one*))
-            (cons '(:failure "SearchMiss" "") lib)
+            (cons '(:failure "search-miss" "") lib)
           (t4-algebra-with-library lib
               ((inverse (t4-field-inverse-from-product-with-replies lib normalized replies) :library))
             (cons (proof-proof-symmetric (library-library-proof lib) inverse) lib))))
@@ -149,9 +143,6 @@
                   (t4-field-reciprocal-of-operation-recurse (cdr body) nil lib goal body right replies)
                 (cons nil lib))))
            (t (cons nil lib))))))))
-
-(defun t4-field-reciprocal-of-operation (lib goal)
-  (t4-field-reciprocal-of-operation-with-replies lib goal nil))
 
 (defun t4-field-first-reciprocal (terms)
   (cond ((endp terms) nil)
@@ -207,9 +198,6 @@
                                   lib backward relation premises replies) :library))
                     (cons (t4-algebra-equality-tests lib relation products forward backward)
                           lib)))))))))))
-
-(defun t4-field-compare-inverse (lib relation products premises)
-  (t4-field-compare-inverse-with-replies lib relation products premises nil))
 
 (defun t4-field-inverse-zero-test (test)
   (and (proof-is-call test *proof-not*)
@@ -277,9 +265,6 @@
                          lib products branch test zero relation factor replies)
                       (cons nil lib))))))))))))
 
-(defun t4-field-inverse-with-zero-case (lib goal)
-  (t4-field-inverse-with-zero-case-with-replies lib goal nil))
-
 (defun t4-field-scaled-right-prove (lib original conditional parts reciprocal premises replies)
   (t4-algebra-with-library lib
       ((arguments (proof-list-of-length (cdr reciprocal) 1))
@@ -345,17 +330,10 @@
                         (t4-field-scaled-right-prove
                          lib original conditional parts reciprocal premises replies)))))))))))))
 
-(defun t4-field-scaled-right (lib goal premises)
-  (t4-field-scaled-right-with-replies lib goal premises nil))
-
 (defun t4-field-formula-parts (formula)
   (if (proof-is-call formula *library-implies*)
       (proof-list-of-length (cdr formula) 2)
     (list :none formula)))
-
-(defun t4-field-applicable-p (formula)
-  (proof-with-checked-results ((parts (t4-field-formula-parts formula)))
-    (if (proof-is-call (cadr parts) *proof-equal*) t nil)))
 
 (defun t4-field-identity-prove (lib parts replies)
   (let ((guard (car parts)) (goal (cadr parts)))
@@ -383,8 +361,3 @@
             arithmetic
           (t4-field-identity-prove (cdr arithmetic) parts replies))))))
 
-(defun t4-field-field-identity (lib formula)
-  (t4-algebra-with-library lib ((parts (t4-field-formula-parts formula)))
-    (if (proof-is-call (cadr parts) *proof-equal*)
-        (t4-field-identity-prove lib parts nil)
-      (cons nil lib))))

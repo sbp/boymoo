@@ -10,8 +10,6 @@ A Hypotheses answers from the tests it holds. A test signed `t` that is a conjun
 
 ## Two ways to run a recipe
 
-The functions `descent-selector-decrease`, `descent-gap-decrease` and the others take a Hypotheses and answer from it alone.
-
 A caller whose hypotheses know more than the tests, as the Rulers of `prover/rulers.lisp` do, runs the same recipe through `descent-query-recipe`. The recipe then stops at the first term that the Hypotheses do not give and returns a request. The caller answers, adds the answer to the replies, and runs the recipe again from the start with the same arguments; the replies given so far are found in the table and the recipe goes further. Nothing but the replies is kept from one run to the next, so the functions stay without memory (`prover/CONVENTIONS.md`). An answer of `nil` is an answer: the recipe goes on without the term, or fails as it would have.
 
 ## Lemmas that a recipe adds

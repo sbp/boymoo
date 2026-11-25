@@ -49,7 +49,7 @@
     (n lib formula replacements names calls property-name result-and-replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h3-lexicographic-induction")
+      '(:failure "fuel" "h3-lexicographic-induction")
     (let ((result (car result-and-replies)))
       (if (h3-induction-request-p result)
           (h3-lexicographic-induction
@@ -91,7 +91,7 @@
             (list (list (h3-lexicographic-selector-mapping variables *library-car*) 2)
                   tail))))
     (if (not variables)
-        '(:failure "MissingProofData" "")
+        '(:failure "missing-proof-data" "")
       (proof-with-checked-results
           ((addition (if (equal property-name "ANTI-SYMMETRIC")
                          (h3-lexicographic-reconstruct-cons lib)

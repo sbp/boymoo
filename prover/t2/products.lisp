@@ -8,9 +8,6 @@
   (assoc-equal (proof-sym (concatenate 'string "SELF-" name) "ACL2")
                (proof-proof-facts (library-library-proof lib))))
 
-(defun t2-products-library-natural (lib term)
-  (t2-guarded-selectors-library-natural lib term))
-
 (defun t2-products-library-type-of (lib term evidence)
   (t2-guarded-selectors-library-type-of lib term evidence))
 
@@ -20,12 +17,12 @@
         (proof-proof-modus-ponens proof step evidence)
       (proof-with-checked-results ((literal (proof-step-first step)) (head (proof-term-at literal 0)))
         (if (not (equal head *library-implies*))
-            '(:failure "RecipeMismatch" "")
+            '(:failure "recipe-mismatch" "")
           (proof-with-checked-results ((left (proof-term-at literal 1))
                                        (known (proof-step-first evidence)))
             (if (equal left known)
                 (library-library-cite lib "IMPLICATION-CONSEQUENT" (cdr literal) (list step evidence))
-              '(:failure "RecipeMismatch" ""))))))))
+              '(:failure "recipe-mismatch" ""))))))))
 
 (defun t2-products-library-rational (lib term evidence)
   (proof-with-checked-results
@@ -50,7 +47,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t2-products-push-minus"))
+     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t2-products-push-minus"))
      ((proof-is-call term *proof-plus*)
       (proof-with-checked-results
        ((result (proof-proof-reflexive proof term))
@@ -95,7 +92,7 @@
 (defun t2-products-linear-combine (n lib step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t2-products-linear-combine")
+      '(:failure "fuel" "t2-products-linear-combine")
     (let ((proof (library-library-proof lib)))
       (proof-with-checked-results
        ((literal (proof-step-first step))
@@ -149,7 +146,7 @@
          (proof-with-checked-results ((reverse (proof-proof-symmetric proof b)))
            (proof-proof-chain proof a (list reverse)))
        (proof-with-checked-results ((a-text (proof-write a-normal)) (b-text (proof-write b-normal)))
-         '(:failure "RecipeMismatch" ""))))))
+         '(:failure "recipe-mismatch" ""))))))
 
 (defun t2-products-library-weak-from-difference (lib a b nonnegative-difference integers)
   (proof-with-checked-results
@@ -450,7 +447,7 @@
     (left-factor (proof-term-at lower 1))
     (right-factor (proof-term-at upper 1)))
    (if (not (and (equal left-factor right-factor) (equal right-factor factor)))
-       '(:failure "RecipeMismatch" "")
+       '(:failure "recipe-mismatch" "")
      (proof-with-checked-results
       ((a (proof-term-at lower 2))
        (b (proof-term-at upper 2))

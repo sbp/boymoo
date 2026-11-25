@@ -6,7 +6,7 @@
 
 | ACL2 call | Result | Failure |
 |---|---|---|
-| `(t3-book-spines-constructor-form lib value evidence definitions)` | Tidy equality Step for the normalized constructor form of term `value`, or `nil` when there is no equation. | A failure from normalization or proof construction, or `Fuel`. |
+| `(t3-book-spines-constructor-form lib value evidence definitions)` | Tidy equality Step for the normalized constructor form of term `value`, or `nil` when there is no equation. | A failure from normalization or proof construction, or `fuel`. |
 | `(t3-book-spines-shallow lib term evidence)` | Equality Step chaining one unfolding of `term` with its constructor form. | A failure from unfolding, normalization or proof construction. |
 | `(t3-book-spines-replace-value lib equation replacements)` | Equality Step after applying the equality Steps in `replacements` in order to the right side of `equation`. | A failure from proof construction. |
 | `(t3-book-spines-tail-bindings lib call)` | The changed argument bindings, in argument order, when every recursive call has the same substituted actuals and each changed argument occurs once. An empty binding list is `nil`. | A failure from looking up the definition, walking the calls or substituting. |
@@ -23,7 +23,7 @@
 
 The `lib` argument can also be the book proof context in `prover/t3/sig/book-values.md`. Its package declarations are available to primitive computations. A Library with the `:t3-book` Proof dispatch tag supports the primitive computations that need no package declarations.
 
-`(t3-book-spines-library-simplify lib term evidence definitions)` uses the primitive computation rules for `lib`. It returns a simplification Step, `nil` or a failure, including `Fuel`. `(t3-book-spines-proof lib)` returns the Proof used for inference.
+`(t3-book-spines-library-simplify lib term evidence definitions)` uses the primitive computation rules for `lib`. It returns a simplification Step, `nil` or a failure, including `fuel`. `(t3-book-spines-proof lib)` returns the Proof used for inference.
 
 The book proof context constructor and fields are also available as `t3-book-spines-make-book-proofs`, `t3-book-spines-library`, `t3-book-spines-book-packages` and `t3-book-spines-book-visible`. The library accessor accepts either a book proof context or a Library. 
 The book proof context primitive operations are available as `t3-book-spines-tagged`, `t3-book-spines-book-package-value`, `t3-book-spines-book-coerce`, `t3-book-spines-book-constant` and `t3-book-spines-book-simplify`. Their arguments, results and failures are those of `tagged` and the corresponding methods in `prover/t3/sig/book-values.md`. The eleven primitive symbol constants in that signature also have names with `t3-book-spines` in place of `t3-book-values`.

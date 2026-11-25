@@ -70,10 +70,6 @@
               (t nil)))
     nil))
 
-(defun t4-bookwitness-candidate-values (functions)
-  (proof-with-checked-results ((existing (t4-bookwitness-existing-values functions)))
-    (append (t4-bookwitness-constant-values functions) existing)))
-
 (defun t4-bookwitness-request-p (value)
   (and (consp value) (eq (car value) :call)
        (member-eq (cadr value) '(:solve :used-prelude))))
@@ -187,9 +183,9 @@
 (defun t4-bookwitness-trial-failure-p (value)
   (and (failure-p value)
        (member-equal (cadr value)
-                     '("SearchMiss" "InferenceMismatch" "value" "assertion" "recursion"
+                     '("search-miss" "inference-mismatch" "value" "assertion" "recursion"
                        "coding" "decoding" "encoding"
-                       "translating" "Unproved" "MissingProof"))))
+                       "translating" "unproved" "MissingProof"))))
 
 (defun t4-bookwitness-search (candidates lib name functions formulas names replies)
   (if (endp candidates)

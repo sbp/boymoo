@@ -674,7 +674,7 @@
     (n lib lhs evidence mem-reversed equivalence replies result)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "b1-revappend-intersects-reversed-second-normalize"))
+   ((zp n) '(:failure "fuel" "b1-revappend-intersects-reversed-second-normalize"))
    ((b1-logic-call-p result)
     (let* ((reply (b1-revappend-intersects-reversed-second-member-rule
                    (b1-logic-call-term result) (b1-logic-call-library result)

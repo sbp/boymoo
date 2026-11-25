@@ -563,7 +563,7 @@
   (let ((proof (library-library-proof lib)))
     (cond
      ((failure-p value) value)
-     ((zp n) '(:failure "Fuel" "b1-floor-sum-zero-divisor-remainders-by-value"))
+     ((zp n) '(:failure "fuel" "b1-floor-sum-zero-divisor-remainders-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))

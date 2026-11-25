@@ -33,9 +33,6 @@
 (defun h3-book-powers-checked-pair (answer)
   (if (failure-p (car answer)) (car answer) answer))
 
-(defun h3-book-powers-checked-library (answer)
-  (if (failure-p (car answer)) (car answer) (cdr answer)))
-
 (defun h3-book-powers-step-argument (step position)
   (proof-with-checked-results ((literal (proof-step-first step)))
     (proof-term-at literal position)))
@@ -299,10 +296,6 @@
                     (h3-book-signs-signs-positive sign)))))
     (cons step lib)))
 
-(defun h3-book-powers-successor-equation (lib base nonzero index negative)
-  (h3-book-powers-checked-pair
-   (h3-book-powers-successor-equation-with-library lib base nonzero index negative)))
-
 (defun h3-book-powers-rational-power (lib base exponent)
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results
@@ -454,10 +447,6 @@
      lib (if integral *h3-book-powers-natural-integral-power* *h3-book-powers-natural-positive-power*)
      formula theorem)))
 
-(defun h3-book-powers-prove-natural-power (lib integral)
-  (h3-book-powers-checked-library
-   (h3-book-powers-prove-natural-power-with-library lib integral)))
-
 (defun h3-book-powers-integral-power-natural-with-library (lib base index nonnegative)
   (h3-book-powers-with-library lib
       ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-natural-integral-power*)
@@ -485,10 +474,6 @@
        (condition (h3-book-floor-conjunct-proof lib (list base positive index nonnegative)))
        (step (proof-proof-modus-ponens (library-library-proof lib) theorem condition)))
     (cons step lib)))
-
-(defun h3-book-powers-positive-power-natural (lib base positive index nonnegative)
-  (h3-book-powers-checked-pair
-   (h3-book-powers-positive-power-natural-with-library lib base positive index nonnegative)))
 
 (defun h3-book-powers-natural-power-with-library (lib base positive index nonnegative)
   (h3-book-powers-with-library lib
@@ -574,10 +559,6 @@
        (theorem (h3-book-powers-induct lib result formula *library-x* replacement)))
     (h3-book-powers-register lib *h3-book-powers-natural-power-opposite* formula theorem)))
 
-(defun h3-book-powers-prove-natural-power-opposite (lib)
-  (h3-book-powers-checked-library
-   (h3-book-powers-prove-natural-power-opposite-with-library lib)))
-
 (defun h3-book-powers-natural-power-opposite-with-library (lib base nonzero index bound)
   (h3-book-powers-with-library lib
       ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-natural-power-opposite*)
@@ -605,10 +586,6 @@
        (reciprocal-fixed (h3-book-arithmetic-fix-value lib reciprocal reciprocal-numeric))
        (result (proof-proof-rewrite proof raw reciprocal-fixed '(1 2))))
     (cons result lib)))
-
-(defun h3-book-powers-natural-power-opposite (lib base nonzero index bound)
-  (h3-book-powers-checked-pair
-   (h3-book-powers-natural-power-opposite-with-library lib base nonzero index bound)))
 
 (defun h3-book-powers-inverse-power-equation-with-library (lib base nonzero index negative)
   (h3-book-powers-with-library lib
@@ -665,10 +642,6 @@
        (result (h3-rewrite-implication lib guard cases)))
     (h3-book-powers-register lib *h3-book-powers-positive-power* formula result)))
 
-(defun h3-book-powers-prove-positive-power (lib)
-  (h3-book-powers-checked-library
-   (h3-book-powers-prove-positive-power-with-library lib)))
-
 (defun h3-book-powers-positive-power-with-library (lib base positive index)
   (h3-book-powers-with-library lib
       ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-positive-power*)
@@ -713,10 +686,6 @@
        (formula (list *library-implies* guard (proof-eq opposite inv)))
        (theorem (h3-rewrite-implication lib guard cases)))
     (h3-book-powers-register lib *h3-book-powers-power-opposite* formula theorem)))
-
-(defun h3-book-powers-prove-power-opposite (lib)
-  (h3-book-powers-checked-library
-   (h3-book-powers-prove-power-opposite-with-library lib)))
 
 (defun h3-book-powers-power-opposite-with-library (lib base nonzero index)
   (h3-book-powers-with-library lib
@@ -780,10 +749,6 @@
        (theorem (h3-rewrite-implication lib guard cases)))
     (h3-book-powers-register lib *h3-book-powers-power-predecessor* formula theorem)))
 
-(defun h3-book-powers-prove-power-predecessor (lib)
-  (h3-book-powers-checked-library
-   (h3-book-powers-prove-power-predecessor-with-library lib)))
-
 (defun h3-book-powers-power-predecessor-with-library (lib base nonzero index)
   (h3-book-powers-with-library lib
       ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-power-predecessor*)
@@ -795,10 +760,6 @@
        (condition (h3-book-floor-conjunct-proof lib (list base nonzero index)))
        (step (proof-proof-modus-ponens (library-library-proof lib) theorem condition)))
     (cons step lib)))
-
-(defun h3-book-powers-power-predecessor (lib base nonzero index)
-  (h3-book-powers-checked-pair
-   (h3-book-powers-power-predecessor-with-library lib base nonzero index)))
 
 (defun h3-book-powers-add-power-conclusion (base first second)
   (proof-eq (h3-book-powers-power base (library-plus first second))
@@ -878,10 +839,6 @@
        (theorem (h3-book-powers-induct lib case formula *library-x* replacement)))
     (h3-book-powers-register lib *h3-book-powers-power-add-natural* formula theorem)))
 
-(defun h3-book-powers-prove-power-add-natural (lib)
-  (h3-book-powers-checked-library
-   (h3-book-powers-prove-power-add-natural-with-library lib)))
-
 (defun h3-book-powers-power-add-natural-with-library (lib base nonzero first second nonnegative)
   (h3-book-powers-with-library lib
       ((registered (if (h3-book-powers-has-lemma-p lib *h3-book-powers-power-add-natural*)
@@ -894,10 +851,6 @@
        (condition (h3-book-floor-conjunct-proof lib (list base nonzero first second nonnegative)))
        (step (proof-proof-modus-ponens (library-library-proof lib) fact condition)))
     (cons step lib)))
-
-(defun h3-book-powers-power-add-natural (lib base nonzero first second nonnegative)
-  (h3-book-powers-checked-pair
-   (h3-book-powers-power-add-natural-with-library lib base nonzero first second nonnegative)))
 
 (defun h3-book-powers-prove-power-add-integer-with-library (lib)
   (h3-book-powers-with-library lib
@@ -951,10 +904,6 @@
        (cases (proof-proof-cases proof test negative nonnegative))
        (theorem (h3-rewrite-implication lib guard cases)))
     (h3-book-powers-register lib *h3-book-powers-power-add-integer* formula theorem)))
-
-(defun h3-book-powers-prove-power-add-integer (lib)
-  (h3-book-powers-checked-library
-   (h3-book-powers-prove-power-add-integer-with-library lib)))
 
 (defun h3-book-powers-power-add-integer-with-library (lib base nonzero first second)
   (h3-book-powers-with-library lib

@@ -4,7 +4,8 @@
 #     make -f runner-fast/Makefile
 #
 # It writes build/runner-fast/boymoo-run-fast.  It compiles heap.c and
-# includes run.h from runner/, the reference runner's files, unchanged.
+# prelude.c and includes run.h and prelude.h from runner/, the reference
+# runner's files, unchanged.
 # CC, CFLAGS, LDFLAGS, LIBS and OUT may be given on the command line.
 # The C that the fast runner writes when it runs is compiled by cc, with
 # the options that jit.c names (FAST_CFLAGS); README.md in this directory
@@ -18,8 +19,8 @@ LDFLAGS =
 LIBS = -lpthread
 OUT = build/runner-fast
 SRC = runner-fast/sys.c runner/heap.c runner-fast/num.c runner-fast/data.c \
-      runner-fast/eval.c runner-fast/gen.c runner-fast/jit.c runner-fast/native.c
-HDR = runner/run.h runner-fast/fast.h runner-fast/fastrt.h
+      runner-fast/eval.c runner-fast/gen.c runner-fast/jit.c runner-fast/native.c runner/prelude.c
+HDR = runner/run.h runner/prelude.h runner-fast/fast.h runner-fast/fastrt.h
 
 all: $(OUT)/boymoo-run-fast
 

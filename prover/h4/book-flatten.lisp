@@ -31,9 +31,6 @@
 (defun h4-book-flatten-nil-value (p negative)
   (h4-association-nil-value p negative))
 
-(defun h4-book-flatten-non-nil (p equality)
-  (h4-association-non-nil (library-library-proof p) equality))
-
 (defun h4-book-flatten-case-of (p formula test yes no)
   (h4-association-case-of p formula test yes no))
 
@@ -67,7 +64,7 @@
      (cons (equal pattern term) bindings))
     ((or (not (proof-compound term)) (/= (len pattern) (len term)))
      (cons nil bindings))
-    ((endp pattern) '(:failure "MissingTermPart" ""))
+    ((endp pattern) '(:failure "missing-term-part" ""))
     ((equal (car pattern) (car term))
      (h4-book-flatten-match-arguments (cdr pattern) (cdr term) bindings))
     (t (cons nil bindings))))
@@ -87,13 +84,13 @@
   (if (proof-is-call conclusion *library-implies*)
       (if (consp (cddr conclusion))
           (h4-book-flatten-fact-conclusion (caddr conclusion))
-        '(:failure "MissingTermPart" ""))
+        '(:failure "missing-term-part" ""))
     conclusion))
 
 (defun h4-book-flatten-fact-discharge (n p step known)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h4-book-flatten-fact-discharge")
+      '(:failure "fuel" "h4-book-flatten-fact-discharge")
     (proof-with-checked-results ((literal (proof-step-first step)))
       (if (proof-is-call literal *library-implies*)
           (proof-with-checked-results ((premise (proof-term-at literal 1)))
@@ -141,7 +138,7 @@
 
 (defun h4-book-flatten-unfold-selected (p call shape selectors)
   (if (not shape)
-      '(:failure "InapplicableStep" "")
+      '(:failure "inapplicable-step" "")
     (let ((proof (library-library-proof p)))
       (proof-with-checked-results
        ((opened (proof-proof-unfold proof call))
@@ -284,7 +281,7 @@
        ((call (h4-book-flatten-step-right step))
         (opened (h4-book-flatten-unfold-on-list p call *proof-false* nil)))
        (proof-proof-chain (library-library-proof p) step (list opened)))
-    '(:failure "InapplicableStep" "")))
+    '(:failure "inapplicable-step" "")))
 
 (defun h4-book-flatten-concat-map-extend
     (p lhs rhs combined first-output hypothesis associative second-output)
@@ -392,7 +389,7 @@
                (base (h4-book-flatten-map-accumulator-finish
                       shape nil p left output right sequence accumulator distributive)))
               (h4-book-flatten-cdr-induction p formula sequence base step changes))))
-       '(:failure "InapplicableStep" "")))))
+       '(:failure "inapplicable-step" "")))))
 
 (defun h4-book-flatten-map-after-list-fix-finish (shape hypothesis p fixed left right)
   (let ((proof (library-library-proof p)))
@@ -527,6 +524,6 @@
       (and definition (equal (len (cadr definition)) 1)
            (let ((result (h4-book-flatten-append-map-try p formula shape definitions)))
              (if (and (failure-p result)
-                      (member-equal (cadr result) '("InapplicableStep" "assertion")))
+                      (member-equal (cadr result) '("inapplicable-step" "assertion")))
                  nil
                result))))))

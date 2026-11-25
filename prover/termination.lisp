@@ -315,7 +315,7 @@
  (defun termination-selector-product (n axes formals calls actuals selected)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "termination-selector-product")
+       '(:failure "fuel" "termination-selector-product")
      (if (endp axes)
          (termination-bind valid (termination-selector-plan-check calls actuals formals selected)
            (and valid (termination-selector-selected-formals selected formals)))
@@ -323,7 +323,7 @@
  (defun termination-selector-indices (n index axes formals calls actuals selected)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "termination-selector-indices")
+       '(:failure "fuel" "termination-selector-indices")
      (if (< index (cdar axes))
          (let ((result (termination-selector-product
                         (1- n) (cdr axes) formals calls actuals

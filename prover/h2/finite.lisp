@@ -96,7 +96,7 @@
              (step (h2-finite-empty-transport search empty)))
           (cons (proof-proof-subsume proof step (list goal guard)) search))))
      ((endp available)
-      (cons '(:failure "TacticInapplicable" "") search))
+      (cons '(:failure "tactic-inapplicable" "") search))
      (t
       (h2-book-logic-with-saved-result search
         (h2-book-logic-with-results search
@@ -123,7 +123,7 @@
 (defun h2-finite-member-of-constant-walk (search key data cdr-step result)
   (declare (xargs :measure (acl2-count data)))
   (if (endp data)
-      (cons '(:failure "TacticInapplicable" "") search)
+      (cons '(:failure "tactic-inapplicable" "") search)
     (let* ((library (h2-search-search-library search))
            (proof (library-library-proof library)))
       (h2-book-logic-with-results search
@@ -252,14 +252,14 @@
 (defun h2-finite-lookup-data-walk (n search term function key)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "h2-finite-lookup-data-walk") search)
+      (cons '(:failure "fuel" "h2-finite-lookup-data-walk") search)
     (h2-book-logic-with-results search
         ((head (proof-term-at term 0)))
       (if (equal head function)
           (h2-book-logic-with-results search
               ((actual-key (proof-term-at term 1)))
             (if (not (equal actual-key key))
-                (cons '(:failure "TacticInapplicable" "") search)
+                (cons '(:failure "tactic-inapplicable" "") search)
               (h2-book-logic-with-results search
                   ((table (proof-term-at term 2)))
                 (cons (proof-term-at table 1) search))))
@@ -268,7 +268,7 @@
               (h2-book-logic-search-call search :normalize
                                          (list term (h2-search-context-init) nil nil))))
           (if (not (car normalized))
-              (cons '(:failure "TacticInapplicable" "") search)
+              (cons '(:failure "tactic-inapplicable" "") search)
             (h2-book-logic-with-results search
                 ((next (h2-book-logic-first-at (car normalized) 2)))
               (h2-finite-lookup-data-walk (1- n) search next function key))))))))

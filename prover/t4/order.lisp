@@ -16,7 +16,7 @@
 (defun t4-order-unfold-return-last (n proof equation)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t4-order-unfold-return-last")
+      '(:failure "fuel" "t4-order-unfold-return-last")
     (let ((next (t4-order-unfold-return-last-step proof equation)))
       (if (eq (car next) :continue)
           (t4-order-unfold-return-last (1- n) proof (cdr next))
@@ -92,7 +92,7 @@
          (opening (t4-order-strict-equation lib first)))
       (if (or (not opening)
               (not (equal (caadr (caddr (proof-step-first opening))) order-name)))
-          '(:failure "SearchMiss" "")
+          '(:failure "search-miss" "")
         (proof-with-checked-results ((rewritten (proof-proof-rewrite proof step opening '(1))))
           (proof-proof-conjunct proof rewritten))))))
 
@@ -121,7 +121,7 @@
       (answer (t4-order-reply :fact-proof (list formula premises) lib replies))
     (if (caar answer)
         answer
-      '(:failure "SearchMiss" ""))))
+      '(:failure "search-miss" ""))))
 
 (defun t4-order-negated-reflexivity (lib relation x order-name)
   (let ((proof (library-library-proof lib)))

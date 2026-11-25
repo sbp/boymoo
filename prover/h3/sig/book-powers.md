@@ -12,7 +12,7 @@ term access, proof construction or proof search.
 | Call | Result |
 |---|---|
 | `(h3-book-powers-power base index)` | The power term with base term `base` and exponent term `index`. |
-| `(h3-book-powers-power-equation lib term value evidence)` | Equality Step reducing the power call `term` to term `value` using the list of evidence Steps. Returns an `Unproved` failure if there is no reduction. |
+| `(h3-book-powers-power-equation lib term value evidence)` | Equality Step reducing the power call `term` to term `value` using the list of evidence Steps. Returns an `unproved` failure if there is no reduction. |
 | `(h3-book-powers-unit-index-power lib base nonzero)` | Equality Step reducing the first power of the base to its numeric fix, given numeric and nonzero Steps for the base. |
 | `(h3-book-powers-predecessor-equation lib base nonzero index-integer index-positive)` | `(cons step lib)` with the recurrence for a positive exponent, given the base's numeric and nonzero Steps and the exponent's integer and positive Steps. |
 | `(h3-book-powers-nonnegative-integer lib integer positive)` | Nonnegative Step for the term of the given integer and positive Steps. |
@@ -20,28 +20,16 @@ term access, proof construction or proof search.
 | `(h3-book-powers-positive-index lib whole nonnegative nonzero)` | `(cons step lib)` with the exponent's positive Step, given its integer, nonnegative and nonzero Steps. The nonzero Step denies equality of the index to zero. |
 | `(h3-book-powers-power-guard base indices)` | Conjunction of the base term's numeric and nonzero properties and the integrality of each term in `indices`, in list order. |
 | `(h3-book-powers-positive-base lib rational positive)` | `(cons (list numeric nonzero) lib)` with the numeric and nonzero Steps for the term of the given rational and positive Steps. |
-| `(h3-book-powers-prove-natural-power lib integral)` | Library with the inductive power lemma. `integral` is `t` to prove integrality for an integer base, or `nil` to prove positivity for a positive rational base. |
 | `(h3-book-powers-integral-power-natural lib base index nonnegative)` | `(cons step lib)` proving the power integer, given integer Steps for the base and exponent and the exponent's nonnegative Step. |
-| `(h3-book-powers-positive-power-natural lib base positive index nonnegative)` | `(cons step lib)` proving the power positive, given the base's rational and positive Steps and the exponent's integer and nonnegative Steps. |
 | `(h3-book-powers-natural-power lib base positive index nonnegative)` | `(cons (list integral positive) lib)` with both power Steps, given the base's integer and positive Steps and the exponent's integer and nonnegative Steps. |
-| `(h3-book-powers-successor-equation lib base nonzero index negative)` | `(cons step lib)` with the recurrence for a negative exponent, given the base's numeric and nonzero Steps and the exponent's integer and negative Steps. |
 | `(h3-book-powers-rational-power lib base exponent)` | Rationality Step for the power of the term in rational Step `base` and exponent term `exponent`. Returns a failure if the cited fact gives a different conclusion. |
 | `(h3-book-powers-numeric-power lib term)` | Step proving the power call `term` numeric by unfolding its definition. |
 | `(h3-book-powers-nonzero-power lib base nonzero exponent)` | Nonzero Step for the power of the term in numeric Step `base` and exponent term `exponent`, given the base's nonzero Step. |
 | `(h3-book-powers-power-inverse-law lib base nonzero exponent)` | Inverse-law Step for the power of the term in numeric Step `base` and exponent term `exponent`, given the base's nonzero Step. |
-| `(h3-book-powers-prove-natural-power-opposite lib)` | Library with the inverse product lemma for the nonnegative exponent and its opposite. |
-| `(h3-book-powers-natural-power-opposite lib base nonzero index bound)` | `(cons step lib)` equating the opposite power and the reciprocal of the original power, given numeric and nonzero Steps for the base and integer and nonnegative Steps for the exponent. |
 | `(h3-book-powers-inverse-power-equation lib base nonzero index negative)` | `(cons step lib)` equating a negative power and the reciprocal of the power at the opposite exponent, given the base's numeric and nonzero Steps and the exponent's integer and negative Steps. |
-| `(h3-book-powers-prove-positive-power lib)` | Library with the positivity lemma for integer powers. |
 | `(h3-book-powers-positive-power lib base positive index)` | `(cons step lib)` proving the power positive, given rational and positive Steps for the base and an integer Step for the exponent. |
-| `(h3-book-powers-prove-power-opposite lib)` | Library with the reciprocal lemma for opposite exponents. |
 | `(h3-book-powers-power-opposite lib base nonzero index)` | `(cons step lib)` equating the opposite power to the reciprocal of the original power, given a numeric and a nonzero Step for the base and an integer Step for the exponent. |
-| `(h3-book-powers-prove-power-predecessor lib)` | Library with the predecessor identity at an arbitrary integer exponent. |
-| `(h3-book-powers-power-predecessor lib base nonzero index)` | `(cons step lib)` giving the predecessor identity, given a numeric and a nonzero Step for the base and an integer Step for the exponent. |
 | `(h3-book-powers-add-power-conclusion base first second)` | Equality term for the power of `base` at the sum of the exponent terms `first` and `second`. |
-| `(h3-book-powers-prove-power-add-natural lib)` | Library with the addition law for an integer exponent and a nonnegative integer exponent. |
-| `(h3-book-powers-power-add-natural lib base nonzero first second nonnegative)` | `(cons step lib)` proving the addition law, given numeric and nonzero Steps for the base, integer Steps for both exponents and a nonnegative Step for the second exponent. |
-| `(h3-book-powers-prove-power-add-integer lib)` | Library with the addition law for two integer exponents. |
 | `(h3-book-powers-power-add-integer lib base nonzero first second)` | `(cons step lib)` proving the addition law, given numeric and nonzero Steps for the base and integer Steps for both exponents. |
 
 `*h3-book-powers-expt*` is the symbol datum for `COMMON-LISP::EXPT`.

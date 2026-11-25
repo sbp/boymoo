@@ -175,14 +175,6 @@
                                         (car parts) (cadr parts)
                                         badge-equation 0 positions 0 nil)))))))
 
-(defun l1-guarded-lambda-reduction-initial (reduction term)
-  (l1-application-application-initial
-   (l1-application-application-with-kind reduction :lambda) term))
-
-(defun l1-guarded-literal-reduction-choose-branch (reduction term)
-  (l1-application-application-choose-branch
-   (l1-application-application-with-kind reduction :literal) term))
-
 (defund l1-guarded-lemma-entry (name step)
   (proof-proof-entry "lemma" name (cons name (proof-step-clause step)) (list step)))
 
@@ -343,11 +335,6 @@
         (cons (append entries (list (proof-step-clause (car normalization))))
               (cdr normalization))))))
 
-(defun l1-guarded-argument-arity (proof test arguments failure)
-  (proof-with-checked-results
-      ((result (l1-guarded-argument-arity-with-proof proof test arguments failure)))
-    (car result)))
-
 (defun l1-guarded-badge-validity (proof badge-equation)
   (proof-with-checked-results
       ((function (l1-guarded-term-path badge-equation '(1 1)))
@@ -457,7 +444,7 @@
  (defun l1-guarded-result-calls-visit (n term names calls)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "l1-guarded-result-calls-visit")
+       '(:failure "fuel" "l1-guarded-result-calls-visit")
      (proof-with-checked-results ((next (l1-guarded-result-call-route term names calls)))
        (case (car next)
          (:visit (l1-guarded-result-calls-visit (1- n) (cadr next) names (caddr next)))
@@ -466,7 +453,7 @@
 
  (defun l1-guarded-result-calls-arguments (n args names calls)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "l1-guarded-result-calls-arguments"))
+   (cond ((zp n) '(:failure "fuel" "l1-guarded-result-calls-arguments"))
          ((endp args) calls)
          (t
           (proof-with-checked-results
@@ -532,27 +519,11 @@
         '(:failure "failure" ""))
        (t (list definitions grants affected))))))
 
-(defun l1-guarded-audit-prefix-records (statements definitions grants affected)
-  (declare (xargs :measure (acl2-count statements)))
-  (if (endp statements)
-      (list definitions grants affected)
-    (proof-with-checked-results
-        ((next (l1-guarded-audit-record (car statements) definitions grants affected)))
-      (l1-guarded-audit-prefix-records (cdr statements) (car next) (cadr next) (caddr next)))))
-
 (defun l1-guarded-audit-lookup (name map)
   (let ((found (assoc-equal name map)))
     (if found
         (cdr found)
       '(:failure "failure" ""))))
-
-(defun l1-guarded-audit-table-names (table)
-  (if (endp table)
-      nil
-    (proof-with-checked-results
-        ((name (proof-term-at (car table) 0))
-         (names (l1-guarded-audit-table-names (cdr table))))
-      (add-to-set-equal name names))))
 
 (defun l1-guarded-same-set-p (left right)
   (and (subsetp-equal left right) (subsetp-equal right left)))
@@ -573,17 +544,6 @@
     (list (add-to-set-equal name specials)
           (if (intersectp-equal calls affected) (add-to-set-equal name dynamic) dynamic))))
 
-(defun l1-guarded-audit-application-branches (branch formals affected specials dynamic)
-  (declare (xargs :measure (acl2-count branch)))
-  (if (not (proof-is-call branch *proof-if*))
-      (list branch specials dynamic)
-    (if (not (consp (cdddr branch)))
-        '(:failure "failure" "")
-      (proof-with-checked-results
-          ((sets (l1-guarded-audit-application-case branch formals affected specials dynamic)))
-        (l1-guarded-audit-application-branches (cadddr branch) formals affected
-                                              (car sets) (cadr sets))))))
-
 (defund l1-guarded-audit-badge-case (branch required)
   (proof-with-checked-results
       ((parts (proof-list-of-length (cdr branch) 3))
@@ -593,67 +553,6 @@
      (or (not flag)
          (equal (cadr parts)
                 (proof-quote (list (proof-sym "APPLY$-BADGE" "ACL2") 2 1 flag *proof-nil*)))))))
-
-(defun l1-guarded-audit-badge-branches (branch required)
-  (declare (xargs :measure (acl2-count branch)))
-  (and (proof-is-call branch *proof-if*)
-       (if (not (consp (cdddr branch)))
-           '(:failure "failure" "")
-         (proof-with-checked-results ((checked (l1-guarded-audit-badge-case branch required)))
-           (l1-guarded-audit-badge-branches (cadddr branch) required)))))
-
-(defun l1-guarded-audit-dynamic-calls (calls designators)
-  (if (endp calls)
-      nil
-    (proof-with-checked-results
-        ((designator (proof-term-at (car calls) 1))
-         (rest (l1-guarded-audit-dynamic-calls (cdr calls) designators)))
-      (if (member-equal designator designators) (add-to-set-equal (car calls) rest) rest))))
-
-(defun l1-guarded-audit-expected-calls (dynamic payload value)
-  (if (endp dynamic)
-      nil
-    (cons (list *l1-application-apply* (proof-quote (car dynamic))
-                (l1-primitive-cons-list (list payload value) *proof-false*))
-          (l1-guarded-audit-expected-calls (cdr dynamic) payload value))))
-
-(defun l1-guarded-audit-quoted-designators (designators)
-  (if (endp designators)
-      nil
-    (cons (proof-quote (car designators))
-          (l1-guarded-audit-quoted-designators (cdr designators)))))
-
-(defun l1-guarded-audit-dynamic (definitions eval-name dynamic)
-  (proof-with-checked-results
-      ((badge-definition (l1-guarded-audit-lookup *l1-guarded-badge* definitions))
-       (branch (l1-guarded-term-path badge-definition '(1 3)))
-       (checked (l1-guarded-audit-badge-branches
-                 branch (list (cons *l1-application-apply* *l1-guarded-function-flag*)
-                              (cons eval-name (proof-sym "EXPR" "KEYWORD")))))
-       (definition (l1-guarded-audit-lookup eval-name definitions))
-       (formals (proof-list-of-length (car definition) 2)))
-    (let* ((expression (car formals))
-           (environment (cadr formals))
-           (syntax-tail (list *library-cdr* expression))
-           (syntax-fn (list *library-car* syntax-tail))
-           (payload (list *library-car* (list *library-cdr* syntax-fn)))
-           (syntax-data (list *library-car* (list *library-cdr* syntax-tail))))
-      (proof-with-checked-results
-          ((calls (l1-guarded-result-calls (cadr definition) (list *l1-application-apply*)))
-           (dynamic-calls (l1-guarded-audit-dynamic-calls
-                           calls (l1-guarded-audit-quoted-designators dynamic))))
-        (l1-guarded-assertion
-         (l1-guarded-same-set-p
-          dynamic-calls (l1-guarded-audit-expected-calls
-                         dynamic payload (list eval-name syntax-data environment))))))))
-
-(defun l1-guarded-audit-outside-slice (facts slice-numbers)
-  (if (endp facts)
-      nil
-    (let ((rest (l1-guarded-audit-outside-slice (cdr facts) slice-numbers)))
-      (if (member-equal (caar facts) slice-numbers)
-          rest
-        (add-to-set-equal (cadar facts) rest)))))
 
 (defun l1-guarded-audit-argument-guards (positions actuals)
   (if (endp positions)
@@ -732,58 +631,9 @@
        (applied (l1-guarded-audit-applied calls function positions formals nil)))
     (l1-guarded-assertion (l1-guarded-same-set-p applied callbacks))))
 
-(defun l1-guarded-audit-rows (rows definitions affected primitive specials)
-  (and (consp rows)
-    (proof-with-checked-results
-        ((row (proof-list-of-length (car rows) 2))
-         (checked (l1-guarded-audit-row (cadr row) definitions affected primitive specials)))
-      (l1-guarded-audit-rows (cdr rows) definitions affected primitive specials))))
-
 (defconst *l1-guarded-audit-early*
   (list (proof-sym "BADGE-USERFN-TYPE" "ACL2")
         (proof-sym "APPLY$-USERFN-TAKES-ARITY-ARGS" "ACL2")
         (proof-sym "UNTAME-APPLY$-TAKES-ARITY-ARGS" "ACL2")
         (proof-sym "UNTAME-APPLY$ constraint 1" "ACL2")))
 
-(defun l1-guarded-audit-guarded-prefix (statements guarded-rows slice-numbers)
-  (let ((oracles (list *l1-guarded-apply-user* *l1-guarded-untame-apply* *l1-guarded-untame-eval*))
-        (eval-name (proof-sym "EV$" "ACL2"))
-        (apply-prim (proof-sym "APPLY$-PRIM" "ACL2")))
-    (proof-with-checked-results
-        ((prefix (l1-guarded-audit-prefix-records statements nil nil oracles))
-         (definitions (car prefix))
-         (grants (cadr prefix))
-         (affected (caddr prefix))
-         (badge-definition (l1-guarded-audit-lookup *l1-application-badge-primitive* definitions))
-         (table (l1-guarded-term-path badge-definition '(1 1 2 1)))
-         (primitive-application (l1-guarded-audit-lookup *l1-application-apply-primitive* definitions))
-         (table-quote (l1-guarded-term-path primitive-application '(1 1 2)))
-         (checked (l1-guarded-assertion (equal table-quote (proof-quote table))))
-         (primitive (l1-guarded-audit-table-names table))
-         (checked (l1-guarded-assertion
-                   (not (intersectp-equal
-                         (append primitive (list apply-prim *l1-guarded-tame*
-                                                 *l1-guarded-tame-function* *l1-guarded-suitably-tame*))
-                         affected))))
-         (untame-eval-grants (l1-guarded-audit-lookup *l1-guarded-untame-eval* grants))
-         (checked (l1-guarded-assertion (equal untame-eval-grants *proof-nil*)))
-         (application (l1-guarded-audit-lookup *l1-application-apply* definitions))
-         (formals (car application))
-         (lambda-branch (l1-guarded-term-path (cadr application) '(2 0)))
-         (checked (l1-guarded-assertion (equal lambda-branch (proof-sym "APPLY$-LAMBDA" "ACL2"))))
-         (primitive-branch (l1-guarded-term-path (cadr application) '(3 2 0)))
-         (checked (l1-guarded-assertion (equal primitive-branch apply-prim)))
-         (branch (l1-guarded-term-path (cadr application) '(3 3)))
-         (branches (l1-guarded-audit-application-branches branch formals affected nil nil))
-         (specials (cadr branches))
-         (dynamic (caddr branches))
-         (checked (l1-guarded-assertion
-                   (and (equal (car branches) (cons *l1-guarded-apply-user* formals))
-                        (l1-guarded-same-set-p dynamic (list *l1-application-apply* eval-name)))))
-         (checked (l1-guarded-assertion (not (intersectp-equal dynamic primitive))))
-         (checked (l1-guarded-audit-dynamic definitions eval-name dynamic))
-         (facts (l1-witness-affected-constraints statements (1+ (len statements))
-                                                 (cons (proof-sym "BADGE-USERFN" "ACL2") oracles)))
-         (outside (l1-guarded-audit-outside-slice facts slice-numbers))
-         (checked (l1-guarded-assertion (l1-guarded-same-set-p outside *l1-guarded-audit-early*))))
-      (l1-guarded-audit-rows guarded-rows definitions affected primitive specials))))

@@ -9,9 +9,9 @@ An Evaluator has the form `(:b2-evaluator library name label ev evl goals operat
 | ACL2 call | Result | Failure |
 |---|---|---|
 | `(b2-evaluator-evaluator-equations functions formulas)` | Whether the constraints have the required re-quotation equation. | A failure for a malformed constraint list or term. |
-| `(b2-evaluator-evaluator-init library functions formulas)` | Initialized Evaluator. | `Unproved` for unsupported constraints or a failure from processing them. |
-| `(b2-evaluator-evaluator-dispatch evaluator)` | `(operations arity)` in constraint order. | `Unproved` for unsupported dispatch or a failure from processing a constraint. |
-| `(b2-evaluator-evaluator-field-count evaluator term)` | Maximum required argument field index, with zero for no field. | `Unproved` for unsupported selectors or a failure from a malformed term. |
+| `(b2-evaluator-evaluator-init library functions formulas)` | Initialized Evaluator. | `unproved` for unsupported constraints or a failure from processing them. |
+| `(b2-evaluator-evaluator-dispatch evaluator)` | `(operations arity)` in constraint order. | `unproved` for unsupported dispatch or a failure from processing a constraint. |
+| `(b2-evaluator-evaluator-field-count evaluator term)` | Maximum required argument field index, with zero for no field. | `unproved` for unsupported selectors or a failure from a malformed term. |
 | `(b2-evaluator-evaluator-install evaluator)` | Evaluator with the definitions and measure entry installed. | Failure from producing or installing the entries. |
 | `(b2-evaluator-evaluator-remember evaluator name step)` | `(cons symbol evaluator)` with the named auxiliary lemma installed. `name` is its suffix string. | Failure from adding the lemma. |
 | `(b2-evaluator-evaluator-quote-arguments evaluator)` | `(cons symbol evaluator)` for the installed quote-arguments lemma. | Failure from proof construction. |

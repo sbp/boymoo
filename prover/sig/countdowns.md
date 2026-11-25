@@ -13,7 +13,5 @@
 | `(countdowns-positive-gap lib value evidence rulers)` | `value` is a term and `evidence` is a list of proof steps. Returns `(cons step lib)` with a proof that `value` is positive, or a nil step. |
 | `(countdowns-clip-naturals lib term)` | `term` is a counter term. Returns `(cons step lib)` with an equality that removes clipping around natural summands, or a nil step. |
 | `(countdowns-counter-shift lib child parent)` | `child` and `parent` are counter terms. Returns `(cons step lib)` with a unit decrease equality, or a nil step. |
-| `(countdowns-wrapped-countdown lib goal rulers)` | Returns `(cons step lib)` with a proof of the count decrease `goal`, or a nil step. |
-| `(countdowns-clipped-decrease lib goal rulers)` | Returns `(cons step lib)` with a proof of the `NFIX` decrease `goal`, or a nil step. |
 
 `(countdowns-wrapped-countdown-with-rulers lib goal rulers)` and `(countdowns-clipped-decrease-with-rulers lib goal rulers)` return `(cons (list step rulers) lib)` or a failure. The returned Rulers holds the evidence established during the queries.

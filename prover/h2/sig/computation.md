@@ -19,11 +19,11 @@ and `hidden` is a Boolean.
 | `(h2-computation-primitive-value function args packages)` | The unquoted value for a primitive symbol, its ordered list of unquoted arguments, and the package table. |
 | `(h2-computation-evaluate proof term packages fuel)` | `(cons step fuel)` with the Step for the closed term and the remaining rewriting budget. `proof` is a Search. `:none` or `nil` denotes an unlimited budget. A failure can occupy the Step position. |
 
-Primitive evaluation can return `TacticInapplicable` for an unusable
+Primitive evaluation can return `tactic-inapplicable` for an unusable
 argument, missing package record, or a non-ASCII primitive name.
-Unsupported primitive calls and hidden packages can return `Unproved`.
-The evaluator also returns `Unproved` for a constrained function or
-an exhausted rewriting budget and `Fuel` when its recursion counter
+Unsupported primitive calls and hidden packages can return `unproved`.
+The evaluator also returns `unproved` for a constrained function or
+an exhausted rewriting budget and `fuel` when its recursion counter
 runs out.
 
 Evaluation uses the Search in `prover/h2/sig/search.md`. Completed closed

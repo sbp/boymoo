@@ -16,12 +16,11 @@ A result written `(cons value attempt)` or `(cons value lib)` can carry a failur
 |---|---|---|
 | `b1-search-subterms` | `term` | The list of terms in traversal order, including `term`. |
 | `b1-search-key` | `term` | The two-element index key described above. Can return a failure for invalid indexing. |
-| `b1-search-rule-proof` | Rule, `lib`, `bindings`, condition replies | A Step, a failure, or `(:request term)`. Replies are an alist from condition terms to Steps or failures. An absent reply produces a request for that term. |
 | `b1-search-fact-index-init` | `lib` | The index built by visiting the library's facts in insertion order, omitting definitions. Can return a failure. |
 | `b1-search-fact-index-add` | FactIndex, `name`, `clause` | The updated index. Can return a failure. |
 | `b1-search-fact-index-candidates` | One index alist, `term` | The matching Rules from the exact bucket followed by the general bucket. Each bucket is visited from newest to oldest. Can return a failure. |
 | `b1-search-attempt-init` | `lib`, FactIndex, `fuel`, `definitions`, `case-context` | An Attempt. The automatic search starts with fuel `65`. |
-| `b1-search-attempt-charge` | Attempt | `(cons value attempt)` with `nil` or `SearchBudgetExhausted` in the value position. |
+| `b1-search-attempt-charge` | Attempt | `(cons value attempt)` with `nil` or `search-budget-exhausted` in the value position. |
 | `b1-search-attempt-evidence` | Attempt, `proofs`, `addition` | The expanded evidence list in order. Can return a failure. |
 | `b1-search-attempt-establish` | Attempt, `term`, `known`, `depth` | `(cons value attempt)` with a Step or failure. |
 | `b1-search-attempt-selector-formal` | Attempt, operator symbol | The one-based selector position, or `nil`. Can return a failure. |
@@ -31,14 +30,12 @@ A result written `(cons value attempt)` or `(cons value lib)` can carry a failur
 | `b1-search-attempt-rewriting` | Attempt, `known` | A rewrite callback descriptor for the given known-evidence table. |
 | `b1-search-attempt-rewrite-test` | Attempt, `conditional`, `known` | `(cons value attempt)` with an optional Step or failure. |
 | `b1-search-attempt-structural-rule` | Attempt, `known` | A structural callback descriptor for the given known-evidence table. |
-| `b1-search-attempt-apply-rule` | Attempt, callback descriptor, `term` | `(cons value attempt)` with an optional Step or failure for either search descriptor. |
 | `b1-search-attempt-truth-of-cons` | Attempt, `term`, `known` | An optional Step or a failure. |
 | `b1-search-attempt-condition` | Attempt, `term`, `known` | `(cons value attempt)` with an optional Step or failure. |
 | `b1-search-attempt-normalize-evidence` | Attempt, `known` | `(cons value attempt)` with the updated known-evidence table or a failure. |
 | `b1-search-attempt-local-rules` | Attempt, induction evidence, `known` | `(cons value attempt)` with `(rules known)` or a failure. The rules are in evidence order, and the returned map includes the added hypotheses. |
 | `b1-search-attempt-examine-hypotheses` | Attempt, `formula`, `known`, `rules` | `(cons value attempt)` with `(optional-step known)` or a failure. |
 | `b1-search-attempt-prove` | Attempt, `formula`, `evidence`, induction evidence, `depth` | `(cons value attempt)` with a Step or a failure. The automatic search starts at depth `3`. |
-| `b1-search-attempt-with-cases` | Attempt, `formula`, `evidence`, induction evidence, `depth`, `test` | `(cons value attempt)` with a Step or failure. |
 | `b1-search-attempt-anchors` | Attempt, `formula` | The candidate variables in traversal order. Can return a failure. |
 | `b1-search-attempt-substitutions` | Attempt, `formula`, `variable` | The candidate substitutions in traversal order, each a list of two-element `(variable replacement)` lists. Can return a failure. |
 | `b1-search-immediate-definitions` | `lib`, `formula` | The operator symbols in traversal order. Can return a failure. |

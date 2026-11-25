@@ -93,7 +93,7 @@
   (cond
    ((failure-p request) request)
    ((not (eq (car request) :t3-book-term-collections-leaf)) (cons request self))
-   ((zp n) '(:failure "Fuel" "t3-book-remove-progn-remove-progn-term-result"))
+   ((zp n) '(:failure "fuel" "t3-book-remove-progn-remove-progn-term-result"))
    (t
     (proof-with-checked-results
         ((advanced (t3-book-remove-progn-head-advance
@@ -112,7 +112,7 @@
             ((accepted (t3-book-remove-progn-argument-type
                         (t3-book-substitution-term-traversal-lib self) (cdr path) original)))
           (t3-book-substitution-term-traversal-smaller-at self child 0 accepted evidence))
-      '(:failure "Unsupported" ""))))
+      '(:failure "unsupported" ""))))
 
 (defun t3-book-remove-progn-term-cons (self value typed known original evidence)
   (let ((lib (t3-book-substitution-term-traversal-lib self)))
@@ -143,7 +143,7 @@
             (t3-book-remove-progn-term-child self value original evidence))
            ((proof-is-call value *proof-cons*)
             (t3-book-remove-progn-term-cons self value typed known original evidence))
-           (t '(:failure "Unsupported" ""))))))))
+           (t '(:failure "unsupported" ""))))))))
 
 (defund t3-book-remove-progn-prove-next (traversal label replies)
   (proof-with-checked-results
@@ -159,7 +159,7 @@
 (defun t3-book-remove-progn-prove (n traversal label replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-remove-progn-prove")
+      '(:failure "fuel" "t3-book-remove-progn-prove")
     (let ((result (t3-book-remove-progn-prove-next traversal label replies)))
       (if (eq (car result) :progn-reply)
           (t3-book-remove-progn-prove (1- n) traversal label (cadr result))

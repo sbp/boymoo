@@ -248,7 +248,7 @@
  (defun b2-record-extensionality-difference-lemma-run (n lib is-bound)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-record-extensionality-difference-lemma-run")
+       '(:failure "fuel" "b2-record-extensionality-difference-lemma-run")
      (let ((name (if is-bound *b2-record-extensionality-above* *b2-record-extensionality-witness*)))
        (if (assoc-equal name (proof-proof-facts (library-library-proof lib)))
            lib
@@ -282,7 +282,7 @@
  (defun b2-record-extensionality-difference-lemma-induction (n request is-bound target openers)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-record-extensionality-difference-lemma-induction")
+       '(:failure "fuel" "b2-record-extensionality-difference-lemma-induction")
      (proof-with-checked-results ((value (car request)))
        (if (b2-record-update-request-p value)
            (let ((args (caddr value)))
@@ -302,19 +302,19 @@
      (n evidence induction lib target is-bound openers)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-record-extensionality-difference-lemma-advance")
+       '(:failure "fuel" "b2-record-extensionality-difference-lemma-advance")
      (b2-record-extensionality-pair-cases (1- n) lib evidence target is-bound openers induction)))
 
  (defun b2-record-extensionality-difference-lemma-base (n evidence lib target is-bound openers)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-record-extensionality-difference-lemma-base")
+       '(:failure "fuel" "b2-record-extensionality-difference-lemma-base")
      (b2-record-extensionality-pair-cases (1- n) lib evidence target is-bound openers nil)))
 
  (defun b2-record-extensionality-pair-cases (n lib evidence goal is-bound openers induction)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-record-extensionality-pair-cases")
+       '(:failure "fuel" "b2-record-extensionality-pair-cases")
      (proof-with-checked-results
          ((known (b2-tactics-tactics-evidence lib evidence))
           (typed (b2-record-update-evidence-at
@@ -328,7 +328,7 @@
      (n request evidence goal known left is-bound openers induction)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-record-extensionality-pair-cases-record")
+       '(:failure "fuel" "b2-record-extensionality-pair-cases-record")
      (proof-with-checked-results ((value (car request)))
        (if (b2-record-update-request-p value)
            (let* ((lib (cdr request))
@@ -350,7 +350,7 @@
      (n right-facts lib evidence goal left is-bound openers induction)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-record-extensionality-pair-cases-present")
+       '(:failure "fuel" "b2-record-extensionality-pair-cases-present")
      (let ((facts (append evidence right-facts))
            (r *b2-record-update-r*)
            (u *b2-record-extensionality-u*))
@@ -369,7 +369,7 @@
      (n equal-heads branch lib goal is-bound openers induction)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-record-extensionality-pair-cases-present-heads")
+       '(:failure "fuel" "b2-record-extensionality-pair-cases-present-heads")
      (let ((r *b2-record-update-r*)
            (u *b2-record-extensionality-u*))
        (if equal-heads
@@ -389,7 +389,7 @@
      (n request branch goal is-bound openers induction different)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-record-extensionality-pair-cases-choose")
+       '(:failure "fuel" "b2-record-extensionality-pair-cases-choose")
      (proof-with-checked-results ((value (car request)))
        (if (b2-record-update-request-p value)
            (proof-with-checked-results
@@ -405,7 +405,7 @@
      (n lib sign facts branch goal is-bound openers induction different)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-record-extensionality-pair-cases-branch")
+       '(:failure "fuel" "b2-record-extensionality-pair-cases-branch")
      (let ((r *b2-record-update-r*))
        (cond
         ((eq branch :heads)
@@ -430,7 +430,7 @@
      (n evidence induction lib is-bound target openers)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-record-extensionality-difference-lemma-shared-head")
+       '(:failure "fuel" "b2-record-extensionality-difference-lemma-shared-head")
      (let* ((r *b2-record-update-r*)
             (u *b2-record-extensionality-u*)
             (tail-r (list *library-cdr* r))
@@ -460,7 +460,7 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((not (o< (nfix (1- n)) (nfix n)))
-    '(:failure "Fuel" "b2-record-extensionality-updated-lookup-rules"))
+    '(:failure "fuel" "b2-record-extensionality-updated-lookup-rules"))
    ((not (proof-is-call record *b2-record-extensionality-set*)) (list rules keys))
    (t
     (proof-with-checked-results

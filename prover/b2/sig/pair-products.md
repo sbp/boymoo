@@ -4,7 +4,6 @@
 
 | Call | Arguments and result |
 |---|---|
-| `(b2-pair-products-cons-cases lib a b replies)` | Step joined from the construction cases of pair argument terms `a` and `b`. `replies` is an alist with `(constructed facts)` keys and Step or failure values. At the first missing reply the result is `(:b2-pair-products-cons-cases constructed facts)`. Supply that reply and repeat the call. |
 | `(b2-pair-products-pair-size lib formula)` | Step proving the pair size formula. |
 | `(b2-pair-products-pair-reconstruction lib formula)` | Step proving the reconstruction formula. |
 | `(b2-pair-products-pair-equality lib formula)` | Step proving the pair equality formula. |

@@ -15,7 +15,6 @@ place of its result.
 | `(t3-book-lemmas-natural-fix lib)` | The Library with `T3-EXPORTED-NFIX` added. |
 | `(t3-book-lemmas-set-tail lib)` | The Library with `T3-SET-TAIL-COUNT` added. |
 | `(t3-book-lemmas-implies-proper-list lib term wrappers)` | A Step proving `term` if it is a recognized proper-list implication, or `nil`. `wrappers` is the list of recognizer heads visited on the current path. Pass `nil` to start. |
-| `(t3-book-lemmas-build lib)` | The Library after Boolean, IFF, cons equality and exported NFIX lemmas, in that order. |
 
 The symbol constants are `*t3-book-lemmas-booleanp*`, `*t3-book-lemmas-iff*`,
 `*t3-book-lemmas-true-listp*`, `*t3-book-lemmas-exported-nfix*`,

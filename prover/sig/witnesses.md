@@ -7,7 +7,6 @@
 | ACL2 call | Arguments and result |
 |---|---|
 | `(witnesses-witness lib recipe arity)` | `arity` is the constrained function's number of arguments. Returns `(cons name lib)` with the witness symbol and any new definition, or a failure. |
-| `(witnesses-conditional-test term)` | Returns the first inner conditional test according to the term traversal, or nil. |
 | `(witnesses-rational-negation lib term evidence)` | `evidence` is a list of proof steps. Returns a proof that the negation of a rational is rational when applicable, or nil. |
 | `(witnesses-prove-formula n lib term definitions evidence)` | `n` is fuel, `definitions` is a list of definition names and `evidence` is a list of proof steps. Returns a proof of `term` or a failure. The initial fuel is `1000000`. |
 | `(witnesses-df-fact-locations term path)` | `path` is the list of indices reaching `term`. Returns all paths to constrained `TO-DF` calls in argument-first order. |
@@ -18,5 +17,3 @@
 | `(witnesses-rounding-formula lib name term)` | `name` is the ASCII name of the rounding formula `term`. Returns its proof. |
 | `(witnesses-zero-dfp lib term)` | `term` is a `DFP` application whose argument unfolds to zero. Returns `(cons step lib)` with a proof of `term`. |
 | `(witnesses-witness-proofs lib data)` | `data` is `(functions formulas)`. Each function is `(name arity)` and each formula is `(name term)`. Returns `(cons (list entry method) lib)` with the proof entry and method string. |
-
-`witnesses-conditional-test` can return a failure for an `IF` application with no test.

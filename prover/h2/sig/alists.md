@@ -11,7 +11,6 @@ strings without a package qualification.
 | `(h2-alists-array-extension p formula replies)` | `(cons step p)` for the array extension term `formula`. | A failure from proof construction or derivation, or a failure from a malformed formula. |
 | `(h2-alists-ordered-alist p replies)` | `(cons name p)` for the implication from `ORDERED-SYMBOL-ALISTP` to `ALISTP`, with the auxiliary fact name as a string. | A failure from proof construction or derivation. |
 | `(h2-alists-first-key alist)` | The term `(CAR (CAR alist))`. | None. |
-| `(h2-alists-ordered-projections p replies)` | `(cons names p)` with the tail, head pair, head symbol and neighbor fact names as strings, in that order. | A failure from proof construction or derivation. |
 | `(h2-alists-normalized-fact p name)` | `(cons name p)` with the logical fact name as a string and the updated Library. If there are no wrappers to remove, the result uses the supplied name. | A failure from proof construction. |
 | `(h2-alists-ordered-changes p theorem formula replies)` | `(cons step p)` for the ordered alist operation named by theorem string `theorem`. | A failure from proof construction or derivation. |
 | `(h2-alists-channel-headers p formula replies)` | `(cons step p)` for the input or output channel header theorem `formula`. | A failure from proof construction or derivation. |

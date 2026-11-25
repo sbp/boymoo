@@ -7,9 +7,6 @@
 specified in `prover/h2/sig/api.md`. Preparation failures are recorded in the
 session. The proving interfaces handle failures in the same way as `h2-api-prove`.
 
-`(h2-api-prove-all-loop library cases)` has the argument and answer format
-of `h2-api-prove-all`.
-
 A session has the form `(:h2-session base earlier context aids-cache)`. The
 base and context each contain a BookProof, an index of normalized input
 lines, and an index of reserved private names. The base is for the library

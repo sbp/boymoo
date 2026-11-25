@@ -31,7 +31,6 @@ contains distinct symbols in occurrence order.
 | `h2-api-world-init` | Library lines. Returns their world with an empty earlier prefix. | Library preparation failure. |
 | `h2-api-world-advance` | A world and a complete earlier list that extends its earlier prefix. Returns the world after admitting the new suffix in input order. | Failure while parsing or admitting a line. |
 | `h2-api-world-trial` | A world. Returns a proof trial with its rule index and conditional index lemmas. | Proof preparation failure. |
-| `h2-api-world` | Library and earlier lines. Returns the world after admitting both. | World preparation failure. |
 | `h2-api-world-with-indexed-prefix` | Library and earlier lines. Returns their world and can index the written names during admission. | World preparation failure. |
 | `h2-api-namespaced` | Auxiliary and final entry records and a set of reserved names. Returns `(lemmas entry)` with their certificate names. | An invalid or occupied auxiliary name, non-ASCII proof text, or a proof writing failure. |
 | `h2-api-namespaced-with-tree` | The same arguments and an additional tree of reserved names. | The same failures as `h2-api-namespaced`, with both sources of reserved names checked. |

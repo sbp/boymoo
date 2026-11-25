@@ -28,7 +28,6 @@ hold distinct normalized lines, declared names and auxiliary names.
 | `api-context-append` | `context`, a context, and `line`, an input string | The updated context, or a failure from parsing, indexing or using an auxiliary name. |
 | `api-context-working-copy` | `context`, a context | `(lib index)` for a proof attempt in the prepared context. |
 | `api-context-for` | `earlier` and `library`, each a list of input lines | The context for the library followed by the earlier input, or a failure from building or appending to it. |
-| `api-measure-choices` | `data`, parsed definition fields, `measured`, an alist of stored measures, and `defined`, an alist of known definitions | The list of candidate measure alists in order. May propagate a failure from measuring recursive calls. |
 | `api-replace-names` | `source`, the text of a proof entry, `aliases`, an alist from original to auxiliary symbols, and `statement-entry`, a Boolean | The transformed proof text, or a failure from reading or writing an entry. |
 | `api-exported` | `certificate`, a certificate, and `declared`, the set of declared input symbols as a list | `(lemmas entry)`, `nil` on a name collision, or a failure from inspecting or rewriting the certificate. |
 | `api-prove-in-context` | `statement`, `earlier`, `library` and `aids`, as for `api-prove` | `(lemmas entry)` or `nil` on proof failure. May propagate a failure from input or export processing. |

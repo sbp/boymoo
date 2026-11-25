@@ -310,7 +310,7 @@
  (defun b2-signed-bitwise-by-value (n lib value template tests goal measure binding floor-type digit)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-signed-bitwise-by-value"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-signed-bitwise-by-value"))
     ((proof-is-call value *proof-if*)
      (proof-with-checked-results
          ((branches (proof-list-of-length (cdr value) 3))
@@ -359,7 +359,7 @@
      (n value signed lib template goal measure binding floor-type)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-signed-bitwise-integer-logand-leaf")
+       '(:failure "fuel" "b2-signed-bitwise-integer-logand-leaf")
      (proof-with-checked-results
          ((facts (b2-signed-bitwise-assumptions lib signed))
           (known (b2-tactics-tactics-evidence lib facts)))

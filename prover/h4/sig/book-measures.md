@@ -13,11 +13,11 @@ of distinct names used for membership tests.
 | `(h4-book-measures-expand-evidence p premises)` | Steps obtained by expanding the ordered premise Steps, in evidence insertion order. The pending list is consumed from its end. | Yes. |
 | `(h4-book-measures-measure-plans definitions calls aids)` | List of candidate measure lists. Stored plans use Cartesian product order, then the structural plan and the single-definition fallback plans in formal order. | Yes. |
 | `(h4-book-measures-well-formed-measure term formals functions)` | Whether a measure uses the given formals and members of the function-name set. | A malformed lambda or application can return a failure. |
-| `(h4-book-measures-structural-decrease p goal context)` | Step for an ordinal comparison using the supplied Descent Hypotheses. | `Unproved` or a proof-operation failure. |
+| `(h4-book-measures-structural-decrease p goal context)` | Step for an ordinal comparison using the supplied Descent Hypotheses. | `unproved` or a proof-operation failure. |
 | `(h4-book-measures-decrease p clause tests splits)` | Step for the final literal of the clause, using signed tests and the integer split count. Pass `2` for the usual search. | Yes. |
-| `(h4-book-measures-termination-proof p definitions calls aids book-functions)` | Two-element list of the first successful measure plan and the conclusion Steps in distinct clause order. `book-functions` is the set of constrained and chosen function names. | `Unproved` when the attempts are exhausted. Failures outside the measure fallback kinds propagate. |
+| `(h4-book-measures-termination-proof p definitions calls aids book-functions)` | Two-element list of the first successful measure plan and the conclusion Steps in distinct clause order. `book-functions` is the set of constrained and chosen function names. | `unproved` when the attempts are exhausted. Failures outside the measure fallback kinds propagate. |
 
-`Unproved` has the form `(:failure "Unproved" "")`. The constants `*h4-book-measures-wrappers*` and
+`unproved` has the form `(:failure "unproved" "")`. The constants `*h4-book-measures-wrappers*` and
 `*h4-book-measures-selectors*` list the corresponding function names in
 source order. The symbol constants are `*h4-book-measures-o-finp*`,
 `*h4-book-measures-o-rst*`, `*h4-book-measures-o-first-expt*`,

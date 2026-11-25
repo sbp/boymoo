@@ -32,9 +32,6 @@
                (cons ,name ,object)
              ,then)))))))
 
-(defun h3-book-power-order-result (pair)
-  (if (failure-p (car pair)) (car pair) pair))
-
 (defun h3-book-power-order-bound-library (bound-result)
   (if (failure-p bound-result)
       bound-result
@@ -83,10 +80,6 @@
                                 (if weak '(1 1) '(1)))))
     (cons step lib)))
 
-(defun h3-book-power-order-times-positive (lib bound scalar positive types)
-  (h3-book-power-order-result
-   (h3-book-power-order-times-positive-with-library lib bound scalar positive types)))
-
 (defun h3-book-power-order-endpoint-types (endpoints rational-one factor)
   (if (endp endpoints)
       nil
@@ -130,10 +123,6 @@
             (list *proof-times* *proof-one* s) scalar-identity combined)))
     (cons step lib)))
 
-(defun h3-book-power-order-scaled-unit-bound (lib bound scalar positive factor combined)
-  (h3-book-power-order-result
-   (h3-book-power-order-scaled-unit-bound-with-library lib bound scalar positive factor combined)))
-
 (defun h3-book-power-order-advance-bound-with-library
   (lib base positive base-bound exponent exponent-positive previous previous-bound growing)
   (h3-book-power-order-with-state lib
@@ -157,12 +146,6 @@
      (context (h3-book-order-bounds-init lib (list base child-type power-type))))
     (h3-book-power-order-bound-library
      (h3-book-order-bounds-compose-with-bounds context (car ordered) (cadr ordered)))))
-
-(defun h3-book-power-order-advance-bound
-  (lib base positive base-bound exponent exponent-positive previous previous-bound growing)
-  (h3-book-power-order-result
-   (h3-book-power-order-advance-bound-with-library
-    lib base positive base-bound exponent exponent-positive previous previous-bound growing)))
 
 (defun h3-book-power-order-unit-lemma-name (growing)
   (if (h3-book-power-order-truth growing)
@@ -229,10 +212,6 @@
                                  formula done nil) :state))
     (cons nil lib)))
 
-(defun h3-book-power-order-prove-unit-bound (lib growing)
-  (let ((result (h3-book-power-order-prove-unit-bound-with-library lib growing)))
-    (if (failure-p (car result)) (car result) (cdr result))))
-
 (defun h3-book-power-order-unit-bound-natural-with-library
   (lib base positive relative index nonnegative growing)
   (let* ((name (h3-book-power-order-unit-lemma-name growing))
@@ -251,11 +230,6 @@
            (step (proof-proof-modus-ponens (library-library-proof lib) numeric guard)))
           (cons step lib))))))
 
-(defun h3-book-power-order-unit-bound-natural (lib base positive relative index nonnegative growing)
-  (h3-book-power-order-result
-   (h3-book-power-order-unit-bound-natural-with-library
-    lib base positive relative index nonnegative growing)))
-
 (defun h3-book-power-order-unit-bound-positive-with-library
   (lib base positive relative index index-positive growing)
   (h3-book-power-order-with-state lib
@@ -273,11 +247,6 @@
                 lib base positive weak child child-bound growing) :pair))
     (h3-book-power-order-advance-bound-with-library
      lib base positive relative index index-positive child previous growing)))
-
-(defun h3-book-power-order-unit-bound-positive (lib base positive relative index index-positive growing)
-  (h3-book-power-order-result
-   (h3-book-power-order-unit-bound-positive-with-library
-    lib base positive relative index index-positive growing)))
 
 (defun h3-book-power-order-power-difference-bound
   (lib base positive relative delta-integer delta exponent-bound literal strict evidence growing)
@@ -326,12 +295,6 @@
      (factor (h3-book-powers-rational-power lib base delta)))
     (h3-book-power-order-scaled-unit-bound-with-library
      lib bound start-type start-positive factor product)))
-
-(defun h3-book-power-order-compare-powers
-  (lib base positive relative first second exponent-bound growing)
-  (h3-book-power-order-result
-   (h3-book-power-order-compare-powers-with-library
-    lib base positive relative first second exponent-bound growing)))
 
 (defun h3-book-power-order-pair-base (first second)
   (cond
@@ -416,13 +379,6 @@
            (literal (proof-step-first result)))
           (cons (if (equal literal formula) result '(:failure "failure" "")) context)))))))
 
-(defun h3-book-power-order-compare-with-one (lib formula context base positive low high strict)
-  (h3-book-power-order-result
-   (h3-book-power-order-bound-library
-    (h3-book-power-order-compare-with-one-with-context
-     formula (h3-book-order-bounds-with-library context lib) base positive low high
-     (h3-book-power-order-truth strict)))))
-
 (defun h3-book-power-order-direction-bounds (context b growing strict first second)
   (h3-book-power-order-with-state context
     ((relative (h3-book-order-bounds-bound-with-bounds
@@ -436,7 +392,7 @@
 (defun h3-book-power-order-try-directions (directions context b base positive strict normalized)
   (declare (xargs :measure (acl2-count directions)))
   (if (endp directions)
-      (cons '(:failure "Unproved" "") context)
+      (cons '(:failure "unproved" "") context)
     (let* ((direction (car directions))
            (growing (car direction))
            (first (cadr direction))
@@ -463,7 +419,7 @@
   (h3-book-power-order-with-state context
     ((limits (h3-book-order-bound-parts formula)))
     (if (null limits)
-        (cons '(:failure "Unproved" "") context)
+        (cons '(:failure "unproved" "") context)
       (h3-book-power-order-with-state context
         ((low (car limits))
          (high (cadr limits))
@@ -618,19 +574,13 @@
 (defun h3-book-power-order-run-comparison (n request)
   (declare (xargs :measure (nfix n)))
   (cond ((zp n)
-         (cons '(:failure "Fuel" "h3-book-power-order-run-comparison") (cadr request)))
+         (cons '(:failure "fuel" "h3-book-power-order-run-comparison") (cadr request)))
         ((eq (car request) :finished) (cons (cadddr request) (cadr request)))
         (t (h3-book-power-order-run-comparison
             (1- n) (h3-book-power-order-comparison-next request)))))
 
 (defun h3-book-power-order-exponent-comparison-with-context (n formula context)
   (h3-book-power-order-run-comparison n (list :compare context nil formula)))
-
-(defun h3-book-power-order-exponent-comparison (n lib formula context)
-  (h3-book-power-order-result
-   (h3-book-power-order-bound-library
-    (h3-book-power-order-exponent-comparison-with-context
-     n formula (h3-book-order-bounds-with-library context lib)))))
 
 (defun h3-book-power-order-pair-base-arguments (endpoints)
   (let ((count (len endpoints)))
@@ -688,10 +638,6 @@
              (reflexive (proof-proof-reflexive proof first))
              (step (proof-proof-rewrite proof reflexive result '(1 2 1))))
             (cons step lib)))))))
-
-(defun h3-book-power-order-equivalent-power-order (lib goal context)
-  (h3-book-power-order-result
-   (h3-book-power-order-equivalent-power-order-with-library lib goal context)))
 
 (defun h3-book-power-order-has-power-comparison (formula)
   (proof-with-checked-results
@@ -755,10 +701,6 @@
      (bad (proof-proof-chain proof nil-value (list reversed)))
      (step (proof-proof-cases proof test-negative bad good)))
     (cons step lib)))
-
-(defun h3-book-power-order-integral-power-test (lib goal context)
-  (h3-book-power-order-result
-   (h3-book-power-order-integral-power-test-with-library lib goal context)))
 
 (defun h3-book-power-order-window-premises (context term b)
   (h3-book-power-order-with-state context
@@ -829,10 +771,6 @@
      (step (proof-proof-cases proof integer for-integers outside)))
     (cons step lib)))
 
-(defun h3-book-power-order-unit-power-in-window (lib goal context)
-  (h3-book-power-order-result
-   (h3-book-power-order-unit-power-in-window-with-library lib goal context)))
-
 (defun h3-book-power-order-integral-shape (goal lhs)
   (and (proof-is-call lhs *proof-integerp*)
        (proof-with-checked-results ((power (proof-term-at lhs 1)))
@@ -873,6 +811,3 @@
          (result (if (and guarded step) (h3-rewrite-implication lib guard step) step)))
         (cons result lib)))))
 
-(defun h3-book-power-order-power-order-theorem (lib formula)
-  (h3-book-power-order-result
-   (h3-book-power-order-power-order-theorem-with-library lib formula)))

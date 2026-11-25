@@ -224,7 +224,7 @@
 
 (defun proof-by-value-leaves-visit (n proof value tests)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "proof-by-value-leaves-visit"))
+  (cond ((zp n) '(:failure "fuel" "proof-by-value-leaves-visit"))
         ((proof-is-call value *proof-if*)
          (proof-with-checked-results
              ((branches (proof-list-of-length (cdr value) 3))
@@ -283,7 +283,7 @@
 (defun proof-by-value-visit (n proof value template leaf tests)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "proof-by-value-visit"))
+   ((zp n) '(:failure "fuel" "proof-by-value-visit"))
    ((proof-is-call value *proof-if*)
     (proof-with-checked-results
         ((branches (proof-list-of-length (cdr value) 3))
@@ -581,7 +581,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((head (proof-datum-head term)))
      (cond
-      ((zp n) '(:failure "Fuel" "proof-simplify-visit"))
+      ((zp n) '(:failure "fuel" "proof-simplify-visit"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
       ((endp term) '(:failure "index" ""))
       ((or (proof-compound head) (member-equal head definitions))
@@ -609,7 +609,7 @@
                  (t constant)))))))
  (defun proof-simplify-arguments (n proof term args index result evidence definitions)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "proof-simplify-arguments"))
+   (cond ((zp n) '(:failure "fuel" "proof-simplify-arguments"))
          ((endp args) result)
          (t (proof-with-checked-results
                 ((equality (proof-simplify-visit (1- n) proof (car args) evidence definitions))
@@ -655,7 +655,7 @@
 (defun proof-prove-visit (n proof term evidence definitions)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "proof-prove-visit")
+      '(:failure "fuel" "proof-prove-visit")
     (let ((result (proof-prove-step proof term evidence definitions)))
       (if (eq (car result) :transport)
           (proof-with-checked-results

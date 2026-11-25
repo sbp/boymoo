@@ -24,7 +24,10 @@ The arguments not listed in the table can be arbitrary ACL2 objects.
 | `check` | Four strings holding the ground theory, library, statements and proofs. |
 | `check-four` | Five strings holding the ground theory, library, statements, proofs and library's proofs. |
 | `initial-world` | `t`. |
-| `lines-of` | A string. |
+| `lines-of`, `text-lines` | A string. |
+| `string-lines` | A string, natural positions `start` and `i` with `start` at most `i`, a natural count `k` with `i` plus `k` the length of the string, and a true list. |
+| `line-chars` | `t`. |
+| `string-chars` | A string, a natural position `j` at most its length, a natural count `k` at most `j`, and a list of characters. |
 | `lex-atom` | If there is a leading symbol part, its lookup in the package table is a true list. |
 | `parse-loop` | A reader stack and a trie of package records. |
 | `parse-line` | A trie of package records. |
@@ -146,21 +149,23 @@ certificate. It requires that skipped proofs, added axioms and trust
 tags are absent. It compares the functions in ACL2's checker world
 with the exported definitions. It checks the guard status of each
 function in ACL2 and checks every call in the translated guards
-against the primitives, ground functions and checker functions.
-`checker/closed.py` checks the exported definition bodies. The script
+against the primitives, ground functions, the functions of the
+checker's library (`build/checker/library.statements`, which
+`checker/build.sh` writes) and checker functions. `checker/closed.py`
+checks the exported definition bodies, and those of the library. The script
 also checks the declared guards of the two entries directly in the ACL2
 world: four strings for `check` and five for `check-four`.
 
 ## Results
 
-On 2026-11-24 under ACL2 8.7, `sh checker/proofs/guards.sh --require-all`
-reported verified guards for all 220 checker functions. The certificate
+On 2026-11-25 under ACL2 8.7, `sh checker/proofs/guards.sh --require-all`
+reported verified guards for all 224 checker functions. The certificate
 annotation, ACL2 Core, entry guard and ground world checks passed. The
-15 proof books have 2,335 lines and 90,581 bytes by `wc -lc
-checker/proofs/guards*.lisp`. The audit took 22 seconds of elapsed time.
-The export from `sh checker/build.sh` had 241 lines and 276,691 bytes by
-`wc -lc build/checker/checker.statements`. `checker/skips.py` with an
-empty library found 102 statements with obligations.
+15 proof books have 2,353 lines and 91,066 bytes by `wc -lc
+checker/proofs/guards*.lisp`. The audit took 23 seconds of elapsed time.
+The export from `sh checker/build.sh` had 245 lines and 280,100 bytes by
+`wc -lc build/checker/checker.statements`. `checker/skips.py` with the
+checker's library as the library found 104 statements with obligations.
 
 On the same date, `sh checker/test.sh` passed the 382 cases and
 self-containment checks. ACL2 and the runner agreed on all 384 inputs.
@@ -169,7 +174,7 @@ and enabling guard checking also gave the runner's verdicts for all 384
 entries in `build/checker/test/list`. `sh export/proofs/round-trip.sh`
 passed with the round-trip books as written.
 
-On 2026-11-24, `sh checks/agree.sh` completed in 23 minutes. Both
+On 2026-11-25, `sh checks/agree.sh` completed in 21 minutes. Both
 checkers accepted the example and gave the expected verdict on all
 772 cases. They gave the same verdict on all 460 books, and the skip
 generators produced identical proofs for each book.

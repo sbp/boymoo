@@ -436,20 +436,25 @@
       (cons (cadddr entry) (l1-api-helper-sources (cdr helpers))))))
 
 (defun l1-api-certificate-sources-prepared (proof choices raw kind data name calls stored preparation)
-  (proof-with-checked-results
-      ((generated (l1-books-generate-prepared proof choices
-                                              (concatenate 'string raw *l1-api-newline*)
-                                              kind data name calls stored preparation)))
-    (cond ((equal (l1-books-certificate-reason generated) "")
-           (append (l1-api-helper-sources (l1-books-certificate-helpers generated))
-                   (l1-books-certificate-sources generated)))
-          ((equal kind "constrain")
-           (proof-with-checked-results ((parts (l1-warrant-warrant-parts data)))
-             (and parts (eq (caddr parts) :none)
-                  (proof-with-checked-results
-                      ((result (l1-warrant-warrant-lemmas proof data choices t)))
-                    (and result (equal (caddr result) "") (list (cadr result)))))))
-          (t nil))))
+  (let ((raw (concatenate 'string raw *l1-api-newline*)))
+    (proof-with-checked-results
+        ((generated (l1-books-generate-prepared proof choices raw
+                                                kind data name calls stored preparation)))
+      (cond ((equal (l1-books-certificate-reason generated) "")
+             (append (l1-api-helper-sources (l1-books-certificate-helpers generated))
+                     (l1-books-certificate-sources generated)))
+            ((equal kind "constrain")
+             (proof-with-checked-results
+                 ((parts (l1-warrant-warrant-parts data))
+                  (warrant (and parts (eq (caddr parts) :none)
+                                (l1-warrant-warrant-lemmas proof data choices t))))
+               (if (and warrant (equal (caddr warrant) ""))
+                   (list (cadr warrant))
+                 (proof-with-checked-results
+                     ((choice (l1-books-choice-witness proof data
+                                                       (text-upper (siphash-hexdigest raw)))))
+                   (l1-books-certificate-sources choice)))))
+            (t nil)))))
 
 (defun l1-api-parsed-obligation (raw parsed)
   (proof-with-checked-results ((parsed parsed))
@@ -483,10 +488,6 @@
               (context (l1-api-extend (car given) (cadr given) (caddr given) earlier)))
            (and (not (member-equal raw (caddr context)))
                 (l1-api-context-sources (car context) (cadr context) obligation aids))))))
-
-(defun l1-api-certificate (statement earlier library aids)
-  (proof-with-checked-results ((sources (l1-api-certificate-sources statement earlier library aids)))
-    (and sources (l1-warrant-join-sources 1000000 sources))))
 
 (defun l1-api-prove (statement earlier library aids)
   (let ((sources (l1-api-certificate-sources statement earlier library aids)))

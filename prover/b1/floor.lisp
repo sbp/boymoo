@@ -245,7 +245,7 @@
 
 (defun b1-floor-floor-of-ratio-beta (n lib pending)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "b1-floor-floor-of-ratio-beta"))
+  (cond ((zp n) '(:failure "fuel" "b1-floor-floor-of-ratio-beta"))
         ((failure-p pending) pending)
         ((eq (car pending) :done) (cadr pending))
         (t (b1-floor-floor-of-ratio-beta (1- n) lib (b1-floor-floor-of-ratio-beta-next lib pending)))))
@@ -297,7 +297,7 @@
             (c (car right))
             (middle (cadr right)))
         (if (not (equal b middle))
-            '(:failure "RuleInapplicable" "")
+            '(:failure "rule-inapplicable" "")
           (let ((test (library-lt b c)))
             (proof-with-checked-results
                 ((assumed (proof-proof-assume proof test t))
@@ -319,7 +319,7 @@
             (b (cadr left))
             (middle (car left)))
         (if (not (equal a middle))
-            '(:failure "RuleInapplicable" "")
+            '(:failure "rule-inapplicable" "")
           (let ((test (library-lt b a)))
             (proof-with-checked-results
                 ((assumed (proof-proof-assume proof test t))

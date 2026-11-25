@@ -151,7 +151,7 @@
         (cons (list nil evidence) lib)
       (proof-with-checked-results ((test (proof-term-at output 1)))
         (if (not (equal test (list *library-car* (list *library-cdr* parent))))
-            '(:failure "Unsupported" "")
+            '(:failure "unsupported" "")
           (proof-with-checked-results
               ((before lib)
                (lib (if (assoc-equal (proof-sym "SELF-T3-NEGATED-LITERAL-COUNT" "ACL2")
@@ -206,7 +206,7 @@
             (library-library-as-weak lib (car strict)))
         (proof-with-checked-results ((opened (t3-trees-folded-count lib field evidence)))
           (if (not (car opened))
-              '(:failure "Unsupported" "")
+              '(:failure "unsupported" "")
             (proof-with-checked-results
                 ((size (t3-trees-right-side (car opened)))
                  (bound (if (equal size two)
@@ -262,7 +262,7 @@
         ((opened (t3-logic-libraryproofs-normalize
                   lib selected nil (list *t3-trees-mv-nth* *t3-logic-zp* *proof-not* *t3-logic-atom*))))
       (if (not opened)
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (proof-with-checked-results
             ((value (t3-trees-right-side opened))
              (requests (t3-logic-libraryproofs-by-value-leaves lib value tests))
@@ -363,7 +363,7 @@
                    (field (list *library-car* (list *library-cdr* (list *library-cdr* parent)))))
                 (if (or (not (equal guard *proof-false*))
                         (not (equal edcls (list *library-cdr* field))))
-                    '(:failure "Unsupported" "")
+                    '(:failure "unsupported" "")
                   (proof-with-checked-results
                       ((before lib)
                        (lib (if (assoc-equal *t3-trees-guard-count*

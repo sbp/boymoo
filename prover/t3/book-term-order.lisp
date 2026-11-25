@@ -251,7 +251,7 @@
    (if (not (equal branch *proof-true*))
        (if (equal body (list *t3-book-term-order-lexorder* *library-x* *library-y*))
            nil
-         '(:failure "Unproved" ""))
+         '(:failure "unproved" ""))
      (proof-with-checked-results
       ((first (proof-term-at body 1))
        (second (proof-term-at body 3))
@@ -259,13 +259,13 @@
                        (proof-is-call second *proof-if*)
                        (proof-term-at second 2))))
       (if (not (equal otherwise *proof-false*))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
          ((args (proof-list-of-length (cdr first) 2))
           (reversed-test (proof-term-at second 1)))
          (let ((x (car args))
                (y (cadr args))
-               (error '(:failure "Unproved" "")))
+               (error '(:failure "unproved" "")))
            (if (not (equal reversed-test (library-lt y x)))
                error
              (proof-with-checked-results
@@ -278,11 +278,11 @@
 (defun t3-book-term-order-projection-keys-loop (n body keys)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-term-order-projection-keys")
+      '(:failure "fuel" "t3-book-term-order-projection-keys")
     (proof-with-checked-results ((next (t3-book-term-order-next-key body)))
       (cond (next (t3-book-term-order-projection-keys-loop (1- n) (cdr next) (cons (car next) keys)))
             (keys (reverse keys))
-            (t '(:failure "Unproved" ""))))))
+            (t '(:failure "unproved" ""))))))
 
 (defun t3-book-term-order-projection-keys (body)
   (t3-book-term-order-projection-keys-loop 1000000 body nil))
@@ -402,4 +402,4 @@
      (if (equal final-body (list (caddr layers) x y))
          (t3-book-term-order-add-order-laws *t3-book-term-order-laws*
                                             (car layers) (cadr layers) (cadddr layers))
-       '(:failure "Unproved" "")))))
+       '(:failure "unproved" "")))))

@@ -52,7 +52,7 @@
           (list :cases value trail nil))
          ((or (member-equal function trail)
               (not (assoc-equal function (proof-proof-definitions proof))))
-          '(:failure "Unsupported" ""))
+          '(:failure "unsupported" ""))
          (t
           (proof-with-checked-results
               ((opened (proof-proof-unfold proof value))
@@ -76,7 +76,7 @@
              (equal (caddr value) *t3-list-bounds-string-type*))
         (t3-list-bounds-string-assertion lib (cadr value)))
        ((or (not (proof-compound value)) (< 10 (len trail)))
-        '(:failure "Unsupported" ""))
+        '(:failure "unsupported" ""))
        (t (t3-book-strings-call-action results value formula trail))))))
 
 (defund t3-book-strings-projection (results value trail)
@@ -89,11 +89,11 @@
          (producer (caddr parts)))
       (if (or (not (integerp number)) (< number 0) (< 8 number)
               (not (proof-compound producer)))
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (proof-with-checked-results ((function (proof-term-at producer 0)))
           (if (or (member-equal function trail)
                   (not (assoc-equal function (proof-proof-definitions proof))))
-              '(:failure "Unsupported" "")
+              '(:failure "unsupported" "")
             (proof-with-checked-results
                 ((template (list *t3-list-bounds-stringp*
                                  (list *t3-book-projections-mv-nth* index *proof-result*)))
@@ -126,7 +126,7 @@
  (defun t3-book-strings-string-results-string-run (n results value tests trail)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-book-strings-string-results-string-run")
+       '(:failure "fuel" "t3-book-strings-string-results-string-run")
      (let ((action (t3-book-strings-string-action results value tests trail)))
        (case (car action)
          (:project
@@ -145,7 +145,7 @@
  (defun t3-book-strings-string-results-projected-run (n results value tests trail)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-book-strings-string-results-projected-run")
+       '(:failure "fuel" "t3-book-strings-string-results-projected-run")
      (t3-book-strings-with-results
          ((projection (t3-book-strings-projection results value trail))
           (template (cadr projection))
@@ -160,7 +160,7 @@
      (n term signed results trail index)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-book-strings-string-results-projected-leaf")
+       '(:failure "fuel" "t3-book-strings-string-results-projected-leaf")
      (t3-book-strings-with-results
          ((selection (t3-book-strings-projected-leaf-selection results index term))
           (result (t3-book-strings-string-results-string-run
@@ -171,7 +171,7 @@
  (defun t3-book-strings-visit (n results value template tests trail index)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-book-strings-visit")
+       '(:failure "fuel" "t3-book-strings-visit")
      (let* ((proof (library-library-proof (t3-book-strings-string-results-lib results)))
             (branch (t3-book-strings-branch proof value)))
        (case (car branch)
@@ -200,29 +200,3 @@
             (t3-logic-by-value-check-leaf step value template)))
          (otherwise branch))))))
 
-(defun t3-book-strings-string-results-string (results value tests trail)
-  (t3-book-strings-string-results-string-run 1000000 results value tests trail))
-
-(defun t3-book-strings-string-results-return-cases (results value tests trail)
-  (t3-book-strings-visit 1000000 results value (t3-book-strings-string-template)
-                        tests trail nil))
-
-(defun t3-book-strings-string-results-projected (results value tests trail)
-  (t3-book-strings-string-results-projected-run 1000000 results value tests trail))
-
-(defun t3-book-strings-string-result (lib formula earlier)
-  (let ((results (t3-book-strings-string-results-init lib earlier)))
-    (cond
-     ((proof-is-call formula *library-implies*)
-      (proof-with-checked-results ((goal (proof-term-at formula 2)))
-        (if (proof-is-call goal *t3-list-bounds-stringp*)
-            (t3-book-strings-with-results
-                ((value (proof-term-at goal 1))
-                 (step (t3-book-strings-string-results-string
-                        results value (list (list (cadr formula) t)) nil)))
-              (t3-book-lemmas-implication lib formula step))
-          nil)))
-     ((proof-is-call formula *t3-list-bounds-stringp*)
-      (proof-with-checked-results ((value (proof-term-at formula 1)))
-        (t3-book-strings-string-results-string results value nil nil)))
-     (t nil))))

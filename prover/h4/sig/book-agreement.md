@@ -5,7 +5,6 @@ form in `prover/sig/proof.md`.
 
 | ACL2 call | Result | Failure |
 |---|---|---|
-| `(h4-book-agreement-agreement-proof p formula)` | A Step for a recognized agreement, subset, alist equivalence, or lookup formula, or `nil` if the formula matches no recipe. | A failure from inspecting the formula or constructing the proof. |
 
 The constants `*h4-book-agreement-lookup*`, `*h4-book-agreement-get*`,
 `*h4-book-agreement-member*`, `*h4-book-agreement-agree*`,

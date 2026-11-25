@@ -28,7 +28,6 @@ preserves the Library on success, a request or a failure.
 | `(h3-book-witness-variables term)` | The set of variable terms, or a failure. |
 | `(h3-book-witness-define lib formals body)` | `(cons value lib)` with the witness symbol or a failure as `value`. |
 | `(h3-book-witness-equations-for function arity formulas constrained)` | The list of inferred definition options in trial order, or a failure. |
-| `(h3-book-witness-witness-proof lib fields prove)` | `(cons value lib)` with the witness entry, a callback request or a failure as `value`. |
 
 A variable set is ordered lexically by each element's written ACL2
 representation. Equation options precede recognizer options. Witness

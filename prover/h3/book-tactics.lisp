@@ -79,26 +79,8 @@
    (h3-rewrite-search-init lib definitions calls rules budget deep)
    inference-budget inside-first))
 
-(defun h3-book-tactics-book-search-arguments-first (search term)
-  (h3-rewrite-search-arguments-first search term))
-
-(defun h3-book-tactics-book-search-rewrite-atom (search value evidence)
-  (h3-rewrite-search-rewrite-atom search value evidence))
-
-(defun h3-book-tactics-book-search-visit-term (search)
-  (h3-rewrite-search-visit-term search))
-
-(defun h3-book-tactics-book-search-evaluate (search term)
-  (h3-rewrite-search-evaluate search term))
-
-(defun h3-book-tactics-book-search-should-unfold (search term)
-  (h3-rewrite-search-should-unfold search term))
-
 (defun h3-book-tactics-book-search-reduce (search term evidence tests active)
   (h3-rewrite-search-reduce search term evidence tests active))
-
-(defun h3-book-tactics-book-search-derive (search term evidence active tests)
-  (h3-rewrite-search-derive search term evidence active tests))
 
 (defun h3-book-tactics-fact-index-count (index)
   (cadr index))
@@ -643,9 +625,6 @@
             reverse
           (h3-book-tactics-match-reduced lib formula (cdr reverse)))))))
 
-(defun h3-book-tactics-matching-theorem (lib formula index)
-  (car (h3-book-tactics-matching-theorem-with-index lib formula index)))
-
 (defun h3-book-tactics-failure-kind-p (value kinds)
   (and (failure-p value) (if (member-equal (cadr value) kinds) t nil)))
 
@@ -665,7 +644,7 @@
                (premise (if (failure-p hypothesis)
                             hypothesis
                           (car (h3-rewrite-search-prove search hypothesis (list given))))))
-          (cond ((h3-book-tactics-failure-kind-p premise '("Unproved" "assertion")) :decline)
+          (cond ((h3-book-tactics-failure-kind-p premise '("unproved" "assertion")) :decline)
                 ((failure-p premise) premise)
                 (t
                  (proof-with-checked-results
@@ -772,7 +751,7 @@
 (defun h3-book-tactics-run-induction
     (n lib formula variable replacements available calls rules inside-first clause-type replies result)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h3-book-tactics-run-induction"))
+  (cond ((zp n) '(:failure "fuel" "h3-book-tactics-run-induction"))
         ((not (h3-induction-request-p result)) result)
         (t
          (let* ((evidence (h3-induction-request-evidence result))
@@ -887,12 +866,12 @@
    ((and (equal package "SET") (member-equal local-name *h3-book-tactics-set-count-theorems*))
     (let* ((result (h3-book-descent-set-selector-theorem-with-library lib formula))
            (value (car result)))
-      (if (h3-book-tactics-failure-kind-p value '("value" "Unproved" "assertion"))
+      (if (h3-book-tactics-failure-kind-p value '("value" "unproved" "assertion"))
           (cons :continue (cdr result))
         result)))
    ((equal name (proof-sym "SFIX-PRODUCES-SET" "SET"))
     (let ((value (h3-book-descent-set-fix-type lib formula)))
-      (cons (if (h3-book-tactics-failure-kind-p value '("value" "Unproved" "assertion"))
+      (cons (if (h3-book-tactics-failure-kind-p value '("value" "unproved" "assertion"))
                 :continue
               value)
             lib)))
@@ -940,7 +919,7 @@
 (defun h3-book-tactics-rewrite-attempts (openings lib formula definitions rules result)
   (declare (xargs :measure (acl2-count openings)))
   (cond ((not (or (eq result :start)
-                  (h3-book-tactics-failure-kind-p result '("Unproved" "value" "assertion"))))
+                  (h3-book-tactics-failure-kind-p result '("unproved" "value" "assertion"))))
          result)
         ((endp openings) nil)
         (t (h3-book-tactics-rewrite-attempts
@@ -951,7 +930,7 @@
 (defun h3-book-tactics-induction-attempt (options lib formula candidate definitions calls rules result)
   (declare (xargs :measure (acl2-count options)))
   (cond ((not (or (eq result :start)
-                  (h3-book-tactics-failure-kind-p result '("Unproved" "ProofMismatch" "assertion"))))
+                  (h3-book-tactics-failure-kind-p result '("unproved" "proof-mismatch" "assertion"))))
          result)
         ((endp options) nil)
         (t (h3-book-tactics-induction-attempt
@@ -1001,7 +980,7 @@
          (value (car result))
          (lib (cdr result)))
     (if (and value (not (h3-book-tactics-failure-kind-p
-                         value '("Unproved" "DifferentNormalForms" "value" "assertion"))))
+                         value '("unproved" "different-normal-forms" "value" "assertion"))))
         result
       (let ((step (h3-book-tactics-rewrite-theorem lib formula terms index)))
         (if step
@@ -1034,7 +1013,7 @@
                (let ((terms (proof-unique (h3-book-tactics-subterms formula)))
                      (lib (cdr result)))
                  (if (> (len terms) 250)
-                     (cons '(:failure "Unproved" "") lib)
+                     (cons '(:failure "unproved" "") lib)
                    (h3-book-tactics-solve-theorem-tactics lib local-name package formula terms index)))))))))
 
 (defun h3-book-tactics-solve-theorem-prepared (lib name formula prepared)
@@ -1046,10 +1025,6 @@
         (if fact
             (cons fact lib)
           (h3-book-tactics-solve-theorem-unmatched lib name formula (cdr matched)))))))
-
-(defun h3-book-tactics-solve-theorem (lib name formula aids)
-  (declare (ignore aids))
-  (h3-book-tactics-solve-theorem-prepared lib name formula nil))
 
 (defun h3-book-tactics-solve-witness-prepared (instance witnesses lib prepared)
   (let* ((definitions (proof-proof-definitions (library-library-proof lib)))
@@ -1063,14 +1038,11 @@
       (h3-book-tactics-prove-with-search
        lib (append *h3-book-tactics-definitions* names) calls rules 20 130 t nil instance nil))))
 
-(defun h3-book-tactics-solve-book-statement-prove (instance witnesses lib)
-  (h3-book-tactics-solve-witness-prepared instance witnesses lib nil))
-
 (defun h3-book-tactics-run-witness-prepared (n lib function-names formulas candidates
                                                replies result prepared)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "h3-book-tactics-run-witness-prepared") lib)
+      (cons '(:failure "fuel" "h3-book-tactics-run-witness-prepared") lib)
     (let ((value (car result)))
       (if (and (consp value) (eq (car value) :request))
           (let* ((updated (cdr result))
@@ -1082,9 +1054,6 @@
              (h3-book-witness-try-options lib function-names formulas candidates replies)
              prepared))
         result))))
-
-(defun h3-book-tactics-run-witness (n lib function-names formulas candidates replies result)
-  (h3-book-tactics-run-witness-prepared n lib function-names formulas candidates replies result nil))
 
 (defun h3-book-tactics-local-fact-names (entries)
   (if (endp entries)
@@ -1108,9 +1077,6 @@
          1000000 world names formulas candidates nil
          (h3-book-witness-try-options world names formulas candidates nil) prepared)))))
 
-(defun h3-book-tactics-constraint-entry (lib fields)
-  (h3-book-tactics-constraint-entry-prepared lib fields nil))
-
 (defun h3-book-tactics-theorem-entry-prepared (lib fields prepared)
   (let ((parts (proof-list-of-length fields 2)))
     (if (failure-p parts)
@@ -1127,16 +1093,10 @@
                (cons '(:failure "failure" "") (cdr result)))
               (t (cons (proof-proof-entry "theorem" name (list name) (list step)) (cdr result))))))))
 
-(defun h3-book-tactics-theorem-entry (lib fields aids)
-  (declare (ignore aids))
-  (h3-book-tactics-theorem-entry-prepared lib fields nil))
-
 (defun h3-book-tactics-solve-book-statement-prepared (lib kind fields aids prepared)
   (cond ((equal kind "define")
          (h3-book-descent-termination-proof-with-library lib fields aids :proof-entry))
         ((equal kind "theorem") (h3-book-tactics-theorem-entry-prepared lib fields prepared))
         ((equal kind "constrain") (h3-book-tactics-constraint-entry-prepared lib fields prepared))
-        (t (cons '(:failure "Unproved" "") lib))))
+        (t (cons '(:failure "unproved" "") lib))))
 
-(defun h3-book-tactics-solve-book-statement (lib kind fields aids)
-  (h3-book-tactics-solve-book-statement-prepared lib kind fields aids nil))

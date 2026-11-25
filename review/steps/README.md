@@ -12,8 +12,10 @@ The command checks `spec/example` and every case in `checker/cases` and
 and that has a step in `proofs.txt` or `library-proofs.txt`. It compares
 both checkers' verdicts with the recorded verdict. After the cases it
 checks the checker's own source using `build/checker/checker.statements`
-and `build/self/checker.proofs`, with empty library inputs. It runs
-`sh review/self/run.sh` if either source input is missing or empty,
+and `build/self/checker.proofs`, with the checker's library,
+`build/checker/library.statements`, and its proofs,
+`build/self/library/checker.proofs`, as the library inputs. It runs
+`sh review/self/run.sh` if any of the four is missing or empty,
 with output in `build/steps/self-build.log`.
 The source build also uses the tools for the exporter and reference runner
 listed in `DETAILS.md`. Both checkers must give `accepted` for the source.
@@ -121,39 +123,42 @@ the exact step formula. With no substitutions the second premise gives
 
 ## Results
 
-On 2026-11-24, this command with ACL2 8.7 took 65.57 seconds and
-exited with status 0. It printed `all replayable proofs passed`.
+On 2026-11-25, `sh review/steps/run.sh` with ACL2 8.7, with the default
+heap, took 50.43 seconds and exited with status 0. It printed
+`all replayable proofs passed`. This command gives ACL2 a heap of
+1,500 MB:
 
 ```sh
 SBCL_USER_ARGS="--dynamic-space-size 1500" sh review/steps/run.sh
 ```
 
-The 106 cases took 46.72 seconds. The source group took 13.01 seconds
-with both source inputs present. ACL2 reports 7.92 seconds for certifying
-the source book in `build/steps/self/book.log`.
+The 106 cases took 36.44 seconds. The source group took 9.87 seconds
+with all four source inputs present. ACL2 reports 6.51 seconds for
+certifying the source book in `build/steps/self/book.log`.
 
 | Input | Proofs certified | Steps certified |
 | --- | ---: | ---: |
 | Cases with verdict `accepted` | 139 of 142 | 469 of 472 |
 | Cases with verdict `provisional` | 85 of 99 | 185 of 219 |
 | All cases | 224 of 241 | 654 of 691 |
-| Checker source with verdict `accepted` | 322 of 322 | 7,827 of 7,827 |
-| All inputs | 546 of 563 | 8,481 of 8,518 |
+| Checker source with verdict `accepted` | 329 of 329 | 7,845 of 7,845 |
+| All inputs | 553 of 570 | 8,499 of 8,536 |
 
-Of the 24 library proofs and their 42 steps, 22 proofs and 40 steps
-certified. The source certificate covers 262 termination obligations and
-60 lemmas.
+Of the 79 library proofs and their 2,598 steps, 77 proofs and 2,596
+steps certified; 55 of them, with 2,556 steps, are the checker source's.
+The source certificate covers 267 termination obligations, 60 lemmas and
+the two obligations of the termination of `nth`.
 The source book replays the exported bodies and admits the definitions
 from those proofs in a fresh ACL2 world with the `BOYMOO` package. Its
 certificate has empty annotations for axioms, skipped proofs and trust tags.
 
 | Input | Primary book files | Book bytes | Certificates | Certificate bytes |
 | --- | ---: | ---: | ---: | ---: |
-| Cases | 106 | 1,285,642 | 105 | 1,328,637 |
-| Checker source | 1 | 11,494,031 | 1 | 6,605,784 |
+| Cases | 106 | 1,285,642 | 105 | 1,325,996 |
+| Checker source | 1 | 11,590,367 | 1 | 6,633,070 |
 
 File counts and byte sizes come from this command after the run on
-2026-11-24.
+2026-11-25.
 
 ```sh
 python3 - <<'PY'

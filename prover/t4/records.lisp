@@ -150,7 +150,7 @@
   (let ((proof (t4-records-proof records)))
     (proof-with-checked-results ((rhs (t4-records-step-at equation 2)))
       (if (not (equal rhs *proof-false*))
-          '(:failure "InferenceMismatch" "")
+          '(:failure "inference-mismatch" "")
         (proof-with-checked-results
             ((not-nil (proof-proof-not-nil proof))
              (reversed (proof-proof-symmetric proof equation)))
@@ -183,7 +183,7 @@
 (defun t4-records-record-atom-unfold (n records value)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-records-record-atom-unfold")
+      '(:failure "fuel" "t4-records-record-atom-unfold")
     (let ((next (t4-records-record-atom-step records value)))
       (if (eq (car next) :rewrite)
           (t4-records-record-atom-unfold (1- n) records (cadr next))
@@ -453,7 +453,7 @@
      (declare (xargs :measure (nfix n)))
      (cond
       ((not (o< (nfix (1- n)) (nfix n)))
-       (list :failure "Fuel" ,(string-downcase (symbol-name name))))
+       (list :failure "fuel" ,(string-downcase (symbol-name name))))
       ((proof-is-call value *proof-if*)
        (t4-records-let records
            ((branches (proof-list-of-length (cdr value) 3))
@@ -1500,7 +1500,7 @@
      (let ((entry (assoc-equal (if lsp (list typed lsp) (list typed)) callback)))
        (if entry
            (cdr entry)
-         '(:failure "SearchMiss" ""))))))
+         '(:failure "search-miss" ""))))))
 
 (defun t4-records-records-representation-cases (records obj plain wrapped other)
   (let ((proof (t4-records-proof records))
@@ -1915,30 +1915,6 @@
          (lib (t4-records-records-lib records))
          (step (if same selected (t4-ordinals-ordinals-imply lib guard selected))))
       (cons step lib))))
-
-(defun t4-records-arithmetic-installed-p (entries)
-  (and (consp entries)
-       (or (equal (cadar entries) (proof-sym "SELF-GAP-DECREASE" "ACL2"))
-           (t4-records-arithmetic-installed-p (cdr entries)))))
-
-(defun t4-records-add-arithmetic (lib)
-  (if (t4-records-arithmetic-installed-p (library-library-entries lib))
-      lib
-    (library-library-build lib)))
-
-(defun t4-records-record-preservation (lib formula)
-  (proof-with-checked-results ((args (t4-records-preservation-arguments formula)))
-    (if (not args)
-        (cons nil lib)
-      (proof-with-checked-results ((lib (t4-records-add-arithmetic lib)))
-        (t4-records-record-preservation-proof lib (car args) (cadr args))))))
-
-(defun t4-records-record-read (lib formula)
-  (proof-with-checked-results ((args (t4-records-read-arguments formula)))
-    (if (not args)
-        (cons nil lib)
-      (proof-with-checked-results ((lib (t4-records-add-arithmetic lib)))
-        (t4-records-record-read-proof lib args)))))
 
 (defun t4-records-record-preservation-with-replies (lib formula replies)
   (proof-with-checked-results ((args (t4-records-preservation-arguments formula)))

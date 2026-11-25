@@ -15,18 +15,11 @@ and new values for present keys retain the old positions.
 | Call | Arguments and result | Failure |
 |---|---|---|
 | `(t2-books-make-obligation raw name kind data)` | Obligation with the four given fields. | None. |
-| `(t2-books-obligation-raw target)` | Source text of Obligation `target`. | None. |
 | `(t2-books-obligation-name target)` | Name of Obligation `target`. | None. |
 | `(t2-books-obligation-kind target)` | Entry word of Obligation `target`. | None. |
 | `(t2-books-obligation-data target)` | Entry fields of Obligation `target`. | None. |
-| `(t2-books-make-candidate entries prerequisites)` | Candidate with the given proof entries and dictionary of prerequisite facts. | None. |
-| `(t2-books-candidate-entries candidate)` | Candidate's proof entries. | None. |
-| `(t2-books-candidate-prerequisites candidate)` | Candidate's prerequisite fact dictionary. | None. |
 | `(t2-books-first-name kind data)` | First function name in a definition or constraint, the name of a theorem, or `nil` for any other kind. | A failure from reading malformed fields. |
 | `(t2-books-independent-theory lib)` | A Library with the same fields as `lib`, which subsequent calls can extend independently. | None. |
-| `(t2-books-book-aids events)` | List `(measures hints)` from source events `events`. Each dictionary is in first-insertion order. | A failure from reading malformed fields. |
-| `(t2-books-parse-aids events)` | List `(measures hints)` from events `events`. Measures map names to `(term relation)` fields and hints map names to hint data, both in source order. | A failure from reading malformed fields. |
-| `(t2-books-referenced-facts entries)` | Set of external facts as a list ordered by their printed sort keys. | A failure from reading an entry's source. |
 
 A StatementProver is `(:t2-books-statement-prover generator)`, whose field is its Generator. An optional Rules index is `nil` when omitted.
 
@@ -34,7 +27,6 @@ A StatementProver is `(:t2-books-statement-prover generator)`, whose field is it
 |---|---|---|
 | `(t2-books-statement-prover-init generator)` | StatementProver with Generator `generator`. | None. |
 | `(t2-books-statement-prover-generator prover)` | Generator of StatementProver `prover` or BookProver `prover`. | None. |
-| `(t2-books-statement-prover-definition prover data)` | `(cons entry prover)` with the measure proof entry for a definition and the resulting StatementProver. | `Unproved` if the measure recipes fail, or a failure from reading or proving the definition. |
 | `(t2-books-statement-prover-generate prover target hints index)` | `(cons (list lib entry) prover)` with the Library and proof entry for Obligation `target` and the resulting StatementProver. `hints` is the name-to-hint dictionary and `index` is a Rules index or `nil`. | A failure from reading or proving the obligation. |
 | `(t2-books-build-lemma-family lib family)` | Library after the one family identified by `family` from `*t2-books-book-lemmas*`. | A failure from building the lemmas. |
 
@@ -55,11 +47,6 @@ map statement source lines to Candidates and skip reasons, respectively.
 
 | Call | Arguments and result | Failure |
 |---|---|---|
-| `(t2-books-book-prover-init library-source library-events measure-events)` | BookProver for the given library source string and the source events for the library statements and measures. | A failure from admitting events or building lemmas. |
-| `(t2-books-book-prover-candidate prover target hints index)` | `(cons candidate prover)` with the Candidate for Obligation `target` and the resulting BookProver. Other arguments are as in StatementProver's `generate`. | A failure from reading or proving the obligation. |
-| `(t2-books-book-prover-book prover name expected skip-lines aid-events statement-events statement-source)` | `(cons (list statement-source targets candidates skips) prover)` with the original book text, Obligations in source order, candidate and skip-source dictionaries keyed by name, and the resulting BookProver. `expected` is the obligation count. The other inputs supply raw skip lines, parsed aids and statement events, and the original book source string. The `name` argument is unused. | A failure for a mismatched count or an invalid event. |
-| `(t2-books-book-prover-proof-file prover targets candidates skips)` | List of `(target steps source reason)` records in target order. `candidates` and `skips` are dictionaries keyed by target name, from `book`. | A failure when proofs conflict or a proof or skip record is missing. |
-| `(t2-books-owner-of-line chunks number)` | Obligation owning the given one-based proof line, or `nil`. `chunks` are the proof file records. | None for integer line numbers. |
 
 File loading and output, external checkers, and command-line orchestration
 are outside the books.

@@ -21,7 +21,7 @@
                  label))
          (clause (proof-step-clause step)))
     (if (assoc-equal name facts)
-        '(:failure "InapplicableStep" "")
+        '(:failure "inapplicable-step" "")
       (proof-with-checked-results
        ((entry (proof-proof-entry "lemma" name (cons name clause) (list step))))
        (cons name
@@ -37,7 +37,7 @@
      (if (equal formula (proof-ite a b *proof-false*))
          (proof-with-checked-results ((selected (proof-proof-select proof formula first)))
            (proof-proof-transport proof second selected))
-       '(:failure "InapplicableStep" "")))))
+       '(:failure "inapplicable-step" "")))))
 
 (defun h4-association-conjunct (p step)
   (let ((proof (library-library-proof p)))
@@ -55,7 +55,7 @@
                (second (proof-proof-fact proof *h4-association-second-conjunct* bindings))
                (right (proof-proof-discharge proof second step)))
               (list left right)))
-         '(:failure "InapplicableStep" ""))))))
+         '(:failure "inapplicable-step" ""))))))
 
 (defun h4-association-modus-ponens (p step evidence)
   (let ((proof (library-library-proof p)))
@@ -72,7 +72,7 @@
                      (list (list *library-x* premise) (list *library-y* (caddr parts)))))
              (discharged (proof-proof-discharge proof claim step)))
             (proof-proof-discharge proof discharged evidence))
-         '(:failure "InapplicableStep" ""))))))
+         '(:failure "inapplicable-step" ""))))))
 
 (defun h4-association-imply (p formula conclusion)
   (let ((proof (library-library-proof p)))
@@ -83,7 +83,7 @@
            (result (caddr parts)))
        (cond
         ((not (and (equal (car parts) *library-implies*) (equal result first)))
-         '(:failure "InapplicableStep" ""))
+         '(:failure "inapplicable-step" ""))
         ((assoc-equal *h4-association-implies-conclusion* (proof-proof-facts proof))
          (let ((bindings (list (list *library-x* premise) (list *library-y* result))))
            (proof-with-checked-results
@@ -115,13 +115,13 @@
     (no-first (proof-step-first no)))
    (if (and (equal yes-first no-first) (equal no-first formula))
        (proof-proof-cases (library-library-proof p) test yes no)
-     '(:failure "InapplicableStep" ""))))
+     '(:failure "inapplicable-step" ""))))
 
 (defun h4-association-nil-value (p negative)
   (let ((proof (library-library-proof p)))
     (proof-with-checked-results ((first (proof-step-first negative)))
       (if (not (proof-is-call first *proof-not*))
-          '(:failure "InapplicableStep" "")
+          '(:failure "inapplicable-step" "")
         (proof-with-checked-results
          ((term (proof-term-at first 1))
           (partition (proof-proof-nil-or-true proof term))
@@ -141,7 +141,7 @@
            (computed (proof-proof-compute proof (proof-eq value *proof-false*) *proof-nil*))
            (partition (proof-proof-rewrite proof partition computed '(1))))
           (proof-proof-tidy proof partition))
-       '(:failure "InapplicableStep" "")))))
+       '(:failure "inapplicable-step" "")))))
 
 (defun h4-association-select-literal (proof term)
   (proof-with-checked-results ((parts (proof-list-of-length (cdr term) 3)))
@@ -164,7 +164,7 @@
 (defun h4-association-constant-argument (args index)
   (if (< index (len args))
       (proof-term-at (nth index args) 1)
-    '(:failure "MissingTermPart" "")))
+    '(:failure "missing-term-part" "")))
 
 (defun h4-association-constant (proof term)
   (let ((head (car term))
@@ -230,7 +230,7 @@
  (defun h4-association-normalize-visit (n p value known rules expand)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "h4-association-normalize-visit")
+       '(:failure "fuel" "h4-association-normalize-visit")
      (let* ((proof (library-library-proof p))
             (rule (assoc-equal value rules))
             (negative (assoc-equal (proof-neg value) known)))
@@ -247,7 +247,7 @@
         ((or (assoc-equal value known) (not (proof-compound value))
              (proof-is-call value *proof-quote*))
          nil)
-        ((endp value) '(:failure "MissingTermPart" ""))
+        ((endp value) '(:failure "missing-term-part" ""))
         ((or (proof-compound (car value)) (equal (car value) *h4-association-return-last*))
          (proof-with-checked-results
           ((step (if (proof-compound (car value))
@@ -296,7 +296,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((endp args) step)
-    ((zp n) '(:failure "Fuel" "h4-association-normalize-arguments"))
+    ((zp n) '(:failure "fuel" "h4-association-normalize-arguments"))
     (t
      (let ((proof (library-library-proof p)))
        (proof-with-checked-results
@@ -327,7 +327,7 @@
            (cond (known (proof-proof-transport proof known equality))
                  ((and (proof-is-call value *proof-quote*) (not (equal value *proof-false*)))
                   (h4-association-non-nil proof equality))
-                 (t '(:failure "InapplicableTerm" "")))))))))
+                 (t '(:failure "inapplicable-term" "")))))))))
 
 (defun h4-association-rational (p term evidence)
   (proof-with-checked-results

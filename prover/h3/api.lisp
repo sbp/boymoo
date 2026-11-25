@@ -194,9 +194,6 @@
                            (h3-api-reserved-names facts sources))
                          nil nil nil))))
 
-(defun h3-api-entries-init (lib)
-  (h3-api-entries-init-using lib nil))
-
 (defun h3-api-token-present-p (tokens text)
   (and (consp tokens)
        (or (<= 0 (text-find text (car tokens)))
@@ -236,7 +233,7 @@
    (let ((local (assoc-equal symbol (h3-api-entries-sources object)))
          (named (assoc-equal symbol (h3-api-entries-names object))))
      (cond
-      ((zp n) '(:failure "Fuel" "h3-api-entries-name"))
+      ((zp n) '(:failure "fuel" "h3-api-entries-name"))
       ((not local) (cons symbol object))
       (named (cons (cdr named) object))
       ((member-equal symbol (h3-api-entries-active object))
@@ -255,7 +252,7 @@
  (defun h3-api-entries-publish (n object source symbol renamed)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h3-api-entries-publish"))
+    ((zp n) '(:failure "fuel" "h3-api-entries-publish"))
     ((member-equal renamed (h3-api-entries-reserved object))
      '(:failure "failure" ""))
     (t
@@ -279,7 +276,7 @@
  (defun h3-api-entries-term (n object term)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h3-api-entries-term"))
+    ((zp n) '(:failure "fuel" "h3-api-entries-term"))
     ((or (not (proof-compound term)) (endp term) (proof-is-call term *proof-quote*))
      (cons term object))
     (t
@@ -296,14 +293,14 @@
 
  (defun h3-api-entries-substitution (n object bindings)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "h3-api-entries-substitution"))
+   (cond ((zp n) '(:failure "fuel" "h3-api-entries-substitution"))
          ((equal bindings *proof-nil*) (cons bindings object))
          (t (h3-api-entries-map (1- n) object :binding bindings nil))))
 
  (defun h3-api-entries-fields (n object kind fields own)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h3-api-entries-fields"))
+    ((zp n) '(:failure "fuel" "h3-api-entries-fields"))
     ((equal kind "fact")
      (proof-with-checked-results
       ((name (proof-term-at fields 0))
@@ -354,7 +351,7 @@
 
  (defun h3-api-entries-rewrite (n object text own)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "h3-api-entries-rewrite"))
+   (cond ((zp n) '(:failure "fuel" "h3-api-entries-rewrite"))
          ((not (h3-api-entries-tokens object)) (cons text object))
          (t (h3-api-entries-rewrite-lines (1- n) object
                                           (h3-api-proof-lines (coerce text 'list) nil)
@@ -363,7 +360,7 @@
  (defun h3-api-entries-map (n object method values own)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h3-api-entries-map"))
+    ((zp n) '(:failure "fuel" "h3-api-entries-map"))
     ((h3-api-sequence-failure values))
     ((endp values) (cons nil object))
     (t
@@ -380,7 +377,7 @@
  (defun h3-api-entries-binding (n object binding)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "h3-api-entries-binding")
+       '(:failure "fuel" "h3-api-entries-binding")
      (proof-with-checked-results
       ((pair (h3-api-unpack-pair binding))
        (value (h3-api-entries-term (1- n) object (cadr pair))))
@@ -389,7 +386,7 @@
  (defun h3-api-entries-definition (n object definition own)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "h3-api-entries-definition")
+       '(:failure "fuel" "h3-api-entries-definition")
      (proof-with-checked-results
       ((definition (proof-list-of-length definition 3))
        (name (if (equal (car definition) own)
@@ -401,7 +398,7 @@
  (defun h3-api-entries-rewrite-lines (n object lines own reversed)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h3-api-entries-rewrite-lines"))
+    ((zp n) '(:failure "fuel" "h3-api-entries-rewrite-lines"))
     ((endp lines) (cons (text-join "" (reverse reversed)) object))
     (t
      (let ((raw (car lines)))
@@ -423,14 +420,11 @@
           ((failure-p (car result)) (car result))
           (t result))))
 
-(defun h3-api-book-entry (lib kind fields aids)
-  (h3-api-book-entry-prepared lib kind fields aids nil))
-
 (defun h3-api-slice-entry (result name formula)
   (cond ((failure-p result) result)
         ((or (not (proof-step-p result))
              (not (equal (proof-step-clause result) (list formula))))
-         '(:failure "ProofMismatch" ""))
+         '(:failure "proof-mismatch" ""))
         (t (proof-proof-entry "theorem" name (list name) (list result)))))
 
 (defun h3-api-ascii-characters-p (chars)
@@ -447,13 +441,13 @@
                    ((label (proof-term-at name 2)))
                    (if (and (stringp label) (h3-api-ascii-characters-p (coerce label 'list)))
                        (h3-tactics-solve lib label formula)
-                     '(:failure "MalformedTacticInput" ""))))
+                     '(:failure "malformed-tactic-input" ""))))
           (current (if (failure-p solved) lib (cdr solved)))
           (step (if (failure-p solved) solved (car solved)))
           (entry (h3-api-slice-entry step name formula)))
      (cond ((not (failure-p entry)) (cons entry current))
-           ((member-equal (cadr entry) '("Unproved" "MalformedTacticInput" "MissingProofData"
-                                        "ProofMismatch" "DifferentNormalForms"
+           ((member-equal (cadr entry) '("unproved" "malformed-tactic-input" "missing-proof-data"
+                                        "proof-mismatch" "different-normal-forms"
                                         "value" "assertion" "key" "index" "type" "attribute"))
             (proof-with-checked-results
              ((fresh (cond ((not (library-library-entries current)) current)
@@ -461,12 +455,6 @@
                            (t lib))))
              (h3-api-book-entry-prepared fresh "theorem" fields nil prepared)))
            (t entry)))))
-
-(defun h3-api-theorem-entry-with-rebuild (lib fields rebuild)
-  (h3-api-theorem-entry-using lib fields rebuild nil))
-
-(defun h3-api-theorem-entry (lib fields library earlier)
-  (h3-api-theorem-entry-with-rebuild lib fields (list library earlier)))
 
 (defun h3-api-prove-admitted-using (parsed lib measures rebuild prepared)
   (let ((kind (car parsed))

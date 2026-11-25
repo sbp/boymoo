@@ -8,7 +8,7 @@ the second field. This book defines no classes.
 | Call | Result | Failure |
 |---|---|---|
 | `(h1-book-expt-base-factors term)` | The immediate or recursively exposed base factors in depth-first, left-to-right order. Repeated factors remain in the list. | — for prover terms. |
-| `(h1-book-expt-open-power proof term normalizer)` | `(cons step normalizer)` with the unfolded power equation and the resulting Algebra. | A failure in place of the pair, including `Unproved` for an unresolved test. |
+| `(h1-book-expt-open-power proof term normalizer)` | `(cons step normalizer)` with the unfolded power equation and the resulting Algebra. | A failure in place of the pair, including `unproved` for an unresolved test. |
 | `(h1-book-expt-unfold-powers proof term powers normalizer)` | `(cons step normalizer)` with the equation obtained by unfolding the listed powers in `term` in list order and the resulting Algebra. | A failure in place of the pair. |
 | `(h1-book-expt-power-equality proof formula)` | `(cons step proof)` with the induction Step and the resulting Prover. The tactic can add the signed countdown lemmas. | A failed tactic puts its failure in the step position so the caller can retain the Prover. |
 | `(h1-book-expt-install-powers proof)` | The resulting Prover with the power lemmas and rules installed in order. | A failure in place of the Prover. |

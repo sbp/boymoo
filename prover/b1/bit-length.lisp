@@ -268,7 +268,7 @@
     (n left-case lib right goal stop-test child parent integers ordinal-comparison replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-bit-length-paired-bit-length-descent-first-case")
+      '(:failure "fuel" "b1-bit-length-paired-bit-length-descent-first-case")
     (proof-with-checked-results
         ((result (b1-bit-length-length-halving-cases lib right replies)))
       (let ((right-case (car result))
@@ -288,7 +288,7 @@
     (n lib left right goal stop-test child parent integers ordinal-comparison replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-bit-length-paired-bit-length-descent-cases")
+      '(:failure "fuel" "b1-bit-length-paired-bit-length-descent-cases")
     (proof-with-checked-results
         ((result (b1-bit-length-length-halving-cases lib left replies)))
       (let ((left-case (car result)))
@@ -374,7 +374,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((zp n) '(:failure "Fuel" "b1-bit-length-mismatch-is-integer-by-value"))
+     ((zp n) '(:failure "fuel" "b1-bit-length-mismatch-is-integer-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))

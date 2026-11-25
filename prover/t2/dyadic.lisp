@@ -403,7 +403,7 @@
 (defun t2-dyadic-definition-decrease (lib call cases formal)
   (let ((entry (assoc-equal (car (termination-call-actuals call)) cases)))
     (if (not entry)
-        '(:failure "MissingBinding" "")
+        '(:failure "missing-binding" "")
       (proof-with-checked-results
           ((facts (t2-tactics-ruler-facts-init lib (termination-call-tests call) nil))
            (rat (t2-tactics-ruler-facts-require facts (list *library-rationalp* formal)))
@@ -415,7 +415,7 @@
            (head (proof-term-at literal 0)))
         (if (equal head *proof-ordinal-less*)
             step
-          '(:failure "RecipeMismatch" ""))))))
+          '(:failure "recipe-mismatch" ""))))))
 
 (defun t2-dyadic-definition-case-proof (lib obligation call measured cases formal)
   (proof-with-checked-results

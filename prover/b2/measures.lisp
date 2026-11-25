@@ -11,7 +11,7 @@
 
 (defun b2-measures-rejected-step-p (value)
   (and (failure-p value)
-       (member-equal (cadr value) '("value" "inapplicable" "Unproved"))))
+       (member-equal (cadr value) '("value" "inapplicable" "unproved"))))
 
 (defun b2-measures-rulers-make (lib steps)
   (list :b2-measures-rulers lib steps))
@@ -422,9 +422,6 @@
                   (t (b2-measures-selector-decrease-state
                       lib (list *proof-ordinal-less* smaller parent) (cdr offset))))))))))
 
-(defun b2-measures-strict-count (lib smaller parent rulers)
-  (b2-measures-state-result (b2-measures-strict-count-state lib smaller parent rulers)))
-
 (defun b2-measures-nfix-natural (lib term)
   (proof-with-checked-results
       ((argument (proof-term-at term 1))
@@ -741,22 +738,13 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((or (failure-p step) (endp pending)) (cons step lib))
-   ((zp n) (cons '(:failure "Fuel" "b2-measures-run-comparison") lib))
+   ((zp n) (cons '(:failure "fuel" "b2-measures-run-comparison") lib))
    (t
     (let ((next (b2-measures-advance-comparison lib (car pending) (cdr pending) step)))
       (b2-measures-run-comparison (1- n) (cadr next) (car next) (caddr next))))))
 
 (defun b2-measures-compare-state (n lib goal evidence)
   (b2-measures-run-comparison n lib (list (list :compare goal evidence)) nil))
-
-(defun b2-measures-compare-sum (n lib smaller parent evidence)
-  (b2-measures-state-result
-   (b2-measures-run-comparison n lib
-                              (list (list :sum (list smaller parent evidence) '(1 2) parent nil))
-                              nil)))
-
-(defun b2-measures-compare (n lib goal evidence)
-  (b2-measures-state-result (b2-measures-compare-state n lib goal evidence)))
 
 (defun b2-measures-definition-names (definitions)
   (if (endp definitions) nil
@@ -834,24 +822,6 @@
     (:offsets (b2-measures-plan-offsets definitions calls))
     (:offset (b2-measures-next-offset (car names) (cadr position) (caddr position) calls))
     (otherwise nil)))
-
-(defun b2-measures-plans-list (n definitions calls aids names candidate)
-  (declare (xargs :measure (nfix n)))
-  (cond
-   ((zp n) '(:failure "Fuel" "b2-measures-plans-list"))
-   ((failure-p candidate) candidate)
-   ((not candidate) nil)
-   (t
-    (proof-with-checked-results
-        ((remaining (b2-measures-plans-list
-                     (1- n) definitions calls aids names
-                     (b2-measures-plan-next definitions calls aids names (cdr candidate)))))
-      (cons (car candidate) remaining)))))
-
-(defun b2-measures-plans (definitions calls aids)
-  (proof-with-checked-results ((names (b2-measures-definition-names definitions)))
-    (b2-measures-plans-list 1000000 definitions calls aids names
-                            (b2-measures-plan-first definitions calls aids names))))
 
 (defun b2-measures-call-evidence (proof tests)
   (if (endp tests) nil
@@ -958,7 +928,7 @@
 (defun b2-measures-try-plans (n definitions calls aids name names attempt)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "b2-measures-try-plans"))
+   ((zp n) '(:failure "fuel" "b2-measures-try-plans"))
    ((not (car attempt)) (cadr attempt))
    (t
     (b2-measures-try-plans

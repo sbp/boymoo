@@ -34,7 +34,7 @@
       (evidence (t3-logic-evidence-expand evidence))
       (strict (t3-formatting-right-margin-test (t3-logic-evidence-facts evidence) column)))
      (if (not strict)
-         '(:failure "Unsupported" "")
+         '(:failure "unsupported" "")
        (proof-with-checked-results
         ((first (proof-step-first strict))
          (margin (proof-term-at first 1))

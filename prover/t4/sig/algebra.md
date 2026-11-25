@@ -16,32 +16,6 @@ tables, proof construction can propagate the errors of an inference.
 
 | Call | Value |
 |---|---|
-| `(t4-algebra-number lib value premises)` | Step proving the term numeric, or `"SearchMiss"` when no numeric proof is found. |
-| `(t4-algebra-unit lib operator value premises)` | Equality Step for the operation's unit and `value`. |
-| `(t4-algebra-binary-fix lib operator a b index)` | Equality Step removing `FIX` from operand `index`, whose unfixed term is `a`. The other operand is `b`. |
-| `(t4-algebra-adjacent lib operator a b c)` | Equality Step swapping the first two operands of a right-associated operation on three terms. |
-| `(t4-algebra-clear-addend lib a b)` | Equality Step cancelling `b` in `(-b) + (b + a)`. |
-| `(t4-algebra-additive-inverse lib equation)` | Equality Step solving the zero-sum `equation` for its second summand. |
-| `(t4-algebra-negate-sum lib a b)` | Equality Step distributing negation over the sum. |
-| `(t4-algebra-multiply-zero lib value)` | Equality Step reducing zero times `value`. |
-| `(t4-algebra-negate-product lib a b index)` | Equality Step moving the negation of `b` out of operand `index` of the product with `a`. |
-| `(t4-algebra-double-negative lib value)` | Equality Step reducing two negations to `FIX`. |
-| `(t4-algebra-unary-fix lib operator value)` | Equality Step removing `FIX` under the unary operation. |
-| `(t4-algebra-nonzero-reciprocal lib reciprocal product)` | Step proving the reciprocal nonzero from its equality `product` to a unit product. |
-| `(t4-algebra-double-reciprocal lib value)` | Equality Step reducing two reciprocals to `FIX`. |
-| `(t4-algebra-double-reciprocal-invalid why number-assumption value-at-zero lib again)` | Equality Step for a zero or nonnumeric argument to the double reciprocal. `why` and `number-assumption` are Steps. `value-at-zero` is an equality Step or `nil`. `again` is the generic double reciprocal term over `X`. |
-| `(t4-algebra-product-inverse lib term premises)` | Step equating the product with its reciprocal to one, or `nil` when no nonzero premise was supplied. |
-| `(t4-algebra-adjacent-reduction lib operator a b premises)` | Equality Step reducing two operands, or `nil` when no reduction applies. |
-| `(t4-algebra-normalize-association lib step operator)` | Step with the right side associated to the right and the operands stably sorted. |
-| `(t4-algebra-reduce-association lib step operator premises)` | Step with adjacent operands reduced on the right side. |
-| `(t4-algebra-normal lib term premises)` | Equality Step normalizing `term` under the premises. |
-| `(t4-algebra-arithmetic-identity lib formula)` | Step proving `formula` by arithmetic normalization, or `nil`. |
-| `(t4-algebra-orient-normalized lib step goal premises)` | Equality Step with the orientation of `goal`, or `"SearchMiss"` when the normalized endpoints differ. |
-| `(t4-algebra-replace-fixed lib term equality)` | Step substituting an equality of fixed values within the arithmetic operands of `term`. |
-| `(t4-algebra-equal-from-fix lib proposition equality premises)` | Step proving the equality `proposition` after substitution using `equality`, or `"SearchMiss"` when normalization leaves different endpoints. |
-| `(t4-algebra-arithmetic-cancellation lib first second premises factor)` | Step equating the two equality tests by cancellation, or `nil`. |
-| `(t4-algebra-product-cancellation lib first second)` | Step equating the product test `first` to the conditional test `second`, or `nil`. |
-| `(t4-algebra-arithmetic-test lib formula)` | Step proving an equality of arithmetic tests, or `nil`. |
 
 | Call | Result |
 |---|---|
@@ -52,7 +26,7 @@ tables, proof construction can propagate the errors of an inference.
 | `(t4-algebra-negative-inverse lib term)` | Equality Step reducing a term plus its negation, with the negation first. |
 | `(t4-algebra-value-of test lib step)` | Equality Step assigning the Boolean value of `test` under the signed `step`. |
 | `(t4-algebra-equality-tests lib a b forward backward)` | Equality Step for tests `a` and `b`, using the Steps for the two directions. |
-| `(t4-algebra-rejected-guard lib guard contrary)` | Step refuting `guard`, or `"SearchMiss"` when `contrary` refutes none of its conjuncts. |
+| `(t4-algebra-rejected-guard lib guard contrary)` | Step refuting `guard`, or `"search-miss"` when `contrary` refutes none of its conjuncts. |
 | `(t4-algebra-inverse-zero lib operator value rejected)` | Equality Step reducing a unary operation on a value that fails its numeric premise. |
 | `(t4-algebra-branch-value lib term equation premises)` | Equality Step assigning an equality test its value under the premises, or the original `equation`. |
 | `(t4-algebra-element-key term operator)` | The three-element sorting key, using the written term as its string component. |

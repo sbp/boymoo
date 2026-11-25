@@ -138,11 +138,6 @@
                (cons ,name ,lib)
              (h3-book-quotient-with-library ,lib ,rest ,result)))))))
 
-(defun h3-book-quotient-checked-pair (result)
-  (if (failure-p (car result))
-      (car result)
-    result))
-
 (defun h3-book-quotient-distribute-difference-with-library (lib a b factor)
   (let ((proof (library-library-proof lib))
         (delta (library-diff a b)))
@@ -159,10 +154,6 @@
          (chained (proof-proof-chain proof expanded (list equality))))
       (proof-proof-symmetric proof chained))))
 
-(defun h3-book-quotient-distribute-difference (lib a b factor)
-  (h3-book-quotient-checked-pair
-   (h3-book-quotient-distribute-difference-with-library lib a b factor)))
-
 (defun h3-book-quotient-opposite-difference-with-library (lib a b)
   (h3-book-quotient-with-library lib
       ((added (h3-book-sums-lemmas-with-library lib) :paired)
@@ -176,10 +167,6 @@
        (addend (library-library-cite lib *h3-book-sums-add* (list b (library-minus a)) nil))
        (restored (proof-proof-symmetric proof addend)))
     (proof-proof-chain proof equality (list restored))))
-
-(defun h3-book-quotient-opposite-difference (lib a b)
-  (h3-book-quotient-checked-pair
-   (h3-book-quotient-opposite-difference-with-library lib a b)))
 
 (defun h3-book-quotient-scale-order-comparison (lib left right scalar signs types positive)
   (if types
@@ -227,10 +214,6 @@
          (comparison (library-library-axiom lib "<-ON-OTHERS" (list a b)))
          (scaled (proof-proof-symmetric proof scaled)))
       (proof-proof-chain proof comparison (list scaled)))))
-
-(defun h3-book-quotient-scale-order (lib a b scalar signs types)
-  (h3-book-quotient-checked-pair
-   (h3-book-quotient-scale-order-with-library lib a b scalar signs types)))
 
 (defun h3-book-quotient-symmetric (step proof)
   (proof-proof-symmetric proof step))
@@ -413,7 +396,7 @@
        (search (h3-rewrite-search-with-lib search lib))
        (evidence (h3-rewrite-search-context search conditions))
        (reduction (car (h3-rewrite-search-reduce search right evidence nil nil)))
-       (reduction (or reduction '(:failure "Unproved" "")))
+       (reduction (or reduction '(:failure "unproved" "")))
        (from (h3-book-quotient-step-at equation 2))
        (to (h3-book-quotient-step-at reduction 2))
        (aligned (h3-book-arithmetic-associative-equal lib from to))
@@ -448,10 +431,6 @@
                 sides forms scalar divisor scalar-num quotient numerator numerator-num
                 comparison fraction-index target) :paired))
     (h3-rewrite-implication lib guard result)))
-
-(defun h3-book-quotient-quotient-order (lib formula)
-  (h3-book-quotient-checked-pair
-   (h3-book-quotient-quotient-order-with-library lib formula)))
 
 (defun h3-book-quotient-factor-order-factor (lib term base multiplier scalar)
   (if (and (equal term multiplier) (equal base *proof-one*))
@@ -508,7 +487,7 @@
        (search (h3-rewrite-search-with-lib search lib))
        (condition (h3-rewrite-search-context search conditions))
        (selected (car (h3-rewrite-search-reduce search conditional condition nil nil)))
-       (selected (or selected '(:failure "Unproved" "")))
+       (selected (or selected '(:failure "unproved" "")))
        (vanishes (h3-book-quotient-factor-order-vanishes
                   lib (cdr yes) 1 multiplier (h3-book-signs-signs-zero signs) original))
        (right (h3-book-quotient-step-at vanishes 2))
@@ -595,10 +574,6 @@
                      (h3-book-quotient-factor-order-conditional lib guard goal)
                    (cons nil lib)) :paired))
       result)))
-
-(defun h3-book-quotient-factor-order (lib formula)
-  (h3-book-quotient-checked-pair
-   (h3-book-quotient-factor-order-with-library lib formula)))
 
 (defun h3-book-quotient-product-equals-factor-branch-forward (equality lib product reciprocal factor other law q)
   (let ((proof (library-library-proof lib))
@@ -789,10 +764,6 @@
                     nonnumeric nonnumeric nil lib left right opposite value reciprocal) :paired))
     (proof-proof-cases proof number-test numeric nonnumeric)))
 
-(defun h3-book-quotient-reciprocal-of-opposite (lib formula)
-  (h3-book-quotient-checked-pair
-   (h3-book-quotient-reciprocal-of-opposite-with-library lib formula)))
-
 (defun h3-book-quotient-quotient-theorem-with-library (lib name formula)
   (cond
    ((member-equal name '("EQUAL-*-/-1" "EQUAL-*-/-2"))
@@ -805,6 +776,3 @@
     (h3-book-quotient-reciprocal-of-opposite-with-library lib formula))
    (t (cons nil lib))))
 
-(defun h3-book-quotient-quotient-theorem (lib name formula)
-  (h3-book-quotient-checked-pair
-   (h3-book-quotient-quotient-theorem-with-library lib name formula)))

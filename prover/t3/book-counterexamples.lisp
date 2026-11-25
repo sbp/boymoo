@@ -336,7 +336,7 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((not (t3-book-spines-callback-p result)) result)
-   ((zp n) '(:failure "Fuel" "t3-book-counterexamples-convert-proper-replies"))
+   ((zp n) '(:failure "fuel" "t3-book-counterexamples-convert-proper-replies"))
    (t
     (let* ((args (t3-book-spines-callback-args result))
            (answer (if (eq (proof-proof-kind (library-library-proof lib)) :t3-book)

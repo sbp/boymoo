@@ -12,9 +12,26 @@ sh checker/build.sh
 make -s -f runner/Makefile
 
 statements=build/checker/checker.statements
-python3 -B checker/skips.py "$out/empty" "$statements" > "$out/all-skips.proofs"
+library=build/checker/library.statements
+
+# The library's proofs: those of the checker's library, the lines of ACL2's
+# library that the checker calls, read as statements.
+mkdir -p "$out/library"
+python3 -B checker/skips.py "$out/empty" "$library" > "$out/library/all-skips.proofs"
+python3 -B review/self/pilot.py "$library" "$out/library/all-skips.proofs" "$out/library"
+library_proofs=$out/library/checker.proofs
+
+python3 -B checker/skips.py "$library" "$statements" > "$out/all-skips.proofs"
 python3 -B review/self/pilot.py "$statements" "$out/all-skips.proofs" "$out"
 python3 -B review/self/pilot.py "$statements" "$out/all-skips.proofs" "$out" logical
+
+# A checker reads the library's proofs first, so the proofs leave out each
+# helper entry that those already hold (prover/tools/repeats.awk).
+for stem in checker logical; do
+    awk -v known="$library_proofs" -f prover/tools/repeats.awk "$out/$stem.proofs" \
+        > "$out/$stem.proofs.tmp"
+    mv "$out/$stem.proofs.tmp" "$out/$stem.proofs"
+done
 
 # Time both checker commands with the build in place.
 check_pair() {
@@ -23,12 +40,12 @@ check_pair() {
     proofs=$3
     status=0
     {
-        time -p sh checker-js/check.sh "$out/empty" "$input" "$proofs" node \
+        time -p sh checker-js/check.sh "$library" "$input" "$proofs" "$library_proofs" node \
             > "$out/$label.javascript.verdict"
     } 2> "$out/$label.javascript.time" || status=1
     {
         time -p env RUNNER=build/runner/boymoo-run \
-            sh checker/check.sh "$out/empty" "$input" "$proofs" \
+            sh checker/check.sh "$library" "$input" "$proofs" "$library_proofs" \
             > "$out/$label.runner.verdict"
     } 2> "$out/$label.runner.time" || status=1
 
@@ -48,4 +65,5 @@ check_pair() {
 check_pair source "$statements" "$out/checker.proofs"
 check_pair logical "$out/logical.statements" "$out/logical.proofs"
 count=$(awk 'END { print NR }' "$out/all-skips.proofs")
-printf 'Recursive entries proved: %s\nSkips left: 0\n' "$count"
+library_count=$(awk 'END { print NR }' "$out/library/all-skips.proofs")
+printf 'Recursive entries proved: %s, and %s of the library\nSkips left: 0\n' "$count" "$library_count"

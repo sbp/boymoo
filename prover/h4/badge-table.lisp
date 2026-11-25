@@ -106,7 +106,7 @@
  (defun h4-badge-table-name-filter-decision (n positive negative offsets p functions)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h4-badge-table-name-filter-decision"))
+    ((zp n) '(:failure "fuel" "h4-badge-table-name-filter-decision"))
     ((endp negative) (list *proof-true* p functions))
     ((endp offsets)
      (list (h4-badge-table-key-decisions positive *proof-true* *proof-false*) p functions))
@@ -124,7 +124,7 @@
  (defun h4-badge-table-name-filter-groups (n chars positives negatives index offsets p functions body)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h4-badge-table-name-filter-groups"))
+    ((zp n) '(:failure "fuel" "h4-badge-table-name-filter-groups"))
     ((endp chars) (list body p functions))
     (t (let* ((code (car chars))
               (pattern (proof-quote (if (<= 0 code) (list "char" code) *proof-nil*))))
@@ -206,7 +206,7 @@
 (defun h4-badge-table-table-filter-decision (n keys offsets p functions)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h4-badge-table-table-filter-decision")
+      '(:failure "fuel" "h4-badge-table-table-filter-decision")
     (proof-with-checked-results ((branches (h4-badge-table-table-filter-branches keys offsets)))
       (if (not branches)
           (list (h4-badge-table-key-decisions keys *proof-false* *proof-true*) p functions)

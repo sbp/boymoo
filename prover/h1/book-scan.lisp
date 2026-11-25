@@ -59,7 +59,7 @@
 (defun h1-book-scan-prove-natural-term (n proof term)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h1-book-scan-prove-natural-term")
+      '(:failure "fuel" "h1-book-scan-prove-natural-term")
     (let ((result (h1-book-scan-prove-natural-step proof term)))
       (if (eq (car result) :transport)
           (proof-with-checked-results
@@ -336,7 +336,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((core (h1-tactics-prover-proof proof)))
     (if (zp n)
-        '(:failure "Fuel" "h1-book-scan-by-value")
+        '(:failure "fuel" "h1-book-scan-by-value")
       (proof-with-checked-results ((branch (h1-book-scan-value-branch core value)))
         (case (car branch)
           (:if

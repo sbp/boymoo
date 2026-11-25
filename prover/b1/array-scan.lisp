@@ -798,7 +798,7 @@
 (mutual-recursion
  (defun b1-array-scan-scan-association-with-preparation (n work lib reversed-order below)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "b1-array-scan-scan-association-with-preparation"))
+   (cond ((zp n) '(:failure "fuel" "b1-array-scan-scan-association-with-preparation"))
          ((failure-p work) work)
          ((endp (cdr work)) (cons (car work) lib))
          (t (let* ((step (nth 9 work))
@@ -811,7 +811,7 @@
  (defun b1-array-scan-scan-association (n lib reversed-order below)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-array-scan-scan-association")
+       '(:failure "fuel" "b1-array-scan-scan-association")
      (b1-array-scan-scan-association-with-preparation
       (1- n) (b1-array-scan-scan-association-prepare lib reversed-order below) lib reversed-order below))))
 

@@ -10,7 +10,7 @@
 
 (defun h3-ancestors-step-term (step index)
   (if (null step)
-      '(:failure "MalformedTacticInput" "")
+      '(:failure "malformed-tactic-input" "")
     (proof-with-checked-results ((literal (proof-step-first step)))
       (proof-term-at literal index))))
 
@@ -105,7 +105,7 @@
 (defun h3-ancestors-check-membership-induct
     (n library claim ancestors replacements names translated result replies induction-result)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h3-ancestors-check-membership-induct"))
+  (cond ((zp n) '(:failure "fuel" "h3-ancestors-check-membership-induct"))
         ((h3-induction-request-p induction-result)
          (let* ((reply (h3-ancestors-check-membership-prove-case
                         (h3-induction-request-evidence induction-result)
@@ -122,7 +122,7 @@
   (let ((entry (assoc-equal *h3-ancestors-check* (proof-proof-definitions proof))))
     (if entry
         (proof-term-at (cdr entry) 0)
-      '(:failure "MissingProofData" ""))))
+      '(:failure "missing-proof-data" ""))))
 
 (defun h3-ancestors-check-membership (library names)
   (let* ((proof (library-library-proof library))
@@ -217,7 +217,7 @@
          (actual (proof-term-at test 2))
          (head (proof-term-at actual 0)))
       (if (not (equal head *h3-ancestors-builtin-check*))
-          '(:failure "ProofMismatch" "")
+          '(:failure "proof-mismatch" "")
         (proof-with-checked-results
             ((definitions (list *h3-ancestors-builtin-check* (proof-sym "HIDE" "ACL2")))
              (normalizer (h3-rewrite-search-init library definitions nil nil 150 t))
@@ -226,7 +226,7 @@
              (recursive (proof-term-at right 3))
              (head (proof-term-at recursive 0)))
           (if (not (equal head *h3-ancestors-check*))
-              '(:failure "ProofMismatch" "")
+              '(:failure "proof-mismatch" "")
             (proof-with-checked-results
                 ((formals (h3-ancestors-check-formals proof))
                  (hypothesis (proof-proof-fact proof (car property) (seq-zip formals (cdr recursive))))

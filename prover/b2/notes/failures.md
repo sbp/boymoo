@@ -1,7 +1,7 @@
 # Failures in B2
 
-B2 uses the failure values described in `prover/FAILURES.md`. `Fuel` names
-the recursion that exhausted its counter. `Unproved` has an empty message
+B2 uses the failure values described in `prover/FAILURES.md`. `fuel` names
+the recursion that exhausted its counter. `unproved` has an empty message
 and lets the search continue at call sites that have another proof method.
 An operation that has no way to continue returns or propagates a failure.
 

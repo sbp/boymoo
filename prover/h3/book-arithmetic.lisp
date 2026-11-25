@@ -33,7 +33,7 @@
 
 (defun h3-book-arithmetic-normal-form-reassociate (n lib step path head add)
   (if (zp n)
-      '(:failure "Fuel" "h3-book-arithmetic-normal-form-reassociate")
+      '(:failure "fuel" "h3-book-arithmetic-normal-form-reassociate")
     (proof-with-checked-results
         ((node (h3-book-arithmetic-normal-form-node path step)))
       (if (not (proof-is-call node head))
@@ -70,7 +70,7 @@
 
 (defun h3-book-arithmetic-normal-form-pass (n lib step path head add swap changed)
   (if (zp n)
-      '(:failure "Fuel" "h3-book-arithmetic-normal-form-pass")
+      '(:failure "fuel" "h3-book-arithmetic-normal-form-pass")
     (proof-with-checked-results
         ((node (h3-book-arithmetic-normal-form-node path step)))
       (if (not (proof-is-call node head))
@@ -95,7 +95,7 @@
 
 (defun h3-book-arithmetic-normal-form-sort (n lib step head add swap)
   (if (zp n)
-      '(:failure "Fuel" "h3-book-arithmetic-normal-form-sort")
+      '(:failure "fuel" "h3-book-arithmetic-normal-form-sort")
     (proof-with-checked-results
         ((pass (h3-book-arithmetic-normal-form-pass
                 1000000 lib step nil head add swap nil)))
@@ -152,7 +152,7 @@
          (left-value (h3-book-arithmetic-step-at left 2))
          (right-value (h3-book-arithmetic-step-at right 2)))
       (if (not (equal left-value right-value))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results ((reverse-right (proof-proof-symmetric proof right)))
           (proof-proof-chain proof left (list reverse-right)))))))
 
@@ -264,7 +264,7 @@
 (defun h3-book-arithmetic-zero-test (lib term proof)
   (proof-with-checked-results ((literal (proof-step-first proof)))
     (if (equal literal (list *library-numberp* term))
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
           ((rules (h3-rewrite-rules-init lib (list (proof-sym "DEFAULT-UNARY-/" "ACL2")) nil)))
         (h3-book-arithmetic-search-prove
@@ -297,9 +297,6 @@
     (,(car use) h3-scalar-known h3-scalar-equal nil ,@(cdr use))
     (,(car use) h3-scalar-known h3-scalar-different t ,@(cdr use))
     (,(car use) h3-scalar-nonnumeric h3-scalar-nonnumeric nil ,@(cdr use))))
-
-(defun h3-book-arithmetic-scalar-cases (lib value use)
-  (h3-book-arithmetic-scalar-cases-forms lib value (car use) (cadr use) (caddr use)))
 
 (defun h3-book-arithmetic-truth-value (lib evidence)
   (let ((proof (library-library-proof lib)))
@@ -355,9 +352,6 @@
     ,lib ,p ,q
     (,(car forward) h3-equivalence-assume-p ,@(cdr forward))
     (,(car backward) h3-equivalence-assume-q ,@(cdr backward))))
-
-(defun h3-book-arithmetic-equivalent-equalities (lib p q forward backward)
-  (h3-book-arithmetic-equivalent-equalities-forms lib p q forward backward))
 
 (defun h3-book-arithmetic-inverse-nonzero (lib term law)
   (let* ((proof (library-library-proof lib))

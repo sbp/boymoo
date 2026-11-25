@@ -64,7 +64,7 @@
 (defun t2-symbol-trees-normalize-case (n lib reduction search goal context replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      (cons '(:failure "Fuel" "t2-symbol-trees-normalize-case") lib)
+      (cons '(:failure "fuel" "t2-symbol-trees-normalize-case") lib)
     (let ((result (t2-symbol-trees-normalize-attempt lib reduction search goal context replies)))
       (if (eq (car result) :reply)
           (t2-symbol-trees-normalize-case
@@ -115,7 +115,7 @@
          (if (or (not test) (equal test 0) (equal test "") (not may-split))
              (t2-symbol-trees-with-results
               ((text (proof-write target)))
-              (cons '(:failure "Unproved" "")
+              (cons '(:failure "unproved" "")
                     lib))
            (list :split test lib))))))))
 
@@ -140,16 +140,6 @@
 (defun t2-symbol-trees-children (tree)
   (let ((tail (list *t2-book-logic-cdr* tree)))
     (list (list *t2-book-logic-car* tail) (list *t2-book-logic-cdr* tail))))
-
-(defun t2-symbol-trees-update-preserves-type-expand (call tree)
-  (let ((operation (t2-book-logic-head call)))
-    (cond ((equal operation *t2-symbol-trees-update*)
-           (equal (car (last call)) tree))
-          ((equal operation *t2-symbol-trees-treep*)
-           (proof-with-checked-results
-            ((argument (proof-term-at call 1)))
-            (t2-structural-lists-constructed argument)))
-          (t nil))))
 
 (defun t2-symbol-trees-update-hypothesis
     (lib formula tree child tests type-fact key-type)
@@ -179,8 +169,8 @@
                 ((key-literal (proof-step-first key-type)))
                 (if (equal key-literal (list *t2-symbol-trees-symbolp* key))
                     t
-                  '(:failure "RecipeMismatch" "")))
-             '(:failure "RecipeMismatch" "")))
+                  '(:failure "recipe-mismatch" "")))
+             '(:failure "recipe-mismatch" "")))
     (tests (list (list branch shape)))
     (parts (t2-symbol-trees-components lib tree-type tests 5) :library)
     (children (t2-symbol-trees-children tree))
@@ -201,14 +191,6 @@
     (proof (t2-power-implication lib domain cases))
     (step (t2-structural-proof-induct lib formula tree proof (list (cadr left) (cadr right)))))
    (cons step lib)))
-
-(defun t2-symbol-trees-lookup-after-update-expand (call tree)
-  (let ((operation (t2-book-logic-head call))
-        (argument (car (last call))))
-    (cond ((equal operation *t2-symbol-trees-update*) (equal argument tree))
-          ((equal operation *t2-symbol-trees-find*)
-           (or (equal argument tree) (t2-structural-lists-constructed argument)))
-          (t nil))))
 
 (defun t2-symbol-trees-rewrite-equations (lib steps equality)
   (declare (xargs :measure (acl2-count steps)))
@@ -260,7 +242,7 @@
     (tree (caddr update))
     (same-key (proof-eq (car lookup) key))
     (test (proof-term-at right 1))
-    (same-test (if (equal test same-key) test '(:failure "RecipeMismatch" "")))
+    (same-test (if (equal test same-key) test '(:failure "recipe-mismatch" "")))
     (branch (list *proof-consp* tree))
     (tests (list (list branch t)))
     (children (t2-symbol-trees-children tree))
@@ -272,20 +254,6 @@
     (cases (library-inherited proof-proof-cases lib branch yes no))
     (step (t2-structural-proof-induct lib formula tree cases (list (cadr first) (cadr second)))))
    (cons step lib)))
-
-(defun t2-symbol-trees-alist-accumulator-expand (call tree)
-  (let ((operation (t2-book-logic-head call)))
-    (cond
-     ((or (equal operation *t2-symbol-trees-with-acc*)
-          (equal operation *t2-symbol-trees-to-alist*))
-      (proof-with-checked-results
-       ((argument (proof-term-at call 1)))
-       (equal argument tree)))
-     ((equal operation *t2-structural-lists-append*)
-      (proof-with-checked-results
-       ((argument (proof-term-at call 1)))
-       (t2-structural-lists-constructed argument)))
-     (t nil))))
 
 (defun t2-symbol-trees-accumulator-branch
     (lib formula tree accumulator left right branch head-type
@@ -341,16 +309,6 @@
     (substitutions (list (cadr right-instance) (cadr with-entry) (cadr without-entry)))
     (step (t2-structural-proof-induct lib formula tree cases substitutions)))
    (cons step lib)))
-
-(defun t2-symbol-trees-alist-type-expand (call conversion predicate)
-  (let ((operation (t2-book-logic-head call)))
-    (cond ((equal call conversion) t)
-          ((or (equal operation predicate)
-               (equal operation *t2-structural-lists-append*))
-           (proof-with-checked-results
-            ((argument (proof-term-at call 1)))
-            (t2-structural-lists-constructed argument)))
-          (t nil))))
 
 (defun t2-symbol-trees-alist-type-hypothesis (lib formula tree child tests typed facts index)
   (proof-with-checked-results
@@ -450,15 +408,6 @@
                   (list (cons *t2-symbol-trees-find* 2)
                         (cons *t2-symbol-trees-update* 3)
                         (cons *t2-symbol-trees-key-depth* 2))))
-
-(defun t2-symbol-trees-aligned-depth-expand (call source tree-index tree)
-  (let ((position (table-get (t2-symbol-trees-aligned-depth-positions source tree-index)
-                               (t2-book-logic-head call) :none)))
-    (if (eq position :none)
-        nil
-      (proof-with-checked-results
-       ((argument (proof-term-at call position)))
-       (equal argument tree)))))
 
 (defun t2-symbol-trees-depth-expansion (positions tree)
   (declare (xargs :measure (acl2-count positions)))

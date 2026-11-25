@@ -178,20 +178,6 @@
                   (cons (list factor premise) facts)))
                (t (cons nil facts))))))))))
 
-(defun t2-factorization-candidates (premises facts comparison)
-  (if (endp premises)
-      (cons nil facts)
-    (proof-with-checked-results
-        ((current (t2-factorization-candidate (car premises) facts comparison))
-         (rest (t2-factorization-candidates (cdr premises) (cdr current) comparison)))
-      (if (car current)
-          (cons (cons (car current) (car rest)) (cdr rest))
-        rest))))
-
-(defun t2-factorization-factor-candidates (facts comparison)
-  (proof-with-checked-results ((premises (t2-tactics-ruler-facts-premises facts)))
-    (t2-factorization-candidates (car premises) (cdr premises) comparison)))
-
 (defun t2-factorization-coefficients (parts)
   (if (endp parts)
       nil

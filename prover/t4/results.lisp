@@ -119,7 +119,7 @@
  (defund t4-results-simplify (n lib term evidence definitions packages)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-results-simplify")
+       '(:failure "fuel" "t4-results-simplify")
      (proof-with-checked-results
          ((base (t4-results-simplify-core (1- n) lib term evidence definitions packages))
           (lib (cdr base))
@@ -138,7 +138,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((proof (library-library-proof lib)))
      (cond
-      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-results-simplify-core"))
+      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-results-simplify-core"))
       ((or (not (proof-compound term)) (proof-is-call term *proof-quote*))
        (cons nil lib))
       ((endp term) (proof-term-at term 0))
@@ -172,7 +172,7 @@
  (defund t4-results-simplify-arguments (n lib term args index result evidence definitions packages)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-results-simplify-arguments"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-results-simplify-arguments"))
     ((endp args) (cons result lib))
     (t
      (proof-with-checked-results
@@ -186,7 +186,7 @@
 (defund t4-results-prove-visit (n lib term evidence definitions packages)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-results-prove-visit")
+      '(:failure "fuel" "t4-results-prove-visit")
     (proof-with-checked-results ((premise (t4-ordinals-prove-premise lib term evidence)))
       (if premise
           (cons premise lib)
@@ -272,17 +272,12 @@
              (step (proof-proof-tidy proof result)))
           (cons step lib))))))
 
-(defun t4-results-unfold-projection (lib term)
-  (proof-with-checked-results
-      ((result (t4-results-unfold-projection-with-library lib term *t4-results-initial-packages*)))
-    (car result)))
-
 (defun t4-results-projection-index-text (index)
   (if (eq index t)
       "True"
     (let ((digits (decimal-text (abs index))))
       (cond ((< 4300 (length digits))
-             '(:failure "SearchMiss" ""))
+             '(:failure "search-miss" ""))
             ((< index 0) (concatenate 'string "NEG-" digits))
             (t digits)))))
 
@@ -326,7 +321,7 @@
 (defun t4-results-result-property-beta (n lib raw opening)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-results-result-property-beta")
+      '(:failure "fuel" "t4-results-result-property-beta")
     (let ((proof (library-library-proof lib)))
       (proof-with-checked-results ((lambda-p (t4-results-lambda-application-p raw)))
         (if (not lambda-p)
@@ -408,8 +403,8 @@
 (defun t4-results-result-property-visit (n value tests opened template paths context)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-results-result-property-visit"))
-   ((zp paths) '(:failure "SearchMiss" ""))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-results-result-property-visit"))
+   ((zp paths) '(:failure "search-miss" ""))
    ((proof-is-call value *proof-if*)
     (t4-relations-with-results
         ((parts (proof-list-of-length (cdr value) 3))
@@ -462,9 +457,6 @@
                            rewritten)))
               (cons result lib))))))))
 
-(defun t4-results-result-property (lib formula)
-  (t4-results-result-property-query lib formula nil))
-
 (defun t4-results-guard-and-claim (formula)
   (if (proof-is-call formula *library-implies*)
       (proof-list-of-length (cdr formula) 2)
@@ -474,7 +466,7 @@
   (let ((entry (assoc-equal name (proof-proof-definitions (library-library-proof lib)))))
     (if entry
         (cdr entry)
-      '(:failure "MissingProofInput" ""))))
+      '(:failure "missing-proof-input" ""))))
 
 (defun t4-results-recursive-calls (lib name)
   (proof-with-checked-results
@@ -485,7 +477,7 @@
 
 (defun t4-results-list-projection-invariant-tail-list (tests lib guard obj)
   (if (eq guard :none)
-      '(:failure "SearchMiss" "")
+      '(:failure "search-miss" "")
     (let ((proof (library-library-proof lib)))
       (proof-with-checked-results
           ((evidence (t4-structural-evidence-init lib tests nil))
@@ -526,7 +518,7 @@
     (n value tests context guard obj smaller-field condition decrease)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-results-list-projection-invariant-prove-field")
+      '(:failure "fuel" "t4-results-list-projection-invariant-prove-field")
     (let* ((lib (car context))
            (proof (library-library-proof lib)))
       (t4-results-save-failure
@@ -565,7 +557,7 @@
                             ((target (and (proof-is-call value *t4-results-mv-nth*)
                                           (proof-term-at value 2))))
                           (if (not (proof-is-call target *termination-return-last*))
-                              '(:failure "SearchMiss" "")
+                              '(:failure "search-miss" "")
                             (proof-with-checked-results
                                 ((opening (proof-proof-unfold proof target))
                                  (reflexive (proof-proof-reflexive proof value)))
@@ -648,7 +640,7 @@
 (defun t4-results-list-result-unroll-equality (n lib step target)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-results-list-result-unroll-equality")
+      '(:failure "fuel" "t4-results-list-result-unroll-equality")
     (proof-with-checked-results
         ((right (t4-relations-step-right step))
          (value (proof-term-at right 1)))
@@ -678,7 +670,7 @@
          (actual (proof-step-first step)))
       (if (equal actual target)
           step
-        '(:failure "InferenceMismatch" "")))))
+        '(:failure "inference-mismatch" "")))))
 
 (defund t4-results-list-result-solve (target tests context)
   (t4-relations-with-results
@@ -699,7 +691,7 @@
     (n value tests context template formula equality changes required decrease)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-results-list-result-invariant-visit")
+      '(:failure "fuel" "t4-results-list-result-invariant-visit")
     (let* ((lib (car context))
            (proof (library-library-proof lib))
            (changed (assoc-equal value changes)))
@@ -754,7 +746,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((proof (library-library-proof (car context))))
      (cond
-      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-results-by-value"))
+      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-results-by-value"))
       ((proof-is-call value *proof-if*)
        (t4-results-with-results
            ((parts (proof-list-of-length (cdr value) 3))
@@ -807,13 +799,13 @@
                            (car (caddr result)))))
              (if (equal literal expected)
                  result
-               (t4-results-save-failure '(:failure "InferenceMismatch" "") (car (caddr result)))))))))))
+               (t4-results-save-failure '(:failure "inference-mismatch" "") (car (caddr result)))))))))))
 
  (defun t4-results-guarded-result-type-visit (n value tests opened template remaining context)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-results-guarded-result-type-visit"))
-    ((zp remaining) '(:failure "SearchMiss" ""))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-results-guarded-result-type-visit"))
+    ((zp remaining) '(:failure "search-miss" ""))
     (t
      (t4-results-with-results
          ((known (t4-results-guarded-result-type-known value tests template context)))
@@ -843,7 +835,7 @@
                       (proof (library-library-proof (car (caddr proved))))
                       (step (t4-relations-by-value-rewrite proof (car proved) equation template)))
                    (list step (cadr proved) (caddr proved)))
-               '(:failure "SearchMiss" "")))))))))))
+               '(:failure "search-miss" "")))))))))))
 
 (defun t4-results-list-projection-proof (context formula guard claim projection obj)
   (t4-results-with-results
@@ -906,13 +898,6 @@
                      (cons lib replies) formula guard claim projection (car object))
                   (cons nil lib))))))))))
 
-(defun t4-results-list-projection-invariant-query (lib formula recursive replies)
-  (let ((result (t4-results-list-projection-invariant-recipe lib formula recursive replies)))
-    (if (t4-results-saved-failure-p result) (cadr result) result)))
-
-(defun t4-results-list-projection-invariant (lib formula recursive)
-  (t4-results-list-projection-invariant-query lib formula recursive nil))
-
 (defun t4-results-guarded-result-type-template (claim)
   (if (or (not (proof-compound claim)) (proof-is-call claim *proof-quote*))
       nil
@@ -973,9 +958,6 @@
                              (t4-ordinals-ordinals-imply lib guard rewritten))))
                 (cons result lib)))))))))
 
-(defun t4-results-guarded-result-type (lib formula recursive)
-  (t4-results-guarded-result-type-query lib formula recursive nil))
-
 (defun t4-results-list-result-proof (context root formula equality changes selected)
   (t4-relations-with-results
       ((arithmetic (t4-relations-recipe-request context :use-arithmetic nil)))
@@ -1018,7 +1000,7 @@
          (root (and true-list (proof-term-at claim 1))))
       (cond
        ((or (not true-list) (not (proof-compound root))) (cons nil lib))
-       ((endp root) '(:failure "SearchMiss" ""))
+       ((endp root) '(:failure "search-miss" ""))
        (t
         (let ((name (car root))
               (actuals (cdr root)))
@@ -1046,9 +1028,6 @@
                              (cons lib replies) root formula equality changes picked)
                           (cons nil lib)))))))))))))))
 
-(defun t4-results-list-result-invariant (lib formula recursive)
-  (t4-results-list-result-invariant-query lib formula recursive nil))
-
 (defun t4-results-query (recipe lib formula recursive replies)
   (case recipe
     (:result-property (t4-results-result-property-query lib formula replies))
@@ -1059,4 +1038,4 @@
          result)))
     (:guarded-result-type (t4-results-guarded-result-type-query lib formula recursive replies))
     (:list-result-invariant (t4-results-list-result-invariant-query lib formula recursive replies))
-    (otherwise '(:failure "SearchMiss" ""))))
+    (otherwise '(:failure "search-miss" ""))))

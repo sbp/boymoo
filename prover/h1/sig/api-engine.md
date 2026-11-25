@@ -26,10 +26,7 @@ ASCII string. `nil` denotes an empty list of lines.
 | `(h1-api-engine-statement-world earlier library)` | World for the ordered lists of preceding lines and library lines. | A failure from constructing the world or admitting lines. |
 | `(h1-api-engine-measures aids)` | Dictionary mapping function names to `(measure relation)` from the ordered list of aid lines. Keys occur in order of first insertion. | A failure from parsing the lines or their measure fields. |
 | `(h1-api-engine-write-atom datum)` | Atomic reader datum serialized as a byte string. | A failure from the writer for an invalid datum. |
-| `(h1-api-engine-write-frozen datum)` | Frozen datum serialized as a byte string. | A failure from the writer for an invalid datum. |
-| `(h1-api-engine-quotation-end source start)` | Byte offset immediately after the closing parenthesis of a quotation in `source`. `start` is the offset after its opening token. | A failure for an unclosed quotation. |
 | `(h1-api-engine-scoped-symbols source names)` | `source` with selected unescaped generated symbols replaced outside quotations. `names` is an insertion-ordered alist from symbol text to replacement text. | A failure for an unclosed quotation when scanning for replacements. |
-| `(h1-api-engine-auxiliary-groups entries)` | Auxiliary entries grouped in order, with each adjacent matching definition and measure kept together. | A failure for an entry that is neither a definition nor a lemma outside a pair. |
 | `(h1-api-engine-export proof entry public)` | Two-element list `(auxiliaries entry-text)` for the BookProver's auxiliary dependencies and the conclusion `entry`, or `nil` for a name collision or an auxiliary without a generated name. `public` is a list of distinct public names. | A failure from reading or exporting the entries. |
 
 `h1-api-engine-as-lines` returns a failure for input outside the listed

@@ -7,16 +7,12 @@ The three entry points used outside the book are `definition-equation`, `prove-b
 | ACL2 call | Result | Failure |
 |---|---|---|
 | `(h1-recipes-definition-equation p formula functions)` | Step proving the equation by unfolding its left side and, if needed, solving the residual equation with the given openings. | From destructuring, unfolding or solving. |
-| `(h1-recipes-prove-by-shape p formula)` | Pair with the Step selected by the formula's shape. | `Unproved` if no plan applies, or a failure from the selected plan. |
-| `(h1-recipes-prove p name formula)` | Pair with the Step selected by the unqualified theorem name string, falling back to automatic proof. | From the selected plan. |
+| `(h1-recipes-prove-by-shape p formula)` | Pair with the Step selected by the formula's shape. | `unproved` if no plan applies, or a failure from the selected plan. |
 | `(h1-recipes-function name p)` | The ACL2 symbol for the name string if defined, otherwise its Common Lisp symbol. | — |
 | `(h1-recipes-openings p names)` | List of the symbols for the whitespace-separated names in the given string, in that order. | — |
 | `(h1-recipes-conclusion formula)` | The consequent after peeling the formula's leading implications. | From reading a malformed implication. |
 | `(h1-recipes-add-swap p)` | Step for the commutation of the first two addends in a right-associated sum. | From proof construction. |
 | `(h1-recipes-distribute-minus p)` | Step for distribution of unary minus over addition. | From proof construction. |
-| `(h1-recipes-changed-calls original target place)` | Ordered list of `(place original-call target-call)` triples for call-head substitutions, using one-based argument indices appended to `place`. | `Unproved` for different arguments. |
-| `(h1-recipes-transfer-step p formula step)` | Pair with the Step obtained by proving call equations and rewriting at the changed places. | `Unproved` for different arguments, or a failure from proof construction. |
-| `(h1-recipes-transfer-property p formula earlier)` | As for `transfer-step`, starting with the fact named by `earlier`. | From fact lookup or transfer. |
 | `(h1-recipes-basic-types p formula)` | Pair with the Step using the basic type rules and auxiliary lemmas. | From proof construction. |
 | `(h1-recipes-complex-equality p formula)` | Step for equality of complex numbers in terms of their parts. | From destructuring or proof construction. |
 | `(h1-recipes-nonempty-package p formula)` | Step that a symbol has a nonempty package name. | From destructuring or proof construction. |
@@ -36,7 +32,7 @@ The three entry points used outside the book are `definition-equation`, `prove-b
 | `(h1-recipes-natural-result p formula application)` | Pair with the Step transferred from the first applicable fact or obtained by induction. | From reading facts, matching or proof construction. |
 | `(h1-recipes-calls-operator term operator)` | Whether the term calls the given operator outside quotations, including calls inside lambda bodies. | From reading a malformed lambda. |
 
-The call-substitution traversal and arithmetic method requests use natural-number fuel. These operations can also return a `Fuel` failure if they exhaust it.
+The call-substitution traversal and arithmetic method requests use natural-number fuel. These operations can also return a `fuel` failure if they exhaust it.
 
 The branch proof functions take the listed arguments in order. Each returns a Step or a proof construction failure.
 

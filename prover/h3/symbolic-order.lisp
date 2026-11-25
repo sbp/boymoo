@@ -62,7 +62,7 @@
 
 (defun h3-symbolic-order-pair-operands (literal)
   (if (integerp literal)
-      '(:failure "MalformedTacticInput" "")
+      '(:failure "malformed-tactic-input" "")
     (proof-list-of-length (cdr literal) 2)))
 
 (defun h3-symbolic-order-string-asymmetric (lib forward)
@@ -142,7 +142,7 @@
          (right (cadr parts))
          (proved (proof-step-first right-proof)))
       (if (not (equal proved right))
-          '(:failure "ProofMismatch" "")
+          '(:failure "proof-mismatch" "")
         (proof-with-checked-results
             ((opened (proof-proof-unfold proof literal))
              (opened (proof-proof-rewrite proof fact opened '(1)))

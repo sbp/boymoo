@@ -107,7 +107,7 @@
     (n request lib template formula predicate by-name present word found head tail integers structure)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "t3-name-bounds-membership-cap-leaves"))
+   ((zp n) '(:failure "fuel" "t3-name-bounds-membership-cap-leaves"))
    ((failure-p request) request)
    ((not (eq (car request) :t3-book-term-collections-leaf)) request)
    (t (proof-with-checked-results

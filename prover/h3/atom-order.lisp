@@ -15,7 +15,7 @@
 
 (defun h3-atom-order-step-term (step index)
   (if (null step)
-      '(:failure "MalformedTacticInput" "")
+      '(:failure "malformed-tactic-input" "")
     (proof-with-checked-results ((literal (proof-step-first step)))
       (proof-term-at literal index))))
 
@@ -151,7 +151,7 @@
        (boolean (proof-proof-fact proof "booleanp-<" (list (list *library-x* a) (list *library-y* b))))
        (test (h3-atom-order-step-term boolean 1)))
     (if (not (equal test lower))
-        '(:failure "ProofMismatch" "")
+        '(:failure "proof-mismatch" "")
       (proof-with-checked-results
           ((nil-case (proof-eq lower *proof-false*))
            (assumption (proof-proof-assume proof nil-case t))
@@ -196,13 +196,13 @@
       (proof-with-checked-results
           ((index (if (< rank 0) (+ (len *h3-atom-order-kinds*) rank) rank))
            (predicate (if (< index 0)
-                          '(:failure "MalformedTacticInput" "")
+                          '(:failure "malformed-tactic-input" "")
                         (proof-term-at *h3-atom-order-kinds* index)))
            (key (list predicate value)))
         (let ((entry (assoc-equal key evidence)))
           (if entry
               (cons (cdr entry) library)
-            '(:failure "MissingProofData" ""))))
+            '(:failure "missing-proof-data" ""))))
     (proof-with-checked-results
         ((other (h3-atom-order-other-than-number library))
          (library (cdr other))
@@ -339,7 +339,7 @@
   (let ((entry (assoc-equal variable ranks)))
     (if entry
         (cdr entry)
-      '(:failure "MissingProofData" ""))))
+      '(:failure "missing-proof-data" ""))))
 
 (defun h3-atom-order-alphorder-law-get-pair (pair library ranks equations known length-name)
   (proof-with-checked-results
@@ -412,7 +412,7 @@
          (proof (library-library-proof library))
          (left (h3-atom-order-step-term equation 1))
          (entry (assoc-equal left source))
-         (evidence (if entry (cdr entry) '(:failure "MissingProofData" "")))
+         (evidence (if entry (cdr entry) '(:failure "missing-proof-data" "")))
          (rewritten (proof-proof-rewrite proof evidence equation '(1)))
          (reduced (proof-proof-tidy proof rewritten))
          (right (h3-atom-order-step-term equation 2)))
@@ -464,7 +464,7 @@
 
 (defun h3-atom-order-alphorder-law-partition-plan (n variables rank)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '((:failure "Fuel" "h3-atom-order-alphorder-law-partition-plan")))
+  (cond ((zp n) '((:failure "fuel" "h3-atom-order-alphorder-law-partition-plan")))
         ((endp variables) '((:prove)))
         ((equal rank (len *h3-atom-order-kinds*))
          (cons (list :rank (car variables) rank)
@@ -532,7 +532,7 @@
        (library (cdr length-result))
        (proof (library-library-proof library))
        (parts (if (integerp formula)
-                  '(:failure "MalformedTacticInput" "")
+                  '(:failure "malformed-tactic-input" "")
                 (proof-list-of-length (cdr formula) 2)))
        (antecedent (car parts))
        (goal (cadr parts))

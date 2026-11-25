@@ -10,6 +10,6 @@ have the forms in `prover/sig/proof.md`. The constants are
 
 | Call | Arguments and result | Failure |
 |---|---|---|
-| `(t3-book-associations-components lib recognizer)` | Steps extracted from Step `recognizer`. Each true conjunction head comes before its rest. | A failure from reading or separating a Step, or `Fuel` on exhaustion. |
-| `(t3-book-associations-invariant lib label lookup table result)` | The updated Library with lemma name string `label` for lookup function symbol `lookup`, table recognizer term `table` and result template term `result`. | `Unsupported` when the head's property is unavailable, `MissingProofInput` when the tail's property is unavailable, or a failure from proof construction. |
+| `(t3-book-associations-components lib recognizer)` | Steps extracted from Step `recognizer`. Each true conjunction head comes before its rest. | A failure from reading or separating a Step, or `fuel` on exhaustion. |
+| `(t3-book-associations-invariant lib label lookup table result)` | The updated Library with lemma name string `label` for lookup function symbol `lookup`, table recognizer term `table` and result template term `result`. | `unsupported` when the head's property is unavailable, `missing-proof-input` when the tail's property is unavailable, or a failure from proof construction. |
 | `(t3-book-associations-associate lib name formula table)` | `(cons entry lib)` with the theorem entry for symbol `name` and formula term `formula`, and the Library with the auxiliary lookup lemma. `table` is the name of the recognizer. | A failure from the invariant, proof construction or serialization. |

@@ -109,7 +109,7 @@
       nil
     (let ((entry (assoc-equal (car wanted) names)))
       (if (not entry)
-          '(:failure "TacticInapplicable" "")
+          '(:failure "tactic-inapplicable" "")
         (proof-with-checked-results
             ((rest (h2-book-logic-resolve-names (cdr wanted) names)))
           (cons (cdr entry) rest))))))

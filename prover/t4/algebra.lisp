@@ -35,11 +35,8 @@
              (let ((,name t4-algebra-value))
                ,rest)))))))
 
-(defun t4-algebra-public-result (result)
-  (if (failure-p (car result)) (car result) result))
-
 (defun t4-algebra-search-miss-p (value)
-  (and (failure-p value) (member-equal (cadr value) '("SearchMiss" "value"))))
+  (and (failure-p value) (member-equal (cadr value) '("search-miss" "value"))))
 
 (defun t4-algebra-query (kind lib args replies)
   (let* ((request (list* :call kind lib args))
@@ -57,7 +54,7 @@
   (let ((entry (assoc-equal operator dictionary)))
     (if entry
         (cdr entry)
-      '(:failure "MissingProofInput" ""))))
+      '(:failure "missing-proof-input" ""))))
 
 (defun t4-algebra-binary-operands (args)
   (if (equal (len args) 2)
@@ -172,7 +169,7 @@
                                    (list (list *library-numberp* value) evidence)
                                    replies)
                   :library))
-        (cons (or typed '(:failure "SearchMiss" ""))
+        (cons (or typed '(:failure "search-miss" ""))
               lib))
     (let ((result (t4-algebra-number-from-type lib value premises (car predicates) replies)))
       (if (car result)
@@ -197,7 +194,7 @@
 (defun t4-algebra-number-visit (n lib value premises replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      (cons '(:failure "Fuel" "t4-algebra-number-visit") lib)
+      (cons '(:failure "fuel" "t4-algebra-number-visit") lib)
     (t4-algebra-with-library lib
         ((given (t4-algebra-find-premise premises (list *library-numberp* value))))
       (cond
@@ -236,9 +233,6 @@
 (defun t4-algebra-number-with-replies (lib value premises replies)
   (t4-algebra-number-visit 1000000 lib value premises replies))
 
-(defun t4-algebra-number (lib value premises)
-  (t4-algebra-public-result (t4-algebra-number-with-replies lib value premises nil)))
-
 (defun t4-algebra-fixed-value (lib value premises replies)
   (t4-algebra-with-library lib
       ((typed (t4-algebra-number-with-replies lib value premises replies) :library))
@@ -254,9 +248,6 @@
                        value
                      (proof-proof-chain (library-library-proof lib) rule (list value)))))
       (cons (if (t4-algebra-search-miss-p result) rule result) lib))))
-
-(defun t4-algebra-unit (lib operator value premises)
-  (t4-algebra-public-result (t4-algebra-unit-with-replies lib operator value premises nil)))
 
 (defun t4-algebra-binary-fix-first (lib operator a b replies)
   (let ((name (if (equal operator *proof-plus*) "SUM-OF-FIX" "PRODUCT-OF-FIX")))
@@ -291,9 +282,6 @@
               lib))
     (t4-algebra-binary-fix-first lib operator a b replies)))
 
-(defun t4-algebra-binary-fix (lib operator a b index)
-  (t4-algebra-public-result (t4-algebra-binary-fix-with-replies lib operator a b index nil)))
-
 (defun t4-algebra-adjacent-result (lib operator a b c)
   (let ((name (if (equal operator *proof-plus*) "ADD-SWAP" "MULTIPLY-SWAP")))
     (if (t4-algebra-fact-present-p lib name)
@@ -310,9 +298,6 @@
              (lib (library-library-lemma lib name claim first nil)))
           (t4-algebra-cite-result lib name (list a b c)))))))
 
-(defun t4-algebra-adjacent (lib operator a b c)
-  (t4-algebra-public-result (t4-algebra-adjacent-result lib operator a b c)))
-
 (defun t4-algebra-negative-inverse (lib term)
   (proof-with-checked-results
       ((commuted (t4-algebra-commuted lib *proof-plus* (library-minus term) term))
@@ -328,9 +313,6 @@
          (original (proof-proof-rewrite proof original inverse '(1 2 1)))
          (unit (t4-algebra-unit-with-replies lib *proof-plus* a nil replies) :library))
       (cons (proof-proof-chain (library-library-proof lib) original (list unit)) lib))))
-
-(defun t4-algebra-clear-addend (lib a b)
-  (t4-algebra-public-result (t4-algebra-clear-addend-with-replies lib a b nil)))
 
 (defun t4-algebra-under-operation (lib premise template)
   (let ((proof (library-library-proof lib)))
@@ -368,9 +350,6 @@
         (cons (proof-proof-chain (library-library-proof lib) start (list shifted remaining))
               lib)))))
 
-(defun t4-algebra-additive-inverse (lib equation)
-  (t4-algebra-public-result (t4-algebra-additive-inverse-with-replies lib equation nil)))
-
 (defun t4-algebra-multiply-zero-with-replies (lib value replies)
   (let ((name "PRODUCT-WITH-ZERO"))
     (if (t4-algebra-fact-present-p lib name)
@@ -396,9 +375,6 @@
              (claim (t4-algebra-first equality))
              (lib (library-library-lemma lib name claim equality nil)))
           (t4-algebra-cite-result lib name (list value)))))))
-
-(defun t4-algebra-multiply-zero (lib value)
-  (t4-algebra-public-result (t4-algebra-multiply-zero-with-replies lib value nil)))
 
 (defun t4-algebra-negate-product-lemma (lib name replies)
   (if (t4-algebra-fact-present-p lib name)
@@ -435,9 +411,6 @@
             (cons (proof-proof-chain (library-library-proof lib) move (list instance negative))
                   lib)))))))
 
-(defun t4-algebra-negate-product (lib a b index)
-  (t4-algebra-public-result (t4-algebra-negate-product-with-replies lib a b index nil)))
-
 (defun t4-algebra-double-negative-with-replies (lib value replies)
   (let ((name "DOUBLE-NEGATIVE-FIX"))
     (if (t4-algebra-fact-present-p lib name)
@@ -462,9 +435,6 @@
              (lib (library-library-lemma lib name claim equation nil)))
           (t4-algebra-cite-result lib name (list value)))))))
 
-(defun t4-algebra-double-negative (lib value)
-  (t4-algebra-public-result (t4-algebra-double-negative-with-replies lib value nil)))
-
 (defun t4-algebra-value-of (test lib step)
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results ((literal (t4-algebra-first step)))
@@ -479,7 +449,7 @@
                 ((rewritten (proof-proof-rewrite proof same step '(1 1 2))))
               (proof-proof-tidy proof rewritten)))))
        ((not (equal literal (proof-neg test)))
-        '(:failure "InferenceMismatch" ""))
+        '(:failure "inference-mismatch" ""))
        (t
         (proof-with-checked-results
             ((boolean (proof-proof-nil-or-true proof test))
@@ -522,7 +492,7 @@
 (defun t4-algebra-rejected-guard-parts (n lib guard contrary conjunction)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-algebra-rejected-guard-parts")
+      '(:failure "fuel" "t4-algebra-rejected-guard-parts")
     (proof-with-checked-results
         ((literal (t4-algebra-first conjunction))
          (head (and (proof-compound literal) (proof-term-at literal 0)))
@@ -534,7 +504,7 @@
             (or answer
                 (t4-algebra-rejected-guard-parts (1- n) lib guard contrary (cadr parts))))
         (or (t4-algebra-rejected-part lib guard contrary conjunction)
-            '(:failure "SearchMiss" ""))))))
+            '(:failure "search-miss" ""))))))
 
 (defun t4-algebra-rejected-guard (lib guard contrary)
   (proof-with-checked-results
@@ -586,9 +556,6 @@
              (lib (library-library-lemma lib name target cases nil)))
           (t4-algebra-cite-result lib name (list value)))))))
 
-(defun t4-algebra-unary-fix (lib operator value)
-  (t4-algebra-public-result (t4-algebra-unary-fix-with-replies lib operator value nil)))
-
 (defun t4-algebra-nonzero-reciprocal-with-replies (lib reciprocal product replies)
   (let ((test (proof-eq reciprocal *proof-zero*)))
     (t4-algebra-with-library lib
@@ -605,9 +572,6 @@
          (impossible (proof-proof-rewrite (library-library-proof lib) impossible constant '(1))))
       (cons (proof-proof-front (library-library-proof lib) impossible (proof-neg test))
             lib))))
-
-(defun t4-algebra-nonzero-reciprocal (lib reciprocal product)
-  (t4-algebra-public-result (t4-algebra-nonzero-reciprocal-with-replies lib reciprocal product nil)))
 
 (defun t4-algebra-denied-zero (lib term opposite premises)
   (let ((proof (library-library-proof lib)))
@@ -636,9 +600,6 @@
         (cons (proof-proof-modus-ponens (library-library-proof lib) axiom argument)
               lib)))))
 
-(defun t4-algebra-product-inverse (lib term premises)
-  (t4-algebra-public-result (t4-algebra-product-inverse-with-replies lib term premises nil)))
-
 (defun t4-algebra-double-reciprocal-invalid-result (why number-assumption value-at-zero lib again)
   (let ((proof (library-library-proof lib)))
     (t4-algebra-with-library lib
@@ -652,10 +613,6 @@
          (wanted (proof-proof-chain proof fixed (list value-at-zero)))
          (wanted (proof-proof-symmetric proof wanted)))
       (cons (proof-proof-chain proof first (list wanted)) lib))))
-
-(defun t4-algebra-double-reciprocal-invalid (why number-assumption value-at-zero lib again)
-  (t4-algebra-public-result
-   (t4-algebra-double-reciprocal-invalid-result why number-assumption value-at-zero lib again)))
 
 (defun t4-algebra-double-reciprocal-with-replies (lib value replies)
   (let ((name "DOUBLE-RECIPROCAL-FIX"))
@@ -698,9 +655,6 @@
              (lib (library-library-lemma lib name (proof-eq again (list *t4-algebra-fix* *library-x*))
                                           result nil)))
           (t4-algebra-cite-result lib name (list value)))))))
-
-(defun t4-algebra-double-reciprocal (lib value)
-  (t4-algebra-public-result (t4-algebra-double-reciprocal-with-replies lib value nil)))
 
 (defun t4-algebra-branch-value (lib term equation premises)
   (if (endp premises)
@@ -775,14 +729,10 @@
           (cons (library-library-axiom lib "INVERSE-OF-+" (list a)) lib))
          (t (t4-algebra-product-inverse-with-replies lib a premises replies)))))))
 
-(defun t4-algebra-adjacent-reduction (lib operator a b premises)
-  (t4-algebra-public-result
-   (t4-algebra-adjacent-reduction-with-replies lib operator a b premises nil)))
-
 (defun t4-algebra-associate-right (n lib step operator place)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-algebra-associate-right")
+      '(:failure "fuel" "t4-algebra-associate-right")
     (proof-with-checked-results ((operand (t4-algebra-operand-at step place)))
       (if (not (proof-is-call operand operator))
           step
@@ -806,7 +756,7 @@
 (defun t4-algebra-association-sort-pass (n lib step operator place changed)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      (cons '(:failure "Fuel" "t4-algebra-association-sort-pass") lib)
+      (cons '(:failure "fuel" "t4-algebra-association-sort-pass") lib)
     (t4-algebra-with-library lib ((operand (t4-algebra-operand-at step place)))
       (if (not (proof-is-call operand operator))
           (cons (list step changed) lib)
@@ -829,7 +779,7 @@
 (defun t4-algebra-association-sort (n lib step operator)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      (cons '(:failure "Fuel" "t4-algebra-association-sort") lib)
+      (cons '(:failure "fuel" "t4-algebra-association-sort") lib)
     (t4-algebra-with-library lib
         ((pass (t4-algebra-association-sort-pass 1000000 lib step operator '(1 2) nil)
                :library))
@@ -843,9 +793,6 @@
       ((step (t4-algebra-associate-right 1000000 lib step operator '(1 2))))
     (t4-algebra-association-sort 1000000 lib step operator)))
 
-(defun t4-algebra-normalize-association (lib step operator)
-  (t4-algebra-public-result (t4-algebra-normalize-association-with-replies lib step operator nil)))
-
 (defun t4-algebra-association-regroup (lib step operator a b rest place)
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results
@@ -857,7 +804,7 @@
 (defun t4-algebra-reduce-association-from (n lib step operator premises place replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      (cons '(:failure "Fuel" "t4-algebra-reduce-association-from") lib)
+      (cons '(:failure "fuel" "t4-algebra-reduce-association-from") lib)
     (t4-algebra-with-library lib ((operand (t4-algebra-operand-at step place)))
       (if (not (proof-is-call operand operator))
           (cons step lib)
@@ -894,10 +841,6 @@
 
 (defun t4-algebra-reduce-association-with-replies (lib step operator premises replies)
   (t4-algebra-reduce-association-from 1000000 lib step operator premises '(1 2) replies))
-
-(defun t4-algebra-reduce-association (lib step operator premises)
-  (t4-algebra-public-result
-   (t4-algebra-reduce-association-with-replies lib step operator premises nil)))
 
 (defun t4-algebra-remove-operand-fixes (lib step operator indices replies)
   (declare (xargs :measure (acl2-count indices)))
@@ -958,7 +901,7 @@
  (defun t4-algebra-normal-visit (n lib term premises replies)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t4-algebra-normal-visit") lib)
+       (cons '(:failure "fuel" "t4-algebra-normal-visit") lib)
      (if (or (not (proof-compound term)) (proof-is-call term *proof-quote*))
          (cons (proof-proof-reflexive (library-library-proof lib) term) lib)
        (t4-algebra-with-library lib
@@ -982,7 +925,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((not (o< (nfix (1- n)) (nfix n)))
-     (cons '(:failure "Fuel" "t4-algebra-normal-children") lib))
+     (cons '(:failure "fuel" "t4-algebra-normal-children") lib))
     ((endp children) (cons step lib))
     (t (t4-algebra-with-library lib
            ((known (t4-algebra-normal-visit (1- n) lib (car children) premises replies)
@@ -998,7 +941,7 @@
  (defun t4-algebra-normal-binary (n lib head step premises replies)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t4-algebra-normal-binary") lib)
+       (cons '(:failure "fuel" "t4-algebra-normal-binary") lib)
      (t4-algebra-with-library lib
          ((step (t4-algebra-remove-operand-fixes lib step head '(1 2) replies) :library)
           (factor (and (equal head *proof-times*)
@@ -1020,7 +963,7 @@
  (defun t4-algebra-normal-unary (n lib head step reduced premises replies)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t4-algebra-normal-unary") lib)
+       (cons '(:failure "fuel" "t4-algebra-normal-unary") lib)
      (t4-algebra-with-library lib ((operand (proof-term-at reduced 1)))
        (cond
         ((proof-is-call operand *t4-algebra-fix*)
@@ -1059,7 +1002,7 @@
  (defun t4-algebra-normal-less (n lib step reduced premises replies)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t4-algebra-normal-less") lib)
+       (cons '(:failure "fuel" "t4-algebra-normal-less") lib)
      (t4-algebra-with-library lib
          ((constant (t4-algebra-constant lib reduced replies) :library))
        (if constant
@@ -1078,7 +1021,7 @@
  (defun t4-algebra-negate-sum-visit (n lib a b replies)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t4-algebra-negate-sum-visit") lib)
+       (cons '(:failure "fuel" "t4-algebra-negate-sum-visit") lib)
      (let ((name "NEGATIVE-OF-SUM"))
        (if (t4-algebra-fact-present-p lib name)
            (t4-algebra-cite-result lib name (list a b))
@@ -1096,15 +1039,6 @@
 
 (defun t4-algebra-normal-with-replies (lib term premises replies)
   (t4-algebra-normal-visit 1000000 lib term premises replies))
-
-(defun t4-algebra-normal (lib term premises)
-  (t4-algebra-public-result (t4-algebra-normal-with-replies lib term premises nil)))
-
-(defun t4-algebra-negate-sum-with-replies (lib a b replies)
-  (t4-algebra-negate-sum-visit 1000000 lib a b replies))
-
-(defun t4-algebra-negate-sum (lib a b)
-  (t4-algebra-public-result (t4-algebra-negate-sum-with-replies lib a b nil)))
 
 (mutual-recursion
  (defun t4-algebra-has-arithmetic (term)
@@ -1141,11 +1075,11 @@
 
 (defun t4-algebra-normal-sides (lib parts premises replies)
   (if (endp parts)
-      (cons '(:failure "SearchMiss" "") lib)
+      (cons '(:failure "search-miss" "") lib)
     (t4-algebra-with-library lib
         ((left (t4-algebra-normal-with-replies lib (car parts) premises replies) :library))
       (if (endp (cdr parts))
-          (cons '(:failure "SearchMiss" "") lib)
+          (cons '(:failure "search-miss" "") lib)
         (t4-algebra-with-library lib
             ((right (t4-algebra-normal-with-replies lib (cadr parts) premises replies) :library))
           (if (endp (cddr parts))
@@ -1153,7 +1087,7 @@
             (let ((third (t4-algebra-normal-with-replies lib (caddr parts) premises replies)))
               (if (t4-algebra-interrupted-p (car third))
                   third
-                (cons '(:failure "SearchMiss" "") (cdr third))))))))))
+                (cons '(:failure "search-miss" "") (cdr third))))))))))
 
 (defun t4-algebra-arithmetic-identity-proof (lib guard goal replies)
   (t4-algebra-with-library lib
@@ -1183,9 +1117,6 @@
         (if (t4-algebra-interrupted-p (car built))
             built
           (t4-algebra-arithmetic-identity-proof (cdr built) (car parts) (cadr parts) replies))))))
-
-(defun t4-algebra-arithmetic-identity (lib formula)
-  (t4-algebra-public-result (t4-algebra-arithmetic-identity-with-replies lib formula nil)))
 
 (defun t4-algebra-normalize-arguments (lib terms premises replies)
   (declare (xargs :measure (acl2-count terms)))
@@ -1218,16 +1149,12 @@
                     candidate))
        (actual (t4-algebra-first candidate)))
     (if (not (equal (cdr actual) (list left right)))
-        (cons '(:failure "SearchMiss" "") lib)
+        (cons '(:failure "search-miss" "") lib)
       (t4-algebra-with-library lib
           ((reversed (proof-proof-symmetric (library-library-proof lib) (cadr sides))))
         (cons (proof-proof-chain (library-library-proof lib) (car sides)
                                  (list candidate reversed))
               lib)))))
-
-(defun t4-algebra-orient-normalized (lib step goal premises)
-  (t4-algebra-public-result
-   (t4-algebra-orient-normalized-with-replies lib step goal premises nil)))
 
 (defun t4-algebra-with-fixed-operand (lib head arg index result equality replies)
   (t4-algebra-with-library lib
@@ -1247,7 +1174,7 @@
  (defun t4-algebra-replace-fixed-visit (n lib term equality replies)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t4-algebra-replace-fixed-visit") lib)
+       (cons '(:failure "fuel" "t4-algebra-replace-fixed-visit") lib)
      (t4-algebra-with-library lib ((left (t4-algebra-side equality 1)))
        (if (equal term left)
            (cons equality lib)
@@ -1268,7 +1195,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((not (o< (nfix (1- n)) (nfix n)))
-     (cons '(:failure "Fuel" "t4-algebra-replace-fixed-arguments") lib))
+     (cons '(:failure "fuel" "t4-algebra-replace-fixed-arguments") lib))
     ((endp args) (cons result lib))
     (t
      (let ((arg (car args)))
@@ -1295,16 +1222,13 @@
 (defun t4-algebra-replace-fixed-with-replies (lib term equality replies)
   (t4-algebra-replace-fixed-visit 1000000 lib term equality replies))
 
-(defun t4-algebra-replace-fixed (lib term equality)
-  (t4-algebra-public-result (t4-algebra-replace-fixed-with-replies lib term equality nil)))
-
 (defun t4-algebra-replace-sides (lib parts equality replies)
   (if (endp parts)
-      (cons '(:failure "SearchMiss" "") lib)
+      (cons '(:failure "search-miss" "") lib)
     (t4-algebra-with-library lib
         ((left (t4-algebra-replace-fixed-with-replies lib (car parts) equality replies) :library))
       (if (endp (cdr parts))
-          (cons '(:failure "SearchMiss" "") lib)
+          (cons '(:failure "search-miss" "") lib)
         (t4-algebra-with-library lib
             ((right (t4-algebra-replace-fixed-with-replies lib (cadr parts) equality replies)
                     :library))
@@ -1313,7 +1237,7 @@
             (let ((third (t4-algebra-replace-fixed-with-replies lib (caddr parts) equality replies)))
               (if (t4-algebra-interrupted-p (car third))
                   third
-                (cons '(:failure "SearchMiss" "") (cdr third))))))))))
+                (cons '(:failure "search-miss" "") (cdr third))))))))))
 
 (defun t4-algebra-normalize-endpoint (lib step premises replies)
   (t4-algebra-with-library lib
@@ -1329,14 +1253,10 @@
        (left (t4-algebra-side a 2))
        (right (t4-algebra-side b 2)))
     (if (not (equal left right))
-        (cons '(:failure "SearchMiss" "") lib)
+        (cons '(:failure "search-miss" "") lib)
       (t4-algebra-with-library lib
           ((reverse (proof-proof-symmetric (library-library-proof lib) b)))
         (cons (proof-proof-chain (library-library-proof lib) a (list reverse)) lib)))))
-
-(defun t4-algebra-equal-from-fix (lib proposition equality premises)
-  (t4-algebra-public-result
-   (t4-algebra-equal-from-fix-with-replies lib proposition equality premises nil)))
 
 (defun t4-algebra-any-call-p (args head)
   (and (consp args)
@@ -1420,10 +1340,6 @@
                 (cons nil lib)
               (t4-algebra-cancellation-forward lib first second (proof-unique candidates)
                                                premises backward replies))))))))
-
-(defun t4-algebra-arithmetic-cancellation (lib first second premises factor)
-  (t4-algebra-public-result
-   (t4-algebra-arithmetic-cancellation-with-replies lib first second premises factor nil)))
 
 (defun t4-algebra-nonzero-fix (lib obj rejected)
   (let ((proof (library-library-proof lib))
@@ -1520,10 +1436,6 @@
         (t4-algebra-product-cancellation-result lib first second shape replies)
       (cons nil lib))))
 
-(defun t4-algebra-product-cancellation (lib first second)
-  (t4-algebra-public-result
-   (t4-algebra-product-cancellation-with-replies lib first second nil)))
-
 (defun t4-algebra-test-applicable-p (goal)
   (and (proof-is-call goal *proof-equal*)
     (proof-with-checked-results ((left (proof-term-at goal 1)))
@@ -1557,5 +1469,3 @@
             built
           (t4-algebra-arithmetic-test-proof (cdr built) (car parts) (cadr parts) replies))))))
 
-(defun t4-algebra-arithmetic-test (lib formula)
-  (t4-algebra-public-result (t4-algebra-arithmetic-test-with-replies lib formula nil)))

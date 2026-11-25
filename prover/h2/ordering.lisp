@@ -234,7 +234,7 @@
                       (("sym" "ACL2" "I") ("sym" "ACL2" "J") ("sym" "ACL2" "K"))
                       "CHARACTER-LISTP")))))
              (if (not parameters)
-                 (cons '(:failure "TacticInapplicable" "") search)
+                 (cons '(:failure "tactic-inapplicable" "") search)
                (let* ((lists (cadr parameters))
                       (accumulators (caddr parameters))
                       (definitions (concatenate 'string "STRING<-L CHAR< " (cadddr parameters)))

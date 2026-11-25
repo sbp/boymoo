@@ -33,15 +33,6 @@
       (list :number-sums lib)
     (t3-rational-order-make-rational-sums lib (t3-rational-order-rational-sums-prefix sums))))
 
-(defun t3-rational-order-rational-sums-library-field (sums name)
-  (let* ((lib (t3-rational-order-rational-sums-lib sums))
-         (proof (library-library-proof lib)))
-    (cond ((equal name "facts") (proof-proof-facts proof))
-          ((equal name "definitions") (proof-proof-definitions proof))
-          ((equal name "primitives") (proof-proof-primitives proof))
-          ((equal name "entries") (library-library-entries lib))
-          (t '(:failure "failure" "")))))
-
 (defun t3-rational-order-rational-sums-cite (sums name arguments evidence)
   (library-library-cite
    (t3-rational-order-rational-sums-lib sums)
@@ -71,7 +62,7 @@
             (proof-proof-modus-ponens proof fact rational)))
           ((proof-is-call term (proof-sym "FIX" "ACL2"))
            (library-library-cite lib "T3-FIX-NUMBER" (cdr term) nil))
-          (t '(:failure "Unsupported" "")))))
+          (t '(:failure "unsupported" "")))))
 
 (mutual-recursion
  (defun t3-rational-order-rational-sums-type-of (sums term evidence)
@@ -94,7 +85,7 @@
         (proof-with-checked-results ((head (proof-term-at term 0)))
           (let ((axiom (cdr (assoc-equal head *t3-rational-order-closure-axioms*))))
             (if (not axiom)
-                '(:failure "Unsupported" "")
+                '(:failure "unsupported" "")
               (proof-with-checked-results
                ((premise (proof-proof-fact proof axiom (seq-zip (list *library-x* *library-y*) (cdr term))))
                 (types (t3-rational-order-type-arguments sums (cdr term) evidence))
@@ -148,7 +139,7 @@
 (defun t3-rational-order-rational-sums-push-minus (n sums term evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t3-rational-order-rational-sums-push-minus")
+      '(:failure "fuel" "t3-rational-order-rational-sums-push-minus")
     (let* ((lib (t3-rational-order-rational-sums-lib sums))
            (proof (library-library-proof lib)))
       (cond
@@ -209,7 +200,7 @@
 (defun t3-rational-order-linear-combine (n sums step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t3-rational-order-linear-combine")
+      '(:failure "fuel" "t3-rational-order-linear-combine")
     (let* ((lib (t3-rational-order-rational-sums-lib sums))
            (proof (library-library-proof lib)))
       (proof-with-checked-results
@@ -271,7 +262,7 @@
        (proof-with-checked-results
         ((a-text (proof-write a-normal))
          (b-text (proof-write b-normal)))
-        '(:failure "Unproved" ""))))))
+        '(:failure "unproved" ""))))))
 
 (defun t3-rational-order-rational-sums-comparison (sums a b types)
   (proof-with-checked-results

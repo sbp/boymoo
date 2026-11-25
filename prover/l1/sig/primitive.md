@@ -30,7 +30,7 @@ Use the accessors and replacement function below to read and update it.
 | `l1-primitive-certificates-entries` | Certificates | Current list of entry records | None |
 | `l1-primitive-certificates-with-proof` | Certificates, replacement Proof | Certificates with the given Proof and the existing entries | None |
 | `l1-primitive-certificates-add` | Certificates, entry name symbol, Step | `(cons fact-step certificates)` with the cited fact and the updated Certificates | Proof or assertion failure |
-| `l1-primitive-certificates-close` | Certificates | Certificates with the scoped facts deleted from the Proof | `MissingWarrantDependency` when a scoped fact is absent |
+| `l1-primitive-certificates-close` | Certificates | Certificates with the scoped facts deleted from the Proof | `missing-warrant-dependency` when a scoped fact is absent |
 
 ## BadgeTable
 
@@ -46,7 +46,6 @@ A quoted table tail uses its row list as term data. The record that carries the 
 | Function | Arguments in order | Result | Failure |
 | --- | --- | --- | --- |
 | `l1-primitive-table-tail-new` | Row list, byte string, starting index | TableTail object | None |
-| `l1-primitive-table-tail-proof-text` | TableTail | Parenthesized text from the starting index | None |
 | `l1-primitive-badge-table-init` | Certificates | BadgeTable for the primitive badge definition | Proof, assertion, or key failure |
 | `l1-primitive-badge-table-certificates` | BadgeTable | Current Certificates | None |
 | `l1-primitive-badge-table-quoted-tail` | BadgeTable, table index | Quoted row list. Negative indices count from the end. The row count selects `*proof-false*`. | An index outside the supported range |
@@ -63,5 +62,4 @@ order. A failure is the entire result in place of any value and object pair.
 
 | Function | Arguments in order | Result | Failure |
 | --- | --- | --- | --- |
-| `l1-primitive-warrant-constant` | Proof, term | Equality Step for a WarrantProof constant computation, or `nil` | Proof or term failure |
 | `l1-primitive-proof-simplify` | Proof, term, evidence Step list, definition symbol list | Equality Step for simplification, or `nil`. Proof kind `:l1-warrant` uses the WarrantProof comparisons, selector computations, and tameness rule. | Proof, term, or fuel failure |

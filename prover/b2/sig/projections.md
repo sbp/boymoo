@@ -9,5 +9,5 @@ result.
 
 | Function | Arguments in order | Result | Failure |
 |---|---|---|---|
-| `b2-projections-mv-nth` | Library, integer index, projected term | Pair with the Step equating the projection to its selector term | May return a failure, including `Fuel` |
+| `b2-projections-mv-nth` | Library, integer index, projected term | Pair with the Step equating the projection to its selector term | May return a failure, including `fuel` |
 | `b2-projections-projected-value` | Library, integer index, equation Step, evidence Step list | Pair with the Step projecting and normalizing the equation's result | May return a failure |

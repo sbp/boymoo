@@ -1200,9 +1200,9 @@
   (let ((result (t3-api-helper-run recipe (t3-book-values-book-proofs-library book))))
     (cond ((not (failure-p result))
            (t3-book-values-book-proofs-with-library book result))
-          ((member-equal (cadr result) '("ProofMismatch" "assertion"))
+          ((member-equal (cadr result) '("proof-mismatch" "assertion"))
            (t3-api-helper-discard-collision recipe labels book))
-          ((member-equal (cadr result) '("Unproved" "Unsupported" "value" "key" "coding"
+          ((member-equal (cadr result) '("unproved" "unsupported" "value" "key" "coding"
                                        "encoding" "decoding" "translating"))
            book)
           (t result))))

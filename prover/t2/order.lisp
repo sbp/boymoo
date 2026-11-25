@@ -29,7 +29,7 @@
                    (premise (cond ((equal (len arguments) 2)
                                    (t2-field-conjunction lib (car arguments) (cadr arguments)))
                                   ((consp arguments) (car arguments))
-                                  (t '(:failure "MissingTermPart" ""))))
+                                  (t '(:failure "missing-term-part" ""))))
                    (fact (proof-proof-fact
                           (library-library-proof lib) name
                           (seq-zip (list *library-x* *library-y*) (cdr term)))))
@@ -168,7 +168,7 @@
            (proof-with-checked-results
             ((step (library-library-cite lib name (list a b last) (list first second))))
             (cons step lib))
-         '(:failure "RecipeMismatch" ""))))))
+         '(:failure "recipe-mismatch" ""))))))
 
 (defun t2-order-opposite-order (lib strict)
   (let ((proof (library-library-proof lib)))

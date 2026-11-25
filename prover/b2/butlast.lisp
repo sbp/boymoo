@@ -38,7 +38,7 @@
    (let ((proof (library-library-proof lib))
          (head (car term)))
      (cond
-      ((zp n) '(:failure "Fuel" "b2-butlast-simplify"))
+      ((zp n) '(:failure "fuel" "b2-butlast-simplify"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
       ((endp term) '(:failure "tactic-rejected" ""))
       ((proof-compound head)
@@ -66,7 +66,7 @@
               (t constant)))))))
  (defun b2-butlast-simplify-arguments (n lib term arguments index result)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "b2-butlast-simplify-arguments"))
+   (cond ((zp n) '(:failure "fuel" "b2-butlast-simplify-arguments"))
          ((endp arguments) result)
          (t (proof-with-checked-results
              ((equality (b2-butlast-simplify (1- n) lib (car arguments)))

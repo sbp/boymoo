@@ -5,7 +5,7 @@ has the form specified in `prover/sig/proof.md`. `step`, `prefix`,
 `evidence` when singular, and `descent` are proof steps. `active` is the
 list of enclosing terms, in order from outermost to innermost, with `nil`
 for an empty list. `book-logic-instance` and `book-logic-reducer-prove`
-use the `Unproved` failure described in `prover/notes/failures.md`.
+use the `unproved` failure described in `prover/notes/failures.md`.
 
 | ACL2 call | Result |
 |---|---|
@@ -36,13 +36,10 @@ Use the constructor and accessors to work with this object.
 | `(book-logic-reducer-known reducer term)` | A step proving a term directly from the evidence and axioms, `nil`, or a failure. |
 | `(book-logic-reducer-disjoint reducer term)` | A step proving the negation of a term from incompatible types, `nil`, or a failure. |
 | `(book-logic-reducer-reduce reducer term active)` | `(cons step reducer)` for the equality obtained by reduction. |
-| `(book-logic-reducer-reduction reducer term active)` | `(cons step reducer)` for one reduction, without consulting or updating the memo for this term. |
 | `(book-logic-reducer-truth-value reducer term)` | An equality step for a truth value, `nil`, or a failure. |
 | `(book-logic-reducer-true-equality reducer term evidence)` | An equality step for a true Boolean term, or a failure. |
-| `(book-logic-reducer-completion reducer term active)` | `(cons step reducer)` for application of a completion axiom. |
 | `(book-logic-reducer-extend reducer prefix step)` | The equality formed by extending `prefix` with `step`, or a failure. |
 | `(book-logic-reducer-may-open term active)` | Whether the term may be unfolded given its enclosing terms. |
-| `(book-logic-reducer-conditional reducer term active)` | `(cons step reducer)` for conditional reduction. |
 | `(book-logic-reducer-prove reducer term)` | `(cons step reducer)` for a proof of `term`. |
 | `(book-logic-reducer-with-rewrite reducer rewrite)` | The reducer with the supplied callback representation. |
 
@@ -74,7 +71,7 @@ the step position of `at`.
 
 `match` can put a failure in `matched` when a malformed term is encountered.
 `term-size`, `within-size` and `may-open` can return a failure for a malformed
-term. `term-size` and `within-size` can also return a `Fuel` failure. Reducer
+term. `term-size` and `within-size` can also return a `fuel` failure. Reducer
 construction can return a failure when reading an evidence step.
 
 The Reducer field accessors are `book-logic-reducer-evidence`,

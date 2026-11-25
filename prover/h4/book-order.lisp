@@ -1528,8 +1528,8 @@
                  (proof-proof-transport proof reduced opened))
              (h4-tactics-tactics-establish p goal evidence *h4-book-order-obasics* rewrites nil))))
       (if (and (failure-p result)
-               (member-equal (cadr result) '("InapplicableTerm" "value")))
-          '(:failure "Unproved" "")
+               (member-equal (cadr result) '("inapplicable-term" "value")))
+          '(:failure "unproved" "")
         result))))
 
 (defun h4-book-order-selector-order-proof-with-shapes (shapes p subjects assumptions main-order goal)
@@ -1573,7 +1573,7 @@
            (result (h4-book-order-case p formula (list *proof-consp* subject) shape
                      (h4-book-order-selector-order-proof-left shape p formula subjects assumptions main-order goal)
                      (h4-book-order-selector-order-proof-left shape p formula subjects assumptions main-order goal))))
-      (if (and (failure-p result) (equal (cadr result) "Unproved"))
+      (if (and (failure-p result) (equal (cadr result) "unproved"))
           nil
         result))))
 
@@ -1866,13 +1866,13 @@
   (declare (xargs :measure (nfix n)))
   (let ((size (len (h4-book-order-ordinal-consequences-literals (cdr result)))))
     (cond ((or (failure-p result) (car result) (equal size previous)) result)
-          ((zp n) '(:failure "Fuel" "h4-book-order-consequence-rounds"))
+          ((zp n) '(:failure "fuel" "h4-book-order-consequence-rounds"))
           (t (h4-book-order-consequence-rounds
               (1- n) (h4-book-order-consequence-pass result terms terms) size terms)))))
 
 (defun h4-book-order-ordinal-consequences-solve (n object)
   (if (zp n)
-      '(:failure "Fuel" "h4-book-order-ordinal-consequences-solve")
+      '(:failure "fuel" "h4-book-order-ordinal-consequences-solve")
     (let ((terms (h4-book-order-ordinal-consequences-terms object)))
       (proof-with-checked-results
           ((object (if (member-equal *proof-zero* terms) (h4-book-order-consequence-origins object terms) object)))

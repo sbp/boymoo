@@ -86,32 +86,8 @@
 (defund b1-search-rule-consequence (proof result condition)
   (proof-proof-modus-ponens proof result condition))
 
-(defun b1-search-rule-proof-follow (path proof result condition)
-  (if (endp path)
-      result
-    (if (equal (car path) "implies")
-        (proof-with-checked-results
-            ((literal (b1-logic-step-first result))
-             (term (proof-term-at literal 1)))
-          (let ((reply (assoc-equal term condition)))
-            (if reply
-                (proof-with-checked-results
-                    ((step (cdr reply))
-                     (next (b1-search-rule-consequence proof result step)))
-                  (b1-search-rule-proof-follow (cdr path) proof next condition))
-              (list :request term))))
-      (proof-with-checked-results
-          ((next (b1-search-rule-conjunct proof result (car path))))
-        (b1-search-rule-proof-follow (cdr path) proof next condition)))))
-
 (defund b1-search-rule-instance (proof rule bindings)
   (proof-proof-fact proof (b1-search-rule-name rule) (table-items bindings)))
-
-(defun b1-search-rule-proof (rule lib bindings condition)
-  (let ((proof (library-library-proof lib)))
-    (proof-with-checked-results
-        ((result (b1-search-rule-instance proof rule bindings)))
-      (b1-search-rule-proof-follow (b1-search-rule-path rule) proof result condition))))
 
 (defun b1-search-make-fact-index (claims equations)
   (list :b1-fact-index claims equations))
@@ -167,7 +143,7 @@
 (defun b1-search-fact-index-add-collect (n index name term path)
   (declare (xargs :measure (nfix n)))
   (cond ((zp n)
-         '(:failure "Fuel" "b1-search-fact-index-add-collect"))
+         '(:failure "fuel" "b1-search-fact-index-add-collect"))
         ((and (< (len path) 6) (proof-is-call term *library-implies*))
          (proof-with-checked-results
              ((child (proof-term-at term 2))
@@ -276,17 +252,17 @@
                          fuel
                          (cddddr attempt))))
     (cons (if (< fuel 0)
-              '(:failure "SearchBudgetExhausted" "")
+              '(:failure "search-budget-exhausted" "")
             nil)
           attempt)))
 
 (defun b1-search-unproved-p (x)
   (and (failure-p x)
-       (or (equal (cadr x) "Unproved")
-           (equal (cadr x) "SearchBudgetExhausted"))))
+       (or (equal (cadr x) "unproved")
+           (equal (cadr x) "search-budget-exhausted"))))
 
 (defun b1-search-retry-p (x)
-  (and (failure-p x) (equal (cadr x) "Unproved")))
+  (and (failure-p x) (equal (cadr x) "unproved")))
 
 ; A search result carries its Library and remaining budget when a proof fails.
 (defmacro b1-search-with-attempt-values (attempt bindings result)
@@ -554,7 +530,7 @@
 
 (defund b1-search-next-definition-call (n terms definitions)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "b1-search-next-definition-call"))
+  (cond ((zp n) '(:failure "fuel" "b1-search-next-definition-call"))
         ((endp terms) nil)
         (t
          (let ((term (car terms)))
@@ -572,7 +548,7 @@
 (defund b1-search-definition-calls-visit (n terms definitions target)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-search-definition-calls-visit")
+      '(:failure "fuel" "b1-search-definition-calls-visit")
     (proof-with-checked-results
         ((next (b1-search-next-definition-call 1000000 terms definitions)))
       (cond ((not next) nil)
@@ -584,11 +560,6 @@
                (if (eq target :none)
                    (cons (car next) rest)
                  rest)))))))
-
-(defun b1-search-immediate-definitions-definition-calls (term lib)
-  (b1-search-definition-calls-visit
-   1000000 (b1-search-subterms term)
-   (proof-proof-definitions (library-library-proof lib)) :none))
 
 (defund b1-search-immediate-definition-p (head definitions)
   (proof-with-checked-results
@@ -603,7 +574,7 @@
 (defund b1-search-immediate-definitions-visit (n terms definitions seen)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-search-immediate-definitions-visit")
+      '(:failure "fuel" "b1-search-immediate-definitions-visit")
     (proof-with-checked-results
         ((next (b1-search-next-definition-call 1000000 terms definitions)))
       (if (not next)
@@ -641,7 +612,7 @@
     (n attempt lib goal known replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "b1-search-attempt-normalize-structural-proof-visit") attempt)
+      (cons '(:failure "fuel" "b1-search-attempt-normalize-structural-proof-visit") attempt)
     (let ((result (b1-search-attempt-normalize-structural-proof-call
                    attempt lib goal known replies)))
       (if (not (b1-logic-call-p result))
@@ -687,7 +658,7 @@
  (defun b1-search-attempt-establish-visit (n attempt term known depth)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b1-search-attempt-establish-visit") attempt)
+       (cons '(:failure "fuel" "b1-search-attempt-establish-visit") attempt)
      (let ((existing (assoc-equal term known)))
        (if existing
            (cons (cdr existing) attempt)
@@ -720,7 +691,7 @@
                      (t (b1-search-attempt-establish-normalize attempt term known))))))))))
  (defun b1-search-attempt-establish-claims (n attempt term known depth rules)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) (cons '(:failure "Fuel" "b1-search-attempt-establish-claims") attempt))
+   (cond ((zp n) (cons '(:failure "fuel" "b1-search-attempt-establish-claims") attempt))
          ((endp rules) (b1-search-attempt-establish-normalize attempt term known))
          (t
           (b1-search-with-attempt-values attempt
@@ -739,14 +710,14 @@
  (defun b1-search-attempt-guarded-rule (n attempt rule bindings known depth)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b1-search-attempt-guarded-rule") attempt)
+       (cons '(:failure "fuel" "b1-search-attempt-guarded-rule") attempt)
      (b1-search-with-attempt-values attempt
          ((step (b1-search-rule-instance (b1-search-attempt-proof attempt) rule bindings)))
        (b1-search-attempt-guarded-path
         (1- n) attempt (b1-search-rule-path rule) step known depth))))
  (defun b1-search-attempt-guarded-path (n attempt path result known depth)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) (cons '(:failure "Fuel" "b1-search-attempt-guarded-path") attempt))
+   (cond ((zp n) (cons '(:failure "fuel" "b1-search-attempt-guarded-path") attempt))
          ((endp path) (cons result attempt))
          ((equal (car path) "implies")
           (b1-search-with-attempt-values attempt
@@ -969,13 +940,6 @@
     (otherwise
      (cons '(:failure "failure" "") attempt))))
 
-(defun b1-search-attempt-apply-rule (attempt rule term)
-  (if (eq (car rule) :callback)
-      (b1-search-attempt-apply-callback attempt (cadr rule) term)
-    (if (eq (car rule) :b1-search-equivalent-test)
-        (b1-search-attempt-apply-callback attempt rule term)
-      (cons (b1-logic-apply-rule (b1-search-attempt-lib attempt) rule term) attempt))))
-
 (defun b1-search-attempt-normalize-rules (rules)
   (if (endp rules)
       nil
@@ -991,7 +955,7 @@
 (defund b1-search-attempt-normalize-visit (n attempt lib term evidence unfold rules split condition inspect-branches replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "b1-search-attempt-normalize-visit") attempt)
+      (cons '(:failure "fuel" "b1-search-attempt-normalize-visit") attempt)
     (let ((result (b1-search-attempt-normalize-call
                    lib term evidence unfold rules split condition inspect-branches replies)))
       (if (not (b1-logic-call-p result))
@@ -1364,7 +1328,7 @@
  (defun b1-search-attempt-prove-visit (n attempt formula evidence induction depth)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b1-search-attempt-prove-visit") attempt)
+       (cons '(:failure "fuel" "b1-search-attempt-prove-visit") attempt)
      (b1-search-with-attempt-result attempt
          (charged (b1-search-attempt-charge attempt))
        (if (proof-is-call formula *library-implies*)
@@ -1385,7 +1349,7 @@
  (defun b1-search-attempt-prove-after-context (n attempt formula evidence induction depth known local)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b1-search-attempt-prove-after-context") attempt)
+       (cons '(:failure "fuel" "b1-search-attempt-prove-after-context") attempt)
      (let ((entry (assoc-equal formula known)))
        (if entry
            (cons (cdr entry) attempt)
@@ -1408,7 +1372,7 @@
  (defun b1-search-attempt-prove-after-normalize (n attempt formula evidence induction depth known result)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b1-search-attempt-prove-after-normalize") attempt)
+       (cons '(:failure "fuel" "b1-search-attempt-prove-after-normalize") attempt)
      (b1-search-with-attempt-values attempt
          ((conclusion (b1-logic-step-at result 2)))
        (if (equal conclusion *proof-true*)
@@ -1432,9 +1396,9 @@
                  (t established)))))))
  (defun b1-search-attempt-with-cases-visit (n attempt formula evidence induction depth test)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) (cons '(:failure "Fuel" "b1-search-attempt-with-cases-visit") attempt))
+   (cond ((zp n) (cons '(:failure "fuel" "b1-search-attempt-with-cases-visit") attempt))
          ((<= depth 0)
-          (cons '(:failure "Unproved" "") attempt))
+          (cons '(:failure "unproved" "") attempt))
          (t
           (b1-search-with-attempt-values attempt
               ((yes-evidence (b1-search-attempt-case-evidence attempt evidence test t)))
@@ -1452,10 +1416,6 @@
 
 (defund b1-search-attempt-prove (attempt formula evidence induction depth)
   (b1-search-attempt-prove-visit 1000000 attempt formula evidence induction depth))
-
-(defun b1-search-attempt-with-cases (attempt formula evidence induction depth test)
-  (b1-search-attempt-with-cases-visit
-   1000000 attempt formula evidence induction depth test))
 
 (defun b1-search-prove-in-library (lib facts fuel definitions case-context formula evidence induction depth)
   (let ((result (b1-search-attempt-prove
@@ -1584,7 +1544,7 @@
   (let ((result (b1-search-induction-anchors lib facts formula anchors t)))
     (if (car result)
         result
-      (cons '(:failure "Unproved" "") (cdr result)))))
+      (cons '(:failure "unproved" "") (cdr result)))))
 
 (defun b1-search-automatic-induction (attempt formula)
   (let ((lib (b1-search-attempt-lib attempt))
@@ -1603,14 +1563,14 @@
                             (cons nil lib))))
               (if (and (car result) (not (b1-search-unproved-p (car result))))
                   result
-                (cons '(:failure "Unproved" "")
+                (cons '(:failure "unproved" "")
                       (cdr result))))))))))
 
 (defun b1-search-automatic (lib facts formula)
   (b1-search-with-library-values lib
       ((text (proof-write formula)))
     (if (> (length text) 10000)
-        (cons '(:failure "Unproved" "") lib)
+        (cons '(:failure "unproved" "") lib)
       (let* ((direct (b1-search-attempt-prove
                       (b1-search-attempt-init lib facts 65 nil nil) formula nil nil 3))
              (attempt (cdr direct))

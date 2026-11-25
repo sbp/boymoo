@@ -868,6 +868,135 @@ int num_less(V a, V b)
     return c < 0;
 }
 
+/* The functions of the prelude (runner/README.md, "The prelude"), as in the
+   reference runner.  Each gives the value that its definition in ACL2
+   gives, for every argument. */
+
+/* The floor of A/B, for B positive. */
+static void zfloor(const Z *a, const Z *b, Z *q)
+{
+    Z r, one, s;
+    zdivmod(a, b, q, &r);
+    if (a->neg && r.n > 0) {
+        zset(&one, 1);
+        zaddm(q, &one, &s);
+        zfree(q);
+        zfree(&one);
+        *q = s;
+    }
+    q->neg = a->neg;
+    znorm(q);
+    zfree(&r);
+}
+
+/* (ash i c): the floor of i times 2^c, where an argument that is not an
+   integer counts as 0. */
+V num_ash(V a, V b)
+{
+    Z i, p, t, r;
+    V s[1];
+    unsigned long e;
+    int down;
+    if (!IS_INT(a) || a == MKFIX(0))
+        return MKFIX(0);
+    if (!IS_INT(b) || b == MKFIX(0))
+        return a;
+    zview(&i, a, s);
+    down = IS_FIX(b) ? FIXVAL(b) < 0 : BTYPE(b) == B_NEG;
+    e = IS_FIX(b) ? (unsigned long)(down ? -FIXVAL(b) : FIXVAL(b)) : 0;
+    if (down && (!IS_FIX(b) || e / 30 >= i.n))   /* 2^e is above |i|, which is below 10^(9n) */
+        return i.neg ? MKFIX(-1) : MKFIX(0);
+    if (!IS_FIX(b))
+        stop(S_MEMORY, "memory exhausted: a number is too large", NOV);
+    zset(&p, 1);
+    zset(&t, 2);
+    for (;;) {                  /* p becomes 2^e, by squaring */
+        if (e & 1) {
+            zmul(&p, &t, &r);
+            zfree(&p);
+            p = r;
+        }
+        if ((e >>= 1) == 0)
+            break;
+        zmul(&t, &t, &r);
+        zfree(&t);
+        t = r;
+    }
+    zfree(&t);
+    if (down)
+        zfloor(&i, &p, &r);
+    else
+        zmul(&i, &p, &r);
+    zfree(&p);
+    return zresult(&r);
+}
+
+/* The magnitude of Z, less 1 if Z is negative, in base 2^32 in the N
+   words of W, where N is at least the number of digits of Z.  In two's
+   complement a negative integer -m has exactly the bits that m - 1
+   lacks. */
+static void zbits(const Z *z, V *w, size_t n)
+{
+    size_t i, k;
+    U c;
+    for (k = 0; k < n; k++)
+        w[k] = 0;
+    for (i = z->n; i-- > 0;)
+        for (c = z->d[i], k = 0; k < n; k++) {
+            c += (U)w[k] * BASE;
+            w[k] = (V)(c & 0xFFFFFFFFUL);
+            c >>= 32;
+        }
+    for (k = 0; z->neg; k++) {
+        if (w[k] != 0) {
+            w[k]--;
+            break;
+        }
+        w[k] = (V)0xFFFFFFFFUL;
+    }
+}
+
+/* (binary-logxor i j): the integer whose bits in two's complement are
+   those in which i and j differ, where an argument that is not an
+   integer counts as 0.  It is negative when one of the two is. */
+V num_logxor(V a, V b)
+{
+    Z x, y, r, one, t;
+    V s[1], u[1], *w;
+    size_t n, i, k;
+    U c;
+    zview(&x, IS_INT(a) ? a : MKFIX(0), s);
+    zview(&y, IS_INT(b) ? b : MKFIX(0), u);
+    n = (x.n > y.n ? x.n : y.n) + 1;
+    if (n > (size_t)-1 / (2 * sizeof(V)) - 1)
+        stop(S_MEMORY, "memory exhausted: a number is too large", NOV);
+    w = xalloc(NULL, 0, 2 * n * sizeof(V));
+    zbits(&x, w, n);
+    zbits(&y, w + n, n);
+    zinit(&r, 2 * n + 1);
+    for (k = n; k-- > 0;) {     /* r becomes r * 2^32 + the word k */
+        c = (U)((w[k] ^ w[n + k]) & 0xFFFFFFFFUL);
+        for (i = 0; i < r.n; i++) {
+            c += (U)r.d[i] << 32;
+            r.d[i] = (V)(c % BASE);
+            c /= BASE;
+        }
+        for (; c > 0; c /= BASE)
+            r.d[r.n++] = (V)(c % BASE);
+    }
+    xalloc(w, 2 * n * sizeof(V), 0);
+    if (x.neg != y.neg) {       /* the bits it lacks: it is -(r + 1) */
+        zset(&one, 1);
+        zaddm(&r, &one, &t);
+        zfree(&r);
+        zfree(&one);
+        r = t;
+        r.neg = 1;
+        znorm(&r);
+    }
+    return zresult(&r);
+}
+
 /* The numerator, the denominator, the real part or the imaginary part. */
 V num_part(V a, int which)
 {

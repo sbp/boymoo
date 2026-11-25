@@ -14,10 +14,6 @@ can replace the entire result.
 
 | Call | Result |
 |---|---|
-| `(t4-hash-lists-put-membership lib formula arithmetic)` | Step equating membership in a key list and lookup after inserting its keys. |
-| `(t4-hash-lists-duplicate-membership lib formula arithmetic)` | Step relating the hashed duplicate check to the ordinary duplicate check. |
-| `(t4-hash-lists-substitution-map lib formula arithmetic)` | Step equating the hashed and ordinary association-list substitutions. |
-| `(t4-hash-lists-hash-set-operation lib formula recursive arithmetic)` | Step equating a set operation with optional hashing to its ordinary list scan. |
 
 BookLogic can run each tactic with its own methods by calling the same
 function name with `-query` appended and passing `replies` in place of

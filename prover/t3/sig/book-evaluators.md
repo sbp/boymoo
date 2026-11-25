@@ -32,7 +32,7 @@ writing the symbol. The four field accessors are
 | `(t3-book-evaluators-quoted-values lib names)` | The Library with the proper-values and quoted-values lemmas appended in that order. | A failure from proof construction. |
 | `(t3-book-evaluators-symbol-is-atom lib typed)` | A negative `CONSP` Step for the term in the positive `SYMBOLP` Step `typed`. | A failure from proof construction. |
 | `(t3-book-evaluators-quote-excluded lib value signed)` | A Step excluding the quoted `QUOTE` symbol for `value`, given the input Step `signed`. | A failure from proof construction. |
-| `(t3-book-evaluators-equation-constraint lib names formula index)` | A Step proving the evaluator constraint `formula` at the zero-based `index`. | `Unsupported` for an incompatible branch, or a construction failure. |
+| `(t3-book-evaluators-equation-constraint lib names formula index)` | A Step proving the evaluator constraint `formula` at the zero-based `index`. | `unsupported` for an incompatible branch, or a construction failure. |
 | `(t3-book-evaluators-evaluator-shape declarations formulas)` | The Boolean recognition of the first eight evaluator equations. | A failure from reading a malformed formula or declaration. |
 | `(t3-book-evaluators-witness lib declarations formulas)` | `(cons entry lib)` with the witness proof entry and the Library extended with the evaluator definitions and lemmas. | A failure from reading the constraints or constructing the proof. |
 

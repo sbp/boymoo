@@ -73,7 +73,7 @@
 (defun h3-tactics-structural-induction (n library formula variable replacements replies kind calls)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h3-tactics-structural-induction")
+      '(:failure "fuel" "h3-tactics-structural-induction")
     (let ((result (h3-induction-structural-induction library formula variable replacements replies)))
       (if (not (h3-induction-request-p result))
           result
@@ -217,7 +217,7 @@
 (defun h3-tactics-completion (library name formula)
   (let ((entry (assoc-equal name *h3-tactics-completions*)))
     (if (not entry)
-        '(:failure "MissingProofData" "")
+        '(:failure "missing-proof-data" "")
       (proof-with-checked-results
        ((conclusion (proof-term-at formula 2))
         (left (proof-term-at conclusion 1))
@@ -341,7 +341,7 @@
              (h3-tactics-using library formula
                               (h3-tactics-acl2-symbols '("DFP-TO-DF" "RATIONALP-TO-DF"))
                               nil (list call) nil 150))
-         '(:failure "MalformedTacticInput" ""))))))
+         '(:failure "malformed-tactic-input" ""))))))
 
 (defun h3-tactics-solve-by-name (library name formula)
   (let ((direct (assoc-equal name *h3-tactics-direct*)))

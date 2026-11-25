@@ -18,7 +18,6 @@
 (defun b2-meta-cancel-cancellation-operands (self) (nth 7 self))
 (defun b2-meta-cancel-cancellation-operator (self) (nth 8 self))
 (defun b2-meta-cancel-cancellation-fringes (self) (nth 9 self))
-(defun b2-meta-cancel-cancellation-fallback (self) (nth 10 self))
 (defun b2-meta-cancel-cancellation-openers (self) (nth 11 self))
 
 (defun b2-meta-cancel-cancellation-with-fold (self fold)
@@ -579,7 +578,7 @@
  (defun b2-meta-cancel-cons-operation-run (n self term operation evidence prove)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-meta-cancel-cons-operation-run")
+       '(:failure "fuel" "b2-meta-cancel-cons-operation-run")
      (let ((test (list *proof-consp* term))
            (same (proof-eq (list *library-car* term) (proof-quote operation)))
            (lib (b2-meta-cancel-cancellation-lib self)))
@@ -600,7 +599,7 @@
  (defun b2-meta-cancel-apply-cons-recipe (n self recipe sign evidence)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-meta-cancel-apply-cons-recipe")
+       '(:failure "fuel" "b2-meta-cancel-apply-cons-recipe")
      (cond ((eq recipe :relation)
             (b2-meta-cancel-cancellation-prove-relation (1- n) sign evidence self))
            ((eq recipe :left)
@@ -609,7 +608,7 @@
 
  (defun b2-meta-cancel-cancellation-prove-relation (n active evidence self)
    (declare (xargs :measure (nfix n)))
-   (cond ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-meta-cancel-cancellation-prove-relation"))
+   (cond ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-meta-cancel-cancellation-prove-relation"))
          ((not active)
           (b2-meta-cancel-with-self (b2-meta-cancel-cancellation-unchanged self evidence) self))
          (t (b2-meta-cancel-cons-operation-run
@@ -620,7 +619,7 @@
  (defun b2-meta-cancel-cancellation-prove-relation-left (n first outer self)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-meta-cancel-cancellation-prove-relation-left")
+       '(:failure "fuel" "b2-meta-cancel-cancellation-prove-relation-left")
      (b2-meta-cancel-cons-operation-run
       (1- n) self (cadr (b2-meta-cancel-cancellation-operands self))
       (b2-meta-fold-arithmetic-fold-operation (b2-meta-cancel-cancellation-fold self))

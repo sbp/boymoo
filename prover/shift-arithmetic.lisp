@@ -153,7 +153,3 @@
           (shift-arithmetic-shift-decrease-term lib term parent rulers))
        (cons (list nil rulers) lib)))))
 
-(defun shift-arithmetic-shift-decrease (lib goal rulers)
-  (quotient-proofs-let*
-   (((result lib) (shift-arithmetic-shift-decrease-with-rulers lib goal rulers)))
-   (cons (car result) lib)))

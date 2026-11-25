@@ -16,7 +16,7 @@
 (defun t3-book-associations-components-visit (n proof recognizer)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-associations-components")
+      '(:failure "fuel" "t3-book-associations-components")
     (proof-with-checked-results
      ((literal (proof-step-first recognizer))
       (no (if (proof-is-call literal *proof-if*) (proof-term-at literal 3) nil)))
@@ -70,7 +70,7 @@
              (cons :split branches)))
           (t
            (proof-with-checked-results ((written (proof-write term)))
-             '(:failure "Unsupported" ""))))))))))
+             '(:failure "unsupported" ""))))))))))
 
 (defun t3-book-associations-formula-evidence (proof test holds evidence)
   (proof-with-checked-results ((premise (proof-proof-assume proof test holds)))
@@ -87,7 +87,7 @@
 (defun t3-book-associations-prove-formula (n lib term definitions evidence)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "t3-book-associations-prove-formula"))
+   ((zp n) '(:failure "fuel" "t3-book-associations-prove-formula"))
    ((failure-p evidence) evidence)
    (t
     (let ((proof (library-library-proof lib))
@@ -118,7 +118,7 @@
        (let ((known (and normal (assoc-equal (caddr (proof-step-first normal)) facts))))
          (if known
              (proof-proof-transport (library-library-proof lib) (cdr known) normal)
-           '(:failure "Unsupported" "")))))))
+           '(:failure "unsupported" "")))))))
 
 (defun t3-book-associations-invariant (lib label lookup table result)
   (let* ((proof (library-library-proof lib))
@@ -151,7 +151,7 @@
       (use-child (proof-proof-prove-if proof assumption smaller))
       (known-child (if (assoc-equal child facts)
                        (table-get facts child nil)
-                     '(:failure "MissingProofInput" "")))
+                     '(:failure "missing-proof-input" "")))
       (tail-result (proof-proof-prove-if proof use-child known-child))
       (inspected (t3-book-spines-shallow lib finder (list present)))
       (test (proof-term-at (caddr (proof-step-first inspected)) 1))

@@ -21,23 +21,6 @@ strings.
 | `(h2-compression-lookup-aref-integer-view proof)` | Returns a pair with the auxiliary lemma name for reading an array at an integer key. | May return a failure. |
 | `(h2-compression-lookup-compressed-aref proof formula)` | The implication term for the read of the compressed array. Returns a pair with the Step for the formula. | May return a failure. |
 
-The `h2-compression-lookup-within-array-lookup-leaf` function takes the branch value term and its
-signed tests first, in the order supplied by `proof-proof-by-value-leaves`,
-followed by the proof and captured arguments. The loop induction preserves
-the first occurrence of each substitution, visiting the skipped case before
-the retained case.
-
-`(h2-compression-lookup-within-array-lookup-leaf value choices proof key
-name data old-lookup header header-view header-law key-type typed alist
-lower within target)` returns the pair containing the Step equating a
-lookup of `key` in the branch value to `target`, or a failure.
-`header-view` is the opening equation for `header` and `header-law` is
-the name from `header-independent-lookup`. The five Steps `key-type`,
-`typed`, `alist`, `lower` and `within` prove integrality of the key,
-integrality of the dimension, the alist predicate, and the lower and
-upper bounds on the key, respectively. The reply-aware operation takes
-the same arguments with `proof` supplied separately.
-
 The read-only `skip-status` and `array-bounds` accept a Search or its
 Library. The other proof arguments are opaque BookProof values.
 
@@ -51,7 +34,7 @@ as `args`, and the recipe name without the book prefix as the keyword
 `h2-compression-lookup-request-args` recognize and read the request.
 Append a reply `(cons value proof)` and rerun with the original arguments.
 The named functions start with an empty reply list. The reply-aware call
-returns `Unproved` in the value position to retain the resulting BookProof.
+returns `unproved` in the value position to retain the resulting BookProof.
 
 Operations `:library`, `:keep-folded`, `:restore-fixed-calls`, `:derive`,
 `:auxiliary`, `:lemma`, and `:search` follow the reply protocol in

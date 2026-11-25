@@ -15,14 +15,8 @@
         (cons (proof-sym "ACL2-NUMBERP" "ACL2") "booleanp-acl2-numberp")
         (cons (proof-sym "COMPLEX-RATIONALP" "ACL2") "booleanp-complex-rationalp")))
 
-(defun book-library-cons-value (head tail)
-  (proof-constant-cons-value head tail))
-
 (defun book-library-book-library-init (proof)
   (library-library-init (proof-proof-with-kind proof :book)))
-
-(defun book-library-book-library-constant (lib term)
-  (proof-proof-constant (proof-proof-with-kind (library-library-proof lib) :book) term))
 
 (defun book-library-book-library-boolean-constant (lib value)
   (proof-proof-prove (library-library-proof lib) (list *book-library-booleanp* value)
@@ -68,13 +62,13 @@
  (defun book-library-book-library-boolean-loop (n lib term)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "book-library-book-library-boolean-loop")
+       '(:failure "fuel" "book-library-book-library-boolean-loop")
      (book-library-boolean-run (1- n) lib (book-library-boolean-task lib term))))
 
  (defun book-library-boolean-run (n lib task)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "book-library-boolean-run"))
+    ((zp n) '(:failure "fuel" "book-library-boolean-run"))
     ((failure-p task) task)
     ((eq (car task) :return) (cadr task))
     ((eq (car task) :if)

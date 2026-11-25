@@ -27,7 +27,7 @@
  (defun b2-floor-translation-rational-type-run (n lib term known solver)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b2-floor-translation-rational-type-run")
+       '(:failure "fuel" "b2-floor-translation-rational-type-run")
      (let ((rational (assoc-equal (list *library-rationalp* term) known)))
        (cond (rational (cons (cdr rational) solver))
              ((or (assoc-equal (list *proof-integerp* term) known)
@@ -67,7 +67,7 @@
 
  (defun b2-floor-translation-rational-type-parts (n lib terms known solver)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "b2-floor-translation-rational-type-parts"))
+   (cond ((zp n) '(:failure "fuel" "b2-floor-translation-rational-type-parts"))
          ((endp terms) (cons nil solver))
          (t (proof-with-checked-results
                 ((first (b2-floor-translation-rational-type-run (1- n) lib (car terms) known solver))

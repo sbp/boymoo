@@ -286,7 +286,7 @@
 (defun h4-terms-term-implies-pseudo-lambda-tests (n p constraint tests)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h4-terms-term-implies-pseudo-lambda-tests")
+      '(:failure "fuel" "h4-terms-term-implies-pseudo-lambda-tests")
     (proof-with-checked-results ((literal (proof-step-first constraint)))
       (if (proof-is-call literal *proof-if*)
           (proof-with-checked-results ((tail (proof-term-at literal 3)))

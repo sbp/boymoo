@@ -14,7 +14,6 @@ maps `SYMBOL-ALISTP` to 3 and `TRUE-LISTP` to 1, in that order.
 
 | Call | Result | Failure |
 |---|---|---|
-| `(t2-structural-lists-constructed term)` | Boolean indicating that `term` is quoted NIL or a `CONS` call. | None. |
 | `(t2-structural-lists-append-associativity lib)` | Pair of the lemma name string and library. Adds the associativity lemma if absent. | A proof failure. |
 | `(t2-structural-lists-append-to-empty lib)` | Pair of the lemma name string and library. Adds the right identity lemma for a true list if absent. | A proof failure. |
 | `(t2-structural-lists-preserve-list-predicate lib operation predicate)` | Pair of the lemma name string and library. `operation` is the append or reverse append symbol and `predicate` is a symbol in `fields`. | A proof failure. |
@@ -31,8 +30,3 @@ Boolean. Term indexing can fail on malformed calls.
 
 | Call | Accepted terms |
 |---|---|
-| `(t2-structural-lists-append-associativity-expand call)` | An append whose first argument is `X` or constructed. |
-| `(t2-structural-lists-preserve-list-predicate-expand call operation predicate)` | An application of `operation` to `X` first, or of `predicate` to a constructed term. |
-| `(t2-structural-lists-evens-preserves-expand call term)` | The term itself, or a `SYMBOL-ALISTP` call on a constructed term. |
-| `(t2-structural-lists-merge-preserves-expand call term predicate)` | The term itself, or a `predicate` call on a constructed term. |
-| `(t2-structural-lists-sort-preserves-expand call term predicate)` | The term itself, or a `predicate` call on quoted NIL. |

@@ -92,7 +92,7 @@
 (defun h4-book-printing-establish-quoted-characters (n p target replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h4-book-printing-establish-quoted-characters")
+      '(:failure "fuel" "h4-book-printing-establish-quoted-characters")
     (let ((result (h4-book-printing-quoted-characters-step p target replies)))
       (if (eq (car result) :h4-book-printing-replies)
           (h4-book-printing-establish-quoted-characters (1- n) p target (cdr result))
@@ -102,7 +102,7 @@
  (defun h4-book-printing-characters-of-visit (n p term premises)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "h4-book-printing-characters-of-visit")
+       '(:failure "fuel" "h4-book-printing-characters-of-visit")
      (let ((pr (library-library-proof p))
            (target (list *h4-book-printing-characters* term)))
        (proof-with-checked-results ((given (proof-find-evidence premises (list target))))
@@ -158,7 +158,7 @@
  (defun h4-book-printing-characters-of-append-parts (n p parts premises left)
    (declare (xargs :measure (nfix n)))
    (cond ((or (endp parts) (zp left)) nil)
-         ((zp n) '(:failure "Fuel" "h4-book-printing-characters-of-append-parts"))
+         ((zp n) '(:failure "fuel" "h4-book-printing-characters-of-append-parts"))
          (t (proof-with-checked-results
                 ((proof (h4-book-printing-characters-of-visit (1- n) p (car parts) premises))
                  (rest (h4-book-printing-characters-of-append-parts
@@ -184,7 +184,7 @@
 (defun h4-book-printing-by-value (n p value template tests premises)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h4-book-printing-by-value")
+      '(:failure "fuel" "h4-book-printing-by-value")
     (let ((pr (library-library-proof p)))
       (cond
        ((proof-is-call value *proof-if*)

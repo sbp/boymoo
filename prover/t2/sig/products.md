@@ -32,7 +32,6 @@ Proof has kind `:slice`. Every call can return a failure.
 | Function | Arguments and result |
 |---|---|
 | `(t2-products-library-type-of lib term evidence)` | Library, term and integer evidence. Returns the integer Step for the term. |
-| `(t2-products-library-natural lib term)` | Library and term. Returns its naturalness Step. |
 | `(t2-products-library-modus-ponens lib step evidence)` | Library, implication Step and premise Step. Returns the consequent Step. |
 | `(t2-products-library-rational lib term evidence)` | Library, term and integer evidence. Returns the rationality Step. |
 | `(t2-products-library-number lib term evidence)` | Library, term and integer evidence. Returns the ACL2 number Step. |

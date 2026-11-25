@@ -43,7 +43,7 @@
           (lib (h1-tactics-prover-library proof))
           (head (car term)))
      (cond
-      ((zp n) '(:failure "Fuel" "h1-book-disjoin-simplify-visit"))
+      ((zp n) '(:failure "fuel" "h1-book-disjoin-simplify-visit"))
       ((not (proof-compound term)) nil)
       ((not (consp term)) '(:failure "failure" ""))
       ((equal head *proof-quote*) nil)
@@ -92,7 +92,7 @@
  (defun h1-book-disjoin-simplify-arguments (n proof term args index result)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h1-book-disjoin-simplify-arguments"))
+    ((zp n) '(:failure "fuel" "h1-book-disjoin-simplify-arguments"))
     ((endp args) result)
     (t
      (proof-with-checked-results
@@ -143,7 +143,7 @@
 (defun h1-book-disjoin-eval-constructed-project (n proof result term)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h1-book-disjoin-eval-constructed-project"))
+   ((zp n) '(:failure "fuel" "h1-book-disjoin-eval-constructed-project"))
    ((proof-is-call term *proof-cons*)
     (proof-with-checked-results
         ((next (h1-book-rewrite-equal-projections proof result term))
@@ -226,7 +226,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((core (h1-tactics-prover-proof proof)))
     (cond
-     ((zp n) '(:failure "Fuel" "h1-book-disjoin-disjoin2-value-branches"))
+     ((zp n) '(:failure "fuel" "h1-book-disjoin-disjoin2-value-branches"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((parts (proof-list-of-length (cdr value) 3))

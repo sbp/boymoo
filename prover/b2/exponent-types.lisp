@@ -298,7 +298,7 @@
 (defun b2-exponent-types-case-value (n lib value template tests data base-info bindings)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "b2-exponent-types-case-value"))
+   ((zp n) '(:failure "fuel" "b2-exponent-types-case-value"))
    ((proof-is-call value *proof-if*)
     (proof-with-checked-results
         ((branches (proof-list-of-length (cdr value) 3))

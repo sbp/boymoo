@@ -118,9 +118,6 @@
   (b2-pair-products-prove-choice lib a nil some facts
     (b2-pair-products-cons-cases-on-first some facts lib a b prove)))
 
-(defun b2-pair-products-cons-cases (lib a b replies)
-  (b2-pair-products-cons-cases-with-proof lib a b (list :replies replies)))
-
 (defun b2-pair-products-pair-size (lib formula)
   (proof-with-checked-results
       ((parts (proof-list-of-length formula 4))

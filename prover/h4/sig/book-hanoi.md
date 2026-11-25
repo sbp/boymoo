@@ -7,8 +7,6 @@ value is replaced.
 
 | Function | Arguments and result | Failure |
 |---|---|---|
-| `(h4-book-hanoi-hanoi-proof p formula uses)` | Prove a Hanoi transfer invariant or corollary. `uses` is the list of hint uses for `formula`, as in `book-hints.md`. The result is a Step or `nil`. | Propagates a failure from the transfer proof, or from corollary preparation. |
-| `(h4-book-hanoi-hanoi-corollary p formula uses)` | Prove the equality `formula` by instantiating the first implication among the hint facts. The result is a Step or `nil`. | Propagates a failure from preparation. The case-proof fallback kinds in `prover/h4/notes/failures.md` yield `nil`. |
 | `(h4-book-hanoi-stack-transfer p formula)` | Prove the stack-transfer implication by induction. Returns a Step. | May return a failure. |
 | `(h4-book-hanoi-hanoi name)` | Return the symbol with string name `name` in package `HANOI`. | None. |
 | `(h4-book-hanoi-cons-list items)` | Return the term that constructs the list of terms in `items`, in argument order. | None. |

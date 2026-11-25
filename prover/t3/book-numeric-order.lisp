@@ -6,9 +6,6 @@
 (defun t3-book-numeric-order-number-sums-type-of (sums term evidence)
   (t3-rational-order-rational-sums-type-of sums term evidence))
 
-(defun t3-book-numeric-order-number-sums-number-type (sums term types)
-  (t3-book-numeric-order-number-sums-type-of sums term types))
-
 (defun t3-book-numeric-order-select (lib equation evidence)
   (proof-with-checked-results
    ((first (proof-step-first equation))

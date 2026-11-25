@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include "run.h"
+#include "prelude.h"
 
 const char *const prim_pkg[NPRIMS] = {
     "ACL2", "ACL2", "ACL2", "ACL2", "ACL2", "ACL2", "COMMON-LISP",
@@ -63,15 +64,20 @@ unsigned long defs_built;
 enum { O_CONST, O_VAR, O_PRIM, O_CALL, O_TCALL, O_JNIL, O_JMP, O_RET,
        O_ENTER, O_LEAVE, O_REBIND, O_JET };
 
-/* The prelude: two functions of two arguments that the runner has from
-   the start when it is run with -j, and computes by num.c.  They are
-   functions like any other: a define line for one of them is in force
-   in its place. */
+/* The prelude: five functions that the runner has from the start when
+   it is run with -j: ash and binary-logxor, which num.c computes, and
+   length, char and subseq, which prelude.c computes.  A define line of
+   the program text for one of them is read and not used: the runner
+   computes ACL2's definition itself, as ACL2 computes these functions by
+   the code of the Lisp under it (README.md, "The prelude"). */
 int prelude;
-enum { J_ASH, J_LOGXOR, NJETS };
-static const char *const jet_pkg[NJETS] = {"COMMON-LISP", "ACL2"};
-static const char *const jet_name[NJETS] = {"ASH", "BINARY-LOGXOR"};
-static long jet_code[NJETS][3] = {{O_JET, J_ASH, O_RET}, {O_JET, J_LOGXOR, O_RET}};
+enum { J_ASH, J_LOGXOR, J_LENGTH, J_CHAR, J_SUBSEQ, NJETS };
+static const char *const jet_pkg[NJETS] =
+    {"COMMON-LISP", "ACL2", "COMMON-LISP", "COMMON-LISP", "COMMON-LISP"};
+static const char *const jet_name[NJETS] = {"ASH", "BINARY-LOGXOR", "LENGTH", "CHAR", "SUBSEQ"};
+static const int jet_arity[NJETS] = {2, 2, 1, 2, 3};
+static long jet_code[NJETS][3] = {{O_JET, J_ASH, O_RET}, {O_JET, J_LOGXOR, O_RET},
+    {O_JET, J_LENGTH, O_RET}, {O_JET, J_CHAR, O_RET}, {O_JET, J_SUBSEQ, O_RET}};
 
 static long fn_of(V s)
 {
@@ -98,7 +104,7 @@ static long fn_of(V s)
     for (j = 0; prelude && j < NJETS; j++)
         if (strlen(jet_name[j]) == y->len && memcmp(jet_name[j], y->name, y->len) == 0 &&
             strlen(jet_pkg[j]) == p->len && memcmp(jet_pkg[j], p->name, p->len) == 0) {
-            f->arity = 2;
+            f->arity = jet_arity[j];
             f->built = 1;
             f->code.op = jet_code[j];
             f->code.n = f->code.maxstack = 3;
@@ -145,10 +151,13 @@ void index_define(const unsigned char *p, const unsigned char *e, int file, long
         if (syms[SYMIDX(name)].prim >= 0)
             bad("a define line defines a primitive:", name);
         k = fn_of(name);
+        if (fns[k].code.op != NULL && fns[k].code.op[0] == O_JET) {
+            pos++;             /* a function of the prelude stays the prelude's */
+            continue;
+        }
         if (fns[k].line == start)
             bad("a define line defines a function twice:", name);
         fns[k].line = start;   /* a later definition is in force */
-        fns[k].built = 0;      /* also in place of a function of the prelude */
         fns[k].end = e;
         fns[k].file = file;
         fns[k].lineno = line;
@@ -532,13 +541,21 @@ static void prim(int p)
     stk[sp - 1] = r;
 }
 
-/* A function of the prelude: its two arguments on the stack give way to
-   its value. */
+/* A function of the prelude: its arguments on the stack give way to its
+   value. */
 static void jet(int j)
 {
-    V r = j == J_ASH ? num_ash(stk[sp - 2], stk[sp - 1]) : num_logxor(stk[sp - 2], stk[sp - 1]);
-    sp--;
-    stk[sp - 1] = r;
+    size_t base = sp - (size_t)jet_arity[j];
+    V r;
+    switch (j) {
+    case J_ASH: r = num_ash(stk[base], stk[base + 1]); break;
+    case J_LOGXOR: r = num_logxor(stk[base], stk[base + 1]); break;
+    case J_LENGTH: r = pre_length(base); break;
+    case J_CHAR: r = pre_char(base); break;
+    default: r = pre_subseq(base); break;
+    }
+    sp = base + 1;
+    stk[base] = r;
 }
 
 /* The machine. */

@@ -38,9 +38,6 @@ entire result.
 | `(t2-arithmetic-arithmetic-ordinal-comparison lib a b integers)` | The equality Step relating ordinal and integer comparison of the two terms, using the integer Step list. |
 | `(t2-arithmetic-count-comparison lib strict child-count parent-count integers)` | The `O<` Step for the counts, given the strict comparison of their integer values and the two Steps equating the counts to those values. |
 | `(t2-arithmetic-reversed-successor lib before after)` | The equality Step rewriting the incremented index in the difference terms. |
-| `(t2-arithmetic-gap-endpoints term)` | The list of `(lower upper inclusive-p)` triples yielded for the term, in generator order. |
-| `(t2-arithmetic-positive-gap lib before hypotheses integers)` | `(list step lib hypotheses)` for positivity of the difference term using the strict endpoint test and the given integer Steps. |
-| `(t2-arithmetic-positive-countdown lib before hypotheses integers)` | `(list step lib hypotheses)` for positivity of the measure term using the tests and the given integer Steps. |
 | `(t2-arithmetic-clipped-predecessor lib integral positive-value)` | `(cons step lib)` for clipped predecessor descent from the integer and positivity Steps. |
 | `(t2-arithmetic-clipped-decrease lib goal hypotheses)` | `(list step lib hypotheses)` for decrease of a clipped gap. |
 | `(t2-arithmetic-rational-parts lib rational)` | The Steps for the integer numerator, integer denominator, and positive denominator, in that order, from the rationality Step. |
@@ -74,16 +71,6 @@ symbol, child measure, and parent measure. The ordinary hypothesis
 entry points take the underlying shared Hypotheses object. They use its
 tests and cached evidence for lookups and the values of its `extra` map in
 insertion order for premises.
-
-For RulerFacts, `t2-arithmetic-positive-gap-query`,
-`t2-arithmetic-positive-countdown-query`, `t2-arithmetic-clipped-decrease-query`,
-and `t2-arithmetic-rational-count-decrease-query` take the same arguments
-followed by a list of replies, initially empty. A completed call has the
-same result and returns a failure as the ordinary entry point. A suspended call
-returns a request recognized by `(t2-arithmetic-request-p value)`.
-The accessors `t2-arithmetic-request-operation`,
-`t2-arithmetic-request-term`, `t2-arithmetic-request-library`, and
-`t2-arithmetic-request-hypotheses` each take a request and cannot fail.
 
 The operation is `:find`, `:require`, or `:premises`. The term is the
 queried term, or `nil` for `:premises`. Evaluate the request using the

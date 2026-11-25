@@ -13,9 +13,9 @@
    (let ((head (proof-datum-head term)))
      (cond
       ((not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t2-guarded-selectors-simplify-term"))
+       '(:failure "fuel" "t2-guarded-selectors-simplify-term"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
-      ((endp term) '(:failure "MissingTermPart" ""))
+      ((endp term) '(:failure "missing-term-part" ""))
       ((or (proof-compound head) (member-equal head definitions))
        (proof-with-checked-results
         ((expansion (proof-simplify-expansion proof term))
@@ -42,7 +42,7 @@
  (defun t2-guarded-selectors-simplify-arguments (n proof term args index result evidence definitions)
    (declare (xargs :measure (nfix n)))
    (cond ((not (o< (nfix (1- n)) (nfix n)))
-          '(:failure "Fuel" "t2-guarded-selectors-simplify-arguments"))
+          '(:failure "fuel" "t2-guarded-selectors-simplify-arguments"))
          ((endp args) result)
          (t (proof-with-checked-results
              ((equality (t2-guarded-selectors-simplify-term (1- n) proof (car args) evidence definitions))
@@ -65,7 +65,7 @@
 (defun t2-guarded-selectors-prove-visit (n proof term evidence definitions)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t2-guarded-selectors-prove-visit"))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t2-guarded-selectors-prove-visit"))
    ((equal term *proof-true*)
     (let ((name (proof-sym "SELF-TRUE" "ACL2")))
       (if (and (eq (proof-proof-kind proof) :slice) (assoc-equal name (proof-proof-facts proof)))
@@ -137,7 +137,7 @@
               (cdr term) steps)))
           ((proof-is-call term *proof-minus*)
            (if (endp (cdr term))
-               '(:failure "MissingTermPart" "")
+               '(:failure "missing-term-part" "")
              (proof-with-checked-results
               ((step (t2-guarded-selectors-library-type-of lib (cadr term) evidence)))
               (library-library-cite lib "INTEGER-NEGATION" (cdr term) (list step)))))
@@ -161,7 +161,7 @@
       (q-args (library-compare-chain-arguments q q-strict)))
      (let ((a (car p-args)) (b (cadr p-args)) (c (cadr q-args)))
        (if (not (equal b (car q-args)))
-           '(:failure "RecipeMismatch" "")
+           '(:failure "recipe-mismatch" "")
          (proof-with-checked-results
           ((types (t2-guarded-selectors-type-arguments lib (list a b c) nil)))
           (library-library-cite lib
@@ -183,7 +183,7 @@
 (defun t2-guarded-selectors-path-end (term)
   (declare (xargs :measure (acl2-count term)))
   (cond ((not (t2-guarded-selectors-selector-call-p term)) term)
-        ((endp (cdr term)) '(:failure "MissingTermPart" ""))
+        ((endp (cdr term)) '(:failure "missing-term-part" ""))
         (t (t2-guarded-selectors-path-end (cadr term)))))
 
 (defun t2-guarded-selectors-selector-path (term source)
@@ -263,7 +263,7 @@
        ((literal (proof-step-first step))
         (no (proof-term-at literal 3)))
        (if (not (equal no *proof-false*))
-           '(:failure "RecipeMismatch" "")
+           '(:failure "recipe-mismatch" "")
          (let* ((arguments (list (cadr literal) (caddr literal)))
                 (bindings (seq-zip (list *library-x* *library-y*) arguments)))
            (proof-with-checked-results
@@ -357,7 +357,7 @@
  (defun t2-guarded-selectors-context-learn (n context step)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t2-guarded-selectors-context-learn")
+       '(:failure "fuel" "t2-guarded-selectors-context-learn")
      (let* ((hypotheses (t2-guarded-selectors-context-hypotheses context))
             (lib (descent-hypotheses-proof hypotheses))
             (proof (descent-proof lib)))
@@ -457,7 +457,7 @@
    (declare (xargs :measure (nfix n)))
    (cond ((endp steps) context)
          ((not (o< (nfix (1- n)) (nfix n)))
-          '(:failure "Fuel" "t2-guarded-selectors-context-learn-steps"))
+          '(:failure "fuel" "t2-guarded-selectors-context-learn-steps"))
          (t (proof-with-checked-results
              ((context (t2-guarded-selectors-context-learn (1- n) context (car steps))))
              (t2-guarded-selectors-context-learn-steps (1- n) context (cdr steps)))))))
@@ -514,7 +514,7 @@
       (proof-with-checked-results ((first (proof-step-first step)) (head (proof-term-at first 0)))
         (if (equal head *proof-less*)
             (cons step context)
-          '(:failure "RecipeMismatch" "")))
+          '(:failure "recipe-mismatch" "")))
     (let* ((edge (car edges)) (head (car edge)) (base (cadr edge)))
       (proof-with-checked-results
        ((evidence (t2-guarded-selectors-context-find context (list *proof-consp* base)))
@@ -538,7 +538,7 @@
        (proof-with-checked-results ((edges (descent-selector-chain-edges actual base nil)))
          (if (not edges)
              (proof-with-checked-results ((text (proof-write base)))
-               '(:failure "RecipeMismatch" ""))
+               '(:failure "recipe-mismatch" ""))
            (proof-with-checked-results
             ((decrease (t2-guarded-selectors-selector-chain-steps edges lib nil context))
              (order (t2-guarded-selectors-library-ordinal-comparison lib (list *library-count* actual) parent))
@@ -552,7 +552,7 @@
       (child-head (proof-term-at (cadr parts) 0))
       (parent-head (and (equal child-head *library-count*) (proof-term-at (caddr parts) 0))))
      (if (not (equal parent-head *library-count*))
-         '(:failure "RecipeMismatch" "")
+         '(:failure "recipe-mismatch" "")
        (proof-with-checked-results
         ((raw (proof-term-at (cadr parts) 1))
          (opened (t2-guarded-selectors-simplify proof raw nil (list *termination-return-last*)))
@@ -609,7 +609,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((zp n) '(:failure "Fuel" "t2-guarded-selectors-guarded-decrease-visit"))
+     ((zp n) '(:failure "fuel" "t2-guarded-selectors-guarded-decrease-visit"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
        ((branches (proof-list-of-length (cdr value) 3))
@@ -620,7 +620,7 @@
              (1- n) (caddr branches) (append tests (list (list test nil))) lib parent template (cdr yes)))
         (joined (proof-by-value-join proof value template (car yes) (car no))))
        (cons joined (cdr no))))
-     ((and (proof-compound value) (endp value)) '(:failure "MissingTermPart" ""))
+     ((and (proof-compound value) (endp value)) '(:failure "missing-term-part" ""))
      ((and (proof-compound value) (proof-compound (car value)))
       (proof-with-checked-results
        ((equation (proof-proof-beta proof value))
@@ -634,7 +634,7 @@
          ((result (t2-guarded-selectors-guarded-decrease-leaf value tests lib parent hypotheses))
           (literal (proof-step-first (car result)))
           (target (proof-subst template (list (cons *proof-result* value)))))
-         (if (equal literal target) result '(:failure "RecipeMismatch" "")))))))
+         (if (equal literal target) result '(:failure "recipe-mismatch" "")))))))
 
 (defun t2-guarded-selectors-guarded-decrease (lib goal hypotheses)
   (let ((proof (library-library-proof lib)))

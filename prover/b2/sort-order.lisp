@@ -474,7 +474,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-sort-order-merge-order-consequent-by-value"))
+     ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-sort-order-merge-order-consequent-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
        ((branches (proof-list-of-length (cdr value) 3))

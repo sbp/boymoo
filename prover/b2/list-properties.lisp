@@ -218,7 +218,7 @@
     (n goal lib formula position rules predicate call arguments measure known progress)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-list-properties-preserve-list-consequent-leaf-prove")
+      '(:failure "fuel" "b2-list-properties-preserve-list-consequent-leaf-prove")
     (let ((established (assoc-equal goal known))
           (proof (library-library-proof lib)))
       (if established
@@ -333,7 +333,7 @@
   (let ((proof (library-library-proof lib)))
     (cond
      ((not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-list-properties-preserve-list-consequent-visit"))
+      '(:failure "fuel" "b2-list-properties-preserve-list-consequent-visit"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))
@@ -391,7 +391,7 @@
 
 (defun b2-list-properties-preserve-list-with-search (lib formula position rules predicates search)
   (if (not (proof-is-call formula *library-implies*))
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (proof-with-checked-results
         ((parts (proof-list-of-length formula 3))
          (result (proof-list-of-length (caddr parts) 2))
@@ -402,7 +402,7 @@
          (x (b2-list-properties-argument-at arguments position)))
       (if (or (not (b2-list-properties-variables-p arguments))
               (not (equal (len (proof-unique arguments)) (len arguments))))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (let* ((proof (library-library-proof lib))
                (condition (cadr parts))
                (goal (caddr parts))

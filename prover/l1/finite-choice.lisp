@@ -29,7 +29,7 @@
  (defun l1-finite-choice-equality-tests (term argument)
    (declare (xargs :measure (acl2-count term)))
    (cond ((equal term argument)
-          '(:failure "NonEqualityArgument" ""))
+          '(:failure "non-equality-argument" ""))
          ((or (endp term) (not (proof-compound term))
               (proof-is-call term *proof-quote*))
           nil)
@@ -335,7 +335,7 @@
 (defun l1-finite-choice-finite-choice (proof argument failure)
   (let ((tests (l1-finite-choice-equality-tests failure argument)))
     (cond ((failure-p tests)
-           (if (or (equal (cadr tests) "NonEqualityArgument")
+           (if (or (equal (cadr tests) "non-equality-argument")
                    (equal (cadr tests) "value"))
                nil
              tests))

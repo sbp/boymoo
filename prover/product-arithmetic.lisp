@@ -87,7 +87,7 @@
 (defun product-arithmetic-normalize (n lib phase task)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "product-arithmetic-normalize"))
+   ((zp n) '(:failure "fuel" "product-arithmetic-normalize"))
    ((failure-p task) task)
    ((eq (car task) :done) (cadr task))
    (t

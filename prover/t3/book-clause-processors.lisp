@@ -48,7 +48,7 @@
         (target (list *t3-book-lambdas-real-term* term world))
         (logic (list *t3-book-lambdas-logic-fns* term world)))
     (cond
-     ((zp n) '(:failure "Fuel" "t3-book-clause-processors-marker-types"))
+     ((zp n) '(:failure "fuel" "t3-book-clause-processors-marker-types"))
      ((integerp term) '(:failure "failure" ""))
      (t
       (proof-with-checked-results ((parts (proof-list-of-length (cdr term) 2)))
@@ -159,7 +159,7 @@
                       (t nil)))
         (proof (library-library-proof lib)))
     (if (not number)
-        '(:failure "MissingProofInput" "")
+        '(:failure "missing-proof-input" "")
       (let ((rule (proof-sym (concatenate 'string "FLAG-IS-CP-EV-CONSTRAINT-" (decimal-text number)) "FLAG")))
         (proof-with-checked-results
             ((facts (proof-proof-fact proof rule (list (list *library-x* term)
@@ -239,7 +239,7 @@
   (cond
    ((failure-p request) request)
    ((not (eq (car request) :t3-book-term-collections-leaf)) request)
-   ((zp n) '(:failure "Fuel" "t3-book-clause-processors-false-disjunction"))
+   ((zp n) '(:failure "fuel" "t3-book-clause-processors-false-disjunction"))
    (t
     (t3-book-clause-processors-false-disjunction-visit
      (1- n) (t3-book-clause-processors-false-disjunction-advance request lib right hypothesis template)
@@ -356,4 +356,4 @@
               (proof-with-checked-results
                   ((entry (t3-book-function-terms-finish lib name formula evaluated-clause)))
                 (cons entry lib))
-            '(:failure "Unsupported" "")))))))
+            '(:failure "unsupported" "")))))))

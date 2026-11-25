@@ -19,9 +19,7 @@ Every function in the table can return a failure. Library results retain definit
 | `(t4-lexicographic-lexicographic-branch-value library term test-proof)` | Equality Step for `term` and the selected branch of its definition. |
 | `(t4-lexicographic-lexicographic-length-positive library object cons-proof)` | Step that `LEN` of `object` is positive using the Step that `object` is a cons. |
 | `(t4-lexicographic-lexicographic-nfix-equal library object)` | Equality Step for the two natural-number fixers applied to `object`. |
-| `(t4-lexicographic-lexicographic-nat-list-fields library object natural-list cons-proof)` | Two-element list of Steps proving the head natural and the tail a natural list from the two input Steps. |
 | `(t4-lexicographic-lexicographic-tail-lengths-equal library same-length cons-x cons-y)` | Equality Step for the tail lengths of the two conses with equal lengths. |
-| `(t4-lexicographic-lexicographic-lex-parts library object lex-proof cons-proof)` | Step for the branch of `LEXP` selected by `cons-proof`, which proves either `CONSP` or its negation. |
 | `(t4-lexicographic-lexicographic-lex-order-transport pair left right library)` | Comparison Step transported through the two equality Steps in argument order. |
 | `(t4-lexicographic-lexicographic-lex-order-impossible positive negative library claim)` | Step for `claim` under the contradictory premises of the two input Steps. |
 

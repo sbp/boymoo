@@ -43,7 +43,7 @@ terms. A callback can also be supplied as `(:replies (key . reply) ...)`,
 where `key` is `(bounds signed)` with the branch equation Step and its
 ordered signed Steps, and a `reply` is a Step or a failure. The calls occur
 for a non-growing interval, a growing interval, a nonnatural end, then a
-nonnatural index. A missing reply returns `Unproved`.
+nonnatural index. A missing reply returns `unproved`.
 
 For the Library of a book proof context, use the `:t3-book` Proof dispatch tag
 specified in `prover/t3/sig/logic.md`. It selects the book proof context natural

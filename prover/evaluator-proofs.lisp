@@ -294,10 +294,6 @@
       (evaluator-proofs-evaluator-add-pair
        (evaluator-proofs-evaluator-with-lib evaluator result)))))
 
-(defun evaluator-proofs-evaluator-define (evaluator)
-  (let ((result (evaluator-proofs-evaluator-define-result evaluator)))
-    (or (car result) (cdr result))))
-
 (defun evaluator-proofs-evaluator-opened (evaluator call evidence definitions logical)
   (let* ((lib (evaluator-proofs-evaluator-lib evaluator))
          (proof (library-library-proof lib)))

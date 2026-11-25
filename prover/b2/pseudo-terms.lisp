@@ -109,7 +109,7 @@
 (defun b2-pseudo-terms-list-boolean-advance-by-value (n lib value template hypothesis)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b2-pseudo-terms-list-boolean-advance-by-value")
+      '(:failure "fuel" "b2-pseudo-terms-list-boolean-advance-by-value")
     (let* ((proof (library-library-proof lib))
            (node (b2-pseudo-terms-list-boolean-advance-node proof value)))
       (cond

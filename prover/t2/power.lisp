@@ -19,12 +19,12 @@
   (list *t2-book-logic-expt* base exponent))
 
 (defun t2-power-condition (terms)
-  (cond ((endp terms) '(:failure "MissingTermPart" ""))
+  (cond ((endp terms) '(:failure "missing-term-part" ""))
         ((endp (cdr terms)) (car terms))
         (t (proof-ite (car terms) (t2-power-condition (cdr terms)) *proof-false*))))
 
 (defun t2-power-join (lib premises)
-  (cond ((endp premises) '(:failure "MissingTermPart" ""))
+  (cond ((endp premises) '(:failure "missing-term-part" ""))
         ((endp (cdr premises)) (car premises))
         (t (proof-with-checked-results ((rest (t2-power-join lib (cdr premises))))
              (t2-field-conjunction lib (car premises) rest)))))

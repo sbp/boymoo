@@ -158,10 +158,6 @@
       (step (proof-proof-rewrite proof step reverse-right '(1 2))))
      (proof-proof-tidy proof step))))
 
-(defun t4-hash-lists-nil-shape (lib replies)
-  (t4-hash-lists-prove lib (proof-neg (list *proof-consp* *proof-false*))
-                       nil (list *proof-not*) replies))
-
 (defun t4-hash-lists-update-lookup (lib lookup replies)
   (let ((proof (library-library-proof lib)))
     (t4-hash-lists-with-results ((parts (proof-list-of-length lookup 3)))
@@ -170,7 +166,7 @@
        (if (not (and (member-equal operator
                                    (list *t4-hash-lists-get* *t4-hash-lists-hons-assoc*))
                      (proof-is-call extension *t4-hash-lists-acons*)))
-           (list '(:failure "InferenceMismatch" "") lib replies)
+           (list '(:failure "inference-mismatch" "") lib replies)
          (t4-hash-lists-with-results
           ((entry (proof-proof-unfold proof extension))
            (listed (t4-hash-lists-step-at entry '(2)))
@@ -216,12 +212,12 @@
 (defun t4-hash-lists-if-same (lib term)
   (let ((proof (library-library-proof lib)))
     (if (not (proof-is-call term *proof-if*))
-        '(:failure "InferenceMismatch" "")
+        '(:failure "inference-mismatch" "")
       (proof-with-checked-results
        ((yes (proof-term-at term 2))
         (no (proof-term-at term 3)))
        (if (not (equal yes no))
-           '(:failure "InferenceMismatch" "")
+           '(:failure "inference-mismatch" "")
          (proof-with-checked-results
           ((test (proof-term-at term 1))
            (yes-step (proof-proof-if-true proof term))
@@ -331,20 +327,20 @@
 (defun t4-hash-lists-redundant-insertion (view-call next-table keys table inserted current)
   (cond ((not (equal (take 3 view-call)
                      (list *t4-hash-lists-put* (list *library-cdr* keys) *proof-true*)))
-         '(:failure "InferenceMismatch" ""))
+         '(:failure "inference-mismatch" ""))
         ((integerp next-table)
          '(:failure "failure" ""))
         ((not (equal (cddr next-table) (list table inserted)))
-         '(:failure "InferenceMismatch" ""))
+         '(:failure "inference-mismatch" ""))
         (t (proof-with-checked-results ((redundant (proof-term-at next-table 1)))
              (if (not (proof-is-call redundant *proof-if*))
-                 '(:failure "InferenceMismatch" "")
+                 '(:failure "inference-mismatch" "")
                (proof-with-checked-results ((lookup (proof-term-at redundant 1)))
                  (if (not (equal lookup (list *t4-hash-lists-get* current table)))
-                     '(:failure "InferenceMismatch" "")
+                     '(:failure "inference-mismatch" "")
                    (proof-with-checked-results ((nil-branch (proof-term-at redundant 3)))
                      (if (equal nil-branch *proof-false*) redundant
-                       '(:failure "InferenceMismatch" ""))))))))))
+                       '(:failure "inference-mismatch" ""))))))))))
 
 (defun t4-hash-lists-put-membership-lemma (lib replies)
   (let* ((proof (library-library-proof lib))
@@ -673,7 +669,7 @@
       (rest-result (t4-syntax-lists-choose lib dups missing))
       (rest-call (t4-hash-lists-step-at rest-result '(2)))
       (checked (if (equal rest-call (list *t4-hash-lists-dups-loop* tail inserted))
-                   t '(:failure "InferenceMismatch" "")))
+                   t '(:failure "inference-mismatch" "")))
       (binding (list (list obj tail) (list table inserted)))
       (smaller (library-library-builtin lib 3 obj))
       (smaller-term (t4-hash-lists-step-at smaller nil))
@@ -806,7 +802,7 @@
       (rhs :context (t4-hash-lists-spine lib right cons-shape replies))
       (test (t4-hash-lists-step-at rhs '(2 1)))
       (left-test (t4-hash-lists-step-at lhs '(2 1)))
-      (checked (if (equal left-test test) t '(:failure "InferenceMismatch" "")))
+      (checked (if (equal left-test test) t '(:failure "inference-mismatch" "")))
       (hypothesis (t4-syntax-lists-recur lib formula table *library-cdr* 3))
       (rec (proof-proof-modus-ponens proof (car hypothesis) (cadr conjuncts)))
       (hit (proof-proof-assume proof test t))
@@ -913,7 +909,7 @@
       (shown (proof-proof-chain proof call (list logical)))
       (value (t4-hash-lists-step-at shown '(2))))
      (if (not (equal value ordinary))
-         (list '(:failure "InferenceMismatch" "") lib replies)
+         (list '(:failure "inference-mismatch" "") lib replies)
        (t4-hash-lists-with-results
         ((same :context (t4-hash-lists-iff-value lib ordinary ordinary nil replies))
          (right (proof-proof-reflexive proof ordinary)))
@@ -930,7 +926,7 @@
      (if (not (and (equal (cdr ordinary) (list key values))
                    (equal flag *proof-true*)
                    (proof-is-call table *proof-quote*)))
-         (list '(:failure "InferenceMismatch" "") lib replies)
+         (list '(:failure "inference-mismatch" "") lib replies)
        (t4-hash-lists-with-results
         ((bindings (list (list *library-x* key) (list *library-y* values)
                          (list (proof-sym "A" "ACL2") table)))
@@ -947,16 +943,16 @@
 
 (defun t4-hash-lists-membership-tests (lib actual ordinary replies)
   (cond ((not (proof-is-call ordinary *t4-hash-lists-member*))
-         (list '(:failure "SearchMiss" "") lib replies))
+         (list '(:failure "search-miss" "") lib replies))
         ((proof-is-call actual *t4-hash-lists-hons-member*)
          (t4-hash-lists-membership-tests-ordinary lib actual ordinary replies))
         ((not (proof-is-call actual *t4-hash-lists-get*))
-         (list '(:failure "SearchMiss" "")
+         (list '(:failure "search-miss" "")
                lib replies))
         (t (t4-hash-lists-with-results ((put (proof-term-at actual 2)))
             (if (proof-is-call put *t4-hash-lists-put*)
                 (t4-hash-lists-membership-tests-lookup lib actual ordinary replies)
-              (list '(:failure "SearchMiss" "")
+              (list '(:failure "search-miss" "")
                     lib replies))))))
 
 (defun t4-hash-lists-parallel-list-scan-branch (holds lib test tested ordinary lhs rhs ih)
@@ -1106,43 +1102,9 @@
                    (:substitution-map (t4-hash-lists-substitution-map-visit lib formula replies))
                    (:hash-set-operation (t4-hash-lists-hash-set-operation-visit
                                          lib formula recursive replies))
-                   (otherwise (list '(:failure "SearchMiss" "") lib replies))))
+                   (otherwise (list '(:failure "search-miss" "") lib replies))))
          (value (car result)))
     (if (t4-hash-lists-request-p value)
         value
       (cons value (cadr result)))))
 
-(defun t4-hash-lists-query-result (result)
-  (if (failure-p (car result)) (car result) result))
-
-(defun t4-hash-lists-put-membership-query (lib formula replies)
-  (t4-hash-lists-query-result (t4-hash-lists-query :put-membership lib formula nil replies)))
-
-(defun t4-hash-lists-duplicate-membership-query (lib formula replies)
-  (t4-hash-lists-query-result (t4-hash-lists-query :duplicate-membership lib formula nil replies)))
-
-(defun t4-hash-lists-substitution-map-query (lib formula replies)
-  (t4-hash-lists-query-result (t4-hash-lists-query :substitution-map lib formula nil replies)))
-
-(defun t4-hash-lists-hash-set-operation-query (lib formula recursive replies)
-  (t4-hash-lists-query-result (t4-hash-lists-query :hash-set-operation lib formula recursive replies)))
-
-(defun t4-hash-lists-start (tactic lib formula recursive arithmetic)
-  (let ((result (t4-hash-lists-query tactic lib formula recursive nil)))
-    (t4-hash-lists-query-result
-     (if (and arithmetic (t4-hash-lists-request-p result)
-              (eq (cadr result) :use-arithmetic))
-         (t4-hash-lists-query tactic lib formula recursive (list (cons nil (cadddr result))))
-       result))))
-
-(defun t4-hash-lists-put-membership (lib formula arithmetic)
-  (t4-hash-lists-start :put-membership lib formula nil arithmetic))
-
-(defun t4-hash-lists-duplicate-membership (lib formula arithmetic)
-  (t4-hash-lists-start :duplicate-membership lib formula nil arithmetic))
-
-(defun t4-hash-lists-substitution-map (lib formula arithmetic)
-  (t4-hash-lists-start :substitution-map lib formula nil arithmetic))
-
-(defun t4-hash-lists-hash-set-operation (lib formula recursive arithmetic)
-  (t4-hash-lists-start :hash-set-operation lib formula recursive arithmetic))

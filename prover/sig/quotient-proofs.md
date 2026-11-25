@@ -30,10 +30,8 @@ the resulting Library. An optional value is `nil` when absent.
 | `(quotient-proofs-radix-product-lemma lib function)` | Given a floor or truncate symbol, returns the lemma name string paired with the Library. |
 | `(quotient-proofs-radix-less-lemma lib function)` | Given a floor or truncate symbol, returns the lemma name string paired with the Library. |
 | `(quotient-proofs-radix-lemma lib function)` | Given a floor or truncate symbol, returns the lemma name string paired with the Library. |
-| `(quotient-proofs-dividend-rulers lib value base rulers)` | Dividend and radix terms and their Rulers. Returns the optional list `(integer-step positive-step)` paired with the Library. |
 | `(quotient-proofs-quotient-call lib term value)` | A proposed quotient `term` and its dividend term. Returns the optional list `(call opening)`, whose second element is an optional equality Step. |
 | `(quotient-proofs-quotient-decrease lib goal rulers)` | The proposed count comparison term and its Rulers. Returns an optional proof Step paired with the Library. |
-| `(quotient-proofs-radix-calls lib formula)` | A formula term. Returns the candidates `(variable child changes test holds)` in traversal order. Each change is a two-element list `(old new)`. |
 | `(quotient-proofs-radix-calls-start formula)` | Returns the initial scan cursor for the formula term. |
 | `(quotient-proofs-radix-calls-next lib cursor)` | Returns `(candidate . cursor)` for the next candidate, or `nil` at exhaustion. |
 | `(quotient-proofs-prove-radix-induction-base lib candidate)` | Returns the initial branch evidence, a singleton list of Steps. |
@@ -45,8 +43,8 @@ each candidate, the caller proves the formula with the base evidence,
 prepares the induction, proves the formula with the inductive evidence,
 then finishes the induction. The caller uses the returned Library for the
 inductive branch and subsequent attempts. A missing descent or a
-`Unproved` continues the scan in order. Exhausting the candidates returns
-`(:failure "Unproved" "")`. Recursive invocations come
+`unproved` continues the scan in order. Exhausting the candidates returns
+`(:failure "unproved" "")`. Recursive invocations come
 from the definition in the Library, as the index's cache can be omitted.
 
 The following results include a library component because integer or

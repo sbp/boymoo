@@ -46,9 +46,6 @@
 (defun reader-cursor-peek (cursor)
   (if (endp (cdr cursor)) -1 (char-code (cadr cursor))))
 
-(defun reader-reader-peek (r)
-  (reader-cursor-peek (reader-cursor r)))
-
 (defun reader-cursor-advance (cursor count)
   (cons (+ (car cursor) count) (nthcdr count (cdr cursor))))
 
@@ -106,9 +103,6 @@
 (defun reader-cursor-escaped (cursor close)
   (reader-escaped-chars (cdr cursor) (car cursor) close nil))
 
-(defun reader-reader-escaped (r close)
-  (reader-at-result r (reader-cursor-escaped (reader-cursor r) close)))
-
 (defun reader-scan (chars index alphabet reversed)
   (if (and (consp chars) (member-equal (char-code (car chars)) alphabet))
       (reader-scan (cdr chars) (1+ index) alphabet (cons (car chars) reversed))
@@ -135,9 +129,6 @@
 (defun reader-cursor-plain (cursor)
   (reader-scan-plain (cdr cursor) (car cursor) nil))
 
-(defun reader-reader-plain (r)
-  (reader-at-result r (reader-cursor-plain (reader-cursor r))))
-
 (defun reader-all-plain-p (chars)
   (if (endp chars)
       t
@@ -154,9 +145,6 @@
                 *reader-value-error*
               result))))
     (reader-cursor-plain cursor)))
-
-(defun reader-reader-part (r)
-  (reader-at-result r (reader-cursor-part (reader-cursor r))))
 
 (defun reader-partition-slash (chars reversed)
   (if (or (endp chars) (eql (car chars) #\/))
@@ -190,7 +178,7 @@
 
 (defun reader-gcd (n a b)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "reader-gcd"))
+  (cond ((zp n) '(:failure "fuel" "reader-gcd"))
         ((zp b) a)
         (t (reader-gcd (1- n) b (mod a b)))))
 
@@ -219,10 +207,6 @@
               magnitude
             (let ((n (if negativep (- magnitude) magnitude)))
               (if fractionp (reader-reduced-ratio n magnitude den) n))))))))
-
-(defun reader-reader-rational (r text)
-  (declare (ignore r))
-  (reader-rational-text text))
 
 (defun reader-complex-imaginary (re cursor)
   (let* ((field (reader-cursor-plain cursor))
@@ -285,7 +269,7 @@
  (defun reader-cursor-datum (n cursor)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "reader-reader-datum")
+       '(:failure "fuel" "reader-reader-datum")
      (let ((byte (reader-cursor-peek cursor)))
        (cond
         ((= byte 40)
@@ -299,7 +283,7 @@
  (defun reader-cursor-list-items (n cursor reversed)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "reader-cursor-list-items"))
+    ((zp n) '(:failure "fuel" "reader-cursor-list-items"))
     ((/= (reader-cursor-peek cursor) 32) (reader-close-list cursor reversed))
     (t (let ((next (reader-cursor-advance cursor 1)))
          (if (reader-prefix-p '(#\. #\Space) (cdr next))
@@ -320,7 +304,7 @@
 (defun reader-cursor-line-args (n cursor word reversed size)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "reader-cursor-line-args"))
+   ((zp n) '(:failure "fuel" "reader-cursor-line-args"))
    ((= (reader-cursor-peek cursor) 32)
     (let ((arg (reader-cursor-datum 1000000 (reader-cursor-advance cursor 1))))
       (if (failure-p arg)

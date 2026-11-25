@@ -4,7 +4,6 @@
 
 | Call | Result |
 |---|---|
-| `(b2-algebra-boolean-equivalence lib left right forward backward)` | Step proving equality of the Boolean terms `left` and `right`. `forward` is the result of applying the forward recipe to the true assumption of `left`. `backward` is the result of applying the backward recipe to the true assumption of `right`. Either recipe result may be a failure. |
 | `(b2-algebra-boolean-equivalence-positive lib goal yes forward)` | Step for the positive branch of `goal`, the equality of the tests, using the assumption Step `yes` and the forward recipe result. |
 | `(b2-algebra-boolean-equivalence-negative lib left right no positive backward)` | Final Step using the false assumption Step `no`, the completed `positive` branch, and the backward recipe result. Use these two branch functions in sequence when a callback has effects or evaluation order matters. |
 | `(b2-algebra-congruence lib equality term path)` | Step obtained by rewriting `term` with the equality Step at the argument indices in `path`. Pass `nil` for an empty path. |
@@ -20,6 +19,6 @@
 | `(b2-algebra-common-operand lib formula)` | Pair of the Step for the cancellation equality `formula` and the Library. The common operand can be on either side. |
 | `(b2-algebra-product-zero-test lib a b)` | Pair of the Step equating the zero test on the product of `a` and `b` to zero tests on their completed factors, and the Library. |
 | `(b2-algebra-cancel-inverse lib left right)` | Step equating the zero test `left` on a sum with its cancellation test `right`. |
-| `(b2-algebra-arithmetic-identity lib name formula)` | Pair of the Step for the arithmetic theorem named by the symbol `name` and the Library. Returns `Unproved` for an unsupported theorem. |
+| `(b2-algebra-arithmetic-identity lib name formula)` | Pair of the Step for the arithmetic theorem named by the symbol `name` and the Library. Returns `unproved` for an unsupported theorem. |
 
 `*b2-algebra-names*` maps the addition and multiplication symbols to `"+"` and `"*"` in that insertion order. `*b2-algebra-cancellation*` and `*b2-algebra-arithmetic-theorems*` are sets of theorem symbols, ordered by their serialized forms.

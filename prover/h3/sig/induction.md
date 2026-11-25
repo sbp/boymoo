@@ -20,7 +20,5 @@ The guard walk visits a true branch before its false branch.
 |---|---|
 | `(h3-induction-well-founded lib formula measure ordinal replacements prove-case)` | The induction Step, a case request, or a failure. |
 | `(h3-induction-structural-induction lib formula variable replacements prove-case)` | The induction Step using `ACL2-COUNT` of `variable`, a case request, or a failure. |
-| `(h3-induction-well-founded-cases lib formula measure replacements)` | The list of evidence lists for the case callback, or a failure. |
-| `(h3-induction-structural-induction-cases lib formula variable replacements)` | The list of evidence lists for the structural case callback, or a failure. |
 | `(h3-induction-request-p value)` | Whether `value` is a case request. Does not produce a failure. |
 | `(h3-induction-request-evidence request)` | The evidence list of a case request. Does not produce a failure. |

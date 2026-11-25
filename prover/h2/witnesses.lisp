@@ -97,10 +97,6 @@
      (h2-witnesses-record-equation (list right (cadr formula)) target unknown equations)))
    (t equations)))
 
-(defun h2-witnesses-definitions-in (formula)
-  (proof-with-checked-results ((equations (h2-witnesses-equations formula nil nil nil)))
-    (reverse equations)))
-
 (defun h2-witnesses-formula-candidates (formulas name arity unknown candidates)
   (if (endp formulas)
       candidates
@@ -247,7 +243,7 @@
         (if small (cons name rest) rest))))))
 
 (defun h2-witnesses-unproved-p (result)
-  (and (failure-p result) (equal (cadr result) "Unproved")))
+  (and (failure-p result) (equal (cadr result) "unproved")))
 
 (defun h2-witnesses-solve-reply (proof goal replies)
   (if (endp replies)
@@ -289,7 +285,7 @@
 (defun h2-witnesses-prove-assignments (proof assignments goals root witnesses count replies)
   (declare (xargs :measure (acl2-count assignments)))
   (if (endp assignments)
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (proof-with-checked-results
      ((proof (h2-witnesses-install proof witnesses (car assignments)))
       (answer (h2-witnesses-prove-goals proof goals witnesses replies nil)))
@@ -306,42 +302,3 @@
             ((entry (proof-proof-entry "witness" root (cons root witnesses) value)))
             (cons entry proof))))))))
 
-(defun h2-witnesses-prepare (data)
-  (proof-with-checked-results
-   ((data (h2-witnesses-pair data))
-    (functions (car data))
-    (formulas (cadr data))
-    (first (proof-term-at functions 0))
-    (root (proof-term-at first 0))
-    (text (proof-write root))
-    (witnesses (h2-witnesses-names functions (text-upper (seq-slice (siphash-hexdigest text) 0 16)) 0))
-    (replacement (h2-witnesses-replacements functions witnesses nil))
-    (candidates (h2-witnesses-candidates functions formulas replacement))
-    (goals (h2-witnesses-goals formulas replacement)))
-   (list :h2-witness-plan root witnesses goals (h2-witnesses-assignments functions candidates))))
-
-(defun h2-witnesses-plan-root (plan)
-  (cadr plan))
-
-(defun h2-witnesses-plan-names (plan)
-  (caddr plan))
-
-(defun h2-witnesses-plan-goals (plan)
-  (cadddr plan))
-
-(defun h2-witnesses-plan-assignments (plan)
-  (car (cddddr plan)))
-
-(defun h2-witnesses-prove-prepared (proof plan replies)
-  (if (failure-p plan)
-      plan
-    (h2-witnesses-prove-assignments proof (h2-witnesses-plan-assignments plan)
-                                    (h2-witnesses-plan-goals plan)
-                                    (h2-witnesses-plan-root plan)
-                                    (h2-witnesses-plan-names plan)
-                                    (len (library-library-entries (h2-search-search-library proof)))
-                                    replies)))
-
-(defun h2-witnesses-prove-witness (proof data replies)
-  (proof-with-checked-results ((plan (h2-witnesses-prepare data)))
-    (h2-witnesses-prove-prepared proof plan replies)))

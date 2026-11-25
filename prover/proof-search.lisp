@@ -39,7 +39,7 @@
 (defun proof-search-conclusion-loop (fuel term)
   (declare (xargs :measure (nfix fuel)))
   (cond
-    ((zp fuel) '(:failure "Fuel" "proof-search-conclusion-loop"))
+    ((zp fuel) '(:failure "fuel" "proof-search-conclusion-loop"))
     ((not (proof-compound term)) term)
     ((endp term) '(:failure "failure" ""))
     ((proof-compound (car term))
@@ -205,7 +205,7 @@
 (defun proof-search-expose-fact (fuel proof step condition)
   (declare (xargs :measure (nfix fuel)))
   (if (zp fuel)
-      '(:failure "Fuel" "proof-search-expose-fact")
+      '(:failure "fuel" "proof-search-expose-fact")
     (proof-search-let ((formula (proof-step-first step)))
       (cond
         ((not (proof-compound formula)) step)
@@ -328,7 +328,7 @@
   (declare (xargs :measure (nfix fuel)))
   (cond
     ((not (eq (car next) :shorten)) next)
-    ((zp fuel) '(:failure "Fuel" "proof-search-shorten-fact"))
+    ((zp fuel) '(:failure "fuel" "proof-search-shorten-fact"))
     (t
      (proof-search-shorten-fact
       (1- fuel) proof (proof-search-shorten-fact-step proof (cdr next) size condition)
@@ -417,10 +417,6 @@
        nil
      (let ((test (proof-search-find-conditional-test (car arguments))))
        (if test test (proof-search-conditional-test-arguments (cdr arguments)))))))
-
-(defun proof-search-conditional-test (term)
-  (proof-search-let ((found (proof-search-find-conditional-test term)))
-    (cdr found)))
 
 (defmacro proof-search-let-in (object bindings body)
   (if (endp bindings)
@@ -628,7 +624,7 @@
 (defun proof-search-search-context-premise-loop (fuel search term evidence known)
   (declare (xargs :measure (nfix fuel)))
   (if (zp fuel)
-      '(:failure "Fuel" "proof-search-search-context-premise-loop")
+      '(:failure "fuel" "proof-search-search-context-premise-loop")
     (let ((entry (assoc-equal term known)))
       (if entry
           (cdr entry)
@@ -655,7 +651,7 @@
 (defun proof-search-context-index-prove (fuel search goal evidence known answers)
   (declare (xargs :measure (nfix fuel)))
   (if (zp fuel)
-      '(:failure "Fuel" "proof-search-context-index-prove")
+      '(:failure "fuel" "proof-search-context-index-prove")
     (let ((step (proof-search-fact-index-prove (proof-search-search-index search)
                                                goal answers)))
       (if (proof-search-request-p step)
@@ -669,7 +665,7 @@
 (defun proof-search-proper-list-search (fuel result evidence known search)
   (declare (xargs :measure (nfix fuel)))
   (if (zp fuel)
-      (cons '(:failure "Fuel" "proof-search-proper-list-search") search)
+      (cons '(:failure "fuel" "proof-search-proper-list-search") search)
     (proof-search-with-result value search
       (proof-search-library-result result search)
       (if (and (consp value) (eq (car value) :call))
@@ -722,7 +718,7 @@
  (defun proof-search-search-premise-loop (fuel search term evidence known)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-search-premise-loop") search)
+       (cons '(:failure "fuel" "proof-search-search-premise-loop") search)
      (proof-search-let-in search ((small (book-logic-within-size term 160)))
        (if (not small)
            (cons *terms-unproved*
@@ -740,7 +736,7 @@
  (defun proof-search-search-prove-premise-loop (fuel search term evidence known)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-search-prove-premise-loop") search)
+       (cons '(:failure "fuel" "proof-search-search-prove-premise-loop") search)
      (proof-search-let-in search ((conditional (proof-search-conjunction-p term)))
        (if conditional
            (proof-search-with-result left search
@@ -756,9 +752,6 @@
                          search)))))
          (proof-search-reduce-premise search term evidence known))))))
 
-(defun proof-search-search-prove-premise (search term evidence known)
-  (proof-search-search-prove-premise-loop 1000000 search term evidence known))
-
 (defund proof-search-search-premise (search term evidence known)
   (proof-search-search-premise-loop 1000000 search term evidence known))
 
@@ -766,7 +759,7 @@
 (defund proof-search-index-with-premise (fuel search term evidence known answers rewritep)
   (declare (xargs :measure (nfix fuel)))
   (if (zp fuel)
-      (cons '(:failure "Fuel" "proof-search-index-with-premise") search)
+      (cons '(:failure "fuel" "proof-search-index-with-premise") search)
     (let* ((index (proof-search-search-index search))
            (step (if rewritep
                      (proof-search-fact-index-rewrite index term answers)
@@ -847,7 +840,7 @@
 (defund proof-search-rewrite-reduction (fuel reducer term replies evidence known search)
   (declare (xargs :measure (nfix fuel)))
   (if (zp fuel)
-      (cons '(:failure "Fuel" "proof-search-rewrite-reduction") search)
+      (cons '(:failure "fuel" "proof-search-rewrite-reduction") search)
     (let* ((working (book-logic-reducer-with-rewrite reducer (cons t replies)))
            (reduced (book-logic-reducer-reduce working term nil))
            (value (car reduced)))
@@ -889,7 +882,7 @@
  (defun proof-search-slice-integer-in (fuel lib term evidence)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-slice-integer-in") lib)
+       (cons '(:failure "fuel" "proof-search-slice-integer-in") lib)
      (let ((name (proof-search-integer-constructor term)))
        (if (not name)
            (proof-search-slice-leaf-integer lib term evidence)
@@ -911,7 +904,7 @@
  (defun proof-search-slice-integers-in (fuel lib terms evidence)
    (declare (xargs :measure (nfix fuel)))
    (cond
-     ((zp fuel) (cons '(:failure "Fuel" "proof-search-slice-integers-in") lib))
+     ((zp fuel) (cons '(:failure "fuel" "proof-search-slice-integers-in") lib))
      ((endp terms) (cons nil lib))
      (t
       (proof-search-with-result step lib
@@ -962,7 +955,7 @@
 (defund proof-search-push-slice-minus (fuel lib term evidence)
   (declare (xargs :measure (nfix fuel)))
   (cond
-    ((zp fuel) (cons '(:failure "Fuel" "proof-search-push-slice-minus") lib))
+    ((zp fuel) (cons '(:failure "fuel" "proof-search-push-slice-minus") lib))
     ((proof-is-call term *proof-plus*)
      (proof-search-let-in lib
        ((identity (proof-search-linear-identity lib term))
@@ -1053,7 +1046,7 @@
         (lib (cdr result)))
     (cond
       ((not (eq (car value) :combine)) result)
-      ((zp fuel) (cons '(:failure "Fuel" "proof-search-combine-slice-sum") lib))
+      ((zp fuel) (cons '(:failure "fuel" "proof-search-combine-slice-sum") lib))
       (t
        (proof-search-combine-slice-sum
         (1- fuel)
@@ -1162,7 +1155,7 @@
                                      evidence known answers)
   (declare (xargs :measure (nfix fuel)))
   (if (zp fuel)
-      (cons '(:failure "Fuel" "proof-search-invariance") search)
+      (cons '(:failure "fuel" "proof-search-invariance") search)
     (proof-search-with-result step search
       (proof-search-search-invariance search call fixed-call fixed position answers)
       (if (proof-search-request-p step)
@@ -1365,7 +1358,7 @@
  (defun proof-search-search-prove-loop (fuel search formula evidence splits)
    (declare (xargs :measure (nfix fuel)))
    (cond
-     ((zp fuel) (cons '(:failure "Fuel" "proof-search-search-prove-loop") search))
+     ((zp fuel) (cons '(:failure "fuel" "proof-search-search-prove-loop") search))
      ((<= (proof-search-search-budget search) 0)
       (cons *terms-unproved* search))
      (t
@@ -1391,7 +1384,7 @@
  (defun proof-search-search-loop (fuel search formula evidence splits)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-search-loop") search)
+       (cons '(:failure "fuel" "proof-search-search-loop") search)
      (proof-search-let-in search
        ((evidence (proof-search-search-evidence search evidence))
         (known (proof-search-evidence-index evidence nil t))
@@ -1412,7 +1405,7 @@
  (defun proof-search-search-lambda (fuel search formula evidence splits)
    (declare (xargs :measure (nfix fuel)))
    (cond
-     ((zp fuel) (cons '(:failure "Fuel" "proof-search-search-lambda") search))
+     ((zp fuel) (cons '(:failure "fuel" "proof-search-search-lambda") search))
      ((or (not (proof-search-search-logical search))
           (not (proof-compound formula))) (cons nil search))
      ((endp formula) (cons '(:failure "failure" "") search))
@@ -1432,7 +1425,7 @@
  (defun proof-search-search-implication (fuel search formula evidence splits)
    (declare (xargs :measure (nfix fuel)))
    (cond
-     ((zp fuel) (cons '(:failure "Fuel" "proof-search-search-implication") search))
+     ((zp fuel) (cons '(:failure "fuel" "proof-search-search-implication") search))
      ((not (proof-is-call formula *library-implies*)) (cons nil search))
      ((endp (cdr formula)) (cons '(:failure "failure" "") search))
      (t
@@ -1453,7 +1446,7 @@
  (defun proof-search-search-after-implication (fuel search formula evidence known splits)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-search-after-implication") search)
+       (cons '(:failure "fuel" "proof-search-search-after-implication") search)
      (proof-search-let-in search ((conditional (proof-search-conjunction-p formula)))
        (if conditional
            (proof-search-with-result test search
@@ -1483,7 +1476,7 @@
  (defun proof-search-search-after-index (fuel search formula evidence known splits)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-search-after-index") search)
+       (cons '(:failure "fuel" "proof-search-search-after-index") search)
      (proof-search-with-result direct search
        (if (proof-search-search-logical search)
            (proof-search-search-logical-formula-loop
@@ -1505,7 +1498,7 @@
  (defun proof-search-search-reduction (fuel search formula evidence known splits)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-search-reduction") search)
+       (cons '(:failure "fuel" "proof-search-search-reduction") search)
      (proof-search-let-in search
        ((reducer (proof-search-start-reduction search evidence))
         (primitive (proof-search-primitive reducer formula)))
@@ -1528,7 +1521,7 @@
      (fuel search formula target reduced evidence known splits)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-search-after-reduction") search)
+       (cons '(:failure "fuel" "proof-search-search-after-reduction") search)
      (proof-search-with-result recovered search
        (if (equal target formula)
            (cons nil search)
@@ -1546,7 +1539,7 @@
  (defun proof-search-search-split (fuel search formula target evidence known splits)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-search-split") search)
+       (cons '(:failure "fuel" "proof-search-search-split") search)
      (proof-search-let-in search
        ((selected (and (< 0 splits)
                        (proof-search-splitting-test search target formula evidence))))
@@ -1577,7 +1570,7 @@
  (defun proof-search-search-logical-formula-loop (fuel search formula evidence known)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-search-logical-formula-loop") search)
+       (cons '(:failure "fuel" "proof-search-search-logical-formula-loop") search)
      (proof-search-with-result computed search
        (proof-search-search-computed-premise search formula known)
        (if computed
@@ -1615,7 +1608,7 @@
  (defun proof-search-preserve-type (fuel search result evidence)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-preserve-type") search)
+       (cons '(:failure "fuel" "proof-search-preserve-type") search)
      (proof-search-with-result value search
        (proof-search-library-result result search)
        (if (and (consp value) (eq (car value) :call))
@@ -1631,7 +1624,7 @@
  (defun proof-search-search-exposed-formula (fuel search formula evidence exposed)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-search-exposed-formula") search)
+       (cons '(:failure "fuel" "proof-search-search-exposed-formula") search)
      (proof-search-let-in search ((target (proof-search-equality-right exposed)))
        (let ((same (proof-is-call target (car formula))))
          (if (and same (endp (cdr target)))
@@ -1650,7 +1643,7 @@
  (defun proof-search-search-by-value (fuel search value template evidence tests)
    (declare (xargs :measure (nfix fuel)))
    (cond
-     ((zp fuel) (cons '(:failure "Fuel" "proof-search-search-by-value") search))
+     ((zp fuel) (cons '(:failure "fuel" "proof-search-search-by-value") search))
      ((proof-is-call value *proof-if*)
       (if (not (equal (len (cdr value)) 3))
           (cons *terms-invalid-proof-arity* search)
@@ -1700,7 +1693,7 @@
      (fuel value tests search predicate evidence)
    (declare (xargs :measure (nfix fuel)))
    (if (zp fuel)
-       (cons '(:failure "Fuel" "proof-search-search-logical-formula-branch-in") search)
+       (cons '(:failure "fuel" "proof-search-search-logical-formula-branch-in") search)
      (proof-search-let-in search
        ((rulers (proof-search-argument-assumptions (proof-search-proof search) tests)))
        (proof-search-search-prove-loop (1- fuel) search (list predicate value)
@@ -1709,7 +1702,7 @@
  (defun proof-search-logical-equality (fuel search formula evidence known)
    (declare (xargs :measure (nfix fuel)))
    (cond
-     ((zp fuel) (cons '(:failure "Fuel" "proof-search-logical-equality") search))
+     ((zp fuel) (cons '(:failure "fuel" "proof-search-logical-equality") search))
      ((not (proof-is-call formula *proof-equal*)) (cons nil search))
      ((not (equal (len (cdr formula)) 2))
       (cons *terms-invalid-proof-arity* search))
@@ -1743,7 +1736,7 @@
  (defun proof-search-logical-rewrite (fuel search chain differences evidence)
    (declare (xargs :measure (nfix fuel)))
    (cond
-     ((zp fuel) (cons '(:failure "Fuel" "proof-search-logical-rewrite") search))
+     ((zp fuel) (cons '(:failure "fuel" "proof-search-logical-rewrite") search))
      ((endp differences) (cons (proof-proof-tidy (proof-search-proof search) chain) search))
      (t
       (let ((argument (car differences)))
@@ -1763,16 +1756,6 @@
 
 (defun proof-search-search-prove (search formula evidence splits)
   (proof-search-search-prove-loop 1000000 search formula evidence splits))
-
-(defun proof-search-search-search (search formula evidence splits)
-  (proof-search-search-loop 1000000 search formula evidence splits))
-
-(defun proof-search-search-logical-formula (search formula evidence known)
-  (proof-search-search-logical-formula-loop 1000000 search formula evidence known))
-
-(defun proof-search-search-logical-formula-branch (value tests search predicate evidence)
-  (proof-search-search-logical-formula-branch-in
-   1000000 value tests search predicate evidence))
 
 (defun proof-search-selector-substitution (actuals next-args environment)
   (if (or (endp actuals) (endp next-args))
@@ -1828,7 +1811,7 @@
 (defun proof-search-induction-plans-loop (fuel index terms plans)
   (declare (xargs :measure (nfix fuel)))
   (cond
-    ((zp fuel) '(:failure "Fuel" "proof-search-induction-plans-loop"))
+    ((zp fuel) '(:failure "fuel" "proof-search-induction-plans-loop"))
     ((endp terms) plans)
     (t
      (let ((term (car terms)))
@@ -1967,15 +1950,10 @@
                 (proof-search-selector-induction search formula (cdr plans) logical)
               (cons value search))))))))
 
-(defun proof-search-prove-selector-induction (lib index formula plans logical)
-  (proof-search-search-result-library
-   (proof-search-selector-induction (proof-search-search-init lib index 48 nil nil)
-                                    formula plans logical)))
-
 (defun proof-search-theorem-tactic (fuel search result tactic)
   (declare (xargs :measure (nfix fuel)))
   (if (zp fuel)
-      (cons '(:failure "Fuel" "proof-search-theorem-tactic") search)
+      (cons '(:failure "fuel" "proof-search-theorem-tactic") search)
     (proof-search-with-result value search
       (proof-search-library-result result search)
       (if (and (consp value) (eq (car value) :call))
@@ -2002,11 +1980,6 @@
   (proof-search-theorem-tactic
    1000000 search
    (list-algebra-list-algebra (proof-search-search-lib search) formula) :algebra))
-
-(defun proof-search-prove-theorem-prove-branch (term evidence lib index)
-  (proof-search-search-result-library
-   (proof-search-search-prove (proof-search-search-init lib index 38 nil t)
-                              term evidence 2)))
 
 (defun proof-search-radix-induction-step (search formula candidate base)
   (proof-search-with-result prepared search
@@ -2040,7 +2013,7 @@
 (defun proof-search-radix-induction (fuel search formula cursor)
   (declare (xargs :measure (nfix fuel)))
   (if (zp fuel)
-      (cons '(:failure "Fuel" "proof-search-radix-induction") search)
+      (cons '(:failure "fuel" "proof-search-radix-induction") search)
     (proof-search-let-in search
       ((next (proof-search-next-radix-candidate search cursor)))
       (if (not next)

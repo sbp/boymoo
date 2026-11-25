@@ -47,13 +47,6 @@
              (cdr characters) (1- (+ (len prefix) (len tail)))
              (if (member-equal name names) names (cons name names)))))))))
 
-(defun t2-tactics-sequence-type (value)
-  (cond ((booleanp value) (if value "bool" "tuple"))
-        ((integerp value) "int")
-        ((rationalp value) "Fraction")
-        ((stringp value) "bytes")
-        (t "tuple")))
-
 (defun t2-tactics-entry-names (source names)
   (if (stringp source)
       (t2-tactics-entry-names-scan (coerce source 'list) 0 names)
@@ -79,38 +72,6 @@
     (needed (t2-tactics-entry-names source nil)))
    (t2-tactics-proof-entries-visit (reverse lemmas) needed (list entry))))
 
-(defun t2-tactics-sum-counts (counts total)
-  (if (endp counts)
-      total
-    (let ((count (car counts)))
-      (cond ((acl2-numberp count) (t2-tactics-sum-counts (cdr counts) (+ total count)))
-            ((eq count t) (t2-tactics-sum-counts (cdr counts) (1+ total)))
-            (t '(:failure "failure" ""))))))
-
-(defun t2-tactics-entry-step-count (counts)
-  (if (or (consp counts) (null counts))
-      (t2-tactics-sum-counts counts 0)
-    '(:failure "failure" "")))
-
-(defun t2-tactics-proof-source-count (entries total)
-  (if (endp entries)
-      total
-    (proof-with-checked-results
-     ((entry (proof-list-of-length (car entries) 4))
-      (count (t2-tactics-entry-step-count (caddr entry))))
-     (t2-tactics-proof-source-count (cdr entries) (+ total count)))))
-
-(defun t2-tactics-proof-source-texts (entries)
-  (if (endp entries)
-      nil
-    (cons (cadddr (car entries)) (t2-tactics-proof-source-texts (cdr entries)))))
-
-(defun t2-tactics-proof-source (lemmas entry)
-  (proof-with-checked-results
-   ((entries (t2-tactics-proof-entries lemmas entry))
-    (count (t2-tactics-proof-source-count entries 0)))
-   (list count (text-join "" (t2-tactics-proof-source-texts entries)))))
-
 (defun t2-tactics-ruler-facts-hypotheses (facts)
   (cadr facts))
 
@@ -125,9 +86,6 @@
 
 (defun t2-tactics-ruler-facts-extra (facts)
   (descent-hypotheses-extra (t2-tactics-ruler-facts-hypotheses facts)))
-
-(defun t2-tactics-ruler-facts-found (facts)
-  (descent-hypotheses-found (t2-tactics-ruler-facts-hypotheses facts)))
 
 (defun t2-tactics-ruler-facts-with-proof (facts proof)
   (list :t2-ruler-facts
@@ -155,7 +113,7 @@
                              (t2-tactics-generator-shared generator)))
 
 (defconst *t2-tactics-unsupported-recipe*
-  '(:failure "Unsupported" ""))
+  '(:failure "unsupported" ""))
 
 (defun t2-tactics-generator-admit-definitions (proof definitions)
   (declare (xargs :measure (acl2-count definitions)))
@@ -204,7 +162,7 @@
   (let ((entry (assoc-equal key dictionary)))
     (if entry
         (cdr entry)
-      '(:failure "MissingBinding" ""))))
+      '(:failure "missing-binding" ""))))
 
 (defun t2-tactics-generator-measures-for-definitions (definitions stored measures)
   (if (endp definitions)
@@ -340,7 +298,7 @@
  (defun t2-tactics-bare-learn (n facts step)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t2-tactics-bare-learn")
+       '(:failure "fuel" "t2-tactics-bare-learn")
      (proof-with-checked-results ((literal (proof-step-first step)))
        (if (assoc-equal literal (t2-tactics-ruler-facts-extra facts))
            facts
@@ -357,7 +315,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((endp steps) facts)
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t2-tactics-bare-learn-steps"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t2-tactics-bare-learn-steps"))
     (t (proof-with-checked-results ((facts (t2-tactics-bare-learn (1- n) facts (car steps))))
          (t2-tactics-bare-learn-steps (1- n) facts (cdr steps)))))))
 
@@ -644,7 +602,7 @@
 (defun t2-tactics-generator-decrease-visit (n lib clause tests)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t2-tactics-generator-decrease-visit")
+      '(:failure "fuel" "t2-tactics-generator-decrease-visit")
     (let ((result (t2-tactics-generator-decrease-recipe lib clause tests)))
       (if (eq (car result) :fixed-absolute)
           (proof-with-checked-results
@@ -841,32 +799,3 @@
           (cons plan generator)
         (t2-tactics-generator-prove-definition-attempt generator (car plan) definitions (cdr plan))))))
 
-(defun t2-tactics-generator-prove (generator kind data)
-  (let ((result (t2-tactics-generator-prove-attempt generator kind data)))
-    (if (failure-p (car result)) (car result) result)))
-
-(defun t2-tactics-renamed-measures (measures names renamed)
-  (if (endp measures)
-      renamed
-    (proof-with-checked-results ((name (t2-tactics-required-key names (caar measures))))
-      (t2-tactics-renamed-measures (cdr measures) names (table-put renamed name (cdar measures))))))
-
-(defun t2-tactics-generator-prove-renamed (generator data)
-  (proof-with-checked-results
-   ((rulers (proof-term-at data 0))
-    (definitions (cdr data))
-    (measures (t2-tactics-generator-measures-for generator definitions))
-    (renamed (t2-rename-fresh-definition rulers definitions))
-    (new-rulers (car renamed))
-    (new-definitions (cadr renamed))
-    (new-measures (t2-tactics-renamed-measures measures (caddr renamed) nil))
-    (calls (termination-recursive-calls rulers definitions))
-    (original (termination-obligations definitions measures calls))
-    (calls (termination-recursive-calls new-rulers new-definitions))
-    (copied (termination-obligations new-definitions new-measures calls)))
-   (if (not (equal original copied))
-       *t2-tactics-unsupported-recipe*
-     (proof-with-checked-results
-      ((result (t2-tactics-generator-prove-definition generator new-rulers new-definitions new-measures))
-       (source (proof-line "define" (cons new-rulers new-definitions))))
-      (cons (list source (car result)) (cdr result))))))

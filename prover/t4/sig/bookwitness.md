@@ -9,7 +9,6 @@ The order of both lists is their order in the constraint.
 | Call | Result | Failure |
 |---|---|---|
 | `(t4-bookwitness-replace-functions term names)` | The term with function names replaced, including inside lambda bodies. `names` is an association list of `(old-name . new-name)` entries. Quoted data is left alone. | A failure from inspecting a malformed term. |
-| `(t4-bookwitness-candidate-values functions)` | A list of candidate assignments in search order. Assignments from the product of false, true and zero come before assignments using existing functions. | A failure from inspecting a malformed function record. |
 | `(t4-bookwitness-simple-witness api tactic name data suffix)` | `(cons value lib)`, where `value` is `(step-count source)`, `nil` when there is no witness, or a request described below. `tactic` is its Library, `name` is the constraint name, and `suffix` is the string used in auxiliary names. | A failure from reading arguments, constructing a proof, or a supplied reply. See `prover/t4/notes/failures.md` for failures that let the search try another candidate. |
 
 `api` is the ordered list of replies to the requests in this invocation.

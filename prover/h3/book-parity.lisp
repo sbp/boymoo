@@ -8,9 +8,6 @@
 (defun h3-book-parity-remember-library (result library)
   (if (failure-p result) (cons result library) result))
 
-(defun h3-book-parity-checked-pair (result)
-  (if (failure-p (car result)) (car result) result))
-
 ; Retain the Library when a later proof operation fails.
 (defmacro h3-book-parity-with-library (library bindings result)
   (if (endp bindings)
@@ -70,9 +67,6 @@
          (law (h3-book-arithmetic-inverse library two numeric
                                           (h3-book-signs-signs-zero signs))))
       (cons (list whole rational signs law) library))))
-
-(defun h3-book-parity-two-sign (library)
-  (h3-book-parity-checked-pair (h3-book-parity-two-sign-with-library library)))
 
 (defun h3-book-parity-half-offset-proof (library rational double fractional)
   (let ((two *h3-book-rounding-two*))
@@ -191,10 +185,6 @@
                                      (list rational double fractional))))
       (cons step library))))
 
-(defun h3-book-parity-half-offset (library rational double fractional)
-  (h3-book-parity-checked-pair
-   (h3-book-parity-half-offset-with-library library rational double fractional)))
-
 (defun h3-book-parity-half-reconstruction-with-library (library term integer)
   (let* ((two *h3-book-rounding-two*)
          (half *h3-book-rounding-half*)
@@ -223,10 +213,6 @@
          (identity (proof-proof-chain (library-library-proof library) step
                                       (list cancelled fixed))))
       (cons identity library))))
-
-(defun h3-book-parity-half-reconstruction (library term integer)
-  (h3-book-parity-checked-pair
-   (h3-book-parity-half-reconstruction-with-library library term integer)))
 
 (defun h3-book-parity-type-after-sum (library first second target)
   (h3-book-parity-with-library library
@@ -728,6 +714,3 @@
                 (cons implication library))
             (cons nil library)))))))
 
-(defun h3-book-parity-parity-theorem (library name formula)
-  (h3-book-parity-checked-pair
-   (h3-book-parity-parity-theorem-with-library library name formula)))

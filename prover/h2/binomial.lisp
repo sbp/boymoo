@@ -598,7 +598,7 @@
     (fuel value conditions proof classify formula k n updates template)
   (declare (xargs :measure (nfix fuel)))
   (cond
-   ((zp fuel) '(:failure "Fuel" "h2-binomial-choose-iteration-by-value"))
+   ((zp fuel) '(:failure "fuel" "h2-binomial-choose-iteration-by-value"))
    ((proof-is-call value *proof-if*)
     (h2-binomial-with-results
         ((branches (proof-list-of-length (cdr value) 3))
@@ -902,7 +902,7 @@
 
 (defun h2-binomial-derive-folded (n proof formula fixed hooks attempt)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h2-binomial-derive-folded"))
+  (cond ((zp n) '(:failure "fuel" "h2-binomial-derive-folded"))
         ((eq (car attempt) :done) (cdr attempt))
         (t (h2-binomial-derive-folded
             (1- n) proof formula fixed hooks
@@ -913,7 +913,7 @@
 (defun h2-binomial-unused-expansion-replies (n search formula replies low high)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h2-binomial-unused-expansion-replies"))
+   ((zp n) '(:failure "fuel" "h2-binomial-unused-expansion-replies"))
    ((<= high low) (nthcdr low replies))
    (t
     (let* ((middle (floor (+ low high) 2))

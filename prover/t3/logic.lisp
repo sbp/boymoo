@@ -15,12 +15,6 @@
 (defconst *t3-logic-legal-constantp* (proof-sym "LEGAL-CONSTANTP1" "ACL2"))
 (defconst *t3-logic-natural-template* (list *library-natp* *proof-result*))
 
-(defun t3-logic-rational-value (datum)
-  (t3-book-lemmas-rational-value datum))
-
-(defun t3-logic-rational-result (head values)
-  (t3-book-lemmas-rational-result head values))
-
 (defun t3-logic-libraryproofs-constant (lib term)
   (t3-book-lemmas-constant lib term))
 
@@ -68,7 +62,7 @@
 (defun t3-logic-prove-visit (n lib term evidence definitions)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-logic-libraryproofs-prove")
+      '(:failure "fuel" "t3-logic-libraryproofs-prove")
     (let ((result (t3-logic-prove-plan lib term evidence definitions)))
       (if (eq (car result) :transport)
           (proof-with-checked-results
@@ -81,7 +75,7 @@
 
 (defund t3-logic-by-value-unfold (proof value)
   (cond ((not (proof-compound value)) nil)
-        ((endp value) '(:failure "MissingProofInput" ""))
+        ((endp value) '(:failure "missing-proof-input" ""))
         ((member-equal (car value) *t3-logic-wrappers*) (proof-proof-unfold proof value))
         ((proof-compound (car value)) (proof-proof-beta proof value))
         (t nil)))
@@ -89,7 +83,7 @@
 (defun t3-logic-by-value-leaves-visit (n proof value tests)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "t3-logic-libraryproofs-by-value-leaves"))
+   ((zp n) '(:failure "fuel" "t3-logic-libraryproofs-by-value-leaves"))
    ((proof-is-call value *proof-if*)
     (proof-with-checked-results
         ((branches (proof-list-of-length (cdr value) 3))
@@ -112,7 +106,7 @@
   (let ((entry (assoc-equal (list value tests) leaf)))
     (if entry
         (cdr entry)
-      '(:failure "Unproved" ""))))
+      '(:failure "unproved" ""))))
 
 (defun t3-logic-by-value-check-leaf (step value template)
   (proof-with-checked-results
@@ -120,7 +114,7 @@
        (target (proof-subst template (list (cons *proof-result* value)))))
     (if (equal literal target)
         step
-      '(:failure "ProofMismatch" ""))))
+      '(:failure "proof-mismatch" ""))))
 
 (defun t3-logic-natural-gap (lib term)
   (let ((proof (library-library-proof lib)))
@@ -139,7 +133,7 @@
  (defun t3-logic-natural-visit (n lib term)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t3-logic-libraryproofs-natural"))
+    ((zp n) '(:failure "fuel" "t3-logic-libraryproofs-natural"))
     ((t3-logic-book-natural-p lib term) (t3-logic-book-natural lib term))
     ((proof-is-call term *t3-logic-length*)
      (library-library-cite lib "T3-LENGTH-NATURAL" (cdr term) nil))
@@ -165,7 +159,7 @@
 
  (defun t3-logic-natural-arguments (n lib args)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "t3-logic-libraryproofs-natural"))
+   (cond ((zp n) '(:failure "fuel" "t3-logic-libraryproofs-natural"))
          ((endp args) nil)
          (t (proof-with-checked-results
                 ((step (t3-logic-natural-visit (1- n) lib (car args)))
@@ -176,7 +170,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((proof (library-library-proof lib)))
      (cond
-      ((zp n) '(:failure "Fuel" "t3-logic-libraryproofs-by-value"))
+      ((zp n) '(:failure "fuel" "t3-logic-libraryproofs-by-value"))
       ((proof-is-call value *proof-if*)
        (proof-with-checked-results
            ((branches (proof-list-of-length (cdr value) 3))
@@ -222,7 +216,7 @@
          (cond
           (premise premise)
           ((and (proof-is-call term *proof-quote*) (endp (cdr term)))
-           '(:failure "MissingProofInput" ""))
+           '(:failure "missing-proof-input" ""))
           ((and (proof-is-call term *proof-quote*)
                 (or (integerp (cadr term)) (eq (cadr term) t)))
            (t3-logic-libraryproofs-prove lib literal nil nil))
@@ -236,7 +230,7 @@
                                    (cdr term) steps)))
           ((and (consp term) (proof-is-call term *proof-minus*))
            (if (endp (cdr term))
-               '(:failure "MissingProofInput" "")
+               '(:failure "missing-proof-input" "")
              (proof-with-checked-results
                  ((step (t3-logic-libraryproofs-type-of lib (cadr term) evidence)))
                (library-library-cite lib "INTEGER-NEGATION" (cdr term) (list step)))))
@@ -266,7 +260,7 @@
 
 (defun t3-logic-unsupported (term)
   (proof-with-checked-results ((text (proof-write term)))
-    '(:failure "Unsupported" "")))
+    '(:failure "unsupported" "")))
 
 (defund t3-logic-prove-formula-plan (lib term definitions evidence)
   (let ((proof (library-library-proof lib)))
@@ -300,7 +294,7 @@
 (defun t3-logic-prove-formula-visit (n lib term definitions evidence)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-logic-libraryproofs-prove-formula")
+      '(:failure "fuel" "t3-logic-libraryproofs-prove-formula")
     (let ((proof (library-library-proof lib))
           (plan (t3-logic-prove-formula-plan lib term definitions evidence)))
       (case (car plan)
@@ -629,7 +623,7 @@
  (defun t3-logic-evidence-record-visit (n evidence term holds step)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-logic-evidence-record")
+       '(:failure "fuel" "t3-logic-evidence-record")
      (proof-with-checked-results
          ((updated (t3-logic-evidence-default evidence step))
           (result (if (proof-is-call term *proof-if*)
@@ -642,7 +636,7 @@
  (defun t3-logic-evidence-record-normalized (n evidence term holds step)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-logic-evidence-record")
+       '(:failure "fuel" "t3-logic-evidence-record")
      (let ((lib (t3-logic-evidence-lib evidence))
            (definitions (t3-logic-evidence-definitions evidence)))
        (proof-with-checked-results
@@ -657,7 +651,7 @@
  (defun t3-logic-evidence-record-related (n evidence term holds step)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-logic-evidence-record")
+       '(:failure "fuel" "t3-logic-evidence-record")
      (let ((lib (t3-logic-evidence-lib evidence)))
        (proof-with-checked-results
            ((cons-proof (t3-logic-evidence-selector-proof lib term holds step))
@@ -678,7 +672,7 @@
  (defun t3-logic-evidence-conditional-visit (n evidence term holds step)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-logic-evidence-conditional")
+       '(:failure "fuel" "t3-logic-evidence-conditional")
      (proof-with-checked-results ((branches (proof-list-of-length (cdr term) 3)))
        (let* ((test (car branches))
               (yes (cadr branches))
@@ -693,7 +687,7 @@
  (defun t3-logic-evidence-conditional-selected (n evidence term holds step test branch selected)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-logic-evidence-conditional")
+       '(:failure "fuel" "t3-logic-evidence-conditional")
      (let* ((lib (t3-logic-evidence-lib evidence))
             (proof (library-library-proof lib)))
        (proof-with-checked-results
@@ -707,9 +701,6 @@
 
 (defun t3-logic-evidence-record (evidence term holds step)
   (t3-logic-evidence-record-visit 1000000 evidence term holds step))
-
-(defun t3-logic-evidence-conditional (evidence term holds step)
-  (t3-logic-evidence-conditional-visit 1000000 evidence term holds step))
 
 (defund t3-logic-evidence-expand-one (evidence signed-test)
   (let ((proof (library-library-proof (t3-logic-evidence-lib evidence))))
@@ -843,7 +834,7 @@
              (proof-with-checked-results
                  ((step (library-library-cite lib "NATURAL-INTEGER" (list term) (list (car natural)))))
                (cons step updated)))
-            ((not term) '(:failure "MissingProofInput" ""))
+            ((not term) '(:failure "missing-proof-input" ""))
             ((and (consp term) (proof-compound term)
                   (member-equal (car term) (list *proof-plus* *proof-times* *proof-minus*)))
              (proof-with-checked-results

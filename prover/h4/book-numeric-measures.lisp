@@ -30,7 +30,7 @@
          (proof (library-library-proof p))
          (bindings (list (list *library-x* term))))
     (if (not entry)
-        '(:failure "MissingProofInput" "")
+        '(:failure "missing-proof-input" "")
       (proof-with-checked-results
        ((integral (proof-proof-use proof *h4-book-numeric-measures-countdown-integer*
                                   bindings (list (cdr entry))))
@@ -136,7 +136,7 @@
         (alias (proof-proof-unfold proof actual))
         (alias-rhs (h4-book-numeric-measures-first-at alias 2)))
        (if (not (equal alias-rhs (list *h4-book-division-floor* ratio *proof-one*)))
-           '(:failure "InapplicableStep" "")
+           '(:failure "inapplicable-step" "")
          (proof-with-checked-results
           ((law (proof-proof-fact proof "rationalp-unary-/" (list (list *library-x* base))))
            (base-type (h4-book-numeric-measures-rational p base nil))
@@ -270,8 +270,8 @@
   (cond ((not (failure-p result)) (cons result p))
         ((and allow-fallback
               (member-equal (cadr result)
-                            '("InapplicableStep" "InapplicableTerm" "MissingProofInput"
-                              "assertion" "value" "key" "Unproved")))
+                            '("inapplicable-step" "inapplicable-term" "missing-proof-input"
+                              "assertion" "value" "key" "unproved")))
          (cons nil p))
         (t result)))
 
@@ -290,9 +290,6 @@
              (result (h4-book-numeric-measures-measure-result
                       p definitions calls (caar definitions) (cadr target) :division (list (car target)))))
         (h4-book-numeric-measures-result-with-library result p allow-fallback)))))
-
-(defun h4-book-numeric-measures-division-measure (p definitions calls support)
-  (h4-book-numeric-measures-division-attempt p definitions calls support nil))
 
 (defun h4-book-numeric-measures-fixed-value-type-components (hypothesis p opened test)
   (let ((proof (library-library-proof p)))

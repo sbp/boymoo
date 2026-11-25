@@ -249,9 +249,6 @@
         (cons (or answer equivalence)
               (list-equivalence-list-equivalence-library equivalence))))))
 
-(defun list-equivalence-list-equivalence-new (lib relation)
-  (car (list-equivalence-list-equivalence-new-result lib relation)))
-
 (defun list-equivalence-paired-substitutions-terms (lib terms)
   (declare (xargs :measure (acl2-count terms)))
   (if (endp terms)
@@ -313,17 +310,6 @@
           (list-equivalence-paired-substitutions-extras
            arguments call left right (list (cons right tail)))))))
 
-(defun list-equivalence-paired-substitutions-bindings (calls position here arguments left right)
-  (declare (xargs :measure (acl2-count calls)))
-  (if (endp calls)
-      nil
-    (proof-with-checked-results
-        ((binding (list-equivalence-paired-substitutions-binding
-                   (car calls) position here arguments left right))
-         (rest (list-equivalence-paired-substitutions-bindings
-                (cdr calls) position here arguments left right)))
-      (if binding (cons binding rest) rest))))
-
 (defun list-equivalence-paired-substitutions-plan (lib conclusion left right)
   (proof-with-checked-results
       ((terms (list-equivalence-paired-substitutions-terms lib (cdr conclusion)))
@@ -346,12 +332,6 @@
                                ((calls (termination-recursive-calls
                                         *termination-all* (list definition))))
                              (list calls (caar positions) here (cdr second))))))))))))
-
-(defun list-equivalence-paired-substitutions (lib conclusion left right)
-  (proof-with-checked-results
-      ((plan (list-equivalence-paired-substitutions-plan lib conclusion left right)))
-    (list-equivalence-paired-substitutions-bindings
-     (car plan) (cadr plan) (caddr plan) (cadddr plan) left right)))
 
 (defun list-equivalence-paired-reduction-reduce (term lib evidence definitions)
   (proof-with-checked-results

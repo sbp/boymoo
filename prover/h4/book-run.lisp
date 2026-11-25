@@ -146,7 +146,7 @@
 (defun h4-book-run-proof-dependencies-walk (n pending seen names)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h4-book-run-proof-dependencies-walk"))
+   ((zp n) '(:failure "fuel" "h4-book-run-proof-dependencies-walk"))
    ((endp pending) (reverse names))
    ((member-equal (car pending) seen)
     (h4-book-run-proof-dependencies-walk (1- n) (cdr pending) seen names))
@@ -292,81 +292,6 @@
           (h4-book-run-catalogue-lines
            (cdr lines) library (cons index earlier) obligations catalogue))))))))
 
-(defun h4-book-run-index-keys (indices)
-  (if (endp indices)
-      nil
-    (cons (list (decimal-text (car indices)) (car indices))
-          (h4-book-run-index-keys (cdr indices)))))
-
-(defun h4-book-run-sorted-indices (pairs)
-  (if (endp pairs)
-      nil
-    (cons (cadar pairs) (h4-book-run-sorted-indices (cdr pairs)))))
-
-(defun h4-book-run-catalogue-common (common)
-  (if (endp common)
-      nil
-    (cons (cons (caar common)
-                (h4-book-run-sorted-indices
-                 (seq-sorted (h4-book-run-index-keys (cdar common)))))
-          (h4-book-run-catalogue-common (cdr common)))))
-
-(defun h4-book-run-catalogue-books (library manifest sources books catalogue)
-  (declare (xargs :measure (acl2-count manifest)))
-  (if (endp manifest)
-      (list (reverse (car catalogue)) books
-            (h4-book-run-catalogue-common (cadddr catalogue)))
-    (proof-with-checked-results ((item (proof-list-of-length (car manifest) 2)))
-      (let* ((book (car item))
-             (count (cadr item))
-             (source (assoc-equal book sources)))
-        (if (not source)
-            '(:failure "failure" "")
-          (proof-with-checked-results
-              ((catalogued (h4-book-run-catalogue-lines
-                            (h4-book-run-lines (cdr source) :bytes)
-                            library nil 0 catalogue)))
-            (let ((obligations (cadr catalogued)))
-              (if (equal obligations count)
-                  (h4-book-run-catalogue-books
-                   library (cdr manifest) sources
-                   (table-put books book (car catalogued)) (caddr catalogued))
-                '(:failure "failure" "")))))))))
-
-(defun h4-book-run-catalogue (library manifest sources)
-  (h4-book-run-catalogue-books library manifest sources nil (list nil nil 0 nil)))
-
-(defun h4-book-run-decimal-chars (chars)
-  (or (endp chars)
-      (let ((code (char-code (car chars))))
-        (and (<= 48 code) (<= code 57)
-             (h4-book-run-decimal-chars (cdr chars))))))
-
-(defun h4-book-run-group-results (lines reversed-library books)
-  (declare (xargs :measure (acl2-count lines)))
-  (if (endp lines)
-      (list (reverse reversed-library) books)
-    (let* ((row (car lines))
-           (label (car (text-split-max row *h4-book-run-tab* 1))))
-      (if (and (< 0 (length label))
-               (h4-book-run-decimal-chars (coerce label 'list)))
-          (h4-book-run-group-results (cdr lines) (cons row reversed-library) books)
-        (h4-book-run-group-results
-         (cdr lines) reversed-library
-         (table-put books label (cons row (table-get books label nil))))))))
-
-(defun h4-book-run-book-result-rows (manifest books)
-  (if (endp manifest)
-      nil
-    (append (reverse (table-get books (caar manifest) nil))
-            (h4-book-run-book-result-rows (cdr manifest) books))))
-
-(defun h4-book-run-update-results (manifest book rows existing)
-  (let* ((grouped (h4-book-run-group-results
-                   (h4-book-run-lines existing :text) nil nil))
-         (books (table-put (cadr grouped) book (reverse rows))))
-    (text-join "" (append (car grouped) (h4-book-run-book-result-rows manifest books)))))
-
 (defun h4-book-run-aid-add (aids name value)
   (let ((previous (table-get aids name nil)))
     (if (member-equal value previous)
@@ -465,7 +390,7 @@
      (table-put assignment (car functions) (car witnesses)))))
 
 (defun h4-book-run-unproved-p (result)
-  (and (failure-p result) (equal (cadr result) "Unproved")))
+  (and (failure-p result) (equal (cadr result) "unproved")))
 
 ; Proof production calls the book tactics on the parsed inputs.
 
@@ -484,9 +409,6 @@
                  (cdr manifest) sources measures (h4-book-run-aid-hints uses hints))))
           (h4-book-run-collect-aids (cdr manifest) sources measures hints))))))
 
-(defun h4-book-run-aids-from-books (manifest sources)
-  (h4-book-run-collect-aids manifest sources nil nil))
-
 (defun h4-book-run-book-search-prove (search formula induction given)
   (let ((result (h4-book-tactics-book-search-prove search formula induction given)))
     (if (failure-p result) (cons result search) result)))
@@ -494,7 +416,7 @@
 (defun h4-book-run-witness-proof-evaluation (p target witnesses)
   (proof-with-checked-results ((fits (h4-book-tactics-fits target 2400)))
     (if (not fits)
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
           ((equality (h4-tactics-tactics-normalize
                       p target nil (append *h4-book-tactics-logic* witnesses) nil nil))
@@ -532,7 +454,7 @@
 (defun h4-book-run-witness-attempts (choices functions constraints p search)
   (declare (xargs :measure (acl2-count choices)))
   (if (endp choices)
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (let* ((witnesses (car choices))
            (assignment (h4-book-run-witness-assignment functions witnesses nil))
            (attempted (h4-book-run-witness-constraints
@@ -552,9 +474,6 @@
        (search (h4-book-tactics-book-search-init-with-templates p tables)))
     (h4-book-run-witness-attempts (proof-unique choices) functions (cadr parts) p search)))
 
-(defun h4-book-run-witness-proof (p fields models)
-  (h4-book-run-witness-proof-with-templates p fields models nil))
-
 (defun h4-book-run-search-theorem-with-templates (p formula name hints book-functions tables)
   (proof-with-checked-results
       ((search (h4-book-tactics-book-search-init-with-templates p tables))
@@ -571,9 +490,6 @@
           result)))
      (t (car (h4-book-run-book-search-prove (cdr setoid) formula t nil))))))
 
-(defun h4-book-run-search-theorem (p formula name hints book-functions)
-  (h4-book-run-search-theorem-with-templates p formula name hints book-functions nil))
-
 (defun h4-book-run-theorem-after-conversions-with-templates
     (p formula name hints conversions book-functions tables)
   (proof-with-checked-results
@@ -582,11 +498,6 @@
                   p formula (table-get hints name nil) book-functions)
                  (h4-book-run-search-theorem-with-templates p formula name hints book-functions tables))))
     (list step p conversions)))
-
-(defun h4-book-run-theorem-after-conversions
-    (p formula name hints conversions book-functions)
-  (h4-book-run-theorem-after-conversions-with-templates
-   p formula name hints conversions book-functions nil))
 
 (defun h4-book-run-theorem-conversions-with-templates
     (p formula name hints ordering conversions book-functions tables)
@@ -608,11 +519,6 @@
                 (list (car inverted) p conversions)
               (h4-book-run-theorem-after-conversions-with-templates
                p formula name hints conversions book-functions tables))))))))
-
-(defun h4-book-run-theorem-conversions
-    (p formula name hints ordering conversions book-functions)
-  (h4-book-run-theorem-conversions-with-templates
-   p formula name hints ordering conversions book-functions nil))
 
 (defun h4-book-run-theorem-with-templates
     (p formula name hints printing ordering conversions book-functions tables)
@@ -638,11 +544,6 @@
             (list proof p conversions)
           (h4-book-run-theorem-conversions-with-templates
            p formula name hints ordering conversions book-functions tables))))))
-
-(defun h4-book-run-theorem
-    (p formula name hints printing ordering conversions book-functions)
-  (h4-book-run-theorem-with-templates
-   p formula name hints printing ordering conversions book-functions nil))
 
 (defun h4-book-run-find-proof-with-templates
     (p statement measures hints models printing ordering conversions book-functions tables)
@@ -677,13 +578,6 @@
     (p statement measures hints models printing ordering conversions book-functions)
   (h4-book-run-find-proof-with-templates
    p statement measures hints models printing ordering conversions book-functions nil))
-
-(defun h4-book-run-find-proof (p statement measures hints models printing ordering conversions)
-  (proof-with-checked-results
-      ((result (h4-book-run-find-proof-with-context
-                p statement measures hints models printing ordering
-                (take 2 conversions) (caddr conversions))))
-    (cons (car result) (cadr result))))
 
 (defun h4-book-run-selected-sources (selected)
   (if (endp selected)
@@ -727,37 +621,6 @@
           (list (h4-book-run-make-certificate (cadr entry) (car entry) support "")
                 p conversions))))))
 
-(defun h4-book-run-prove-statement (p statement measures hints models printing ordering conversions)
-  (proof-with-checked-results
-      ((result (h4-book-run-prove-statement-with-context
-                p statement measures hints models printing ordering
-                (take 2 conversions) (caddr conversions))))
-    (cons (car result) (cadr result))))
-
-(defun h4-book-run-required-value (dictionary key)
-  (let ((entry (assoc-equal key dictionary)))
-    (if entry (cdr entry) '(:failure "failure" ""))))
-
-(defun h4-book-run-book-origins (indices book position origins)
-  (declare (xargs :measure (acl2-count indices)))
-  (if (endp indices)
-      origins
-    (let ((index (car indices)))
-      (h4-book-run-book-origins
-       (cdr indices) book (1+ position)
-       (if (assoc-equal index origins)
-           origins
-         (table-put origins index (list book position)))))))
-
-(defun h4-book-run-catalogue-origins (manifest books origins)
-  (declare (xargs :measure (acl2-count manifest)))
-  (if (endp manifest)
-      origins
-    (let ((book (caar manifest)))
-      (h4-book-run-catalogue-origins
-       (cdr manifest) books
-       (h4-book-run-book-origins (table-get books book nil) book 0 origins)))))
-
 (defund h4-book-run-generate-books-admit (kind fields p book-functions)
   (proof-with-checked-results ((p (h4-tactics-tactics-add-statement p kind fields)))
     (cond
@@ -770,16 +633,6 @@
       (proof-with-checked-results ((name (proof-term-at fields 0)))
         (cons p (add-to-set-equal name book-functions))))
      (t (cons p book-functions)))))
-
-(defun h4-book-run-admit-library-lines (lines p book-functions)
-  (declare (xargs :measure (acl2-count lines)))
-  (if (endp lines)
-      (cons p book-functions)
-    (proof-with-checked-results
-        ((item (h4-book-run-read-line (car lines)))
-         (admitted (h4-book-run-generate-books-admit
-                    (car item) (cadr item) p book-functions)))
-      (h4-book-run-admit-library-lines (cdr lines) (car admitted) (cdr admitted)))))
 
 (defun h4-book-run-admit-earlier (indices common statements p book-functions)
   (declare (xargs :measure (acl2-count indices)))
@@ -795,28 +648,6 @@
         (h4-book-run-admit-earlier
          (cdr indices) common statements (car admitted) (cdr admitted)))))
    (t (h4-book-run-admit-earlier (cdr indices) common statements p book-functions))))
-
-(defun h4-book-run-witness-arities (signatures)
-  (if (endp signatures)
-      nil
-    (proof-with-checked-results
-        ((signature (proof-list-of-length (car signatures) 2))
-         (rest (h4-book-run-witness-arities (cdr signatures))))
-      (cons (cadr signature) rest))))
-
-(defun h4-book-run-catalogue-arities (statements)
-  (declare (xargs :measure (acl2-count statements)))
-  (if (endp statements)
-      nil
-    (let ((item (car statements)))
-      (proof-with-checked-results
-          ((arities
-            (and (equal (h4-book-run-statement-kind item) "constrain")
-                 (proof-with-checked-results
-                     ((signatures (proof-term-at (h4-book-run-statement-fields item) 0)))
-                   (h4-book-run-witness-arities signatures))))
-           (tail (h4-book-run-catalogue-arities (cdr statements))))
-        (append arities tail)))))
 
 (defund h4-book-run-statement-needs-support (statement mode)
   (proof-with-checked-results
@@ -837,39 +668,6 @@
   (and (consp indices)
        (or (h4-book-run-statement-needs-support (nth (car indices) statements) mode)
            (h4-book-run-book-needs-support (cdr indices) statements mode))))
-
-(defun h4-book-run-books-need-support (selected books statements mode)
-  (declare (xargs :measure (acl2-count selected)))
-  (and (consp selected)
-       (proof-with-checked-results
-           ((indices (h4-book-run-required-value books (car selected))))
-         (or (h4-book-run-book-needs-support indices statements mode)
-             (h4-book-run-books-need-support (cdr selected) books statements mode)))))
-
-(defun h4-book-run-library-sources (entries)
-  (if (endp entries)
-      nil
-    (cons (cadddr (car entries)) (h4-book-run-library-sources (cdr entries)))))
-
-(defun h4-book-run-prepare-books (p book-functions selected statements books aids)
-  (proof-with-checked-results
-      ((p (h4-book-arithmetic-countdown-lemmas p))
-       (p (h4-book-tactics-equality-symmetry p))
-       (pointwise (h4-function-equality-pointwise-lemma p))
-       (arities (h4-book-run-catalogue-arities statements))
-       (modeled (h4-book-run-witness-definitions (cdr pointwise) arities))
-       (printing-needed (h4-book-run-books-need-support selected books statements :printing))
-       (printing (if printing-needed
-                     (h4-book-printing-printing-support (cdr modeled))
-                   (cons nil (cdr modeled))))
-       (ordering-needed (h4-book-run-books-need-support selected books statements :ordering))
-       (ordering (if ordering-needed
-                      (h4-book-order-order-support (cdr printing))
-                    (cons nil (cdr printing)))))
-    (list (cdr ordering)
-          (list (library-library-proof (cdr modeled)) book-functions)
-          (list (car aids) (cadr aids) (car modeled) (car printing) (car ordering))
-          (h4-book-run-library-sources (library-library-entries (cdr ordering))))))
 
 (defun h4-book-run-skip-certificate (statement reason)
   (proof-with-checked-results
@@ -967,59 +765,3 @@
                (cons (h4-book-run-certificate-proof certificate) (revappend extras pieces))
                (cons row rows) (union-equal support used)))))))))
 
-(defun h4-book-run-count-proved (cache)
-  (if (endp cache)
-      0
-    (+ (if (equal (h4-book-run-certificate-reason (cdar cache)) "") 1 0)
-       (h4-book-run-count-proved (cdr cache)))))
-
-(defun h4-book-run-generate-selected (selected catalogued origins prepared progress reversed)
-  (declare (xargs :measure (acl2-count selected)))
-  (if (endp selected)
-      (let* ((cache (caddr progress))
-             (proved (h4-book-run-count-proved cache)))
-        (list (reverse reversed) proved (- (len cache) proved)))
-    (proof-with-checked-results
-        ((indices (h4-book-run-required-value (cadr catalogued) (car selected)))
-         (assembled (h4-book-run-assemble-book
-                     indices (car selected) catalogued origins prepared progress nil nil nil)))
-      (h4-book-run-generate-selected
-       (cdr selected) catalogued origins prepared (cdr assembled)
-       (cons (car assembled) reversed)))))
-
-(defun h4-book-run-generate-books-prepare
-    (manifest selected library statement-sources aid-sources)
-  (proof-with-checked-results
-      ((catalogued (h4-book-run-catalogue
-                    (h4-book-run-lines library :bytes) manifest statement-sources))
-       (origins (h4-book-run-catalogue-origins manifest (cadr catalogued) nil))
-       (aids (h4-book-run-aids-from-books manifest aid-sources))
-       (admitted (h4-book-run-admit-library-lines
-                  (h4-book-run-lines library :file)
-                  (library-library-init (proof-proof-init)) nil))
-       (p (h4-tactics-tactics-propositional-lemmas (car admitted))))
-    (list p (cdr admitted) selected catalogued origins aids)))
-
-(defun h4-book-run-generate-books-library (request)
-  (car request))
-
-(defun h4-book-run-generate-books (request built)
-  (let ((selected (caddr request))
-        (catalogued (cadddr request))
-        (origins (nth 4 request))
-        (aids (nth 5 request)))
-    (proof-with-checked-results
-        ((prepared (h4-book-run-prepare-books
-                    built (cadr request) selected (car catalogued) (cadr catalogued) aids)))
-      (let* ((expansions (h4-book-expansion-expansion-proofs-init))
-             (conversions (list expansions (h4-book-inverse-inversion-proofs-init expansions))))
-        (h4-book-run-generate-selected
-         selected catalogued origins prepared (list (car prepared) conversions nil) nil)))))
-
-(defun h4-book-run-generate-books-from-sources
-    (manifest selected library statement-sources aid-sources)
-  (proof-with-checked-results
-      ((request (h4-book-run-generate-books-prepare
-                 manifest selected library statement-sources aid-sources))
-       (built (h4-terms-tactics-build (h4-book-run-generate-books-library request))))
-    (h4-book-run-generate-books request built)))

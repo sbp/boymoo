@@ -71,7 +71,7 @@
         ((equal head *library-car*) (car value))
         ((endp (cdr value)) *proof-nil*)
         ((and (endp (cddr value)) (not (cadr value)))
-         '(:failure "MissingProofInput" ""))
+         '(:failure "missing-proof-input" ""))
         ((and (endp (cddr value)) (equal (proof-datum-head (cadr value)) "dot"))
          (proof-term-at (cadr value) 1))
         (t (cdr value))))
@@ -134,9 +134,9 @@
    (let ((proof (library-library-proof lib))
          (head (proof-datum-head term)))
      (cond
-      ((zp n) '(:failure "Fuel" "t3-book-lemmas-simplify"))
+      ((zp n) '(:failure "fuel" "t3-book-lemmas-simplify"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
-      ((endp term) '(:failure "MissingProofInput" ""))
+      ((endp term) '(:failure "missing-proof-input" ""))
       ((or (proof-compound head) (member-equal head definitions))
        (proof-with-checked-results
            ((expansion (proof-simplify-expansion proof term))
@@ -166,7 +166,7 @@
 
  (defun t3-book-lemmas-simplify-arguments (n lib term args index result evidence definitions)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "t3-book-lemmas-simplify"))
+   (cond ((zp n) '(:failure "fuel" "t3-book-lemmas-simplify"))
          ((endp args) result)
          (t
           (proof-with-checked-results
@@ -386,7 +386,7 @@
 (defun t3-book-lemmas-proper-list-conjunct (n proof premise)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-lemmas-proper-list-conjunct")
+      '(:failure "fuel" "t3-book-lemmas-proper-list-conjunct")
     (proof-with-checked-results
         ((literal (proof-step-first premise))
          (no (and (proof-is-call literal *proof-if*) (proof-term-at literal 3))))
@@ -514,7 +514,7 @@
 (defun t3-book-lemmas-implies-proper-list-visit (n lib term wrappers)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-lemmas-implies-proper-list")
+      '(:failure "fuel" "t3-book-lemmas-implies-proper-list")
     (proof-with-checked-results ((input (t3-book-lemmas-proper-list-input lib term wrappers)))
       (if (not input)
           nil
@@ -528,9 +528,3 @@
 (defun t3-book-lemmas-implies-proper-list (lib term wrappers)
   (t3-book-lemmas-implies-proper-list-visit 1000000 lib term wrappers))
 
-(defun t3-book-lemmas-build (lib)
-  (proof-with-checked-results
-      ((boolean (t3-book-lemmas-boolean-value lib))
-       (iff (t3-book-lemmas-iff-elimination boolean))
-       (cons (t3-book-lemmas-cons-equality iff)))
-    (t3-book-lemmas-natural-fix cons)))

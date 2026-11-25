@@ -616,7 +616,7 @@
 (defun h2-division-index-lemmas-next (n search replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      (cons '(:failure "Fuel" "h2-division-index-lemmas-next") search)
+      (cons '(:failure "fuel" "h2-division-index-lemmas-next") search)
     (let* ((result (h2-division-index-lemmas-request search replies))
            (search (cdr result)))
       (if (not (h2-alists-request-p (car result)))

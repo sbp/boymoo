@@ -194,7 +194,7 @@
    (let ((goal (list *b2-xdoc-stringp* value))
          (proof (library-library-proof library)))
      (cond
-      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-xdoc-string-result"))
+      ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-xdoc-string-result"))
       ((proof-is-call value *proof-quote*)
        (proof-with-checked-results
            ((step (b2-tactics-tactics-solve library goal evidence nil nil 0 nil)))
@@ -248,7 +248,7 @@
    (let ((proof (library-library-proof library)))
      (cond
       ((not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-xdoc-string-result-by-value"))
+       '(:failure "fuel" "b2-xdoc-string-result-by-value"))
       ((proof-is-call value *proof-if*)
        (proof-with-checked-results
            ((parts (proof-list-of-length (cdr value) 3))
@@ -285,7 +285,7 @@
  (defun b2-xdoc-tag-strings-leaf (n value tests library index)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "b2-xdoc-tag-strings-leaf")
+       '(:failure "fuel" "b2-xdoc-tag-strings-leaf")
      (proof-with-checked-results
          ((evidence (b2-xdoc-assumptions (library-library-proof library) tests))
           (field (b2-projections-mv-nth library index value))

@@ -20,7 +20,6 @@ Each recipe retains its own result convention.
 | `(b1-shapes-head term)` | Returns the head of a nonempty compound term, or `:none`. | None |
 | `(b1-shapes-split-goal formula)` | Returns `(test goal)` for an implication, or `(:none formula)`. | Can return a failure on a malformed implication |
 | `(b1-shapes-conjuncts test)` | Returns the conjuncts of the optional test in order. Each `IF` with quoted false as its third argument contributes its test before its true branch is visited. | Can return a failure on a malformed conditional |
-| `(b1-shapes-abstract-list-recipe lib test goal subject)` | Returns the abstract list recipe for the optional test, goal and subject. | Can return a failure from reading a term or looking up a list signature |
 | `(b1-shapes-revappend-recipe test goal subject)` | Returns the reverse-and-append recipe for the optional test, goal and subject. | Can return a failure on a malformed term |
 | `(b1-shapes-association-recipe test subject)` | Returns the association list recipe for the optional test and subject. | Can return a failure on a malformed term |
 | `(b1-shapes-set-recipe test goal subject)` | Returns the membership or set recipe for the optional test, goal and subject. | Can return a failure on a malformed term |
@@ -28,7 +27,6 @@ Each recipe retains its own result convention.
 | `(b1-shapes-congruence-contrapositive lib formula)` | Returns the Step for the implication or `nil` when rewriting gives a different equality. | Can return a failure from reading a term or constructing a proof |
 | `(b1-shapes-exponent-recipe test goal)` | Returns the exponent recipe for the optional test and goal. | Can return a failure on a malformed term |
 | `(b1-shapes-arithmetic-recipe test goal subject)` | Returns the arithmetic recipe for the optional test, goal and subject. | Can return a failure on a malformed term |
-| `(b1-shapes-theorem-recipes lib formula)` | Returns the recipes for the given formula in the order considered, with repeats retained. | A failure from shape selection or reading a malformed term |
 | `(b1-shapes-witness-recipe functions formulas)` | Returns a witness recipe symbol or `nil`. `functions` is the ordered list of `(name arity)` pairs and `formulas` is the ordered list of `(name formula)` pairs. | Can return a failure on a malformed term or pair |
 | `(b1-shapes-exponent-recipe-signed lib formula sign)` | Calls `b1-powers-exponent-addition-goal` with the formula and the captured sign. Returns `(cons step lib)` with the resulting Library. | A failure from the recipe |
 | `(b1-shapes-theorem-recipes-natural-bit-length lib claim)` | Calls `b1-bit-length-natural-bit-length` on the argument of the claim. Returns the result of that recipe. | A failure from the recipe or a malformed claim |

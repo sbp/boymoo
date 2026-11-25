@@ -12,13 +12,13 @@ is an ordered alist from operation strings to recipe symbols.
 | Call | Result | Failure |
 |---|---|---|
 | `(b1-theorems-apply-recipe label lib formula)` | `(cons step lib)` for the recipe selected by label string `label`, with the resulting Library and its entries in insertion order. | A failure for an unknown label or from the recipe. |
-| `(b1-theorems-all-fnnames lib formula)` | Step proving the list type of the accumulator returned by `ALL-FNNAMES1`. | From the term shape or proof construction, including `Unproved` for an unchanged accumulator where an opening is required. |
+| `(b1-theorems-all-fnnames lib formula)` | Step proving the list type of the accumulator returned by `ALL-FNNAMES1`. | From the term shape or proof construction, including `unproved` for an unchanged accumulator where an opening is required. |
 | `(b1-theorems-realfix-rational lib term)` | Step proving the `REALFIX` application term `term` rational. | From the term shape or proof construction. |
 | `(b1-theorems-complex-opener lib formula)` | Step proving the complex definition equality. | From the term shape or proof construction. |
 | `(b1-theorems-predicate-equality lib formula booleans)` | Step equating equality and equivalence on the Boolean operands of `formula`. `booleans` is the list of their Boolean type Steps in operand order. | From the term shape or proof construction. |
 | `(b1-theorems-equal-of-predicates lib formula)` | Step proving the predicate equality implication. | From the term shape or proof construction. |
 | `(b1-theorems-linear-equalities lib formula)` | Step proving the equality and equivalence of comparisons agree. | From the term shape or proof construction. |
-| `(b1-theorems-project-conjunct lib formula)` | Step proving an implication whose conclusion is a conjunct of its premise. | From the term shape or proof construction, including `Unproved` for an absent conjunct. |
+| `(b1-theorems-project-conjunct lib formula)` | Step proving an implication whose conclusion is a conjunct of its premise. | From the term shape or proof construction, including `unproved` for an absent conjunct. |
 
 `*b1-theorems-true-listp*`, `*b1-theorems-all-fnnames*`,
 `*b1-theorems-add-to-set*`, `*b1-theorems-booleanp*`,

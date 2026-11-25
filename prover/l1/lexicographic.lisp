@@ -232,7 +232,7 @@
 
 (defun l1-lexicographic-length-wrapper (proof function formals body)
   (if (not (and (equal (len formals) 2) (proof-is-call body *proof-if*)))
-      '(:failure "UnsupportedApplication" "")
+      '(:failure "unsupported-application" "")
     (let* ((x (car formals))
            (y (cadr formals))
            (x-length (list *library-len* x))
@@ -244,7 +244,7 @@
                             (proof-term-at body 3)))
            (same-test (and (proof-is-call digit-case *proof-if*) (proof-term-at digit-case 1))))
         (if (not (equal same-test same-length))
-            '(:failure "UnsupportedApplication" "")
+            '(:failure "unsupported-application" "")
           (proof-with-checked-results
               ((equal-branch (proof-term-at digit-case 2))
                (digits (proof-term-at equal-branch 3)))

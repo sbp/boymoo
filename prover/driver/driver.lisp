@@ -187,7 +187,7 @@
 
 (defun driver-check (n ground library statements entries numbers baseline-checked)
   (if (zp n)
-      '(:failure "Fuel" "driver-check")
+      '(:failure "fuel" "driver-check")
     (let* ((assembled (prove-prover-assemble entries nil))
            (text (car assembled))
            (verdict (car (boymoo::check ground library statements text)))

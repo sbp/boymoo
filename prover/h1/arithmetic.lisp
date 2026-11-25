@@ -264,7 +264,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((head (car term)))
      (cond
-      ((zp n) '(:failure "Fuel" "h1-arithmetic-simplify-visit"))
+      ((zp n) '(:failure "fuel" "h1-arithmetic-simplify-visit"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
       ((endp term) '(:failure "failure" ""))
       ((or (proof-compound head) (member-equal head definitions))
@@ -297,7 +297,7 @@
  (defun h1-arithmetic-simplify-args (n proof term args index result evidence definitions)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h1-arithmetic-simplify-args"))
+    ((zp n) '(:failure "fuel" "h1-arithmetic-simplify-args"))
     ((endp args) result)
     (t (proof-with-checked-results
            ((equality (h1-arithmetic-simplify-visit (1- n) proof (car args) evidence definitions))

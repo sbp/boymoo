@@ -38,6 +38,10 @@ static void fingerprint(long k, char hex[33])
             lines[nl++] = (const unsigned char *)"(unbuilt)\n";
             continue;
         }
+        if (fns[f].line == NULL) {
+            lines[nl++] = (const unsigned char *)"(prelude)\n";
+            continue;
+        }
         for (j = 0; j < nl && lines[j] != fns[f].line; j++)
             ;
         if (j == nl)

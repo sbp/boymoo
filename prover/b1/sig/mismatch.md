@@ -14,7 +14,7 @@ The symbol constants are `*b1-mismatch-mismatch*`, `*b1-mismatch-max*`,
 | `(b1-mismatch-mismatch-exists lib formula)` | An equivalence formula with a mismatch call as its first operand. Returns `(cons step lib)` for the formula. |
 | `(b1-mismatch-mismatch-bound lib formula)` | An implication bounding the mismatch index by the maximum bit length. Returns `(cons step lib)` for the formula. |
 | `(b1-mismatch-mismatch-correct lib formula)` | An implication that the two bit tests differ at the reported index. Returns `(cons step lib)` for the formula. |
-| `(b1-mismatch-equal-fixed-by-bits lib formula)` | An implication that fixed integers agree under a bit-agreement hypothesis. Returns `(cons step lib)` for the formula, or `Unproved` if no unconditional fact matches the required bit agreement. |
+| `(b1-mismatch-equal-fixed-by-bits lib formula)` | An implication that fixed integers agree under a bit-agreement hypothesis. Returns `(cons step lib)` for the formula, or `unproved` if no unconditional fact matches the required bit agreement. |
 | `(b1-mismatch-mismatch-wrapped-index lib formula)` | An implication about the mismatch index under a wrapper that applies NFIX. Returns `(cons step lib)` for the formula. |
 
 When the BookProof has a search index, call

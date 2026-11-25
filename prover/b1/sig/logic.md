@@ -22,19 +22,19 @@ when it encounters a branch request.
 | `(b1-logic-equal-to equality)` | A local rule that gives the equality Step when the term is its left side. | None when making the rule. |
 | `(b1-logic-rational-value value)` | The ACL2 rational from an integer or ratio datum, or `nil`. | A failure for a malformed ratio or empty list. |
 | `(b1-logic-rational-datum value)` | The integer or `("ratio" numerator denominator)` datum for the ACL2 rational `value`. | A value without rational fields can return a failure. |
-| `(b1-logic-bookproof-from-fact lib name claim)` | The named fact instantiated to match `claim`. | `Unproved` if the fact does not match, or a proof failure. |
+| `(b1-logic-bookproof-from-fact lib name claim)` | The named fact instantiated to match `claim`. | `unproved` if the fact does not match, or a proof failure. |
 | `(b1-logic-bookproof-rewrite-rule lib name)` | A local rule from the left side of the named fact to its right. | A proof failure. |
 | `(b1-logic-apply-rule lib rule term)` | Apply an equality or named fact rule to the term, giving a Step or `nil`. | A proof failure. |
 | `(b1-logic-bookproof-prove-implication-premise lib formula)` | The assumed premise Step for proving the consequence. | A proof failure. |
-| `(b1-logic-bookproof-prove-implication lib formula consequence)` | The discharged implication using the supplied consequence Step. | A proof failure or `RuleInapplicable` if the consequence concludes a different formula. |
-| `(b1-logic-bookproof-prove-implication-with-premise lib formula premise consequence)` | The discharged implication using the supplied premise and consequence Steps. Use this to keep the premise when proving the consequence extends the Library. | A proof failure or `RuleInapplicable` if the consequence concludes a different formula. |
+| `(b1-logic-bookproof-prove-implication lib formula consequence)` | The discharged implication using the supplied consequence Step. | A proof failure or `rule-inapplicable` if the consequence concludes a different formula. |
+| `(b1-logic-bookproof-prove-implication-with-premise lib formula premise consequence)` | The discharged implication using the supplied premise and consequence Steps. Use this to keep the premise when proving the consequence extends the Library. | A proof failure or `rule-inapplicable` if the consequence concludes a different formula. |
 | `(b1-logic-bookproof-split-conjuncts lib step)` | The list of Steps for the conjuncts in left-to-right order. | A proof failure. |
 | `(b1-logic-bookproof-contradiction lib positive negative goal)` | The cut of the two Steps with `goal` at the front of its clause. | A proof failure. |
-| `(b1-logic-bookproof-forces lib goal assertion evidence unfold rules)` | A Step deriving `goal` by reducing the assertion to NIL under the opposite hypothesis. | `Unproved` or a proof failure. |
+| `(b1-logic-bookproof-forces lib goal assertion evidence unfold rules)` | A Step deriving `goal` by reducing the assertion to NIL under the opposite hypothesis. | `unproved` or a proof failure. |
 | `(b1-logic-bookproof-select-equivalent-test lib term equivalence)` | `(cons step lib)` for the equation replacing the IF test, with the auxiliary lemma installed if needed. | A proof failure or failed assertion. |
-| `(b1-logic-bookproof-case-proof lib goal evidence unfold rules depth)` | A Step from normalization and cases. The default case depth is 16. | `Unproved`, `Fuel` or a proof failure. |
-| `(b1-logic-bookproof-normalize-proof lib goal evidence unfold rules split)` | A Step proving `goal` by normalization or from evidence. | `Unproved`, `Fuel`, or a proof failure. |
-| `(b1-logic-bookproof-normalize lib term evidence unfold rules split condition inspect-branches)` | The equality Step from left-to-right normalization of `term`. | `Fuel` or a proof failure. |
+| `(b1-logic-bookproof-case-proof lib goal evidence unfold rules depth)` | A Step from normalization and cases. The default case depth is 16. | `unproved`, `fuel` or a proof failure. |
+| `(b1-logic-bookproof-normalize-proof lib goal evidence unfold rules split)` | A Step proving `goal` by normalization or from evidence. | `unproved`, `fuel`, or a proof failure. |
+| `(b1-logic-bookproof-normalize lib term evidence unfold rules split condition inspect-branches)` | The equality Step from left-to-right normalization of `term`. | `fuel` or a proof failure. |
 | `(b1-logic-bookproof-true-constant lib term)` | A proof of an established non-NIL quoted constant. | A proof failure. |
 | `(b1-logic-bookproof-false-value lib negative)` | The equation to quoted NIL from a negation Step. | A proof failure. |
 | `(b1-logic-bookproof-boolean-value lib step boolean)` | The equation to quoted T from a term Step and a Step that the term is Boolean. | A proof failure. |
@@ -70,15 +70,6 @@ points. Each reply is `(cons step lib)` with the callback's resulting
 Library and a Step or `nil`. A callback failure is also a reply. To
 supply a reply, repeat the original call with the reply appended in
 invocation order.
-
-`b1-logic-call-p` recognizes requests. The accessors
-`b1-logic-call-kind`, `b1-logic-call-id`, `b1-logic-call-library` and
-`b1-logic-call-term` return the callback kind (`:rule` or
-`:condition`), the callback identifier, the current Library and the
-term. `b1-logic-branch-p` recognizes a branch result. Its accessors
-`b1-logic-branch-test` and `b1-logic-branch-library` give the test and
-the Library at the split. Each recognizer and accessor takes the result
-as its only argument.
 
 Use `(b1-logic-make-branch test lib)` as a callback reply to request a
 split on `test` with the current Library `lib`.

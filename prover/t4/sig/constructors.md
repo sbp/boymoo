@@ -6,10 +6,6 @@ the list of recursively defined function names in definition order.
 
 | Call | Result |
 |---|---|
-| `(t4-constructors-scalar-result library formula replies)` | A proof of a scalar return type, or `nil` for a formula outside the recipe. |
-| `(t4-constructors-tree-constructor library formula replies)` | A proof of a constructor's tree recognition equation, or `nil` for a formula outside the recipe. |
-| `(t4-constructors-reordered-recognizer library formula replies)` | A proof that interchanges the recognizer tests, or `nil` for a formula outside the recipe. |
-| `(t4-constructors-optional-recognizer library formula recursive replies)` | A proof of the optional recognizer's implication, Boolean result, or constructor result, or `nil` for a formula outside the recipe. |
 
 Each call returns `(cons result library)`, a failure, or a request
 `(:t4-request operation arguments library)`. Pass the starting Library
@@ -27,13 +23,6 @@ successful known or fact-proof reply has value `(cons step evidence)`
 and a successful equation reply has value `(cons equality evidence)`.
 A missing proof or equation uses `nil` in the car of that value.
 An Evidence object is the one in `prover/t4/sig/structural.md`.
-
-A request for `:prove` has a term, an ordered list of premise Steps,
-and an ordered list of definition symbols to unfold. Its value is the
-Step from the Library's `prove` method. A request for
-`:recognizer-implication` has one formula as its argument. Its value
-is the result of `t4-recognizers-recognizer-implication` with that
-formula and the caller's recursive name set.
 
 ## Retaining the Library on a caught failure
 

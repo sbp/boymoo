@@ -12,7 +12,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((zp n) '(:failure "Fuel" "b1-powers-expt-number-by-value"))
+     ((zp n) '(:failure "fuel" "b1-powers-expt-number-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
        ((parts (proof-list-of-length (cdr value) 3))
@@ -535,7 +535,7 @@
 (defun b1-powers-exponent-addition-goal-normalize (n lib claim evidence rules replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-powers-exponent-addition-goal-normalize")
+      '(:failure "fuel" "b1-powers-exponent-addition-goal-normalize")
     (let ((result (b1-powers-exponent-addition-goal-normalize-step
                    lib claim evidence rules replies)))
       (if (eq (car result) :reply)

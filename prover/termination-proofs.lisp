@@ -211,10 +211,6 @@
                                                 less comparison)))
               (cons result context)))))))))
 
-(defun termination-proofs-length-decrease (lib goal rulers)
-  (car (termination-proofs-length-decrease-in
-        goal (termination-proofs-context lib rulers nil nil))))
-
 (defun termination-proofs-required-binding (key bindings)
   (let ((binding (assoc-equal key bindings)))
     (if binding
@@ -315,7 +311,7 @@
           (library-library-lemma lib "MINIMUM-LESS" claim less guards))))))
 
 (defun termination-proofs-natural-fuel (operation lib)
-  (cons (list :failure "Fuel" operation) lib))
+  (cons (list :failure "fuel" operation) lib))
 
 ; Complete the natural-number proof requests while retaining the library
 ; established before any failed request.
@@ -518,7 +514,7 @@
                    (cdr reply) rulers (cons t (cdr replies)) ordinality))))))))
 
 (defun termination-proofs-fuel (name context)
-  (cons (list :failure "Fuel" name) context))
+  (cons (list :failure "fuel" name) context))
 
 (mutual-recursion
  (defun termination-proofs-prove-decrease-in (n clause context)
@@ -643,21 +639,6 @@
                          (termination-proofs-sum-bounds
                           (1- n) child parent side-literals (cdr indices)
                           (update-nth index before current) (cons bound bounds) context)))))))))))))))
-
-(defun termination-proofs-prove-decrease (lib clause rulers extra-descent)
-  (termination-proofs-public-result
-   (termination-proofs-prove-decrease-in
-    1000000 clause (termination-proofs-context lib rulers extra-descent nil))))
-
-(defun termination-proofs-minimum-decrease (lib clause rulers extra-descent)
-  (termination-proofs-public-result
-   (termination-proofs-minimum-decrease-in
-    1000000 clause (termination-proofs-context lib rulers extra-descent nil))))
-
-(defun termination-proofs-sum-decrease (lib clause rulers extra-descent)
-  (termination-proofs-public-result
-   (termination-proofs-sum-decrease-in
-    1000000 clause (termination-proofs-context lib rulers extra-descent nil))))
 
 (defun termination-proofs-measures (definitions stored-measures measures)
   (if (endp definitions)

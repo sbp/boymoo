@@ -155,9 +155,6 @@
                                (index (run-index-names (proof-search-fact-index-with-lib index lib) names)))
                (api-context-make lib index seen declared helpers)))))))
 
-(defun api-context-append-statement (context raw seen)
-  (api-context-append-parsed context seen (api-parse raw)))
-
 (defun api-context-parse-line (raw remembered)
   (and (text-starts-with raw *api-context-kinds*)
        (if (and remembered (equal raw (car remembered)))
@@ -261,22 +258,6 @@
         nil
       (book-proofs-let* ((changed (api-measure-choices-changed-p calls formals position nil)))
         (and changed (api-measure-choices-for-position constructors formals position measured))))))
-
-(defun api-measure-choices-positions (remaining position setup measured)
-  (declare (xargs :measure (nfix remaining)))
-  (if (zp remaining)
-      nil
-    (book-proofs-let* ((choices (api-measure-choices-at position setup measured))
-                      (next (api-measure-choices-positions (1- remaining) (1+ position) setup measured)))
-      (append choices next))))
-
-(defun api-measure-choices (data measured defined)
-  (book-proofs-let* ((measured-p (api-measure-choices-measured-p (cdr data) measured))
-                    (setup (api-measure-choices-setup data defined))
-                    (choices (api-measure-choices-positions (cadddr setup) 0 setup measured)))
-    (if measured-p
-        (cons measured choices)
-      choices)))
 
 (defun api-replace-names-alias (symbol aliases)
   (table-get aliases symbol symbol))

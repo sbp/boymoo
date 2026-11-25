@@ -14,4 +14,4 @@ The `p` argument is a Tactics Library as specified in `prover/h4/sig/tactics.md`
 | `(h4-book-accumulator-accumulator-induction p formula match subject)` | The Step for `formula` using its `match` and the induction variable `subject`. |
 | `(h4-book-accumulator-reverse-accumulator-proof p formula)` | The first accumulator proof Step for `formula`, in logical argument order, or `nil`. |
 
-Every call may return a failure as its entire result. A nonapplicable mapping or induction case may return a failure `Unproved`. The last call handles `Unproved` from its attempts and propagates other failures.
+Every call may return a failure as its entire result. A nonapplicable mapping or induction case may return a failure `unproved`. The last call handles `unproved` from its attempts and propagates other failures.

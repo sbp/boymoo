@@ -105,10 +105,10 @@
           ((literal (proof-step-first step))
            (parts (proof-list-of-length literal 3)))
         (if (not (equal (car parts) *library-implies*))
-            '(:failure "InapplicableStep" "")
+            '(:failure "inapplicable-step" "")
           (proof-with-checked-results ((premise (proof-step-first evidence)))
             (if (not (equal (cadr parts) premise))
-                '(:failure "InapplicableStep" "")
+                '(:failure "inapplicable-step" "")
               (proof-with-checked-results
                   ((claim (proof-proof-fact proof *h4-tactics-implies-elimination*
                                             (list (list *library-x* premise)
@@ -132,7 +132,7 @@
 (defun h4-tactics-tactics-fact-instance-apply (n p step known)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h4-tactics-tactics-fact-instance-apply")
+      '(:failure "fuel" "h4-tactics-tactics-fact-instance-apply")
     (proof-with-checked-results ((literal (proof-step-first step)))
       (if (not (proof-is-call literal *library-implies*))
           step
@@ -235,7 +235,7 @@
        (no-first (proof-step-first no)))
     (if (and (equal yes-first no-first) (equal no-first formula))
         (proof-proof-cases (library-library-proof p) test yes no)
-      '(:failure "InapplicableStep" ""))))
+      '(:failure "inapplicable-step" ""))))
 
 (defun h4-tactics-tactics-imply-opened (proof formula premise conclusion)
   (proof-with-checked-results
@@ -257,10 +257,10 @@
   (let ((proof (library-library-proof p)))
     (proof-with-checked-results ((parts (proof-list-of-length formula 3)))
       (if (not (equal (car parts) *library-implies*))
-          '(:failure "InapplicableStep" "")
+          '(:failure "inapplicable-step" "")
         (proof-with-checked-results ((result (proof-step-first conclusion)))
           (let ((premise (cadr parts)))
-            (cond ((not (equal (caddr parts) result)) '(:failure "InapplicableStep" ""))
+            (cond ((not (equal (caddr parts) result)) '(:failure "inapplicable-step" ""))
                   ((assoc-equal *h4-tactics-implies-conclusion* (proof-proof-facts proof))
                    (let ((bindings (list (list *library-x* premise) (list *library-y* result))))
                      (proof-with-checked-results
@@ -278,7 +278,7 @@
           ((literal (proof-step-first step))
            (parts (proof-list-of-length literal 4)))
         (if (not (and (equal (car parts) *proof-if*) (equal (cadddr parts) *proof-false*)))
-            '(:failure "InapplicableStep" "")
+            '(:failure "inapplicable-step" "")
           (let ((bindings (list (list *library-x* (cadr parts)) (list *library-y* (caddr parts)))))
             (proof-with-checked-results
                 ((first (proof-proof-fact proof *h4-tactics-first-conjunct* bindings))
@@ -327,7 +327,7 @@
         ((first-claim (proof-step-first first))
          (second-claim (proof-step-first second)))
       (if (not (equal formula (proof-ite first-claim second-claim *proof-false*)))
-          '(:failure "InapplicableStep" "")
+          '(:failure "inapplicable-step" "")
         (proof-with-checked-results ((selected (proof-proof-select proof formula first)))
           (proof-proof-transport proof second selected))))))
 
@@ -352,7 +352,7 @@
         ((literal (proof-step-first negative))
          (head (proof-term-at literal 0)))
       (if (not (equal head *proof-not*))
-          '(:failure "InapplicableStep" "")
+          '(:failure "inapplicable-step" "")
         (proof-with-checked-results
             ((term (proof-term-at literal 1))
              (partition (proof-proof-nil-or-true proof term))
@@ -367,7 +367,7 @@
       (let ((term (cadr parts))
             (value (caddr parts)))
         (if (not (and (proof-is-call value *proof-quote*) (not (equal value *proof-false*))))
-            '(:failure "InapplicableStep" "")
+            '(:failure "inapplicable-step" "")
           (proof-with-checked-results
               ((nil-or-true (proof-proof-nil-or-true proof term))
                (partition (proof-proof-rewrite proof nil-or-true equality '(1 1)))
@@ -417,12 +417,12 @@
 (mutual-recursion
  (defun h4-tactics-tactics-rewrite-context-visit (n value path p term expand result)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "h4-tactics-tactics-rewrite-context-visit"))
+   (cond ((zp n) '(:failure "fuel" "h4-tactics-tactics-rewrite-context-visit"))
          ((proof-is-call value *proof-quote*) (cons value result))
          ((not (proof-compound value))
           (if (eq expand :none)
               (cons value result)
-            '(:failure "InapplicableTerm" "")))
+            '(:failure "inapplicable-term" "")))
          (t
           (proof-with-checked-results
               ((redex (h4-tactics-tactics-rewrite-context-redex
@@ -437,7 +437,7 @@
  (defun h4-tactics-tactics-rewrite-context-redex (n value path p term expand result)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "h4-tactics-tactics-rewrite-context-redex")
+       '(:failure "fuel" "h4-tactics-tactics-rewrite-context-redex")
      (let ((proof (library-library-proof p)))
        (proof-with-checked-results ((head (proof-term-at value 0)))
          (cond
@@ -469,10 +469,10 @@
                                   (h4-tactics-tactics-constant p call))))
                    (if equality
                        (cons equality (cdr args))
-                     '(:failure "InapplicableTerm" ""))))))))))))
+                     '(:failure "inapplicable-term" ""))))))))))))
  (defun h4-tactics-tactics-rewrite-context-arguments (n args path index p term expand result)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "h4-tactics-tactics-rewrite-context-arguments"))
+   (cond ((zp n) '(:failure "fuel" "h4-tactics-tactics-rewrite-context-arguments"))
          ((endp args) (cons nil result))
          (t
           (proof-with-checked-results
@@ -489,12 +489,6 @@
 
 (defun h4-tactics-tactics-evaluate-closed (p term expand)
   (h4-tactics-tactics-rewrite-context p term expand nil))
-
-(defun h4-tactics-tactics-logical-equation (p function)
-  (proof-with-checked-results
-      ((equation (proof-proof-fact (library-library-proof p) function nil))
-       (body (proof-rewritten-term equation)))
-    (h4-tactics-tactics-rewrite-context p body :none equation)))
 
 (defun h4-tactics-request-p (result)
   (and (consp result) (eq (car result) :h4-tactics-request)))
@@ -609,7 +603,7 @@
  (defun h4-tactics-tactics-normalize-visit (n value p known expand rules visit-state)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "h4-tactics-tactics-normalize-visit")
+       '(:failure "fuel" "h4-tactics-tactics-normalize-visit")
      (let* ((ordered (eq (caar visit-state) :h4-tactics-ordered-provider))
             (previous (and ordered (assoc-equal value (cdr visit-state)))))
        (if previous
@@ -623,7 +617,7 @@
  (defun h4-tactics-tactics-normalize-visit-value (n value p known expand rules visit-state)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "h4-tactics-tactics-normalize-visit-value")
+       '(:failure "fuel" "h4-tactics-tactics-normalize-visit-value")
      (let ((proof (library-library-proof p))
            (rule (assoc-equal value rules))
            (negative (table-get known (proof-neg value) nil)))
@@ -662,7 +656,7 @@
  (defun h4-tactics-tactics-normalize-if (n value p known expand rules visit-state)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "h4-tactics-tactics-normalize-if")
+       '(:failure "fuel" "h4-tactics-tactics-normalize-if")
      (let ((proof (library-library-proof p)))
        (h4-tactics-with-normalization-results
            ((parts (proof-list-of-length (cdr value) 3))
@@ -686,7 +680,7 @@
  (defun h4-tactics-tactics-normalize-call (n value p known expand rules visit-state)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "h4-tactics-tactics-normalize-call")
+       '(:failure "fuel" "h4-tactics-tactics-normalize-call")
      (let ((proof (library-library-proof p)))
        (h4-tactics-with-normalization-results
            ((arguments (h4-tactics-tactics-normalize-arguments
@@ -708,7 +702,7 @@
              (cons chained (cdr rest))))))))
  (defun h4-tactics-tactics-normalize-arguments (n args index step value p known expand rules visit-state)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "h4-tactics-tactics-normalize-arguments"))
+   (cond ((zp n) '(:failure "fuel" "h4-tactics-tactics-normalize-arguments"))
          ((endp args) (cons step visit-state))
          (t
           (h4-tactics-with-normalization-results
@@ -741,4 +735,4 @@
             (cond (premise (proof-proof-transport proof premise equality))
                   ((and (proof-is-call value *proof-quote*) (not (equal value *proof-false*)))
                    (h4-tactics-tactics-non-nil p equality))
-                  (t '(:failure "InapplicableTerm" "")))))))))
+                  (t '(:failure "inapplicable-term" "")))))))))

@@ -54,8 +54,12 @@ trap 'exit 1' HUP INT TERM
 . checker/quote.sh
 : > "$scratch/empty"
 : > "$scratch/library.aids"
+# The aids of an input "library line N" are the measures that ACL2 stores for
+# the library, which sh review/termination/run.sh writes.
 measures=build/termination/library.measures
-if [ -f "$measures" ]; then
+if grep -q "^library line " "$expected"; then
+    [ -f "$measures" ] ||
+        fail "no $measures: run sh review/termination/run.sh first"
     awk '{ if ($0 !~ / "(declared|default)"\)$/) sub(/\)$/, " \"default\")")
            print }' "$measures" > "$scratch/library.aids"
 fi

@@ -9,5 +9,3 @@ A Reader is the source and a position, and stays a plain value that a caller can
 The reader recurs with counters, since a datum can be nested to any depth; the writer recurs on the datum itself and needs none. The count of 1,000,000 bounds the nesting and the number of members of one list together.
 
 An integer, a numerator or a denominator of more than 4,300 digits is refused with the kind `"value"`. The limit is `*reader-decimal-limit*`.
-
-`reader-reader-rational` takes a Reader and does not use it.

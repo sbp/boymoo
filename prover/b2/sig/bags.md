@@ -24,10 +24,6 @@ formula.
 | `(b2-bags-reduced-premise lib premise evidence unfold rules)` | A premise Step, with ordered lists of evidence Steps, unfold terms or names, and rule Steps. Pass `nil` for omitted rules. Returns the possibly reduced premise Step. |
 | `(b2-bags-member-delete lib formula)` | The membership after deletion formula. Returns its Step. |
 | `(b2-bags-delete-commutes lib formula)` | The commutativity of deletion formula. Returns its Step. |
-| `(b2-bags-subbag-delete lib formula)` | The subbag after deletion formula. Returns `(cons step lib)`. |
-| `(b2-bags-subbag-tail lib name formula)` | The name symbol and formula for a subbag tail case. Returns `(cons step lib)`. |
-| `(b2-bags-intersection-bound lib name formula)` | The name symbol and formula for an intersection bound. Returns `(cons step lib)`. |
 | `(b2-bags-intersection-cons lib present)` | A positive membership Step for the intersection term. Returns `(cons step lib)` proving the term is a cons. |
 | `(b2-bags-append-membership lib formula)` | The append membership formula. Returns its Step. |
-| `(b2-bags-fringe-membership lib formula)` | The fringe membership formula. Returns `(cons step lib)`. |
 | `(b2-bags-prove-bag lib name formula)` | The theorem name symbol and formula. Returns `(cons step lib)` for the proof chosen by the name. |

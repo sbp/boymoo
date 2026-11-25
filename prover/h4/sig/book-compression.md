@@ -37,7 +37,6 @@ return their respective fields.
 - `h4-book-compression-singleton-sum-tail-type`
 - `h4-book-compression-singleton-sum-result`
 - `h4-book-compression-singleton-sum-tail-exponent`
-- `h4-book-compression-singleton-sum-raw`
 - `h4-book-compression-singleton-sum-shapes`
 - `h4-book-compression-singleton-sum-projections`
 - `h4-book-compression-singleton-sum-start`

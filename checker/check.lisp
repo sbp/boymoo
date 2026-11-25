@@ -402,6 +402,57 @@
           (t (proof-step line ctx w)))))
 
 ; ---------------------------------------------------------------------------
+; The lines of an input, read from its string.
+
+; The K characters of the string S before the position J, followed by ACC.
+(defun string-chars (s j k acc)
+  (declare (xargs :guard (and (stringp s) (natp j) (natp k) (<= k j)
+                              (<= j (length s)) (character-listp acc))
+                  :verify-guards nil
+                  :measure (acl2-count k)))
+  (if (zp k)
+      acc
+    (string-chars s (+ -1 j) (+ -1 k) (cons (char s (+ -1 j)) acc))))
+
+; The lines of the string S from the position I on, as LINES-OF gives
+; them, but each written (S START . END), for the characters of S from
+; START up to END: each line with its line feed, and last, if S does not
+; end with a line feed, what follows the last line feed.  START is where
+; the line that holds I begins, K is the number of characters of S from I
+; on, and ACC holds the lines before START, the last first.  Only CHAR
+; reads S, and every line shares it, so that an input is held once, as its
+; string, and RUN makes a line a list of characters only when it reads
+; that line (LINE-CHARS).
+(defun string-lines (s start i k acc)
+  (declare (xargs :guard (and (stringp s) (natp start) (natp i) (natp k)
+                              (<= start i) (equal (+ i k) (length s))
+                              (true-listp acc))
+                  :verify-guards nil
+                  :measure (acl2-count k)))
+  (if (zp k)
+      (rev (if (< start i) (cons (cons s (cons start i)) acc) acc))
+    (if (equal (char s i) #\Newline)
+        (string-lines s (+ 1 i) (+ 1 i) (+ -1 k)
+                      (cons (cons s (cons start (+ 1 i))) acc))
+      (string-lines s start (+ 1 i) (+ -1 k) acc))))
+
+; The characters of a line: of a line (S START . END) of STRING-LINES,
+; those of S from START up to END; and anything else is taken as the list
+; of its characters already.
+(defun line-chars (x)
+  (declare (xargs :guard t :verify-guards nil))
+  (if (and (consp x) (stringp (car x)) (consp (cdr x))
+           (natp (car (cdr x))) (natp (cdr (cdr x)))
+           (<= (car (cdr x)) (cdr (cdr x)))
+           (<= (cdr (cdr x)) (length (car x))))
+      (string-chars (car x) (cdr (cdr x)) (- (cdr (cdr x)) (car (cdr x))) nil)
+    x))
+
+(defun text-lines (text)
+  (declare (xargs :guard (stringp text) :verify-guards nil))
+  (string-lines text 0 0 (length text) nil))
+
+; ---------------------------------------------------------------------------
 ; One pair of statements and proofs (spec/formats.md, section 7).
 ; SN and PN count the lines read from each input so far.
 
@@ -419,7 +470,8 @@
          (pname (if library "library-proofs" "proofs")))
     (if (equal ctx nil)
         (if (consp slines)
-            (let ((line (parse-line (car slines) *statement-words* (w-pkgs w))))
+            (let* ((text (car slines))
+                   (line (parse-line (line-chars text) *statement-words* (w-pkgs w))))
               (if line
                   (let ((r (if (and library (not (consp plines)))
                                (admit line input w)
@@ -433,7 +485,8 @@
               (rejection pname (+ 1 pn) "a line of the proofs after the statements are done")
             w))
       (if (consp plines)
-          (let ((line (parse-line (car plines) *proof-words* (w-pkgs w))))
+          (let* ((text (car plines))
+                 (line (parse-line (line-chars text) *proof-words* (w-pkgs w))))
             (if line
                 (let ((r (proof-line line ctx library w)))
                   (if (stringp r)
@@ -491,10 +544,10 @@
   (let ((g (load-ground (lines-of ground) (initial-world))))
     (if (equal g :bad)
         (list "the ground theory could not be read" "")
-      (let ((w (run (lines-of library) 0 (lines-of library-proofs) 0 nil :library g)))
+      (let ((w (run (text-lines library) 0 (text-lines library-proofs) 0 nil :library g)))
         (if (rejected-p w)
             (rejection-verdict w)
-          (let ((w (run (lines-of statements) 0 (lines-of proofs) 0 nil :statements w)))
+          (let ((w (run (text-lines statements) 0 (text-lines proofs) 0 nil :statements w)))
             (if (rejected-p w)
                 (rejection-verdict w)
               (list (verdict w) ""))))))))

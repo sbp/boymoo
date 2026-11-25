@@ -89,7 +89,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((zp n) '(:failure "Fuel" "b2-lists-sum-append-by-value"))
+     ((zp n) '(:failure "fuel" "b2-lists-sum-append-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((parts (proof-list-of-length (cdr value) 3))

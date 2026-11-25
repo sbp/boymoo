@@ -224,7 +224,7 @@
 (defun t3-book-evaluators-constructor-form (n lib value evidence)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-evaluators-constructor-form")
+      '(:failure "fuel" "t3-book-evaluators-constructor-form")
     (let ((proof (library-library-proof lib)))
       (proof-with-checked-results
        ((equation (t3-book-evaluators-normalize lib value evidence nil))
@@ -516,7 +516,7 @@
     (claim (proof-step-first result)))
    (if (equal claim equation)
        (t3-book-lemmas-implication lib formula result)
-     '(:failure "Unsupported" ""))))
+     '(:failure "unsupported" ""))))
 
 (defun t3-book-evaluators-shape-arities (declarations)
   (if (endp declarations)

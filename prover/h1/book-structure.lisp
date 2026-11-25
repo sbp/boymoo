@@ -11,7 +11,7 @@
         (proof-sym "HONS-ASSOC-EQUAL" "ACL2")))
 
 (defun h1-book-structure-unproved-p (result)
-  (and (failure-p result) (equal (cadr result) "Unproved")))
+  (and (failure-p result) (equal (cadr result) "unproved")))
 
 (defun h1-book-structure-container-case (proof application known)
   (let ((core (h1-tactics-prover-proof proof))
@@ -20,7 +20,7 @@
         ((equation (proof-proof-unfold core application))
          (branch (proof-rewritten-term equation)))
       (if (not (proof-is-call branch *proof-if*))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((test (proof-term-at branch 1))
              (known-literal (proof-step-first known)))
@@ -34,14 +34,14 @@
                    (list *h1-book-structure-atom* *h1-book-structure-endp*
                          *proof-not*))))
               (if (not reduced)
-                  '(:failure "Unproved" "")
+                  '(:failure "unproved" "")
                 (proof-with-checked-results
                     ((value (proof-rewritten-term reduced)))
                   (if (member-equal value (list *proof-true* *proof-false*))
                       (proof-with-checked-results
                           ((tested (h1-propositions-computed-test lib reduced)))
                         (h1-propositions-select-value lib equation tested))
-                    '(:failure "Unproved" "")))))))))))
+                    '(:failure "unproved" "")))))))))))
 
 (defun h1-book-structure-projected-members (proof premise goal selector strip alist cons-evidence)
   (let* ((core (h1-tactics-prover-proof proof))
@@ -52,7 +52,7 @@
         ((projected (h1-book-structure-container-case proof (cadr premise) cons-evidence))
          (projection (proof-rewritten-term projected)))
       (if (not (equal projection (list *proof-cons* head-value tail-values)))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((assumed (h1-arithmetic-proof-assume core premise t))
              (members (proof-proof-rewrite core assumed projected '(1 1)))
@@ -69,7 +69,7 @@
           (if (not (equal value (proof-ite (list (car goal) head-value)
                                            (list (car premise) tail-values)
                                            *proof-false*)))
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (proof-with-checked-results
                 ((opened (proof-proof-rewrite core members typed '(1))))
               (h1-propositions-propositional-proof-conjunct lib opened))))))))
@@ -100,7 +100,7 @@
          (branch (proof-rewritten-term equation)))
       (if (not (and (proof-is-call branch *proof-if*)
                     (equal (cddr branch) (list (list *library-car* alist) tail-call))))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((yes (h1-book-structure-projected-branch proof equation (cadr branch) t
                                                      (cadr goal) (car members)))
@@ -122,7 +122,7 @@
          (absent (h1-book-structure-container-case proof application atom-evidence))
          (right (proof-rewritten-term absent)))
       (if (not (equal right *proof-false*))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((refl (h1-propositions-propositional-proof-reflexive lib (cadr goal)))
              (rewritten (proof-proof-rewrite core refl absent '(1 2 1)))
@@ -141,7 +141,7 @@
         (if (or (not (equal (cadr premise) (list strip alist)))
                 (proof-compound alist)
                 (member-equal alist (h1-tactics-subterms key)))
-            '(:failure "Unproved" "")
+            '(:failure "unproved" "")
           (let* ((test (list *proof-consp* alist))
                  (measure (list *library-count* alist))
                  (pairs (list (list alist (list *library-cdr* alist)))))
@@ -160,7 +160,7 @@
 
 (defun h1-book-structure-projected-association (proof formula)
   (if (not (proof-is-call formula *library-implies*))
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (proof-with-checked-results ((parts (proof-list-of-length formula 3)))
       (let* ((premise (cadr parts))
              (goal (caddr parts))
@@ -169,20 +169,20 @@
         (cond
          ((or (not (assoc-equal (h1-tactics-call-head premise) definitions))
               (not (equal (len premise) 2)))
-          '(:failure "Unproved" ""))
+          '(:failure "unproved" ""))
          ((integerp goal) '(:failure "failure" ""))
          ((not (equal (len goal) 2))
-          '(:failure "Unproved" ""))
+          '(:failure "unproved" ""))
          (t
           (let* ((projection (cadr goal))
                  (selector (h1-tactics-call-head projection)))
             (if (not (assoc-equal selector *h1-book-structure-strip*))
-                '(:failure "Unproved" "")
+                '(:failure "unproved" "")
               (proof-with-checked-results ((application (proof-term-at projection 1)))
                 (if (member-equal (h1-tactics-call-head application) *h1-book-structure-lookup*)
                     (h1-book-structure-projected-application proof formula premise goal
                                                             selector application)
-                  '(:failure "Unproved" "")))))))))))
+                  '(:failure "unproved" "")))))))))))
 
 (defun h1-book-structure-nonempty-first-row-witness (proof test row equation)
   (proof-with-checked-results ((branch (proof-rewritten-term equation)))
@@ -210,7 +210,7 @@
 
 (defun h1-book-structure-nonempty-first-row (proof root tests cons-evidence)
   (if (endp tests)
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (proof-with-checked-results ((signed (proof-list-of-length (car tests) 2)))
       (let* ((test (car signed))
              (core (h1-tactics-prover-proof proof)))
@@ -235,16 +235,16 @@
          (row (list *library-car* variable)))
     (if (not (and (assoc-equal (h1-tactics-call-head actual) (proof-proof-definitions core))
                   (equal (cdr actual) (list variable))))
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
           ((cons-evidence (h1-arithmetic-proof-assume core (list *proof-consp* variable) t))
            (advancement (h1-book-structure-container-case proof actual cons-evidence))
            (result (proof-rewritten-term advancement)))
         (if (not (proof-is-call result *proof-cons*))
-            '(:failure "Unproved" "")
+            '(:failure "unproved" "")
           (proof-with-checked-results ((head (proof-term-at result 1)))
             (if (not (equal head (list *library-cdr* row)))
-                '(:failure "Unproved" "")
+                '(:failure "unproved" "")
               (proof-with-checked-results
                   ((refl (h1-propositions-propositional-proof-reflexive lib (list *library-car* actual)))
                    (first (h1-propositions-rewrite-value lib refl advancement))
@@ -287,7 +287,7 @@
 
 (defun h1-book-structure-tuple-induction-terms (proof formula terms openings)
   (cond
-   ((endp terms) '(:failure "Unproved" ""))
+   ((endp terms) '(:failure "unproved" ""))
    ((not (member-equal (h1-tactics-call-head (car terms)) openings))
     (h1-book-structure-tuple-induction-terms proof formula (cdr terms) openings))
    (t

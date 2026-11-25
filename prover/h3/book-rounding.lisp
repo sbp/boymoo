@@ -88,9 +88,6 @@
        (upper (proof-proof-rewrite proof (caddr interval) result '(1 2 2))))
     (cons (list whole lower upper) lib)))
 
-(defun h3-book-rounding-fl-interval (lib rational)
-  (h3-book-rounding-checked-pair (h3-book-rounding-fl-interval-with-library lib rational)))
-
 (defun h3-book-rounding-rewrite-ratio-operands
     (proof operands ratio cancellation positive position equation)
   (if (endp operands)
@@ -135,10 +132,6 @@
        (rewritten (proof-proof-rewrite proof given equation (if weak '(1 1) '(1))))
        (step (proof-proof-tidy proof rewritten)))
     (cons step lib)))
-
-(defun h3-book-rounding-multiply-ratio-bound (lib given n-type d-type signs)
-  (h3-book-rounding-checked-pair
-   (h3-book-rounding-multiply-ratio-bound-with-library lib given n-type d-type signs)))
 
 (defun h3-book-rounding-floor-of-nonnumeric-or-complex
     (lib call not-rational d-type d-nonzero)
@@ -277,9 +270,6 @@
        (step (proof-proof-chain proof inner (list shift back))))
     (cons step lib)))
 
-(defun h3-book-rounding-floor-halving (lib)
-  (h3-book-rounding-checked-pair (h3-book-rounding-floor-halving-with-library lib)))
-
 (defun h3-book-rounding-fl-at-integer (lib integer)
   (proof-with-checked-results
       ((value (h3-book-rounding-step-at integer 1))
@@ -387,10 +377,6 @@
           step)
         lib))
 
-(defun h3-book-rounding-guarded-step (lib guard step)
-  (h3-book-rounding-checked-pair
-   (h3-book-rounding-guarded-step-with-library lib guard step)))
-
 (defun h3-book-rounding-halving-lemma (lib)
   (let ((name (proof-sym (string-append "SELF-" *h3-book-rounding-halving*) "ACL2"))
         (proof (library-library-proof lib)))
@@ -463,6 +449,3 @@
             (h3-book-rounding-guarded-step-with-library lib guard step)
           (h3-book-rounding-halving-goal lib guard goal))))))
 
-(defun h3-book-rounding-rounding-theorem (lib formula)
-  (h3-book-rounding-checked-pair
-   (h3-book-rounding-rounding-theorem-with-library lib formula)))

@@ -464,7 +464,7 @@
   (let ((proof (library-library-proof library)))
     (cond
      ((not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-sorting-merge-membership-by-value"))
+      '(:failure "fuel" "b2-sorting-merge-membership-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))

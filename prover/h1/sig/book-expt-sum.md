@@ -22,4 +22,4 @@ in `prover/sig/proof.md`. `tests` is an ordered list of signed tests
 | `(h1-book-expt-sum-zero-of-sum proof normalizer left right)` | `(cons step normalizer)` with the Step deciding whether the sum vanishes and the resulting Algebra. | A failure in place of the pair. |
 | `(h1-book-expt-sum-power-on-zero-base proof base exponent zero-base case normalizer)` | `(cons step normalizer)` with the evaluated power equation and the resulting Algebra. `case` decides whether the exponent is zero. | A failure in place of the pair. |
 | `(h1-book-expt-sum-zero-base-product proof goal base left right tests)` | A Step proving `goal` on a zero base, with cases for whether the exponents `left` and `right` vanish. | A failure in place of the Step. |
-| `(h1-book-expt-sum-power-addition proof formula)` | A Step proving the addition formula, including its guarded variants. | A failure in place of the Step, including `Unproved` when the tactic does not apply. |
+| `(h1-book-expt-sum-power-addition proof formula)` | A Step proving the addition formula, including its guarded variants. | A failure in place of the Step, including `unproved` when the tactic does not apply. |

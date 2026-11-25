@@ -167,7 +167,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((base (library-library-proof (h2-search-search-library proof))))
     (cond
-     ((zp n) '(:failure "Fuel" "h2-sets-set-equivalence-by-value"))
+     ((zp n) '(:failure "fuel" "h2-sets-set-equivalence-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))

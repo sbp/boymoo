@@ -18,9 +18,7 @@ A library context is `(:h4-api-library-context source world)`. `source` is the l
 | `(h4-api-library-context source)` | List of library lines. Returns the initialized library context. | A failure from initialization, parsing, or admission. |
 | `(h4-api-core-support)` | Returns `(entries facts definitions)` for the core support. Entries follow declaration order, facts follow the corresponding entry names, and definitions follow definition order. | A failure from building support. |
 | `(h4-api-support-selection world proofs source)` | Tactics world, conclusion Steps, and final entry source. Returns the relevant auxiliary entries in the world's entry order. | A failure from writing an entry name. |
-| `(h4-api-finish world statement kind arguments proofs inherited)` | Tactics world, parsed Statement, entry kind, header arguments after the name, conclusion Steps, and shared prelude. Returns `(lemmas entry)` with the selected and renamed support and final entry. | A failure from writing or renaming proof text. |
 | `(h4-api-install-core-support world)` | Tactics world. Returns the world extended with core support. | A failure from core support or a failed assertion. |
-| `(h4-api-pointwise-support definition necessity)` | The FN-EQUAL definition `(formals body)` and the necessity fact clause. Returns `(entry name clause)` for the pointwise lemma. | A failure from building support. |
 | `(h4-api-use-core-support world)` | Tactics world. Returns the world with core support, and the pointwise lemma when available. | A failure from core support or a failed assertion. |
 | `(h4-api-warrant-support definitions)` | A list of `(name formals body)` definitions. Returns `(facts definitions filters shared)` for the warrant prelude. | A failure from building or writing support. |
 | `(h4-api-prepare-warrant world formula)` | Tactics world and warrant theorem formula. Returns `(cons shared world)` with the extended world. | A failure from building support or a failed assertion. |
@@ -36,30 +34,6 @@ A library context is `(:h4-api-library-context source world)`. `source` is the l
 
 The interface's Tactics world is `(:h4-api-world library functions choices filters)`. `library` is the underlying H4 Tactics Library. `functions` lists constrained and chosen function names in first-occurrence order. `choices` is an alist of `(name . fields)` entries in declaration order. `filters` is the list of filter names for a prepared warrant. `h4-api-make-world` takes the four fields in order. The functions `h4-api-world-library`, `h4-api-world-functions`, `h4-api-world-choices`, and `h4-api-world-filters` take a world and return their named field. `h4-run-entry-sources` receives the underlying Library.
 
-For a shared prelude, each alias is the two-element list `(old new)` from `h4-api-encoding-owned-entries`. `h4-api-finish` passes those aliases to that function and uses an alist of `(old . new)` entries for `h4-api-encoding-rename`.
-
 `*h4-api-prefix*` is the exported name prefix, `"H4"`. The warrant certificate's emitter is the operation in `badge-table.md` that appends a lemma entry and adds its fact in emission order.
 
-The dependency traversal may return `Fuel` on exhaustion or propagate a failure for a malformed Step.
-
-| Prepared call | Arguments and result | Failure |
-|---|---|---|
-| `(h4-api-core-support-from-ground ground)` | Takes the initial H4 world and returns the core support tuple. | As for `h4-api-core-support`. |
-| `(h4-api-use-core-support-prepared world ground core)` | Takes a working world, the initial H4 world and the core support tuple. Installs core and any applicable pointwise support. | As for `h4-api-use-core-support`. |
-| `(h4-api-build-proof-ready world statement measures hints)` | Takes a world with core and pointwise support installed, a parsed Statement and the relevant aid alists. Searches and returns `(lemmas entry)` on success. | A failure from building or writing the proof. |
-| `(h4-api-statement-known-p world statement)` | Returns a true value when the parsed Statement's name is already a fact or definition in the world. | None. |
-| `(h4-api-relevant-measures definitions measures relevant)` | Takes parsed definition triples, the measure alist and an accumulator alist. Returns the accumulator with the measures for the given definitions, in definition order. | A failure for a malformed definition triple. |
-| `(h4-api-install-core-support-prepared world core)` | Takes a working world and the core support tuple. Installs the core support. | As for `h4-api-install-core-support`. |
-| `(h4-api-pointwise-key world)` | Returns `(definition necessity)` if both prerequisites for the pointwise lemma are present, or `nil`. The caller supplies a world with core support installed. | None. |
-| `(h4-api-pointwise-support-from-ground definition necessity ground core)` | Builds pointwise support from the two prerequisites, the ground world and the core support tuple. Pass `:unprepared` to construct core support as needed. | As for `h4-api-pointwise-support`. |
-| `(h4-api-install-pointwise-support world support)` | Installs a pointwise support tuple. Catches the same optional failures as `h4-api-use-core-support`. | A propagated failure or a name collision. |
-| `(h4-api-warrant-input world formula)` | Checks the warrant prerequisites and returns the ordered definitions used to build warrant support. | A failed assertion or a failure from reading the formula or definitions. |
-| `(h4-api-warrant-support-from-ground definitions ground)` | Takes the ordered warrant definitions and the ground world and builds warrant support. | As for `h4-api-warrant-support`. |
-| `(h4-api-install-warrant-support world support)` | Installs warrant support, returning `(cons shared world)`. | A name collision or a failure supplied in `support`. |
-| `(h4-api-special-plan statement)` | Returns `(cons recipe formula)` for a recognized theorem or `nil`. | A failure from reading the formula or selecting the recipe. |
-| `(h4-api-special-with-plan world statement plan)` | Proves a parsed Statement with the supplied plan. Returns `(lemmas entry)`. | As for `h4-api-special`. |
-| `(h4-api-special-prepared statement plan prepared)` | As for `h4-api-special-with-plan`, with the `(cons shared world)` from warrant preparation or an empty prelude paired with the world. | A failure from the supplied preparation, proof or output. |
-| `(h4-api-build-proof-ready-with-templates world statement measures hints tables)` | As for `h4-api-build-proof-ready`, with the template tables of `book-tactics.md` for rule search. | As for `h4-api-build-proof-ready`. |
-| `(h4-api-prepare-core-installation core)` | Returns the core tuple with distinct fact keys and the ordered definitions to install as a fourth field. `h4-api-install-core-support-prepared` accepts this form on an admitted world. | Propagates a failure in the core tuple. |
-| `(h4-api-build-proof-ready-with-cache world statement measures hints tables cache)` | As for `h4-api-build-proof-ready-with-templates`, with the ownership cache of `api-encoding.md`. Returns `(cons result cache2)`. | A failure can be the result in the returned pair. |
-| `(h4-api-special-prepared-with-cache statement plan prepared cache)` | As for `h4-api-special-prepared`, with the ownership cache. Returns `(cons result cache2)`. | A failure can be the result in the returned pair. |
+The dependency traversal may return `fuel` on exhaustion or propagate a failure for a malformed Step.

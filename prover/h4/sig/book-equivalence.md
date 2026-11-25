@@ -31,7 +31,7 @@ keeping the first occurrence. Inverse triples have the form
 
 Unless stated otherwise, proof results can be a failure from search, term
 operations or proof construction. An open-ended recursive search can also
-return `Fuel`. Where an evaluation updates a search, a successful
+return `fuel`. Where an evaluation updates a search, a successful
 ordinary result is `(cons result updated-object)`, where that object is the
 Equivalence or the BookSearch passed in. A failure is the entire result.
 In proof results, `nil` indicates an absent Step.
@@ -40,24 +40,12 @@ In proof results, `nil` indicates an absent Step.
 |---|---|---|
 | `h4-book-equivalence-positions` | Term, starting place (default `nil`) | List of `(subterm place)` pairs, root first, then arguments in source order, excluding descendants of quotes and function positions. |
 | `h4-book-equivalence-inverse-operations` | Rule list | List of inverse triples, in rule order, trying the two sides of each rule and the two operand orders in source order. Duplicates are retained. May return a failure on a malformed Rule. |
-| `h4-book-equivalence-equivalence-init` | BookSearch, relation symbol, library fact name, premise Step list | Equivalence whose laws come from the named fact. Returns `Unproved` if its reflexivity law has a different relation. |
+| `h4-book-equivalence-equivalence-init` | BookSearch, relation symbol, library fact name, premise Step list | Equivalence whose laws come from the named fact. Returns `unproved` if its reflexivity law has a different relation. |
 | `h4-book-equivalence-equivalence-reverse` | Equivalence, relation Step | Step for the relation with the operands exchanged. |
 | `h4-book-equivalence-equivalence-compose` | Equivalence, two relation Steps | Step for the relation between the outside operands. |
-| `h4-book-equivalence-equivalence-at-root` | Equivalence, term, size bound | Ordered list of Steps with the term on the left, paired with the updated Equivalence. |
-| `h4-book-equivalence-equivalence-replay-rewrite` | Equivalence, Rule, binding map | Step or `nil`, paired with the updated Equivalence. |
-| `h4-book-equivalence-equivalence-lift` | Equivalence, context term, place, relation Step | Step or `nil`, paired with the updated Equivalence. |
-| `h4-book-equivalence-equivalence-rewrite` | Equivalence, left term, right term | Step paired with the updated Equivalence. Returns `Unproved` when rewriting fails. |
 | `h4-book-equivalence-equivalence-follow` | Equivalence, path map, left term, right term | Step that composes the path. A path map is an insertion-ordered alist from a term to `(predecessor equality-step)`. The initial term has a `nil` value. |
-| `h4-book-equivalence-equivalence-cancel-factor` | Equivalence, left term, right term, evidence | Step paired with the updated Equivalence. Pass `:none` for the default evidence from the Equivalence and a Step list, including `nil` for an empty list, for explicit evidence. Returns `Unproved` when cancellation fails. |
-| `h4-book-equivalence-equivalence-prove` | Equivalence, left term, right term | Step paired with the updated Equivalence. Returns `Unproved` when all tactics fail. |
-| `h4-book-equivalence-equivalence-inverse-goal` | Equivalence, left term, right term | Step paired with the updated Equivalence. Returns `Unproved` when no inverse law applies. |
-| `h4-book-equivalence-equivalence-cancel-left-inverse` | Equivalence, product relation Step, inverse symbol, identity term | Step paired with the updated Equivalence. Returns `Unproved` when lifting fails. |
-| `h4-book-equivalence-equivalence-inverse-bridge` | Equivalence, left term, right term | Step paired with the updated Equivalence. Returns `Unproved` when the search fails. |
-| `h4-book-equivalence-equivalence-establish-guard` | Equivalence, guard term | Step paired with the updated Equivalence. Returns `Unproved` if no guard proof is found. |
-| `h4-book-equivalence-equivalence-guarded` | Equivalence, left term, right term | Step paired with the updated Equivalence. Returns `Unproved` if no guard can be discharged. |
 | `h4-book-equivalence-equivalence-true-value` | Equivalence, relation Step | Equality Step equating the relation with quoted T. |
-| `h4-book-equivalence-equivalence-equality` | BookSearch, relation symbol, law fact name, premise Step list, left and right relation calls | Equality Step paired with the updated BookSearch. |
-| `h4-book-equivalence-setoid-proof` | BookSearch, formula term | Step or `nil`, paired with the updated BookSearch. `Unproved` and `InapplicableStep` in the equivalence proof or final implication leave the goal open. |
+| `h4-book-equivalence-setoid-proof` | BookSearch, formula term | Step or `nil`, paired with the updated BookSearch. `unproved` and `inapplicable-step` in the equivalence proof or final implication leave the goal open. |
 
 The Equivalence constructor appends a lookup scope to the fields above.
 `(h4-book-equivalence-equivalence-lookup-scope equivalence)` returns it

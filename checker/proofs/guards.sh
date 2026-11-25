@@ -28,7 +28,8 @@ fi
 sh checker/build.sh || fail 'checker/build.sh'
 
 statements=build/checker/checker.statements
-python3 -B checker/closed.py spec/ground.txt "$statements" || fail 'closure of the checker'
+python3 -B checker/closed.py spec/ground.txt build/checker/library.statements "$statements" ||
+    fail 'closure of the checker'
 python3 -B - "$statements" "$dir/guards-functions.txt" "$dir/guards-ground.txt" <<'PY' || fail 'checker statements'
 import hashlib
 import sys
@@ -53,9 +54,13 @@ with open(sys.argv[2], "w") as functions:
     for name in definitions(data):
         print(write(name).decode("ascii"), file=functions)
 
-with open("spec/ground.txt", "rb") as ground, open(sys.argv[3], "w") as allowed:
-    for name in definitions(ground.read(), primitives=True):
-        print(write(name).decode("ascii"), file=allowed)
+# The primitives and the functions of the ground theory and of the
+# checker's library.
+with open(sys.argv[3], "w") as allowed:
+    for path in ("spec/ground.txt", "build/checker/library.statements"):
+        with open(path, "rb") as text:
+            for name in definitions(text.read(), primitives=True):
+                print(write(name).decode("ascii"), file=allowed)
 PY
 
 for book in $books; do

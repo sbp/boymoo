@@ -74,7 +74,7 @@
       result
     (let ((value (car result)))
       (if (and (failure-p value)
-               (not (and keep-unproved (equal (cadr value) "Unproved"))))
+               (not (and keep-unproved (equal (cadr value) "unproved"))))
           value
         (cons value (cadr result))))))
 
@@ -187,16 +187,6 @@
        (premise (proof-term-at literal 1))
        (evidence (proof-proof-prove proof premise (list proof-string namespace) nil)))
     (proof-proof-modus-ponens proof fact evidence)))
-
-(defun h2-book-recipes-run-inverse (execution name proof-string package namespace)
-  (h2-book-recipes-with-result library (h2-book-recipes-operation execution :library nil)
-    (cons (h2-book-recipes-inverse-step (library-library-proof library)
-                                      name proof-string package namespace)
-          execution)))
-
-(defun h2-book-recipes-injective-intern-inverse (name proof-string proof package namespace)
-  (h2-book-recipes-output
-   (h2-book-recipes-run-inverse (list proof) name proof-string package namespace) nil))
 
 (defun h2-book-recipes-run-injective-intern (execution formula)
   (h2-book-recipes-checked
@@ -419,7 +409,7 @@
 (defun h2-book-recipes-split-array-fields (n proof step)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h2-book-recipes-split-array-fields")
+      '(:failure "fuel" "h2-book-recipes-split-array-fields")
     (proof-with-checked-results ((literal (proof-step-first step)))
       (if (not (proof-is-call literal *proof-if*))
           (list step)
@@ -777,25 +767,6 @@
 
 (defun h2-book-recipes-focused-proof-with-replies (proof name formula replies)
   (h2-book-recipes-output (h2-book-recipes-run-focused-proof (cons proof replies) name formula) t))
-
-(defun h2-book-recipes-call-with-replies (proof recipe args replies)
-  (let* ((execution (cons proof replies))
-         (result
-          (case recipe
-            (:focused-proof (h2-book-recipes-run-focused-proof execution (car args) (cadr args)))
-            (:append-equation (h2-book-recipes-run-append-equation execution (car args)))
-            (:append-recognizer (h2-book-recipes-run-append-recognizer execution (car args)))
-            (:injective-intern (h2-book-recipes-run-injective-intern execution (car args)))
-            (:injective-intern-inverse
-             (h2-book-recipes-run-inverse execution (nth 0 args) (nth 1 args) (nth 2 args) (nth 3 args)))
-            (:make-list-recognizer (h2-book-recipes-run-make-list-recognizer execution (car args)))
-            (:gentle-take (h2-book-recipes-run-gentle-take execution (car args)))
-            (:remove-one (h2-book-recipes-run-remove-one execution (car args) (cadr args)))
-            (:array-fields (h2-book-recipes-run-array-fields execution (car args)))
-            (:compressed-header (h2-book-recipes-run-compressed-header execution))
-            (:array-proof (h2-book-recipes-run-array-proof execution (car args) (cadr args)))
-            (otherwise (cons '(:failure "failure" "") execution)))))
-    (h2-book-recipes-output result t)))
 
 ; These dispatch forms expand where the book prover answers a request.
 (defmacro h2-book-recipes-search-call (search recipe args)

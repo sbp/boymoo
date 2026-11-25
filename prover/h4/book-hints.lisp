@@ -85,7 +85,7 @@
             (proof-quote term)
           (proof-with-checked-results ((name (proof-term-at term 2)))
             (if (text-starts-with name "*")
-                '(:failure "UnusableHint" "")
+                '(:failure "unusable-hint" "")
               term))))
     (proof-quote term)))
 
@@ -150,7 +150,7 @@
             ((equal head (proof-cl "<=")) (proof-neg (list *proof-less* b a)))
             (t (proof-neg (list *proof-less* a b))))))
    ((member-equal head functions) (cons head arguments))
-   (t '(:failure "UnusableHint" ""))))
+   (t '(:failure "unusable-hint" ""))))
 
 (mutual-recursion
  (defun h4-book-hints-source-term (term functions)
@@ -158,7 +158,7 @@
    (cond ((not (proof-compound term)) (h4-book-hints-source-atom term))
          ((proof-is-call term *proof-quote*) term)
          ((endp term)
-          '(:failure "UnusableHint" ""))
+          '(:failure "unusable-hint" ""))
          (t (proof-with-checked-results
              ((arguments (h4-book-hints-source-arguments (cdr term) functions)))
              (h4-book-hints-source-call (car term) arguments functions)))))
@@ -189,7 +189,7 @@
               (assoc-equal (cadr item) (proof-proof-facts proof)))
          (let ((bindings (h4-book-hints-instance-bindings (cddr item) functions)))
            (cond ((failure-p bindings)
-                  (if (member-equal (cadr bindings) '("UnusableHint" "value")) nil bindings))
+                  (if (member-equal (cadr bindings) '("unusable-hint" "value")) nil bindings))
                  ((no-duplicatesp-equal (strip-cars bindings))
                   (proof-proof-fact proof (cadr item) bindings))
                  (t nil))))

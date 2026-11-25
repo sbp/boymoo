@@ -57,25 +57,6 @@
                 (cons (car next) (list :inferred (cdr next)))
               (cons (cadr setup) :expanded))))))
 
-(defun t3-book-measures-plans-collect (n definitions stored setup phase seen)
-  (declare (xargs :measure (nfix n)))
-  (if (zp n)
-      '(:failure "Fuel" "t3-book-measures-plans")
-    (proof-with-checked-results ((next (t3-book-measures-next-plan definitions stored setup phase)))
-      (if (not next)
-          nil
-        (let* ((plan (car next))
-               (use (and (equal (len plan) (len definitions))
-                         (not (t3-book-measures-seen-plan-p plan seen)))))
-          (proof-with-checked-results
-           ((rest (t3-book-measures-plans-collect (1- n) definitions stored setup (cdr next)
-                                                 (if use (cons plan seen) seen))))
-           (if use (cons (list plan (car setup)) rest) rest)))))))
-
-(defun t3-book-measures-plans (lib rulers definitions stored)
-  (proof-with-checked-results ((setup (t3-book-measures-prepare-plans lib rulers definitions stored)))
-    (t3-book-measures-plans-collect 1000000 definitions stored setup '(:inferred :start) nil)))
-
 (defun t3-book-measures-count-comparison (lib smaller larger evidence)
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results
@@ -90,7 +71,7 @@
                 (proof-with-checked-results
                  ((step (library-library-cite lib "T3-SET-TAIL-COUNT" (list parent) (list (car nonempty)))))
                  (cons step (cdr nonempty)))
-              '(:failure "Unsupported" "")))
+              '(:failure "unsupported" "")))
          (t3-size-count-descent lib smaller larger evidence)))
       (comparison (t3-size-ordinal-comparison lib smaller larger))
       (step (proof-proof-rewrite proof (car ordinal) comparison '(1)))
@@ -103,7 +84,7 @@
         (t3-size-length-tail lib parent evidence)
       (proof-with-checked-results ((value (proof-term-at smaller 1)))
         (if (not (proof-is-call value *t3-book-halves-mv-nth*))
-            '(:failure "Unsupported" "")
+            '(:failure "unsupported" "")
           (proof-with-checked-results ((parts (proof-list-of-length value 3)))
             (let ((index (cadr parts)))
               (if (and (equal (caddr parts) (list *t3-book-halves-halve* parent))
@@ -114,14 +95,14 @@
                     (step (library-library-cite lib (concatenate 'string "T3-HALVE-LESS-" (decimal-text (cadr index)))
                                                 (list parent) (list (car cons) (car tail)))))
                    (cons step (cdr tail)))
-                '(:failure "Unsupported" "")))))))))
+                '(:failure "unsupported" "")))))))))
 
 (defun t3-book-measures-count-or-length (lib smaller larger evidence)
   (cond ((and (proof-is-call smaller *library-count*) (proof-is-call larger *library-count*))
          (t3-book-measures-count-comparison lib smaller larger evidence))
         ((and (proof-is-call smaller *library-len*) (proof-is-call larger *library-len*))
          (t3-book-measures-length-comparison lib smaller larger evidence))
-        (t '(:failure "Unsupported" ""))))
+        (t '(:failure "unsupported" ""))))
 
 (defund t3-book-measures-shift (lib result offset prefix)
   (proof-with-checked-results ((step (t3-size-shift lib (car result) offset prefix nil)))
@@ -154,7 +135,7 @@
     (t3-book-measures-count-or-length lib smaller larger evidence)))
 
 (defun t3-book-measures-recoverable-failure-p (result)
-  (and (failure-p result) (member-equal (cadr result) '("Unproved" "Unsupported" "value"))))
+  (and (failure-p result) (member-equal (cadr result) '("unproved" "unsupported" "value"))))
 
 (defun t3-book-measures-note-facts (context facts)
   (declare (xargs :measure (acl2-count facts)))
@@ -201,7 +182,7 @@
      (if (car quick)
          quick
        (let ((result (t3-book-theorems-theorems-prove (cdr quick) normalized context 12)))
-         (cond ((and (failure-p result) (equal (cadr result) "Unsupported")) error)
+         (cond ((and (failure-p result) (equal (cadr result) "unsupported")) error)
                ((failure-p result) result)
                (t (cons (car result) (cadr result)))))))
     (lib (t3-book-theorems-library (cdr found)))
@@ -257,7 +238,7 @@
 (defun t3-book-measures-try-plans (n lib search definitions stored setup phase seen error)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-measures-measure-proof")
+      '(:failure "fuel" "t3-book-measures-measure-proof")
     (proof-with-checked-results ((next (t3-book-measures-next-plan definitions stored setup phase)))
       (if (not next)
           error

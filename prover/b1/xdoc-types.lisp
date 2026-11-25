@@ -238,7 +238,7 @@
 (mutual-recursion
  (defun b1-xdoc-types-string-value (n lib value evidence)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "b1-xdoc-types-string-value"))
+   (cond ((zp n) '(:failure "fuel" "b1-xdoc-types-string-value"))
          ((proof-is-call value *b1-printing-coerce*) (b1-xdoc-types-coerced-string lib value))
          (t (proof-with-checked-results ((head (proof-term-at value 0)))
               (if (member-equal head *b1-xdoc-types-string-constructors*)
@@ -248,7 +248,7 @@
  (defun b1-xdoc-types-string-branches (n lib call evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-xdoc-types-string-branches")
+       '(:failure "fuel" "b1-xdoc-types-string-branches")
      (proof-with-checked-results
          ((head (proof-term-at call 0))
           (opened (b1-logic-bookproof-normalize
@@ -261,13 +261,13 @@
  (defun b1-xdoc-types-string-branches-leaf (n value tests lib evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-xdoc-types-string-branches-leaf")
+       '(:failure "fuel" "b1-xdoc-types-string-branches-leaf")
      (proof-with-checked-results ((cases (b1-xdoc-types-evidence-from-cases lib tests)))
        (b1-xdoc-types-string-value (1- n) lib value (append evidence cases)))))
  (defun b1-xdoc-types-mv-string-result-leaf (n items tests lib position)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-xdoc-types-mv-string-result-leaf")
+       '(:failure "fuel" "b1-xdoc-types-mv-string-result-leaf")
      (proof-with-checked-results
          ((opened (b1-logic-bookproof-normalize lib items nil nil nil nil nil nil))
           (reduced (b1-structures-project-mv lib (list *b1-structures-mv-nth* position items) opened))
@@ -277,7 +277,7 @@
        (library-library-transport-argument lib typed reduced 1))))
  (defun b1-xdoc-types-escaped-list-type-step-consequence-supported (n value lib predicate head child)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "b1-xdoc-types-escaped-list-type-step-consequence-supported"))
+   (cond ((zp n) '(:failure "fuel" "b1-xdoc-types-escaped-list-type-step-consequence-supported"))
          ((equal predicate *b1-printing-characters*)
           (b1-printing-character-list lib value (list head child)))
          (t
@@ -297,7 +297,7 @@
  (defun b1-xdoc-types-by-value-leaf (n lib value template tests leaf)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-xdoc-types-by-value-leaf")
+       '(:failure "fuel" "b1-xdoc-types-by-value-leaf")
      (proof-with-checked-results
          ((result (case (car leaf)
                     (:string
@@ -319,7 +319,7 @@
  (defun b1-xdoc-types-by-value (n lib value template tests leaf)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "b1-xdoc-types-by-value"))
+    ((zp n) '(:failure "fuel" "b1-xdoc-types-by-value"))
     ((proof-is-call value *proof-if*)
      (proof-with-checked-results
          ((branches (proof-list-of-length (cdr value) 3))
@@ -457,7 +457,7 @@
 (defun b1-xdoc-types-partition-macro-args-type-value (n value predicate facts lib)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-xdoc-types-partition-macro-args-type-value")
+      '(:failure "fuel" "b1-xdoc-types-partition-macro-args-type-value")
     (let ((goal (list predicate value)))
       (proof-with-checked-results ((known (b1-xdoc-types-find-claim goal facts)))
         (cond

@@ -146,7 +146,7 @@
 (defun b1-lexical-case-proof-visit (n result lib goal evidence unfold rules replies)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "b1-lexical-case-proof-visit"))
+   ((zp n) '(:failure "fuel" "b1-lexical-case-proof-visit"))
    ((failure-p result) result)
    ((b1-logic-call-p result)
     (let* ((current (b1-logic-call-library result))
@@ -393,7 +393,7 @@
 (mutual-recursion
  (defun b1-lexical-atom-cases-choose (n index failures lib term consequence)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "b1-lexical-atom-cases-choose"))
+   (cond ((zp n) '(:failure "fuel" "b1-lexical-atom-cases-choose"))
          ((failure-p failures) failures)
          ((equal index (len *b1-lexical-types*))
           (b1-lexical-atom-case-consequence (1- n) consequence lib nil failures))
@@ -402,7 +402,7 @@
              (b1-lexical-atom-cases-evidence lib term index failures)))))
  (defun b1-lexical-atom-cases-accept (n index failures lib term consequence evidence)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "b1-lexical-atom-cases-accept"))
+   (cond ((zp n) '(:failure "fuel" "b1-lexical-atom-cases-accept"))
          ((failure-p evidence) evidence)
          (t (b1-lexical-atom-cases-reject
              (1- n) index failures term consequence (car evidence)
@@ -410,7 +410,7 @@
                                                (cadr evidence) (caddr evidence))))))
  (defun b1-lexical-atom-cases-reject (n index failures term consequence test accepted)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "b1-lexical-atom-cases-reject"))
+   (cond ((zp n) '(:failure "fuel" "b1-lexical-atom-cases-reject"))
          ((failure-p accepted) accepted)
          (t (proof-with-checked-results
                 ((rejected (b1-lexical-atom-cases-choose
@@ -423,7 +423,7 @@
  (defun b1-lexical-atom-case-consequence (n consequence lib type evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-lexical-atom-case-consequence")
+       '(:failure "fuel" "b1-lexical-atom-case-consequence")
      (let ((mode (cadr consequence))
            (formula (caddr consequence))
            (x (cadddr consequence))
@@ -443,7 +443,7 @@
  (defun b1-lexical-atom-pair-cases-first (n x-type x-types lib y atoms mode formula x unfold)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-lexical-atom-pair-cases-first")
+       '(:failure "fuel" "b1-lexical-atom-pair-cases-first")
      (b1-lexical-atom-cases-choose (1- n) 0 nil lib y
                                   (list :second mode formula x y atoms unfold x-type x-types)))))
 

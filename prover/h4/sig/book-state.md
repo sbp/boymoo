@@ -15,7 +15,7 @@ is an insertion-ordered dictionary from first literals to Steps.
 | `h4-book-state-indexed-state-init` | Library, read name, write name, four law names, evidence dictionary | IndexedState | A failure if the law list does not contain four names |
 | `h4-book-state-indexed-state-on-write` | IndexedState, law name, target term | Equation instance using the state's evidence values in dictionary order | A failure from the instance |
 | `h4-book-state-indexed-state-reduce` | IndexedState, term | Lookup or overwrite Step, or `nil` if neither law applies | A failure from a required premise or proof construction |
-| `h4-book-state-indexed-state-restore` | Natural-number fuel, IndexedState, update term, original state term | Step restoring one slot through the intervening writes | A failure from proof construction, a failed assertion, or `Fuel` |
+| `h4-book-state-indexed-state-restore` | Natural-number fuel, IndexedState, update term, original state term | Step restoring one slot through the intervening writes | A failure from proof construction, a failed assertion, or `fuel` |
 | `h4-book-state-indexed-state-invariant-equation` | IndexedState, law name, view function, written state term | Instance of the law on the view applied to the written state | A failure from the instance |
 
 Pass `1000000` as the initial fuel for restoration. Pass `nil` for omitted

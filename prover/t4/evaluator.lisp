@@ -19,7 +19,7 @@
            ((or (not (proof-compound term))
                 (proof-is-call term *proof-quote*))
             term)
-           ((endp term) '(:failure "MalformedCandidate" ""))
+           ((endp term) '(:failure "malformed-candidate" ""))
            (t (proof-with-checked-results
                ((args (t4-evaluator-replace-terms-args (cdr term) replacements)))
                (cons (car term) args))))))
@@ -36,14 +36,14 @@
   (declare (xargs :measure (acl2-count tail)))
   (cond
    ((not (proof-is-call tail *library-cdr*))
-    '(:failure "SearchMiss" ""))
-   ((not (consp (cdr tail))) '(:failure "MalformedCandidate" ""))
+    '(:failure "search-miss" ""))
+   ((not (consp (cdr tail))) '(:failure "malformed-candidate" ""))
    ((not (equal (cadr tail) obj))
     (t4-evaluator-argument-value-tail
      (cadr tail) obj (list *library-cdr* values)))
    ((equal tail (list *library-cdr* obj))
     (list *library-car* values))
-   (t '(:failure "SearchMiss" ""))))
+   (t '(:failure "search-miss" ""))))
 
 (mutual-recursion
  (defun t4-evaluator-argument-value (term evaluator obj env values)
@@ -54,11 +54,11 @@
        (let ((datum (cadr parts)) (environment (caddr parts)))
          (if (or (not (equal environment env))
                  (not (proof-is-call datum *library-car*)))
-             '(:failure "SearchMiss" "")
+             '(:failure "search-miss" "")
            (proof-with-checked-results ((tail (proof-term-at datum 1)))
              (t4-evaluator-argument-value-tail tail obj values))))))
     ((or (not (proof-compound term)) (proof-is-call term *proof-quote*)) term)
-    ((endp term) '(:failure "MalformedCandidate" ""))
+    ((endp term) '(:failure "malformed-candidate" ""))
     (t (proof-with-checked-results
         ((args (t4-evaluator-argument-value-args
                 (cdr term) evaluator obj env values)))
@@ -286,7 +286,7 @@
    (declare (xargs :measure (acl2-count term)))
    (cond ((or (not (proof-compound term)) (proof-is-call term *proof-quote*))
           nil)
-         ((endp term) '(:failure "MalformedCandidate" ""))
+         ((endp term) '(:failure "malformed-candidate" ""))
          ((member-equal (car term) (list *library-car* *library-cdr*))
           (proof-with-checked-results ((arg (proof-term-at term 1)))
             (if (proof-is-call arg list-ev)
@@ -327,7 +327,7 @@
 (defun t4-evaluator-evaluator-select-arguments-loop (n self proof)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t4-evaluator-evaluator-select-arguments-loop")
+      '(:failure "fuel" "t4-evaluator-evaluator-select-arguments-loop")
     (let ((result (t4-evaluator-evaluator-select-argument self proof)))
       (if (eq (car result) :continue)
           (t4-evaluator-evaluator-select-arguments-loop (1- n) (cddr result) (cadr result))
@@ -352,7 +352,7 @@
       (tagged (proof-proof-rewrite proof identity swapped '(1 1)))
       (literal (proof-step-first tagged)))
      (if (not (equal literal tag))
-         '(:failure "InferenceMismatch" "")
+         '(:failure "inference-mismatch" "")
        (proof-with-checked-results
         ((shape (t4-evaluator-evaluator-type-of-pair self term))
          (value-eq (t4-evaluator-evaluator-evaluation self term *proof-false* shape tagged))
@@ -362,7 +362,7 @@
          (unquoted (proof-proof-symmetric proof kwote))
          (quoted (proof-proof-rewrite proof value-eq unquoted '(1 1 1)))
          (result (t4-evaluator-step-right quoted)))
-        (if (equal result value) quoted '(:failure "InferenceMismatch" "")))))))
+        (if (equal result value) quoted '(:failure "inference-mismatch" "")))))))
 
 (defun t4-evaluator-evaluator-quoted-arguments-branch
     (positive self x env lhs pair hypothesis decrease)
@@ -501,7 +501,7 @@
       (rhs (t4-evaluator-step-right body))
       (branch-test (proof-term-at rhs 1)))
      (cond
-      ((not (equal branch-test test)) '(:failure "InferenceMismatch" ""))
+      ((not (equal branch-test test)) '(:failure "inference-mismatch" ""))
       ((not tag) '(:failure "failure" ""))
       (t (proof-with-checked-results
           ((literal (proof-step-first tag)))
@@ -566,7 +566,7 @@
       (literal (proof-step-first step)))
      (if (equal literal (cons *library-implies* rule))
          (proof-proof-subsume proof step (list literal))
-       '(:failure "InferenceMismatch" "")))))
+       '(:failure "inference-mismatch" "")))))
 
 (defun t4-evaluator-evaluator-clauses-assumptions (common proof)
   (if (endp common)
@@ -602,7 +602,7 @@
       (literal (proof-step-first (car dispatched))))
      (if (not (equal literal
                      (proof-eq (list (t4-evaluator-evaluator-ev self) obj env) (cadr entry))))
-         '(:failure "InferenceMismatch" "")
+         '(:failure "inference-mismatch" "")
        (let* ((self (cdr dispatched))
               (lib (t4-evaluator-evaluator-lib self))
               (proof (library-library-proof lib)))
@@ -776,7 +776,7 @@
     (let* ((termination (cadr generated))
            (measure (text-find termination "(measure ")))
       (if (< measure 0)
-          '(:failure "SearchMiss" "")
+          '(:failure "search-miss" "")
         (proof-with-checked-results ((local (proof-line "define" definition-data)))
           (list (+ (car generated) (car prelude))
                 (concatenate 'string (seq-slice termination 0 measure) local
@@ -790,7 +790,7 @@
     (proofs (car result))
     (firsts (t4-evaluator-witness-firsts proofs)))
    (if (not (equal firsts goals))
-       '(:failure "InferenceMismatch" "")
+       '(:failure "inference-mismatch" "")
      (proof-with-checked-results
       ((target (proof-proof-entry "witness" name (cons name available) proofs)))
       (if (eq (car api) :replies)
@@ -829,8 +829,8 @@
                            api prefix name available goals rules (cdr operators) suffix)))
               (if (and (failure-p result)
                        (member-equal (cadr result)
-                                     '("Unproved" "SearchMiss" "InferenceMismatch"
-                                       "MissingProofInput" "MalformedCandidate" "value" "assertion"
+                                     '("unproved" "search-miss" "inference-mismatch"
+                                       "missing-proof-input" "malformed-candidate" "value" "assertion"
                                        "key" "type" "index" "recursion")))
                   nil
                 result)))))))))

@@ -175,7 +175,7 @@
 
 (defun h4-run-proof-dependencies-loop (n pending seen facts)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h4-run-proof-dependencies-loop"))
+  (cond ((zp n) '(:failure "fuel" "h4-run-proof-dependencies-loop"))
         ((endp pending) (reverse facts))
         ((member-equal (car pending) seen)
          (h4-run-proof-dependencies-loop (1- n) (cdr pending) seen facts))
@@ -315,9 +315,6 @@
         (cons (h4-api-finish-entry name kind (car prepared) inherited (car encoded))
               (cdr encoded))))))
 
-(defun h4-api-finish (world statement kind arguments proofs inherited)
-  (car (h4-api-finish-with-cache world statement kind arguments proofs inherited :uncached)))
-
 ; A draft holds the world, entry kind, header arguments, proofs, and inherited prelude.
 (defun h4-api-finish-draft (statement draft cache)
   (if (failure-p draft)
@@ -433,10 +430,6 @@
                (entries (library-library-entries library))
                (facts (proof-proof-facts (library-library-proof library))))
           (list (car (last entries)) name (table-get facts name nil)))))))
-
-(defun h4-api-pointwise-support (definition necessity)
-  (h4-api-pointwise-support-from-ground definition necessity
-                                        (h4-api-ground-world) :unprepared))
 
 (defun h4-api-pointwise-key (world)
   (let* ((proof (library-library-proof (h4-api-world-library world)))

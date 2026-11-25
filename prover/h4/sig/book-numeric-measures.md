@@ -21,6 +21,5 @@ measure result.
 | `(h4-book-numeric-measures-subtraction-measure p definitions calls)` | Return the measure result for subtraction, with proofs in first-occurrence clause order. | May return a failure. |
 | `(h4-book-numeric-measures-floor-parts term)` | Return `(value base)` from a recognized rounding term or `nil`. | May return a failure on a malformed application. |
 | `(h4-book-numeric-measures-floor-view p actual value base integers)` | Return a Step equating the actual term to its floor form by using value and base terms and integer evidence Steps. | May return a failure. |
-| `(h4-book-numeric-measures-division-measure p definitions calls support)` | Return `(cons result library)` after the division tactic. The supplied support facts are installed in order. | May return a failure. |
 | `(h4-book-numeric-measures-fixed-value-type p call)` | Return one natural-number Step for an `NFIX` term, or the list of the integer and positive Steps for a positive-fix term. | May return a failure. |
 | `(h4-book-numeric-measures-increasing-index-measure p definitions calls)` | Return the increasing-index measure result. | May return a failure. |

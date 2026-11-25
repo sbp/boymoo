@@ -8,11 +8,11 @@
 #
 # It needs make and c99 (or the compiler given to make), the library's
 # program text and statements, which sh runner/test.sh writes if they
-# are missing, and the POSIX tools grep, sed and awk.  For each
-# of ash and binary-logxor it times calls on the same arguments
-# twice: by ACL2's definitions, from the library's program text; and
-# with -j, from that text less the define line of that one function, so
-# that only it is the prelude's.  The calls are made by a loop defined
+# are missing, and the POSIX tools sed and awk.  For each of the
+# five functions of the prelude it times calls on the same arguments
+# twice, from the library's program text: by ACL2's definitions, without
+# -j; and with -j, by which the runner computes the function itself.
+# The calls are made by a loop defined
 # in program text, and the time of the same loop without the call is
 # taken away.  Times are the runner's own (-v), of the processor, the
 # least of three runs, in microseconds a call.  Every run is given at most 1,000 megabytes, which
@@ -30,8 +30,6 @@ mkdir -p $T
 LIB="-p spec/ground.txt -p build/export/library.statements"
 PROG=build/export/library.program
 Q=COMMON-LISP::QUOTE
-grep -v '^(define COMMON-LISP::NIL (COMMON-LISP::ASH ' $PROG > $T/ASH.program
-grep -v '^(define COMMON-LISP::NIL (ACL2::BINARY-LOGXOR ' $PROG > $T/LOGXOR.program
 
 # (LOOP-F n x y acc) calls F on x and y, n times.
 loop() {
@@ -43,6 +41,9 @@ loop() {
     loop NOTHING 'ACL2::X'
     loop ASH '(COMMON-LISP::ASH ACL2::X ACL2::Y)'
     loop LOGXOR '(ACL2::BINARY-LOGXOR ACL2::X ACL2::Y)'
+    loop LENGTH '(COMMON-LISP::LENGTH ACL2::X)'
+    loop CHAR '(COMMON-LISP::CHAR ACL2::X ACL2::Y)'
+    loop SUBSEQ "(COMMON-LISP::SUBSEQ ACL2::X ACL2::Y (ACL2::BINARY-+ ACL2::Y ($Q 10)))"
 } > $T/loops.program
 
 # seconds OPTION LIBRARY FUNCTION N X Y: the seconds of N calls, the
@@ -62,14 +63,24 @@ seconds() {
     echo "$least"
 }
 
+# Strings of 1,000 and of 100,000 characters.
+s3=$(awk 'BEGIN { printf "\""; for (i = 0; i < 1000; i++) printf "a"; printf "\"" }')
+s5=$(awk 'BEGIN { printf "\""; for (i = 0; i < 100000; i++) printf "a"; printf "\"" }')
+
 # row FUNCTION ARGUMENTS X Y N: N calls by the definitions, 200,000 with
 # the prelude.
 row() {
     d0=$(seconds "" $PROG NOTHING $5 $3 $4)
     d1=$(seconds "" $PROG $1 $5 $3 $4)
     j0=$(seconds "" $PROG NOTHING 200000 $3 $4)
-    j1=$(seconds -j $T/$1.program $1 200000 $3 $4)
-    case $1 in ASH) name=ash ;; *) name=binary-logxor ;; esac
+    j1=$(seconds -j $PROG $1 200000 $3 $4)
+    case $1 in
+        ASH) name=ash ;;
+        LOGXOR) name=binary-logxor ;;
+        LENGTH) name=length ;;
+        CHAR) name=char ;;
+        *) name=subseq ;;
+    esac
     awk -v f="$name" -v what="$2" -v n=$5 -v d0="$d0" -v d1="$d1" -v j0="$j0" -v j1="$j1" 'BEGIN {
         j = (j1 - j0) / 200000 * 1000000
         d = (d1 - d0) / n * 1000000
@@ -88,4 +99,10 @@ row() {
     row LOGXOR "two integers of 16 bits" 51234 43210 50
     row LOGXOR "two integers of 24 bits" 12345678 9876543 1
     row LOGXOR "two integers of 64 bits" 12345678901234567890 9876543210987654321 1
+    row LENGTH "a string of 1,000 characters" "$s3" 0 2000
+    row LENGTH "a string of 100,000 characters" "$s5" 0 20
+    row CHAR "a string of 1,000 characters, at its end" "$s3" 999 2000
+    row CHAR "a string of 100,000 characters, at its end" "$s5" 99999 20
+    row SUBSEQ "a string of 1,000 characters, 10 from its middle" "$s3" 495 2000
+    row SUBSEQ "a string of 100,000 characters, 10 from its middle" "$s5" 49995 20
 } | tee $T/table.txt

@@ -378,7 +378,3 @@
                                               (cadr projection-call)
                                               (caddr projection-call) value))))))))
 
-(defun halving-proofs-halving-descent (lib goal rulers)
-  (proof-with-checked-results
-   ((result (halving-proofs-halving-descent-with-rulers lib goal rulers)))
-   (cons (caar result) (cdr result))))

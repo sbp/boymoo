@@ -223,7 +223,7 @@
     (n pending kind-a typed-a lib a b fast dual base direct-goal direct-open dual-goal reverse-open)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-strict-lexicographic-strict-atom-cases-first-kind-reply"))
+   ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-strict-lexicographic-strict-atom-cases-first-kind-reply"))
    ((failure-p pending) pending)
    ((not (eq (caar pending) :b2-lexicographic-atom-types)) (car pending))
    (t (b2-strict-lexicographic-strict-atom-cases-first-kind-reply
@@ -255,7 +255,7 @@
     (n pending lib a b fast dual base direct-goal direct-open dual-goal reverse-open)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-strict-lexicographic-strict-atom-cases-reply"))
+   ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-strict-lexicographic-strict-atom-cases-reply"))
    ((failure-p pending) pending)
    ((not (eq (caar pending) :b2-lexicographic-atom-types)) (car pending))
    (t (b2-strict-lexicographic-strict-atom-cases-reply

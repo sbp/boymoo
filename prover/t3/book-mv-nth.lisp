@@ -15,7 +15,7 @@
                     ((equal function *proof-cons*) 9)
                     (t nil))))
     (if (not rule)
-        '(:failure "MissingProofInput" "")
+        '(:failure "missing-proof-input" "")
       (let ((name (proof-sym (concatenate 'string "EVAL-FOR-MV-NTH-CONSTRAINT-" (decimal-text rule)) "ACL2"))
             (cons-test (list *proof-consp* term))
             (head-test (proof-eq (list *library-car* term) (proof-quote function)))
@@ -156,8 +156,8 @@
       (proof-with-checked-results ((head (proof-term-at value 1)))
         (if (equal head (proof-quote *proof-quote*))
             (t3-book-mv-nth-recurrence-quote lib value index-result evidence substitutions)
-          '(:failure "Unsupported" ""))))
-     (t '(:failure "Unsupported" "")))))
+          '(:failure "unsupported" ""))))
+     (t '(:failure "unsupported" "")))))
 
 (defun t3-book-mv-nth-recurrence-leaf (raw tests lib premise index-result measure formula template substitutions)
   (let ((proof (library-library-proof lib)))
@@ -186,7 +186,7 @@
    ((failure-p request) request)
    ((not (eq (car request) :t3-book-term-collections-leaf))
     (cons request substitutions))
-   ((zp n) '(:failure "Fuel" "t3-book-mv-nth-recurrence"))
+   ((zp n) '(:failure "fuel" "t3-book-mv-nth-recurrence"))
    (t
     (proof-with-checked-results
         ((advanced (t3-book-mv-nth-recurrence-advance
@@ -226,7 +226,7 @@
      ((equal value *library-x*)
       (proof-proof-reflexive proof (list *t3-book-evaluators-eval* *library-x* *t3-book-mv-nth-env*)))
      ((not (proof-is-call value *t3-book-mv-nth-recurse*))
-      '(:failure "Unsupported" ""))
+      '(:failure "unsupported" ""))
      (t
       (proof-with-checked-results
           ((evidence (t3-logic-evidence-init lib tests nil nil))
@@ -253,7 +253,7 @@
   (cond
    ((failure-p request) request)
    ((not (eq (car request) :t3-book-term-collections-leaf)) request)
-   ((zp n) '(:failure "Fuel" "t3-book-mv-nth-correctness"))
+   ((zp n) '(:failure "fuel" "t3-book-mv-nth-correctness"))
    (t
     (t3-book-mv-nth-correctness-visit
      (1- n) (t3-book-mv-nth-correctness-advance request lib template) lib template))))
@@ -272,4 +272,4 @@
          (literal (proof-step-first result)))
       (if (equal literal formula)
           (proof-proof-entry "theorem" name (list name) (list result))
-        '(:failure "Unsupported" "")))))
+        '(:failure "unsupported" "")))))

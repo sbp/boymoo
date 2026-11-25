@@ -130,11 +130,6 @@
              (cons nil lib)
            (lexicographic-finish-ordinal lib value exponent coefficient (car tail)))))))))))
 
-(defun lexicographic-constructed-ordinal (lib value)
-  (proof-with-checked-results
-   ((result (lexicographic-constructed-ordinal-with-library lib value)))
-   (car result)))
-
 (defun lexicographic-open-constructor (lib value)
   (if (not (proof-compound value))
       (cons nil lib)
@@ -176,11 +171,6 @@
            ((value (proof-term-at left 1)))
            (lexicographic-open-constructor lib value))))))))
 
-(defun lexicographic-ordinal-constructor-equation (lib formula)
-  (proof-with-checked-results
-   ((result (lexicographic-ordinal-constructor-equation-with-library lib formula)))
-   (car result)))
-
 (defun lexicographic-finish-natural-field (lib equation rulers value natural)
   (if (terms-proof-fallback-p natural)
       (cons (list equation rulers) lib)
@@ -221,11 +211,6 @@
           (lexicographic-finish-natural-field
            lib equation (cdr found) value
            (if (car found) (cons (car found) lib) (lexicographic-library-natural lib value)))))))))
-
-(defun lexicographic-natural-field (lib term rulers)
-  (proof-with-checked-results
-   ((result (lexicographic-natural-field-with-rulers lib term rulers)))
-   (cons (caar result) (cdr result))))
 
 (defun lexicographic-transport-fields (lib step after before)
   (proof-with-checked-results
@@ -282,11 +267,6 @@
                 (and constant (not (equal answer *proof-false*))
                      (proof-proof-true-from-eq proof constant))))))
       (lexicographic-finish-numeric-descent lib smaller larger after before rulers extra step)))))
-
-(defun lexicographic-numeric-descent (lib after before rulers extra)
-  (proof-with-checked-results
-   ((result (lexicographic-numeric-descent-with-rulers lib after before rulers extra)))
-   (cons (caar result) (cdr result))))
 
 (defun lexicographic-descent-terms (lib goal)
   (proof-with-checked-results
@@ -386,10 +366,3 @@
            (lexicographic-tied-descent lib equation terms after before rulers extra)
          (lexicographic-first-descent lib equation (nth 4 terms) after before rulers extra)))))))
 
-(defun lexicographic-lexicographic-descent (lib goal rulers equation extra)
-  (proof-with-checked-results
-   ((result (lexicographic-descent-with-rulers lib goal rulers equation extra)))
-   (cons (caar result) (cdr result))))
-
-(defun lexicographic-descent (lib goal rulers equation extra)
-  (lexicographic-lexicographic-descent lib goal rulers equation extra))

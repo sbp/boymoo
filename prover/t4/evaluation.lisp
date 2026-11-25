@@ -240,7 +240,7 @@
          (condition (t4-division-combine lib (list cons-step known-tag)))
          (literal (proof-step-first condition)))
       (if (not (equal literal required))
-          '(:failure "InferenceMismatch" "")
+          '(:failure "inference-mismatch" "")
         (proof-with-checked-results ((step (proof-proof-modus-ponens proof fact condition)))
           (t4-evaluation-equation-result step lib evidence))))))
 
@@ -314,7 +314,7 @@
     (let* ((key (list (car term) list-evaluator))
            (entry (assoc-equal key (t4-evaluation-evaluation-rules-reapplications rules))))
       (if (not entry)
-          '(:failure "MissingProofInput" "")
+          '(:failure "missing-proof-input" "")
         (t4-evaluation-with-results
             ((fact (t4-evaluation-equation-fact lib (cdr entry) (cadr term) (caddr term)))
              (first (proof-step-first fact))
@@ -346,7 +346,7 @@
       ((answer (t4-evaluation-reply :evaluation (list call tests) lib replies)))
     (if (caar answer)
         answer
-      '(:failure "SearchMiss" ""))))
+      '(:failure "search-miss" ""))))
 
 (defun t4-evaluation-evaluation-fold-at-nil (term lib replies)
   (let ((definitions (list *t4-evaluation-endp* *t4-evaluation-atom* *proof-not*)))
@@ -486,7 +486,7 @@
          (first (t4-evaluation-reply :fact-proof
                    (list (list *t4-evaluation-iff* value expansion)) lib (cdr endp))))
       (if (not (caar first))
-          '(:failure "SearchMiss" "")
+          '(:failure "search-miss" "")
         (t4-evaluation-with-results
             ((lib (cdar first))
              (proof (library-library-proof lib))
@@ -509,7 +509,7 @@
              (law (t4-evaluation-reply :fact-proof
                     (list (list *library-implies* premise thesis)) lib (cdr no))))
           (if (not (caar law))
-              '(:failure "SearchMiss" "")
+              '(:failure "search-miss" "")
             (t4-evaluation-with-results
                 ((lib (cdar law))
                  (proof (library-library-proof lib))
@@ -527,7 +527,7 @@
        (lib (cdar evaluated))
        (pair (t4-evaluation-step-right (caar evaluated))))
     (if (not (proof-is-call pair *proof-cons*))
-        '(:failure "SearchMiss" "")
+        '(:failure "search-miss" "")
       (t4-evaluation-with-results
           ((proof (library-library-proof lib))
            (folds (t4-evaluation-rewrite-reflexive lib right (caar evaluated) '(1 2 1)))
@@ -547,7 +547,7 @@
            (and-result (proof-ite h folded-tail *proof-false*))
            (value (t4-evaluation-step-right folds)))
         (if (and (not (equal value or-result)) (not (equal value and-result)))
-            '(:failure "SearchMiss" "")
+            '(:failure "search-miss" "")
           (t4-evaluation-with-results
               ((rest-shape (list *proof-consp* rest))
                (singleton (t4-evaluation-fold-singleton lib left h rest nonempty folds folded-tail

@@ -7,14 +7,8 @@
 (defun t4-bookrun-make-entry (name source steps reason)
   (list :entry name source steps reason))
 
-(defun t4-bookrun-entry-name (entry)
-  (cadr entry))
-
 (defun t4-bookrun-entry-source (entry)
   (caddr entry))
-
-(defun t4-bookrun-entry-steps (entry)
-  (cadddr entry))
 
 (defun t4-bookrun-entry-reason (entry)
   (car (cddddr entry)))
@@ -194,82 +188,6 @@
   (let ((scan (t4-bookrun-section-scan source)))
     (or (cadr scan) (car scan))))
 
-(defun t4-bookrun-read-line (raw)
-  (proof-with-checked-results
-   ((parsed (reader-reader-line (reader-reader raw))))
-   (list (caar parsed) (proof-freeze (cadar parsed)))))
-
-(defun t4-bookrun-declaration-name (kind data)
-  (if (equal kind "define")
-      (proof-with-checked-results
-       ((definition (proof-term-at data 1)))
-       (proof-term-at definition 0))
-    (proof-term-at data 0)))
-
-(defun t4-bookrun-count-line (line lines)
-  (if (endp lines)
-      0
-    (+ (if (equal line (car lines)) 1 0)
-       (t4-bookrun-count-line line (cdr lines)))))
-
-(defun t4-bookrun-assemble-sections (blocks declarations chunks steps size offset)
-  (if (endp blocks)
-      (list declarations chunks steps size offset)
-    (let* ((block (car blocks))
-           (head (car block)))
-      (proof-with-checked-results
-       ((parsed (t4-bookrun-read-line (seq-slice head 0 -1)))
-        (name (and (member-equal (car parsed) '("define" "lemma"))
-                   (t4-bookrun-declaration-name (car parsed) (cadr parsed)))))
-       (let* ((declaration (member-equal (car parsed) '("define" "lemma")))
-              (prior (and declaration (assoc-equal name declarations))))
-         (cond
-          ((and prior (equal (cdr prior) head))
-           (t4-bookrun-assemble-sections (cdr blocks) declarations chunks steps size offset))
-          (prior
-           (proof-with-checked-results
-            ((written (proof-write name)))
-            '(:failure "failure" "")))
-          (t
-           (let* ((contents (text-join "" block))
-                  (lines (len block))
-                  (qeds (t4-bookrun-count-line (proof-line "qed" nil) block)))
-             (t4-bookrun-assemble-sections
-              (cdr blocks) (if declaration (table-put declarations name head) declarations)
-              (cons contents chunks) (+ steps (- (- lines 1) qeds)) (+ size (length contents))
-              (+ offset lines))))))))))
-
-(defun t4-bookrun-assemble-entries (entries declarations chunks offsets offset)
-  (if (endp entries)
-      (list (text-join "" (reverse chunks)) (reverse offsets))
-    (let ((scan (t4-bookrun-section-scan (t4-bookrun-entry-source (car entries)))))
-      (proof-with-checked-results
-       ((assembled (t4-bookrun-assemble-sections (car scan) declarations chunks 0 0 offset)))
-       (let ((end (car (cddddr assembled))))
-         (or (cadr scan)
-             (t4-bookrun-assemble-entries
-              (cdr entries) (car assembled) (cadr assembled)
-              (cons (list offset end (caddr assembled) (cadddr assembled)) offsets) end)))))))
-
-(defun t4-bookrun-assemble (entries)
-  (t4-bookrun-assemble-entries entries nil nil nil 0))
-
-(defun t4-bookrun-proof-dependencies-in (lines facts names)
-  (cond
-   ((endp lines) names)
-   ((text-starts-with (car lines) "(fact ")
-    (proof-with-checked-results
-     ((parsed (t4-bookrun-read-line (car lines)))
-      (name (proof-term-at (cadr parsed) 0)))
-     (let ((fact (assoc-equal name facts)))
-       (t4-bookrun-proof-dependencies-in
-        (cdr lines) facts (if fact (table-put names name (cdr fact)) names)))))
-   (t
-    (t4-bookrun-proof-dependencies-in (cdr lines) facts names))))
-
-(defun t4-bookrun-proof-dependencies (source facts)
-  (t4-bookrun-proof-dependencies-in (t4-bookrun-splitlines source nil) facts nil))
-
 (mutual-recursion
  (defun t4-bookrun-enabled-functions (hints)
    (declare (xargs :measure (acl2-count hints)))
@@ -309,13 +227,13 @@
       (t4-bookrun-make-entry
        name (if (equal kind "constrain") (t4-bookrun-suffix-witness-names source raw) source)
        (car generated) "")))
-   ((and (equal kind "constrain") (equal (cadr generated) "Unproved"))
+   ((and (equal kind "constrain") (equal (cadr generated) "unproved"))
     (let ((candidate (or evaluator simple)))
       (cond ((failure-p candidate) candidate)
             (candidate (t4-bookrun-make-entry name (cadr candidate) (car candidate) ""))
             (t (t4-bookrun-skipped name "needs a constructive witness")))))
    ((member-equal (cadr generated)
-                  '("Unproved" "SearchMiss" "InferenceMismatch" "MissingProofInput"
+                  '("unproved" "search-miss" "inference-mismatch" "missing-proof-input"
                     "value" "assertion" "key" "recursion"))
     (proof-with-checked-results
      ((reason (t4-bookrun-failed-reason kind)))

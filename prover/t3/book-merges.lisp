@@ -73,7 +73,7 @@
          (position (if (< branch 0) (+ branch (len substitutions)) branch)))
     (proof-with-checked-results
         ((pairs (if (< position 0)
-                    '(:failure "MissingProofInput" "")
+                    '(:failure "missing-proof-input" "")
                   (proof-term-at substitutions position)))
          (variable (caar pairs))
          (other (if (equal variable *library-x*) *library-y* *library-x*))

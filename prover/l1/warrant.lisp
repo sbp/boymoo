@@ -41,9 +41,6 @@
   (proof-with-checked-results ((literal (proof-step-first step)))
     (l1-warrant-term-at-place literal place)))
 
-(defun l1-warrant-warrant-proof-constant (proof term)
-  (l1-application-proof-constant proof term))
-
 (defun l1-warrant-warrant-proof-simplify (proof term evidence definitions)
   (l1-application-proof-simplify proof term evidence definitions))
 
@@ -299,7 +296,7 @@
 
 (defun l1-warrant-join-sources (n sources)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "l1-warrant-join-sources"))
+  (cond ((zp n) '(:failure "fuel" "l1-warrant-join-sources"))
         ((endp sources) "")
         ((endp (cdr sources)) (car sources))
         (t (let* ((split (l1-warrant-split-source-in-half sources))
@@ -398,7 +395,7 @@
          (application (l1-application-quoted-application proof function argument nil nil nil)))
     (cond
      ((failure-p application)
-      (if (equal (cadr application) "UnsupportedApplication")
+      (if (equal (cadr application) "unsupported-application")
           (cons nil proof)
         application))
      (t
@@ -433,16 +430,6 @@
             (proof-with-checked-results ((function (proof-term-at designator 1)))
               (l1-warrant-direct-selection-application proof comparison applied selection
                                                        selected complete function))))))))
-
-(defun l1-warrant-direct-selection-with-proof (proof comparison applied selection selected complete)
-  (l1-warrant-materialize-result
-   (l1-warrant-result-halves
-    (l1-warrant-direct-selection-fragments proof comparison applied selection selected complete))))
-
-(defun l1-warrant-direct-selection (proof comparison applied selection selected complete)
-  (proof-with-checked-results
-      ((result (l1-warrant-direct-selection-with-proof proof comparison applied selection selected complete)))
-    (car result)))
 
 (defun l1-warrant-find-application-selector (choices)
   (cond ((endp choices) nil)
@@ -532,15 +519,6 @@
                                                                  count source reason complete)))
                    (proof (l1-warrant-remove-fact (cdr result) *l1-warrant-badge-failure*)))
                 (cons (car result) proof)))))))))
-
-(defun l1-warrant-warrant-cases-with-proof (proof parts choices complete)
-  (l1-warrant-materialize-result
-   (l1-warrant-result-halves
-    (l1-warrant-warrant-cases-fragments proof parts choices complete))))
-
-(defun l1-warrant-warrant-cases (proof parts choices complete)
-  (proof-with-checked-results ((result (l1-warrant-warrant-cases-with-proof proof parts choices complete)))
-    (car result)))
 
 (defun l1-warrant-warrant-logic (certificates)
   (let ((conditional (proof-ite *library-x* *library-y* *library-z*)))

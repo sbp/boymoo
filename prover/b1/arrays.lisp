@@ -60,7 +60,7 @@
 
 (defun b1-arrays-array-checks-fields (n lib pending)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "b1-arrays-array-checks-fields"))
+  (cond ((zp n) '(:failure "fuel" "b1-arrays-array-checks-fields"))
         ((eq (car pending) :continue)
          (proof-with-checked-results
              ((rest (b1-arrays-array-checks-fields

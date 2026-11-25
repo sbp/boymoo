@@ -65,7 +65,7 @@ The recognizers can return a failure for malformed applications.
 | `(h4-book-order-positive-lower-bound p positive integral)` | Step applying discreteness to a positive integer. |
 | `(h4-book-order-nonzero-ordinal-lower-bound p ordinal nonzero)` | Step bounding a nonzero ordinal from below by one. |
 | `(h4-book-order-omega-comparison-proof p formula subject)` | Step for the matched comparison with `OMEGA`. |
-| `(h4-book-order-selector-order-proof p formula subjects)` | Step for the matched selector comparison, or `nil` when the proof fails with `Unproved`. |
+| `(h4-book-order-selector-order-proof p formula subjects)` | Step for the matched selector comparison, or `nil` when the proof fails with `unproved`. |
 | `(h4-book-order-ocmp-proof p formula subjects)` | Step for the matched equality between an `OCMP` tag test and ordinal order. |
 | `(h4-book-order-order-value-equality p formula evidence)` | Step for the matched equality of order and Boolean values, or `nil`. |
 
@@ -79,4 +79,4 @@ An `OrdinalConsequences` object has the form `(:h4-book-order-ordinal-consequenc
 | `(h4-book-order-ordinal-consequences-add object proof)` | Resulting object after adding the Step if its first literal is new. |
 | `(h4-book-order-ordinal-consequences-between object a b c)` | Resulting object after adding transitivity consequences. |
 | `(h4-book-order-ordinal-consequences-transfer object a b)` | Resulting object after adding the equality consequences for these terms. |
-| `(h4-book-order-ordinal-consequences-solve n object)` | `(cons step object)` with the resulting object and the Step or `nil`. Pass `1000000` for initial natural-number fuel. May return `Fuel` in addition to proof failures. |
+| `(h4-book-order-ordinal-consequences-solve n object)` | `(cons step object)` with the resulting object and the Step or `nil`. Pass `1000000` for initial natural-number fuel. May return `fuel` in addition to proof failures. |

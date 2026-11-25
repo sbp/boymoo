@@ -152,9 +152,6 @@
                        context)))
         (h2-open-make-session base earlier context (h2-open-session-aids-cache session))))))
 
-(defun h2-open-advance (session earlier)
-  (h2-open-advance-prefix session earlier nil))
-
 (defun h2-open-prove-trial (trial parsed name aids private)
   (proof-with-checked-results
       ((trial trial)
@@ -218,5 +215,3 @@
 (defun h2-api-prove-all (library cases)
   (h2-open-prove-all (h2-api-open library) cases nil))
 
-(defun h2-api-prove-all-loop (library cases)
-  (h2-api-prove-all library cases))

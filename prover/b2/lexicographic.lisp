@@ -198,7 +198,7 @@
 (defun b2-lexicographic-compare-second-types (n lib kind-a typed-a base a b formula unfold pending)
   (declare (xargs :measure (nfix n)))
   (cond ((not (eq (car pending) :b2-lexicographic-replies)) pending)
-        ((zp n) '(:failure "Fuel" "b2-lexicographic-compare-second-types"))
+        ((zp n) '(:failure "fuel" "b2-lexicographic-compare-second-types"))
         (t (b2-lexicographic-compare-second-types
             (1- n) lib kind-a typed-a base a b formula unfold
             (b2-lexicographic-compare-second-type-reply
@@ -221,7 +221,7 @@
 (defun b2-lexicographic-compare-first-types (n lib base a b formula unfold pending)
   (declare (xargs :measure (nfix n)))
   (cond ((not (eq (car pending) :b2-lexicographic-replies)) pending)
-        ((zp n) '(:failure "Fuel" "b2-lexicographic-compare-first-types"))
+        ((zp n) '(:failure "fuel" "b2-lexicographic-compare-first-types"))
         (t (b2-lexicographic-compare-first-types
             (1- n) lib base a b formula unfold
             (b2-lexicographic-compare-first-type-reply lib base a b formula unfold (cadr pending))))))

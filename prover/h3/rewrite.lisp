@@ -10,10 +10,10 @@
   (list (proof-cl "NTH") (proof-sym "MV-NTH" "ACL2") (proof-sym "ZP" "ACL2")
         *proof-not* (proof-cl "ATOM") (proof-cl "ENDP")))
 
-(defconst *h3-rewrite-unproved* '(:failure "Unproved" ""))
+(defconst *h3-rewrite-unproved* '(:failure "unproved" ""))
 
 (defun h3-rewrite-unproved-p (value)
-  (and (failure-p value) (equal (cadr value) "Unproved")))
+  (and (failure-p value) (equal (cadr value) "unproved")))
 
 (defun h3-rewrite-arguments (term)
   (and (proof-compound term)
@@ -30,7 +30,7 @@
               (cons t (table-put bindings pattern term)))))
          ((proof-is-call pattern *proof-quote*) (cons (equal pattern term) bindings))
          ((not (proof-compound term)) (cons nil bindings))
-         ((or (endp pattern) (endp term)) '(:failure "MalformedTacticInput" ""))
+         ((or (endp pattern) (endp term)) '(:failure "malformed-tactic-input" ""))
          ((and (equal (car pattern) (car term)) (equal (len pattern) (len term)))
           (h3-rewrite-match-arguments (cdr pattern) (cdr term) bindings))
          (t (cons nil bindings))))
@@ -161,18 +161,18 @@
           ((endp (cdr parts))
            (if (rationalp top)
                top
-             '(:failure "MalformedTacticInput" "")))
+             '(:failure "malformed-tactic-input" "")))
           ((consp (cddr parts))
-           '(:failure "MalformedTacticInput" ""))
+           '(:failure "malformed-tactic-input" ""))
           ((not (and (rationalp top) (rationalp bottom)))
-           '(:failure "MalformedTacticInput" ""))
+           '(:failure "malformed-tactic-input" ""))
           ((equal bottom 0)
            '(:failure "failure" ""))
           (t (/ top bottom)))))
 
 (defun h3-rewrite-rational-value (value)
   (cond ((h3-rewrite-integer-value-p value) (h3-rewrite-integer-value value))
-        ((null value) '(:failure "MalformedTacticInput" ""))
+        ((null value) '(:failure "malformed-tactic-input" ""))
         ((and (consp value) (equal (car value) "ratio"))
          (h3-rewrite-ratio-value (cdr value)))
         (t nil)))
@@ -193,7 +193,7 @@
         (cond ((equal head *proof-minus*) (h3-rewrite-encode-rational (- a)))
               ((equal head *h3-rewrite-reciprocal*)
                (if (equal a 0) 0 (h3-rewrite-encode-rational (/ a))))
-              ((endp (cdr numbers)) '(:failure "MalformedTacticInput" ""))
+              ((endp (cdr numbers)) '(:failure "malformed-tactic-input" ""))
               ((equal head *proof-plus*)
                (h3-rewrite-encode-rational (+ a (cadr numbers))))
               ((equal head *proof-times*)
@@ -203,14 +203,14 @@
 (defun h3-rewrite-primitive-cdr (x)
   (let ((rest (cdr x)))
     (cond ((endp rest) *proof-nil*)
-          ((and (endp (cdr rest)) (null (car rest))) '(:failure "MalformedTacticInput" ""))
+          ((and (endp (cdr rest)) (null (car rest))) '(:failure "malformed-tactic-input" ""))
           ((and (endp (cdr rest)) (consp (car rest)) (equal (caar rest) "dot"))
            (proof-term-at (car rest) 1))
           (t rest))))
 
 (defun h3-rewrite-primitive-value (head values)
   (if (endp values)
-      '(:failure "MalformedTacticInput" "")
+      '(:failure "malformed-tactic-input" "")
     (let* ((x (car values))
            (tag (and (consp x) (stringp (car x)) (car x))))
       (cond
@@ -224,14 +224,14 @@
             *proof-t* *proof-nil*))
        ((equal head *proof-if*)
         (let ((index (if (equal x *proof-nil*) 2 1)))
-          (if (< index (len values)) (nth index values) '(:failure "MalformedTacticInput" ""))))
+          (if (< index (len values)) (nth index values) '(:failure "malformed-tactic-input" ""))))
        ((and (member-equal head (list *library-car* *library-cdr*))
              (not (proof-compound x))) *proof-nil*)
        ((equal head *library-car*) (proof-term-at x 0))
        ((equal head *library-cdr*) (h3-rewrite-primitive-cdr x))
        ((equal head *proof-cons*)
         (if (endp (cdr values))
-            '(:failure "MalformedTacticInput" "")
+            '(:failure "malformed-tactic-input" "")
           (proof-constant-cons-value x (cadr values))))
        ((member-equal head (list (proof-cl "REALPART") (proof-cl "IMAGPART")))
         (let ((real-p (equal head (proof-cl "REALPART"))))
@@ -245,7 +245,7 @@
         (let ((code (h3-rewrite-integer-value x)))
           (list "char" (if (and (integerp code) (<= 0 code) (< code 256)) code 0))))
        ((equal head (proof-cl "COERCE"))
-        (cond ((endp (cdr values)) '(:failure "MalformedTacticInput" ""))
+        (cond ((endp (cdr values)) '(:failure "malformed-tactic-input" ""))
               ((and (not (equal (cadr values) (proof-cl "LIST")))
                     (not (proof-compound x))) (list "str" ""))
               (t :none)))
@@ -416,7 +416,7 @@
       (let ((proof (library-library-proof lib)))
         (cond ((equal head (proof-cl "SYMBOL-NAME"))
                (proof-with-checked-results
-                ((name (cond ((null value) '(:failure "MalformedTacticInput" ""))
+                ((name (cond ((null value) '(:failure "malformed-tactic-input" ""))
                              ((and (consp value) (equal (car value) "sym"))
                               (proof-term-at value 2))
                              (t ""))))
@@ -430,12 +430,12 @@
                     (if number (denominator number) 1)))))
               ((equal head (proof-cl "COERCE"))
                (proof-with-checked-results
-                ((arg (if (consp (cddr term)) (caddr term) '(:failure "MalformedTacticInput" "")))
+                ((arg (if (consp (cddr term)) (caddr term) '(:failure "malformed-tactic-input" "")))
                  (kind (proof-term-at arg 1)))
                 (if (not (equal kind (proof-cl "LIST")))
                     nil
                   (proof-with-checked-results
-                   ((chars (cond ((null value) '(:failure "MalformedTacticInput" ""))
+                   ((chars (cond ((null value) '(:failure "malformed-tactic-input" ""))
                                  ((and (consp value) (equal (car value) "str"))
                                   (proof-with-checked-results
                                    ((text (proof-term-at value 1)))
@@ -456,7 +456,7 @@
 
 (defun h3-rewrite-false-disjunction (proof current expression test)
   (if (< (len expression) 4)
-      '(:failure "MalformedTacticInput" "")
+      '(:failure "malformed-tactic-input" "")
     (proof-with-checked-results
      ((yes (proof-proof-if-true proof expression))
       (rewritten-yes (proof-proof-rewrite proof current yes '(1 1)))
@@ -495,7 +495,7 @@
 (defun h3-rewrite-add-pending (n lib evidence pending)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) (cons '(:failure "Fuel" "h3-rewrite-add-pending") evidence))
+   ((zp n) (cons '(:failure "fuel" "h3-rewrite-add-pending") evidence))
    ((endp pending) (cons nil evidence))
    (t
     (let* ((current (car pending))
@@ -655,7 +655,7 @@
  (defun h3-rewrite-rules-apply-fuel (n rules index term search evidence active)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h3-rewrite-rules-apply-fuel") search)
+       (cons '(:failure "fuel" "h3-rewrite-rules-apply-fuel") search)
      (h3-rewrite-checked
       ((head (h3-rewrite-head-of term)))
       (h3-rewrite-rules-apply-candidates
@@ -666,7 +666,7 @@
  (defun h3-rewrite-rules-apply-candidates (n candidates term proof rules search evidence active)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "h3-rewrite-rules-apply-candidates") search))
+    ((zp n) (cons '(:failure "fuel" "h3-rewrite-rules-apply-candidates") search))
     ((endp candidates) (cons nil search))
     (t
      (h3-rewrite-checked
@@ -689,7 +689,7 @@
  (defun h3-rewrite-rules-apply-sides (n sides instance proof rules search evidence active)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "h3-rewrite-rules-apply-sides") search))
+    ((zp n) (cons '(:failure "fuel" "h3-rewrite-rules-apply-sides") search))
     ((endp sides)
      (h3-rewrite-rules-apply-conclusion (1- n) instance rules search evidence active))
     (t
@@ -719,7 +719,7 @@
  (defun h3-rewrite-rules-apply-conclusion (n instance rules search evidence active)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h3-rewrite-rules-apply-conclusion") search)
+       (cons '(:failure "fuel" "h3-rewrite-rules-apply-conclusion") search)
      (h3-rewrite-checked
       ((first (proof-step-first instance)))
       (if (not (proof-is-call first *library-implies*))
@@ -743,7 +743,7 @@
  (defun h3-rewrite-search-test-evidence-fuel (n search term evidence active)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h3-rewrite-search-test-evidence-fuel") search)
+       (cons '(:failure "fuel" "h3-rewrite-search-test-evidence-fuel") search)
      (h3-rewrite-search-test-literals
       (1- n) search (list term (proof-neg term)) term evidence active)))
 
@@ -752,7 +752,7 @@
    (let* ((rules (h3-rewrite-search-rules search))
           (index (h3-rewrite-rules-propositions rules)))
      (cond
-      ((zp n) (cons '(:failure "Fuel" "h3-rewrite-search-test-literals") search))
+      ((zp n) (cons '(:failure "fuel" "h3-rewrite-search-test-literals") search))
       ((consp literals)
        (let* ((literal (car literals))
               (known (h3-rewrite-search-known search literal evidence)))
@@ -784,7 +784,7 @@
  (defun h3-rewrite-search-reduce-fuel (n search term evidence tests active)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-reduce-fuel") search tests)
+       (list '(:failure "fuel" "h3-rewrite-search-reduce-fuel") search tests)
      (h3-rewrite-with-pair
       (spent search) (h3-rewrite-search-spend-reduction search)
       (if spent
@@ -797,7 +797,7 @@
  (defun h3-rewrite-search-reduce-visit (n value opening search evidence tests active rewrites)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-reduce-visit") search tests)
+       (list '(:failure "fuel" "h3-rewrite-search-reduce-visit") search tests)
      (h3-rewrite-with-pair
       (visited search) (h3-rewrite-search-visit-term search)
       (cond
@@ -832,7 +832,7 @@
  (defun h3-rewrite-search-reduce-visit-call (n value opening search evidence tests active rewrites)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-reduce-visit-call") search tests)
+       (list '(:failure "fuel" "h3-rewrite-search-reduce-visit-call") search tests)
      (let ((proof (library-library-proof (h3-rewrite-search-lib search))))
        (h3-rewrite-checked
         ((head (proof-term-at value 0)))
@@ -861,7 +861,7 @@
  (defun h3-rewrite-search-reduce-visit-if (n value opening search evidence tests active rewrites)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-reduce-visit-if") search tests)
+       (list '(:failure "fuel" "h3-rewrite-search-reduce-visit-if") search tests)
      (let ((proof (library-library-proof (h3-rewrite-search-lib search)))
            (test-active (union-equal active opening)))
        (h3-rewrite-checked
@@ -902,7 +902,7 @@
      (n value opening search evidence tests active rewrites test known start)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (list '(:failure "Fuel" "h3-rewrite-search-reduce-select-if") search tests))
+    ((zp n) (list '(:failure "fuel" "h3-rewrite-search-reduce-select-if") search tests))
     ((or (equal test *proof-false*) known)
      (let ((proof (library-library-proof (h3-rewrite-search-lib search))))
        (h3-rewrite-checked
@@ -922,7 +922,7 @@
      (n value opening search evidence tests active rewrites opening-allowed)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-reduce-visit-arguments") search tests)
+       (list '(:failure "fuel" "h3-rewrite-search-reduce-visit-arguments") search tests)
      (h3-rewrite-with-result
       (rewritten search tests)
       (h3-rewrite-search-reduce-inside
@@ -959,7 +959,7 @@
      (n result rewritten value current opening search evidence tests active rewrites)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (list '(:failure "Fuel" "h3-rewrite-search-reduce-finish") search tests))
+    ((zp n) (list '(:failure "fuel" "h3-rewrite-search-reduce-finish") search tests))
     ((failure-p result) (list result search tests))
     ((not result) (list rewritten search tests))
     (t
@@ -983,7 +983,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((proof (library-library-proof (h3-rewrite-search-lib search))))
      (cond
-      ((zp n) (list '(:failure "Fuel" "h3-rewrite-search-reduce-inside") search tests))
+      ((zp n) (list '(:failure "fuel" "h3-rewrite-search-reduce-inside") search tests))
       ((endp positions) (list (and result (proof-proof-tidy proof result)) search tests))
       (t
        (let ((index (car positions)))
@@ -1007,7 +1007,7 @@
  (defun h3-rewrite-search-reduce-follow (n equality opening search evidence tests active rewrites)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-reduce-follow") search tests)
+       (list '(:failure "fuel" "h3-rewrite-search-reduce-follow") search tests)
      (let ((proof (library-library-proof (h3-rewrite-search-lib search))))
        (h3-rewrite-checked
         ((target (h3-rewrite-right equality)))
@@ -1023,7 +1023,7 @@
  (defun h3-rewrite-search-derive-fuel (n search term evidence active tests)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-derive-fuel") search tests)
+       (list '(:failure "fuel" "h3-rewrite-search-derive-fuel") search tests)
      (h3-rewrite-with-pair
       (spent search) (h3-rewrite-search-spend-inference search active)
       (cond
@@ -1043,7 +1043,7 @@
  (defun h3-rewrite-search-derive-base (n search term evidence active tests)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-derive-base") search tests)
+       (list '(:failure "fuel" "h3-rewrite-search-derive-base") search tests)
      (let ((known (h3-rewrite-search-known search term evidence)))
        (if known
            (list known search tests)
@@ -1071,7 +1071,7 @@
  (defun h3-rewrite-search-derive-if (n search term evidence active)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "h3-rewrite-search-derive-if") search))
+    ((zp n) (cons '(:failure "fuel" "h3-rewrite-search-derive-if") search))
     ((not (proof-is-call term *proof-if*)) (cons nil search))
     (t
      (h3-rewrite-checked
@@ -1098,7 +1098,7 @@
  (defun h3-rewrite-search-derive-rules (n search term evidence active tests)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-derive-rules") search tests)
+       (list '(:failure "fuel" "h3-rewrite-search-derive-rules") search tests)
      (let ((rules (h3-rewrite-search-rules search)))
        (h3-rewrite-with-pair
         (step search)
@@ -1111,7 +1111,7 @@
  (defun h3-rewrite-search-derive-premises (n search term evidence active tests premises)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (list '(:failure "Fuel" "h3-rewrite-search-derive-premises") search tests))
+    ((zp n) (list '(:failure "fuel" "h3-rewrite-search-derive-premises") search tests))
     ((endp premises)
      (h3-rewrite-search-derive-reduced (1- n) search term evidence active tests))
     ((not (proof-is-call (caar premises) *library-implies*))
@@ -1143,7 +1143,7 @@
  (defun h3-rewrite-search-derive-reduced (n search term evidence active tests)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-derive-reduced") search tests)
+       (list '(:failure "fuel" "h3-rewrite-search-derive-reduced") search tests)
      (h3-rewrite-with-result
       (reduced search tests)
       (h3-rewrite-search-reduce-fuel (1- n) search term evidence tests (remove-equal term active))
@@ -1167,7 +1167,7 @@
  (defun h3-rewrite-search-derive-negated (n search term evidence active tests)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (list '(:failure "Fuel" "h3-rewrite-search-derive-negated") search tests))
+    ((zp n) (list '(:failure "fuel" "h3-rewrite-search-derive-negated") search tests))
     ((not (proof-is-call term *proof-not*))
      (list *h3-rewrite-unproved* search tests))
     (t
@@ -1189,7 +1189,7 @@
  (defun h3-rewrite-search-saturate-fuel (n search evidence tests)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-saturate-fuel") search evidence tests)
+       (list '(:failure "fuel" "h3-rewrite-search-saturate-fuel") search evidence tests)
      (let* ((result (h3-rewrite-search-saturate-items (1- n) search evidence evidence tests))
             (updated (caddr result)))
        (if (or (car result) (equal (len updated) (len evidence)))
@@ -1199,7 +1199,7 @@
  (defun h3-rewrite-search-saturate-items (n search items evidence tests)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (list '(:failure "Fuel" "h3-rewrite-search-saturate-items") search evidence tests))
+    ((zp n) (list '(:failure "fuel" "h3-rewrite-search-saturate-items") search evidence tests))
     ((endp items) (list nil search evidence tests))
     (t
      (let ((term (caar items))
@@ -1231,7 +1231,7 @@
  (defun h3-rewrite-search-saturate-implication (n search term step evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (list '(:failure "Fuel" "h3-rewrite-search-saturate-implication") search evidence)
+       (list '(:failure "fuel" "h3-rewrite-search-saturate-implication") search evidence)
      (h3-rewrite-checked
       ((conclusion (proof-term-at term 2)))
       (if (assoc-equal conclusion evidence)
@@ -1253,7 +1253,7 @@
  (defun h3-rewrite-search-prove-fuel (n search term hypotheses)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h3-rewrite-search-prove-fuel") search)
+       (cons '(:failure "fuel" "h3-rewrite-search-prove-fuel") search)
      (h3-rewrite-checked
       ((evidence (h3-rewrite-search-context search hypotheses)))
       (h3-rewrite-search-prove-solve (1- n) term evidence search)
@@ -1262,7 +1262,7 @@
  (defun h3-rewrite-search-prove-solve (n goal context search)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h3-rewrite-search-prove-solve") search)
+       (cons '(:failure "fuel" "h3-rewrite-search-prove-solve") search)
      (let* ((budget (1- (h3-rewrite-search-budget search)))
             (search (update-nth 5 budget search)))
        (cond
@@ -1300,7 +1300,7 @@
  (defun h3-rewrite-search-prove-tests (n tests goal context search failure)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "h3-rewrite-search-prove-tests") search))
+    ((zp n) (cons '(:failure "fuel" "h3-rewrite-search-prove-tests") search))
     ((endp tests) (cons failure search))
     (t
      (let ((test (car tests)))
@@ -1319,7 +1319,7 @@
  (defun h3-rewrite-search-prove-split (n test goal context search)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h3-rewrite-search-prove-split") search)
+       (cons '(:failure "fuel" "h3-rewrite-search-prove-split") search)
      (let ((proof (library-library-proof (h3-rewrite-search-lib search))))
        (h3-rewrite-checked
         ((positive (proof-proof-assume proof test t))
@@ -1339,12 +1339,6 @@
           search))
         search)))))
 
-(defun h3-rewrite-rules-apply (rules index term search evidence active)
-  (h3-rewrite-rules-apply-fuel 1000000 rules index term search evidence active))
-
-(defun h3-rewrite-search-test-evidence (search term evidence active)
-  (h3-rewrite-search-test-evidence-fuel 1000000 search term evidence active))
-
 (defun h3-rewrite-search-reduce (search term evidence tests active)
   (h3-rewrite-with-result
    (value search tests)
@@ -1356,10 +1350,6 @@
    (value search tests)
    (h3-rewrite-search-derive-fuel 1000000 search term evidence active (reverse tests))
    (list value search (reverse tests))))
-
-(defun h3-rewrite-search-saturate (search evidence tests)
-  (let ((result (h3-rewrite-search-saturate-fuel 1000000 search evidence (reverse tests))))
-    (list (car result) (cadr result) (caddr result) (reverse (cadddr result)))))
 
 (defun h3-rewrite-search-prove (search term hypotheses)
   (h3-rewrite-search-prove-fuel 1000000 search term hypotheses))

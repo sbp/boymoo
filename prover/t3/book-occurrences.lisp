@@ -4,17 +4,17 @@
 (defun t3-book-occurrences-natural-count-leaf (n value tests lib recursive premise)
   (declare (ignore tests) (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "t3-book-occurrences-natural-count-leaf"))
+   ((zp n) '(:failure "fuel" "t3-book-occurrences-natural-count-leaf"))
    ((equal value recursive) premise)
    ((proof-is-call value *proof-plus*)
     (let ((args (cdr value)))
       (if (endp args)
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((first (t3-book-occurrences-natural-count-leaf (1- n) (car args) nil
                                                             lib recursive premise)))
           (if (endp (cdr args))
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (proof-with-checked-results
                 ((second (t3-book-occurrences-natural-count-leaf (1- n) (cadr args) nil
                                                                  lib recursive premise)))
@@ -23,7 +23,7 @@
                 (proof-with-checked-results
                     ((extra (t3-book-occurrences-natural-count-leaf (1- n) (caddr args) nil
                                                                     lib recursive premise)))
-                  '(:failure "Unproved" "")))))))))
+                  '(:failure "unproved" "")))))))))
    (t (t3-book-values-book-proofs-natural
        (t3-book-values-make-book-proofs lib nil nil) value))))
 

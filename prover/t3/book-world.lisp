@@ -13,7 +13,7 @@
   (let ((entry (assoc-equal term facts)))
     (if entry
         (cdr entry)
-      '(:failure "MissingProofInput" ""))))
+      '(:failure "missing-proof-input" ""))))
 
 (defun t3-book-world-world-nonsymbol (lib)
   (let* ((proof (library-library-proof lib))
@@ -132,7 +132,7 @@
   (let ((proof (library-library-proof lib))
         (template (list predicate *proof-result*)))
     (cond
-     ((zp n) '(:failure "Fuel" "t3-book-world-signed-list-by-value"))
+     ((zp n) '(:failure "fuel" "t3-book-world-signed-list-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))
@@ -163,7 +163,7 @@
         ((parts (proof-list-of-length goal 2))
          (variable (t3-book-spines-map-parameter lib (cadr parts))))
       (if (not variable)
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (let* ((tail (list *library-cdr* variable))
                (measure (list *library-count* variable))
                (pairs (list (list variable tail)))

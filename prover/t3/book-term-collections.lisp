@@ -29,7 +29,7 @@
 (defun t3-book-term-collections-by-value-open (n proof value tests stack)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-term-collections-by-value-open")
+      '(:failure "fuel" "t3-book-term-collections-by-value-open")
     (let ((frame (t3-book-term-collections-by-value-open-frame proof value)))
       (case (car frame)
         (:failure frame)
@@ -75,7 +75,7 @@
     (if (equal literal target)
         (t3-book-term-collections-by-value-return
          (library-library-proof lib) template step (cadddr request))
-      '(:failure "ProofMismatch" ""))))
+      '(:failure "proof-mismatch" ""))))
 
 (defund t3-book-term-collections-constructor-form-plan (lib value evidence)
   (proof-with-checked-results
@@ -93,7 +93,7 @@
 (defun t3-book-term-collections-constructor-form (n lib value evidence)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-term-collections-constructor-form")
+      '(:failure "fuel" "t3-book-term-collections-constructor-form")
     (let* ((proof (library-library-proof lib))
            (plan (t3-book-term-collections-constructor-form-plan lib value evidence)))
       (if (failure-p plan)
@@ -172,7 +172,7 @@
          ((not (equal normal value)) (list :normalized normal normalized))
          ((proof-is-call value *proof-quote*) (list :quote))
          ((not (proof-is-call value *proof-cons*))
-          '(:failure "Unsupported" ""))
+          '(:failure "unsupported" ""))
          (t
           (proof-with-checked-results ((head (proof-term-at value 1)))
             (cond ((equal predicate *t3-book-substitution-list*) (list :list head))
@@ -186,7 +186,7 @@
 (defun t3-book-term-collections-constructed-type (n lib predicate value known)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-term-collections-constructed-type")
+      '(:failure "fuel" "t3-book-term-collections-constructed-type")
     (let ((target (list predicate value))
           (proof (library-library-proof lib))
           (plan (t3-book-term-collections-constructed-type-plan lib predicate value known)))
@@ -220,7 +220,7 @@
 (defun t3-book-term-collections-leaf-types-selected-list (lib tails typed)
   (cond ((endp tails) (t3-book-substitution-total-list-components lib typed))
         ((not (proof-is-call (car tails) *library-cdr*))
-         '(:failure "Unsupported" ""))
+         '(:failure "unsupported" ""))
         (t (proof-with-checked-results
                ((parts (t3-book-substitution-total-list-components lib typed)))
              (t3-book-term-collections-leaf-types-selected-list lib (cdr tails) (cadr parts))))))
@@ -228,11 +228,11 @@
 (defun t3-book-term-collections-leaf-types-leaf-smaller
     (call lib variable measure expanded evidence arguments substitutions)
   (if (not (proof-is-call call *t3-book-term-collections-if-leaves*))
-      '(:failure "Unsupported" "")
+      '(:failure "unsupported" "")
     (proof-with-checked-results ((item (proof-term-at call 1))
                                  (path (t3-size-selector-path item variable)))
       (if (or (eq path :none) (< (len path) 2))
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (let* ((proof (library-library-proof lib))
                (existing (assoc-equal item substitutions))
                (key (if existing (cdr existing) (list (list variable item))))
@@ -260,12 +260,12 @@
       (let ((arguments (cadar original))
             (evidence (cdr original)))
         (if (endp children)
-            '(:failure "Unproved" "")
+            '(:failure "unproved" "")
           (proof-with-checked-results
               ((left (t3-book-term-collections-leaf-types-leaf-smaller
                       (car children) lib variable measure expanded evidence arguments substitutions)))
             (if (endp (cdr children))
-                '(:failure "Unproved" "")
+                '(:failure "unproved" "")
               (proof-with-checked-results
                   ((right (t3-book-term-collections-leaf-types-leaf-smaller
                            (cadr children) lib variable measure expanded (cadr left)
@@ -275,7 +275,7 @@
                         ((extra (t3-book-term-collections-leaf-types-leaf-smaller
                                  (caddr children) lib variable measure expanded (cadr right)
                                  arguments (caddr right))))
-                      '(:failure "Unproved" ""))
+                      '(:failure "unproved" ""))
                   (proof-with-checked-results
                       ((append-step (library-library-cite
                                      lib *t3-book-term-collections-append-type* children nil))
@@ -295,7 +295,7 @@
          (proved (proof-proof-transport (library-library-proof lib) head opened)))
       (cons proved substitutions)))
    ((not (proof-is-call value *t3-list-bounds-append*))
-    '(:failure "Unsupported" ""))
+    '(:failure "unsupported" ""))
    (t (t3-book-term-collections-leaf-types-leaf-append
        value tests lib accepted variable measure expanded substitutions))))
 
@@ -344,7 +344,7 @@
     (n lib template request recipe context substitutions)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "t3-book-term-collections-by-value"))
+   ((zp n) '(:failure "fuel" "t3-book-term-collections-by-value"))
    ((failure-p request) request)
    ((not (eq (car request) :t3-book-term-collections-leaf)) (cons request substitutions))
    (t
@@ -490,7 +490,7 @@
   (declare (xargs :measure (nfix remaining)))
   (proof-with-checked-results
       ((parts (t3-book-term-collections-equality-types-component-parts proof step)))
-    (cond ((zp remaining) '(:failure "Unproved" ""))
+    (cond ((zp remaining) '(:failure "unproved" ""))
           (parts
            (proof-with-checked-results
                ((rest (t3-book-term-collections-equality-types-components

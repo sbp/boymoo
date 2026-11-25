@@ -11,7 +11,7 @@ The symbol constants `*t2-input-fields-mv-nth*`, `*t2-input-fields-zp*`, `*t2-in
 | `(t2-input-fields-constant-zp lib index)` | Quoted index value as an integer. Returns the Step establishing whether its `ZP` test holds. | A failure for a negative index or failed proof construction. |
 | `(t2-input-fields-end-condition lib term)` | An end-test term. Returns its unfolded equality Step, opening the resulting call as well when the input calls `ENDP`. | A failure from proof construction. |
 | `(t2-input-fields-cons-projection lib selector index result)` | Selector symbol, index, and a `CONS` term. Returns the equality Step for selection from the visible cons spine. | A failure when the required cons spine is absent or proof construction fails. |
-| `(t2-input-fields-bindings lib term)` | Term. Returns the equality Step reducing lambda applications and calls of `RETURN-LAST`, or `nil` if none are reduced. | A failure from proof construction or `Fuel` on exhaustion. |
+| `(t2-input-fields-bindings lib term)` | Term. Returns the equality Step reducing lambda applications and calls of `RETURN-LAST`, or `nil` if none are reduced. | A failure from proof construction or `fuel` on exhaustion. |
 | `(t2-input-fields-result-state channel state)` | Channel and state terms. Returns the term for the state component of `(READ-OBJECT channel state)`. | None. |
 | `(t2-input-fields-project-cons-fields lib term)` | Term. Returns the equality Step simplifying `CAR` and `CDR` of visible cons cells, or `nil` if none are simplified. | A failure from reading a term or constructing a proof. |
 | `(t2-input-fields-assoc-write lib query key value table)` | Query, key, value and table terms. Returns the equality Step for looking up the query after writing the key and value into the table. | A failure from proof construction. |
@@ -24,11 +24,11 @@ The symbol constants `*t2-input-fields-mv-nth*`, `*t2-input-fields-zp*`, `*t2-in
 |---|---|---|
 | `(t2-input-fields-input-slot lib)` | Returns the Library with the input slot and slot write lemmas. | A failure from proof construction. |
 | `(t2-input-fields-other-updates lib)` | Returns the Library with input slot preservation for oracle and global writes, oracle reads, and print updates. | A failure from proof construction. |
-| `(t2-input-fields-other-updates-leaf n value tests lib projected)` | Fuel, result term, signed tests, Library and the term projecting state from the oracle read. Returns a Step equating the input channels of the result and the original state. | `Fuel` on exhaustion, or a failure for an unexpected result term or failed proof construction. |
+| `(t2-input-fields-other-updates-leaf n value tests lib projected)` | Fuel, result term, signed tests, Library and the term projecting state from the oracle read. Returns a Step equating the input channels of the result and the original state. | `fuel` on exhaustion, or a failure for an unexpected result term or failed proof construction. |
 | `(t2-input-fields-project-read lib)` | Returns the Library with the read result flag and input slot lemmas. | A failure from proof construction. |
 | `(t2-input-fields-preserve-channel-type lib)` | Returns the Library with preservation of the channel's input type. | A failure from proof construction. |
 | `(t2-input-fields-any-type-holds lib tests evidence)` | Type test term and evidence Step. Returns the Step proving the test term from evidence for one of its alternatives. | A failure from proof construction or an unmet precondition on the test structure. |
-| `(t2-input-fields-preserve-any-channel-by-type n step lib written)` | Fuel, Step for the original state, Library and unfolded type-test equality Step for the updated state. Returns the Step proving the updated type test. | `Fuel` or a failure from proof construction. |
+| `(t2-input-fields-preserve-any-channel-by-type n step lib written)` | Fuel, Step for the original state, Library and unfolded type-test equality Step for the updated state. Returns the Step proving the updated type test. | `fuel` or a failure from proof construction. |
 | `(t2-input-fields-preserve-any-channel lib)` | Returns the Library with preservation of the channel's input type without specifying the type. | A failure from proof construction. |
 | `(t2-input-fields-shorter-contents lib)` | Returns the Library with the length decrease for a successful read. | A failure from proof construction. |
 

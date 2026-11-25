@@ -11,7 +11,7 @@ A term, a Step, and a Library have the forms specified in `proof.md` and `librar
 | `(finite-tables-finite-table-predicate lib goal known)` | `(cons step lib)`, where `step` proves `goal` or is `nil` if the tactic found no proof. The Library can gain the table lemma and a lemma providing the bound. |
 
 Every function can return a failure. The branch traversal and the range
-check return `Unproved` for a nonliteral leaf and for a bound that
+check return `unproved` for a nonliteral leaf and for a bound that
 does not suffice, respectively.
 
 The two results that carry a Library put a failure in the Step position, preserving the Library reached by the call.

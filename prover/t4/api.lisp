@@ -133,7 +133,7 @@
 (defun t4-api-symbol-token (n chars reversed)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "t4-api-symbol-token"))
+   ((zp n) '(:failure "fuel" "t4-api-symbol-token"))
    ((endp chars) (if reversed (cons reversed chars) nil))
    ((eql (car chars) #\|)
     (let ((part (t4-api-quoted-token (cdr chars) #\| (cons #\| reversed))))
@@ -148,7 +148,7 @@
 (defun t4-api-rename-characters (n chars names reversed)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "t4-api-rename-characters"))
+   ((zp n) '(:failure "fuel" "t4-api-rename-characters"))
    ((endp chars) (coerce (reverse reversed) 'string))
    (t
     (proof-with-checked-results
@@ -283,7 +283,7 @@
 (defun t4-api-export-blocks (n blocks occupied names declarations lemmas)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "t4-api-export-blocks"))
+   ((zp n) '(:failure "fuel" "t4-api-export-blocks"))
    ((endp blocks) '(:failure "failure" ""))
    ((endp (cdr blocks))
     (proof-with-checked-results ((entry (t4-api-target-entry (car blocks) names)))

@@ -10,9 +10,9 @@
 #     verdict.txt;
 #   - the tests that the checker is written in ACL2 Core: every function
 #     called in the define lines of its exported statements is a primitive,
-#     a function of the ground theory or one of its own (checker/closed.py);
-#     and its own statements, with an empty library and a skip for each
-#     obligation, give a provisional verdict;
+#     a function of the ground theory, one of its library or one of its own
+#     (checker/closed.py); and its own statements, with its library as the
+#     library and a skip for each obligation, give a provisional verdict;
 #
 # and computes each of those verdicts again inside ACL2, with the same
 # functions, which must give the same line.  It prints a line for each set
@@ -87,16 +87,18 @@ fi
 
 # The checker in ACL2 Core
 statements=build/checker/checker.statements
-if closed=$(python3 checker/closed.py spec/ground.txt "$statements"); then
+library=build/checker/library.statements
+if closed=$(python3 checker/closed.py spec/ground.txt "$library" "$statements"); then
     echo "checker/closed.py: $closed"
 else
     echo "checker/closed.py: FAILED, $closed"
     failed=1
 fi
-python3 checker/skips.py "$t/empty" "$statements" > "$t/self.proofs"
-v=$(run self "$t/empty" "$statements" "$t/self.proofs")
+python3 checker/skips.py "$library" "$statements" > "$t/self.proofs"
+v=$(run self "$library" "$statements" "$t/self.proofs")
 skips=$(grep -c '' "$t/self.proofs")
-if [ "$v" = "provisional skipped $skips assumed 0 given-definitions 0 given-facts 0" ]; then
+given=$(python3 checker/skips.py "$t/empty" "$library" | grep -c '')
+if [ "$v" = "provisional skipped $skips assumed 0 given-definitions $given given-facts 0" ]; then
     echo "the checker on its own statements: $v"
 else
     echo "the checker on its own statements: FAILED, $v"

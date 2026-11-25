@@ -3,13 +3,12 @@
 Terms, Steps, Libraries, and proof entries use the forms in `prover/sig/proof.md`
 and `prover/sig/library.md`. A definition and a ruler extender use the forms in
 `prover/sig/termination.md`. `tests` is the list of `(term holds)` pairs in call
-path order. Dictionaries are insertion-ordered alists. A failure is the entire result. `Unsupported` identifies a measure or obligation
+path order. Dictionaries are insertion-ordered alists. A failure is the entire result. `unsupported` identifies a measure or obligation
 that the recipe cannot handle.
 
 | Call | Arguments and result | Failure |
 |---|---|---|
 | `(t2-tactics-proof-entries lemmas entry)` | From the list of lemma entries `lemmas` in insertion order, return the entries needed by `entry`, in library order, followed by `entry` itself. | A failure from inspecting an entry or writing its name. |
-| `(t2-tactics-proof-source lemmas entry)` | The two-element list of the total step count and concatenated source of the entries selected by `proof-entries`. | A failure from selecting or inspecting the entries. |
 
 ## Ruler facts
 
@@ -26,7 +25,6 @@ is true once premise derivation has begun. Use the constructor and accessors.
 | `(t2-tactics-ruler-facts-proof facts)` | The Proof or Library of `facts`. | None. |
 | `(t2-tactics-ruler-facts-tests facts)` | The signed tests of `facts`. | None. |
 | `(t2-tactics-ruler-facts-extra facts)` | The extra-Step dictionary of `facts`. | None. |
-| `(t2-tactics-ruler-facts-found facts)` | The established-Step dictionary of `facts`. | None. |
 | `(t2-tactics-ruler-facts-derived facts)` | Whether premise derivation has begun. | None. |
 | `(t2-tactics-ruler-facts-with-proof facts proof)` | RulerFacts with the supplied Proof or Library. | None. |
 | `(t2-tactics-ruler-facts-find facts term)` | `(cons step facts)` with the first Step for `term`, or `nil` in the step position, and the resulting RulerFacts. | A failure from constructing a proof. |
@@ -54,12 +52,10 @@ to measure terms whose insertion order supplies the measure header fields.
 | `(t2-tactics-generator-with-lib generator lib)` | Generator with the supplied Arithmetic Library. | None. |
 | `(t2-tactics-generator-with-measures generator measures)` | Generator with the supplied stored measure and relation dictionary. | None. |
 | `(t2-tactics-generator-admit-given generator kind data)` | Generator after adding the definitions or facts from the given event. | A failure from inspecting or admitting the event. |
-| `(t2-tactics-generator-prove generator kind data)` | `(cons entry generator)` for the definition event and the resulting Generator. | `Unsupported` for other event kinds or a Common Lisp function name, or a failure from the selected measures or proof. |
-| `(t2-tactics-generator-measures-for generator definitions)` | Dictionary from names to measure terms in definition order. | `MissingBinding` for an absent measure, `Unsupported` for another relation, or a failure from inspecting the definitions or measures. |
-| `(t2-tactics-generator-prove-renamed generator data)` | `(cons (list source entry) generator)` with the renamed definition text, its measure entry, and the resulting Generator. | `Unsupported` if renaming changes the obligations, or a failure from constructing the definition or proof. |
+| `(t2-tactics-generator-measures-for generator definitions)` | Dictionary from names to measure terms in definition order. | `missing-binding` for an absent measure, `unsupported` for another relation, or a failure from inspecting the definitions or measures. |
 | `(t2-tactics-generator-prove-definition generator rulers definitions measures)` | `(cons entry generator)` with the measure entry and the resulting Generator. | A failure from constructing the obligations or proof. |
 | `(t2-tactics-generator-ordinal generator measure)` | `(cons step generator)` with an ordinality Step and the resulting Generator. | A failure from constructing a proof. |
-| `(t2-tactics-generator-decrease generator clause tests)` | `(cons step generator)` with the decrease Step and the resulting Generator. | `Unsupported` if there is no descent recipe, or a failure from constructing a proof. |
+| `(t2-tactics-generator-decrease generator clause tests)` | `(cons step generator)` with the decrease Step and the resulting Generator. | `unsupported` if there is no descent recipe, or a failure from constructing a proof. |
 
 Term constants are `*t2-tactics-atom*`, `*t2-tactics-endp*`,
 `*t2-tactics-null*`, `*t2-tactics-eq*`, `*t2-tactics-eql*`,

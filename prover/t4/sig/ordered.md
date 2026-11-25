@@ -14,34 +14,10 @@ not failure. `*t4-ordered-iff*` is the symbol for `IFF`.
 
 | ACL2 call | Result |
 |---|---|
-| `(t4-ordered-rational lib value premises)` | `(cons step lib)` proving the term `value` rational. |
-| `(t4-ordered-identity lib left right premises)` | `(cons step lib)` proving equality of the terms by normalization. |
 | `(t4-ordered-positive term)` | The term comparing quoted zero strictly below `term`. Does not failure. |
 | `(t4-ordered-negative term)` | The term comparing `term` strictly below quoted zero. Does not failure. |
-| `(t4-ordered-signed-cases lib value typed leaf)` | `(cons step lib)` joining the three sign branches of term `value`, with rational Step `typed`. The leaf replies or requests follow positive, zero, negative order. |
-| `(t4-ordered-no-negative lib value above)` | `(cons step lib)` proving term `value` is not negative using positive Step `above`. |
 | `(t4-ordered-nonzero-sign lib sign)` | A Step proving the nonzero Sign's term unequal to quoted zero. |
-| `(t4-ordered-sign-test lib sign term)` | `(cons step lib)` for whether comparison term `term` holds under the given Sign, or `nil` in the value position for an unknown test. |
 | `(t4-ordered-as-boolean lib test premise)` | `(cons step lib)` proving the Boolean value of term `test` using Step `premise`. |
-| `(t4-ordered-product-sign lib x y premises)` | `(cons sign lib)` for the product of the terms of the two Signs `x` and `y`. |
-| `(t4-ordered-sign-formula lib term signs)` | `(cons step lib)` computing the Boolean formula term with the ordered list of Signs. |
-| `(t4-ordered-product-sign-theorem lib formula)` | `(cons step lib)` proving the formula term by splitting on the signs of its product's operands, or `nil` in the step position for an unmatched formula. |
-| `(t4-ordered-scaled-order-lemma lib)` | The Library with the rational scaling lemma, or a failure. |
-| `(t4-ordered-scaled-order lib a b factor premises)` | `(cons step lib)` proving the order of terms `a` and `b` when scaled by term `factor`. |
-| `(t4-ordered-scale-for-unscaled lib term factor premises)` | `(cons (list value step) lib)` with the unscaled term and its scaling equality Step. The pair of fields is `(nil nil)` if the term lacks the factor. |
-| `(t4-ordered-choose-sign lib equation sign)` | `(cons step lib)` reducing the right side of equality Step `equation` as far as the Sign permits. |
-| `(t4-ordered-scaled-comparison lib formula)` | `(cons step lib)` for a comparison with a common scale, or `nil` in the step position when no candidate succeeds. |
-| `(t4-ordered-divided-comparison lib formula)` | `(cons step lib)` proving the formula term by clearing its reciprocal, or `nil` in the step position when no candidate succeeds. |
-
-The three formula calls and `t4-ordered-rational` also have `-with-replies`
-entry points taking a final reply alist. A request has the form
-`(:call kind lib . args)` and the alist maps requests to replies. For
-`:arithmetic` there are no additional arguments and the reply is
-`(cons nil lib)` with arithmetic initialized. For `:fact-proof` the
-arguments are the target term and Evidence, and the reply is `(cons step lib)`
-with the Library after that call. A Step reply can be `nil` or a failure.
-At a request, add its reply to the alist and repeat the original call.
-The ordinary calls start with an empty alist.
 
 The `leaf` argument of `signed-cases` is the list of `(cons step lib)`
 replies in positive, zero, negative order. If the next reply is absent,

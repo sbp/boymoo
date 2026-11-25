@@ -313,7 +313,7 @@
 (defun h1-tactics-rules-add-formula-loop (n rules step general rewrite)
   (declare (xargs :measure (nfix n)))
   (if (h1-tactics-fuel-exhausted-p n)
-      '(:failure "Fuel" "h1-tactics-rules-add-formula-loop")
+      '(:failure "fuel" "h1-tactics-rules-add-formula-loop")
     (let ((result (h1-tactics-rules-add-formula-step rules step general rewrite)))
       (case (car result)
         (:consequent
@@ -767,7 +767,7 @@
 (defun h1-tactics-context-init-conjuncts (n context part)
   (declare (xargs :measure (nfix n)))
   (if (h1-tactics-fuel-exhausted-p n)
-      '(:failure "Fuel" "h1-tactics-context-init-conjuncts")
+      '(:failure "fuel" "h1-tactics-context-init-conjuncts")
     (proof-with-checked-results
         ((term (proof-step-first part))
          (no (if (proof-is-call term *proof-if*) (proof-term-at term 3) :none)))
@@ -893,8 +893,8 @@
   (let* ((search (h1-tactics-context-search context))
          (work (h1-tactics-search-work search)))
     (cond ((and (not (eq work :none)) (< (1- work) 0))
-           '(:failure "Unproved" ""))
-          ((> depth 160) '(:failure "Unproved" ""))
+           '(:failure "unproved" ""))
+          ((> depth 160) '(:failure "unproved" ""))
           ((eq work :none) context)
           (t (h1-tactics-context-with-search
               context (h1-tactics-search-with-work search (1- work)))))))
@@ -912,7 +912,7 @@
  (defun h1-tactics-context-find-loop (n context term)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-context-find-loop")
+       '(:failure "fuel" "h1-tactics-context-find-loop")
      (let ((known (assoc-equal term (h1-tactics-context-evidence context)))
            (active (h1-tactics-context-active context)))
        (cond (known (cons (cdr known) context))
@@ -932,7 +932,7 @@
  (defun h1-tactics-context-derive-loop (n context term)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-context-derive-loop")
+       '(:failure "fuel" "h1-tactics-context-derive-loop")
      (let ((prover (h1-tactics-context-prover context))
            (library (h1-tactics-context-library context)))
        (proof-with-checked-results ((earlier (h1-tactics-prover-prior-fact prover term)))
@@ -966,7 +966,7 @@
  (defun h1-tactics-context-derive-after-conjunction (n context term)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-context-derive-after-conjunction")
+       '(:failure "fuel" "h1-tactics-context-derive-after-conjunction")
      (proof-with-checked-results
          ((right (if (proof-is-call term *proof-equal*) (proof-term-at term 2) :none))
           (step (if (and (not (eq right :none)) (equal (cadr term) right))
@@ -980,7 +980,7 @@
  (defun h1-tactics-context-find-signed (n context test)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-context-find-signed")
+       '(:failure "fuel" "h1-tactics-context-find-signed")
      (proof-with-checked-results
          ((positive (h1-tactics-context-find-loop (1- n) context test)))
        (if (car positive)
@@ -990,7 +990,7 @@
  (defun h1-tactics-context-select-loop (n context term)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-context-select-loop")
+       '(:failure "fuel" "h1-tactics-context-select-loop")
      (let ((proof (h1-tactics-context-proof context))
            (library (h1-tactics-context-library context))
            (prover (h1-tactics-context-prover context)))
@@ -1018,7 +1018,7 @@
  (defun h1-tactics-context-apply-loop (n context index term)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-context-apply-loop")
+       '(:failure "fuel" "h1-tactics-context-apply-loop")
      (let* ((search (h1-tactics-context-search context))
             (global (h1-tactics-prover-rules (h1-tactics-context-prover context)))
             (head (h1-tactics-call-head term)))
@@ -1035,7 +1035,7 @@
  (defun h1-tactics-context-apply-candidates (n context candidates term)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-context-apply-candidates")
+       '(:failure "fuel" "h1-tactics-context-apply-candidates")
      (if (endp candidates)
          (cons nil context)
        (let* ((pattern (caar candidates))
@@ -1064,7 +1064,7 @@
  (defun h1-tactics-context-apply-sides (n context step sides)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-context-apply-sides")
+       '(:failure "fuel" "h1-tactics-context-apply-sides")
      (if (endp sides)
          (cons step context)
        (let ((side (car sides))
@@ -1088,7 +1088,7 @@
  (defun h1-tactics-context-guard-loop (n context term)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-context-guard-loop")
+       '(:failure "fuel" "h1-tactics-context-guard-loop")
      (proof-with-checked-results ((found (h1-tactics-context-find-loop (1- n) context term)))
        (if (car found)
            found
@@ -1121,7 +1121,7 @@
  (defun h1-tactics-search-reduce-follow (n step term context tests fuel depth)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-reduce-follow")
+       '(:failure "fuel" "h1-tactics-search-reduce-follow")
      (proof-with-checked-results ((value (h1-tactics-step-at step 2)))
        (if (equal value term)
            (list nil context tests)
@@ -1133,7 +1133,7 @@
  (defun h1-tactics-search-reduce-rewrite (n current head context)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-reduce-rewrite")
+       '(:failure "fuel" "h1-tactics-search-reduce-rewrite")
      (proof-with-checked-results
          ((applied (h1-tactics-context-apply-loop (1- n) context "rewrites" current))
           (value (if (car applied) (h1-tactics-step-at (car applied) 2) current)))
@@ -1161,7 +1161,7 @@
  (defun h1-tactics-search-reduce-if (n term context tests fuel depth)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-reduce-if")
+       '(:failure "fuel" "h1-tactics-search-reduce-if")
      (proof-with-checked-results ((selection (h1-tactics-context-select-loop (1- n) context term)))
        (if (car selection)
            (h1-tactics-search-reduce-follow (1- n) (car selection) term
@@ -1190,7 +1190,7 @@
  (defun h1-tactics-search-reduce-arguments (n arguments index term context tests fuel depth step)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-reduce-arguments")
+       '(:failure "fuel" "h1-tactics-search-reduce-arguments")
      (if (endp arguments)
          (list step context tests)
        (proof-with-checked-results
@@ -1207,7 +1207,7 @@
  (defun h1-tactics-search-reduce-selector (n head current context)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-reduce-selector")
+       '(:failure "fuel" "h1-tactics-search-reduce-selector")
      (proof-with-checked-results
          ((argument (proof-term-at current 1))
           (atom-step (h1-tactics-context-find-loop
@@ -1227,7 +1227,7 @@
  (defun h1-tactics-search-reduce-after-arguments (n term head context tests fuel depth step)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-reduce-after-arguments")
+       '(:failure "fuel" "h1-tactics-search-reduce-after-arguments")
      (proof-with-checked-results
          ((current (h1-tactics-reduction-current step term))
           (rewrite (if step
@@ -1259,7 +1259,7 @@
  (defun h1-tactics-search-reduce-finish (n term head current context tests fuel depth step equality)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-reduce-finish")
+       '(:failure "fuel" "h1-tactics-search-reduce-finish")
      (if (and (not equality) (not (h1-tactics-opening-available-p head fuel)))
          (h1-tactics-tidy-reduction context step tests)
        (let ((proof (h1-tactics-context-proof context))
@@ -1272,7 +1272,7 @@
  (defun h1-tactics-search-reduce-call (n term head context tests fuel depth)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-reduce-call")
+       '(:failure "fuel" "h1-tactics-search-reduce-call")
      (proof-with-checked-results
          ((rewrite (h1-tactics-search-reduce-rewrite (1- n) term head context)))
        (let ((context (cdr rewrite)))
@@ -1309,7 +1309,7 @@
  (defun h1-tactics-search-reduce-loop (n term context tests fuel depth)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-reduce-loop")
+       '(:failure "fuel" "h1-tactics-search-reduce-loop")
      (proof-with-checked-results ((context (h1-tactics-reduction-work context depth)))
        (let* ((head (h1-tactics-call-head term))
               (binding (assoc-equal term (h1-tactics-context-bindings context))))
@@ -1332,12 +1332,6 @@
 
 (defun h1-tactics-context-find (context term)
   (h1-tactics-context-find-loop 1000000 context term))
-
-(defun h1-tactics-context-derive (context term)
-  (h1-tactics-context-derive-loop 1000000 context term))
-
-(defun h1-tactics-context-select (context term)
-  (h1-tactics-context-select-loop 1000000 context term))
 
 (defun h1-tactics-context-apply (context index term)
   (h1-tactics-context-apply-loop 1000000 context index term))
@@ -1424,7 +1418,7 @@
 (defun h1-tactics-context-learn-loop (n context pending seen)
   (declare (xargs :measure (nfix n)))
   (if (h1-tactics-fuel-exhausted-p n)
-      '(:failure "Fuel" "h1-tactics-context-learn-loop")
+      '(:failure "fuel" "h1-tactics-context-learn-loop")
     (if (endp pending)
         context
       (let ((step (caar pending))
@@ -1577,7 +1571,7 @@
  (defun h1-tactics-search-prove-loop (n search term tests split-and)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-prove-loop")
+       '(:failure "fuel" "h1-tactics-search-prove-loop")
      (proof-with-checked-results
          ((context (h1-tactics-context-init search tests))
           (known (h1-tactics-context-find context term)))
@@ -1606,7 +1600,7 @@
  (defun h1-tactics-search-prove-reduced (n context term tests)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-prove-reduced")
+       '(:failure "fuel" "h1-tactics-search-prove-reduced")
      (let* ((search (h1-tactics-context-search context))
             (proof (h1-tactics-context-proof context)))
        (proof-with-checked-results
@@ -1628,14 +1622,14 @@
                 (search (h1-tactics-context-search context)))
              (cond ((car contradiction) (cons (car contradiction) search))
                    ((equal (h1-tactics-search-remaining search) 0)
-                    '(:failure "Unproved" ""))
+                    '(:failure "unproved" ""))
                    (t (h1-tactics-search-prove-pending
                        (1- n) context term result tests (caddr reduced))))))))))
 
  (defun h1-tactics-search-prove-pending (n context term result tests pending)
    (declare (xargs :measure (nfix n)))
    (if (h1-tactics-fuel-exhausted-p n)
-       '(:failure "Fuel" "h1-tactics-search-prove-pending")
+       '(:failure "fuel" "h1-tactics-search-prove-pending")
      (if (endp pending)
          (proof-with-checked-results
              ((contradiction (if (equal result *proof-false*)
@@ -1643,7 +1637,7 @@
                                (h1-tactics-search-try-contradiction context term))))
            (if (car contradiction)
                (cons (car contradiction) (h1-tactics-context-search (cdr contradiction)))
-             '(:failure "Unproved" "")))
+             '(:failure "unproved" "")))
        (let ((test (caar pending)))
          (proof-with-checked-results
              ((known (h1-tactics-context-find-signed 1000000 context test)))

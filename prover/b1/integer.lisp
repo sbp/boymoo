@@ -108,7 +108,7 @@
       (index (proof-term-at (caddr operands) 1))
       (before (library-diff bound index)))
      (if (not (equal large (list *b1-integer-nfix* before)))
-         '(:failure "RuleInapplicable" "")
+         '(:failure "rule-inapplicable" "")
        (proof-with-checked-results
         ((nat-bound (b1-integer-nfix-natural library bound))
          (nat-index (b1-integer-nfix-natural library index))

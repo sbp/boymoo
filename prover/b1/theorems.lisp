@@ -35,7 +35,7 @@
    (declare (xargs :measure (acl2-count n)))
    (let ((proof (library-library-proof lib)))
      (cond
-      ((zp n) '(:failure "Fuel" "b1-theorems-all-fnnames-consequence-true-list"))
+      ((zp n) '(:failure "fuel" "b1-theorems-all-fnnames-consequence-true-list"))
       ((equal value initial-acc) (cons initial induction))
       ((proof-is-call value *b1-theorems-all-fnnames*)
        (proof-with-checked-results
@@ -66,7 +66,7 @@
                      lib value nil (list *b1-theorems-add-to-set*) nil nil nil nil))
             (result (b1-theorems-step-result opened)))
          (if (equal result value)
-             '(:failure "Unproved" "")
+             '(:failure "unproved" "")
            (proof-with-checked-results
                ((branches (b1-theorems-all-fnnames-by-value
                            (1- n) result tests lib induction initial initial-acc
@@ -80,7 +80,7 @@
    (declare (xargs :measure (acl2-count n)))
    (let ((proof (library-library-proof lib)))
      (cond
-      ((zp n) '(:failure "Fuel" "b1-theorems-all-fnnames-by-value"))
+      ((zp n) '(:failure "fuel" "b1-theorems-all-fnnames-by-value"))
       ((proof-is-call value *proof-if*)
        (proof-with-checked-results
            ((branches (proof-list-of-length (cdr value) 3))
@@ -253,7 +253,7 @@
 (defun b1-theorems-project-conjunct-consequence (n hypothesis lib formula)
   (declare (xargs :measure (acl2-count n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-theorems-project-conjunct-consequence")
+      '(:failure "fuel" "b1-theorems-project-conjunct-consequence")
     (proof-with-checked-results
         ((literal (proof-step-first hypothesis))
          (otherwise (and (proof-is-call literal *proof-if*)
@@ -269,7 +269,7 @@
         (proof-with-checked-results ((conclusion (proof-term-at formula 2)))
           (if (equal literal conclusion)
               hypothesis
-            '(:failure "Unproved" "")))))))
+            '(:failure "unproved" "")))))))
 
 (defun b1-theorems-project-conjunct (lib formula)
   (proof-with-checked-results

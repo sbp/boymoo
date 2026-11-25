@@ -14,11 +14,11 @@ CC = c99
 CFLAGS = -O 1
 LDFLAGS =
 OUT = build/runner
-SRC = runner/sys.c runner/heap.c runner/num.c runner/data.c runner/eval.c
+SRC = runner/sys.c runner/heap.c runner/num.c runner/data.c runner/eval.c runner/prelude.c
 
 all: $(OUT)/boymoo-run
 
-$(OUT)/boymoo-run: $(SRC) runner/run.h
+$(OUT)/boymoo-run: $(SRC) runner/run.h runner/prelude.h
 	mkdir -p $(OUT)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(OUT)/boymoo-run $(SRC)
 

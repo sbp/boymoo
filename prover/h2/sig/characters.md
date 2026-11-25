@@ -26,6 +26,5 @@ Supply each reply as `(:return value)`. If the BookProof supplies the `:keep-fol
 | Lifted call | Result |
 |---|---|
 | `(h2-characters-character-digits-character-at value tests proof)` | Step establishing the character type of the quoted digit `value`, or a failure. |
-| `(h2-characters-character-digits-recognize claim evidence proof rules)` | `(cons step proof)` with the proof of `claim` from the accumulator invariant Step `evidence`. |
 | `(h2-characters-character-result-at-leaf value tests proof rules leaves evidence)` | `(cons step proof)` for the result term `value` under the additional signed tests, in their path order. |
 | `(h2-characters-pack-characters-shape holds evidence proof test formula rules atom)` | `(cons step proof)` proving the joint packing formula under the sign `holds` of `test`. `atom` is the name string for the atom printing invariant. |

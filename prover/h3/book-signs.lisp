@@ -115,9 +115,6 @@
     (equation (proof-proof-rewrite inference positive double '(1 2 1))))
    (cons (proof-proof-symmetric inference equation) lib)))
 
-(defun h3-book-signs-negative-reflection (lib numeric)
-  (h3-book-signs-checked-pair (h3-book-signs-negative-reflection-with-library lib numeric)))
-
 (defun h3-book-signs-zero-contradiction (lib term index sign)
   (let ((inference (library-library-proof lib)))
     (proof-with-checked-results
@@ -168,9 +165,6 @@
        (h3-book-signs-sign-evidence-zero lib sign proof)
      (h3-book-signs-sign-evidence-nonzero lib numeric term sign proof))))
 
-(defun h3-book-signs-sign-evidence (lib numeric sign proof)
-  (h3-book-signs-checked-pair (h3-book-signs-sign-evidence-with-library lib numeric sign proof)))
-
 (defun h3-book-signs-each-sign-prepare-with-library (lib numeric)
   (let ((inference (library-library-proof lib)))
     (h3-book-signs-with-library-results lib
@@ -189,9 +183,6 @@
       (reflection (h3-book-signs-negative-reflection-with-library lib numeric) :pair)
       (negative (proof-proof-transport (library-library-proof lib) negative reflection)))
      (cons (list positive zero negative) lib))))
-
-(defun h3-book-signs-each-sign-prepare (lib numeric)
-  (h3-book-signs-checked-pair (h3-book-signs-each-sign-prepare-with-library lib numeric)))
 
 (defun h3-book-signs-each-sign-finish (lib numeric positive zero negative)
   (let ((inference (library-library-proof lib)))
@@ -302,9 +293,6 @@
             (h3-book-signs-with-library-results lib ((boolean (h3-book-signs-boolean-fact lib term)))
              (cons (library-library-cite lib label (list term) (list boolean proof)) lib)))))))))
 
-(defun h3-book-signs-predicate-value (lib proof)
-  (h3-book-signs-checked-pair (h3-book-signs-predicate-value-with-library lib proof)))
-
 (defun h3-book-signs-times-minus-lemma (lib label)
   (let ((formula (proof-eq (list *proof-times* *library-x* (library-minus *library-y*))
                            (library-minus (list *proof-times* *library-x* *library-y*)))))
@@ -329,9 +317,6 @@
            (exchange (library-library-axiom lib "COMMUTATIVITY-OF-*" (list b a))))
           (cons (proof-proof-rewrite inference step exchange '(1 2 1)) lib)))))))
 
-(defun h3-book-signs-minus-product (lib a b lefthand)
-  (h3-book-signs-checked-pair (h3-book-signs-minus-product-with-library lib a b lefthand)))
-
 (defun h3-book-signs-times-negative-one-with-library (lib numeric)
   (let ((inference (library-library-proof lib)))
     (h3-book-signs-with-library-results lib
@@ -348,9 +333,6 @@
       (fixed (h3-book-arithmetic-fix-value lib term numeric))
       (identity (proof-proof-chain inference unity (list fixed))))
      (cons (proof-proof-rewrite inference changed identity '(1 2 1)) lib))))
-
-(defun h3-book-signs-times-negative-one (lib numeric)
-  (h3-book-signs-checked-pair (h3-book-signs-times-negative-one-with-library lib numeric)))
 
 (defun h3-book-signs-rational-product (lib ra rb)
   (let ((inference (library-library-proof lib)))
@@ -435,9 +417,6 @@
           (h3-book-signs-sign-evidence-with-library lib numeric 0 equation)))
      (h3-book-signs-rational-sign-nonzero lib ra rb sa sb a b product numeric result-sign))))
 
-(defun h3-book-signs-rational-sign (lib ra rb sa sb)
-  (h3-book-signs-checked-pair (h3-book-signs-rational-sign-with-library lib ra rb sa sb)))
-
 (defun h3-book-signs-rational-scaling-case (s1 lib r1 r2 s2 orientation)
   (h3-book-signs-with-library-results lib
    ((product (h3-book-signs-rational-sign-with-library lib r1 r2 s1 s2) :pair)
@@ -484,10 +463,6 @@
     (status (h3-book-signs-signs-at sb sign)))
    (cons (library-library-cite lib label (list a b) (list ra rb status)) lib)))
 
-(defun h3-book-signs-rational-scaling (lib ra rb sb orientation)
-  (h3-book-signs-checked-pair
-   (h3-book-signs-rational-scaling-with-library lib ra rb sb orientation)))
-
 (defun h3-book-signs-comparison-by-parts-default (lib name missing)
   (proof-with-checked-results ((axiom (library-library-axiom lib name (list *library-x*))))
     (proof-proof-modus-ponens (library-library-proof lib) axiom missing)))
@@ -533,9 +508,6 @@
                  lib
                (h3-book-signs-comparison-by-parts-lemma lib label orientation))))
    (cons (library-library-cite updated label (list term) nil) updated)))
-
-(defun h3-book-signs-comparison-by-parts (lib term orientation)
-  (h3-book-signs-checked-pair (h3-book-signs-comparison-by-parts-with-library lib term orientation)))
 
 (defun h3-book-signs-scaled-parts-component (lib head name product parts source real imag)
   (let ((inference (library-library-proof lib)))
@@ -633,10 +605,6 @@
        (reverse (proof-proof-symmetric inference order)))
       (cons (proof-proof-chain inference step (list reverse)) lib)))))
 
-(defun h3-book-signs-scaled-comparison (lib term scalar-type scale orientation)
-  (h3-book-signs-checked-pair
-   (h3-book-signs-scaled-comparison-with-library lib term scalar-type scale orientation)))
-
 (defun h3-book-signs-nonnumeric-signs-default (lib name args absent)
   (let ((inference (library-library-proof lib)))
     (proof-with-checked-results
@@ -669,9 +637,6 @@
       (zero-value (h3-book-signs-predicate-value-with-library lib zero) :pair)
       (positive-value (h3-book-signs-predicate-value-with-library lib positive) :pair))
      (cons (list negative zero positive negative-value zero-value positive-value) lib))))
-
-(defun h3-book-signs-sign-conditions (lib signs)
-  (h3-book-signs-checked-pair (h3-book-signs-sign-conditions-with-library lib signs)))
 
 (defun h3-book-signs-scale-sign-goal-prove-goal
     (equation evidence lib formula comparison term scalar swapped orientation)
@@ -766,10 +731,6 @@
        (cons good lib)
      (h3-book-signs-scale-sign-goal-default lib numeric good formula comparison term scalar swapped orientation))))
 
-(defun h3-book-signs-scale-sign-goal (lib formula term scalar swapped rational neg-complex)
-  (h3-book-signs-checked-pair
-   (h3-book-signs-scale-sign-goal-with-library lib formula term scalar swapped rational neg-complex)))
-
 (defun h3-book-signs-product-sign-theorem-negative (lib goal x y premise search)
   (let ((complex-y (list *h3-book-signs-complexp* y)))
     (h3-book-signs-with-library-results lib
@@ -810,9 +771,6 @@
              (h3-book-signs-product-sign-theorem-positive lib name goal x y premise search)) :pair))
    (cons (h3-rewrite-implication lib condition proof) lib)))
 
-(defun h3-book-signs-product-sign-theorem (lib name formula)
-  (h3-book-signs-checked-pair (h3-book-signs-product-sign-theorem-with-library lib name formula)))
-
 (defun h3-book-signs-rational-product-sign-goal-first-sign-second-sign
     (b lib search target first second orientation a)
   (h3-book-signs-with-library-results lib
@@ -826,7 +784,7 @@
     (rhs (proof-term-at target 2))
     (expected (car (h3-rewrite-search-reduce search rhs conditions nil nil))))
    (if (not expected)
-       (cons '(:failure "Unproved" "") lib)
+       (cons '(:failure "unproved" "") lib)
      (h3-book-signs-with-library-results lib
       ((expected-value (h3-book-signs-step-at expected 2))
        (result-value (h3-book-signs-step-at result 2)))
@@ -834,7 +792,7 @@
           (let ((inference (library-library-proof lib)))
             (h3-book-signs-with-library-results lib ((reverse (proof-proof-symmetric inference expected)))
              (cons (proof-proof-chain inference result (list reverse)) lib)))
-        (cons '(:failure "Unproved" "") lib))))))
+        (cons '(:failure "unproved" "") lib))))))
 
 (defun h3-book-signs-rational-product-sign-goal-first-sign
     (a lib search target first second orientation)
@@ -849,10 +807,6 @@
     (numeric (h3-book-signs-number lib first)))
    (h3-book-signs-each-sign-with-library
     lib numeric (h3-book-signs-rational-product-sign-goal-first-sign) search target first second orientation)))
-
-(defun h3-book-signs-rational-product-sign-goal (lib target first second orientation)
-  (h3-book-signs-checked-pair
-   (h3-book-signs-rational-product-sign-goal-with-library lib target first second orientation)))
 
 (defun h3-book-signs-conditional-product-sign-rationals (operands evidence)
   (if (endp operands)
@@ -927,9 +881,6 @@
        (h3-book-signs-conditional-product-sign-target lib (car fields) (cadr fields)))
     (cons nil lib)))
 
-(defun h3-book-signs-conditional-product-sign (lib formula)
-  (h3-book-signs-checked-pair (h3-book-signs-conditional-product-sign-with-library lib formula)))
-
 (defun h3-book-signs-boolean-comparison-equality-branch (lib q truth formula p-eq search)
   (h3-book-signs-with-library-results lib
    ((given (proof-proof-assume (library-library-proof lib) q truth))
@@ -973,6 +924,3 @@
                    (h3-book-signs-boolean-comparison-equality-prove lib formula p q iff)
                  (cons nil lib)))))))))))
 
-(defun h3-book-signs-boolean-comparison-equality (lib formula)
-  (h3-book-signs-checked-pair
-   (h3-book-signs-boolean-comparison-equality-with-library lib formula)))

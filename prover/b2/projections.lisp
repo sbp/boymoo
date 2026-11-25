@@ -45,7 +45,7 @@
 
 (defun b2-projections-mv-nth-with-fuel (n prepared lib index value)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "b2-projections-mv-nth-with-fuel"))
+  (cond ((zp n) '(:failure "fuel" "b2-projections-mv-nth-with-fuel"))
         ((not (eq (car prepared) :projection)) prepared)
         ((equal index 0) (b2-projections-mv-nth-finish prepared (cons nil lib) index value))
         (t (let* ((next-index (1- index))

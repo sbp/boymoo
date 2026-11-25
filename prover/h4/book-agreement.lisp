@@ -365,7 +365,7 @@
 
 (defun h4-book-agreement-relation-boolean-prepared (n p agreement prepared)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h4-book-agreement-relation-boolean-prepared"))
+  (cond ((zp n) '(:failure "fuel" "h4-book-agreement-relation-boolean-prepared"))
         ((failure-p prepared) prepared)
         ((eq (car prepared) :agreement) (cdr prepared))
         (t (proof-with-checked-results
@@ -378,7 +378,7 @@
 
 (defun h4-book-agreement-relation-boolean (n p relation agreement)
   (if (zp n)
-      '(:failure "Fuel" "h4-book-agreement-relation-boolean")
+      '(:failure "fuel" "h4-book-agreement-relation-boolean")
     (h4-book-agreement-relation-boolean-prepared
      n p agreement (h4-book-agreement-relation-boolean-prepare p relation agreement))))
 
@@ -1369,5 +1369,3 @@
     (h4-book-agreement-agreement-implication p formula choices))
    (t nil)))
 
-(defun h4-book-agreement-agreement-proof (p formula)
-  (h4-book-agreement-agreement-proof-with-choices p formula nil))

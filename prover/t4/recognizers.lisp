@@ -45,12 +45,6 @@
       (step (proof-proof-chain proof equation (list selected))))
      (list step lib (caddr evidence)))))
 
-(defun t4-recognizers-recognizer-implication-branch-view
-    (equation positive lib shape)
-  (proof-with-checked-results
-   ((result (t4-recognizers-branch-view equation positive lib shape :ordinals)))
-   (car result)))
-
 (defun t4-recognizers-recursive-call-p (term recursive)
   (and (proof-compound term)
        (equal (len term) 2)
@@ -240,10 +234,3 @@
    ((result (t4-recognizers-recognizer-implication-run lib formula recursive replies)))
    (cons (car result) (cadr result))))
 
-(defun t4-recognizers-recognizer-implication-with-library (lib formula recursive)
-  (t4-recognizers-recognizer-implication-with-replies lib formula recursive :ordinals))
-
-(defun t4-recognizers-recognizer-implication (lib formula recursive)
-  (proof-with-checked-results
-   ((result (t4-recognizers-recognizer-implication-with-library lib formula recursive)))
-   (car result)))

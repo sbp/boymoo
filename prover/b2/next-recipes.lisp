@@ -97,7 +97,7 @@
          (failure (failure-p typed))
          (value (if failure typed (car typed))))
     (cond ((not (failure-p value)) typed)
-          ((member-equal (cadr value) '("value" "inapplicable" "Unproved"))
+          ((member-equal (cadr value) '("value" "inapplicable" "unproved"))
            (b2-next-recipes-prove-new-theorem-search (if failure lib (cdr typed)) formula))
           (t value))))
 

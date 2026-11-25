@@ -25,7 +25,6 @@ insertion order. The prover symbols are `*h1-book-substitution-term*`,
 | `(h1-book-substitution-install-syntax proof)` | The Prover with the term syntax lemmas installed in order. |
 | `(h1-book-substitution-install-parallel-lookup proof)` | The Prover with the parallel lookup type lemma. |
 | `(h1-book-substitution-nonquote-from-path proof value tests)` | A Step proving the nonquote branch for `value` from the signed tests. |
-| `(h1-book-substitution-substitution-proof proof formula)` | `(cons step proof)` with the Step for `formula` and the Prover including any installed substitution lemma. |
 | `(h1-book-substitution-substitution-proof-with-proof proof formula)` | `(cons value proof)`, with a Step or a failure in `value` and the Prover as of that result. |
 
 The calls above can return a failure as the entire result, except the
@@ -49,7 +48,6 @@ terms, `assumption` is a Step, and `term-call` and `list-call` are terms.
 | `(h1-book-substitution-substitution-result substitution expression)` | The result term, with its second projection selected for the projected family. |
 | `(h1-book-substitution-substitution-projection substitution expression)` | The Step equating the returned value to its tuple projection or to itself. |
 | `(h1-book-substitution-substitution-subcase substitution selector)` | Three Steps for the term type, list type and length claims on the argument of the selector. |
-| `(h1-book-substitution-substitution-result-cases substitution application known template leaf)` | A Step for `template` applied to `application` under the container Step `known`. `leaf` is an alist of `((value tests) . result)` replies as in `proof-proof-by-value`. |
 | `(h1-book-substitution-substitution-atomic-term n substitution value typed-input)` | The type Step for the selected replacement or input. Pass `1000000` as the initial fuel `n`. |
 | `(h1-book-substitution-substitution-term-proof substitution cons tail)` | The term implication Step. `cons` is a Step deciding whether the input is a cons. `tail` is the tail subcase or `nil`. |
 | `(h1-book-substitution-substitution-list-proof substitution cons head tail)` | The list implication Step. `head` and `tail` are subcases or `nil`. |

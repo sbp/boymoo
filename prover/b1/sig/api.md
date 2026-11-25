@@ -34,15 +34,13 @@ The API reader uses the shared Reader representation. The proof world for an ind
 
 | ACL2 call | Arguments and result | Failure |
 |---|---|---|
-| `(b1-api-reader-datum reader)` | Read a datum at the supplied Reader's current position. Return `(cons datum updated-reader)`. | A reader failure, including for malformed dotted tails. |
 | `(b1-api-callproof-fork world)` | Return the supplied `world`, whose facts, definitions, and auxiliary entries the call can use as its starting point. | — |
-| `(b1-api-callproof-not-nil world)` | Prove that quoted NIL is false in `world`. | A failure from constructing the Step. |
 | `(b1-api-ground-world)` | Return the built BookProof with the ground package facts installed. | A failure from construction. |
 | `(b1-api-context-for library earlier)` | Return the context for the library and earlier line lists. The earlier lines are extended in two groups at the last multiple of 64. | A failure from construction or extension. |
 | `(b1-api-prove-in-context statement earlier library aids)` | Take the same arguments and return the same successful results as `b1-api-prove`. Propagate failures to the caller. | A failure from reading, constructing the context, proving, or exporting. |
 | `(b1-api-ascii-text text)` | Return the input string when its characters are ASCII. | A failure for a character outside ASCII. |
 
-The reader and auxiliary text scanner return `Fuel` if a scan exhausts its recursion counter.
+The reader and auxiliary text scanner return `fuel` if a scan exhausts its recursion counter.
 
 ## Prepared contexts
 

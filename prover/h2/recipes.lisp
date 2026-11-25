@@ -448,7 +448,7 @@
 
 (defun h2-recipes-run-derivation-rounds (n operation arguments round)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h2-recipes-run-derivation-rounds"))
+  (cond ((zp n) '(:failure "fuel" "h2-recipes-run-derivation-rounds"))
         ((eq (car round) :retry)
          (h2-recipes-run-derivation-rounds
           (1- n) operation arguments
@@ -549,7 +549,7 @@
 (defun h2-recipes-state-oracle-list (n cursor oracle proof)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h2-recipes-state-oracle-list")
+      '(:failure "fuel" "h2-recipes-state-oracle-list")
     (proof-with-checked-results
      ((term (h2-recipes-step-left cursor))
       (parts (proof-proof-conjunct proof cursor)))

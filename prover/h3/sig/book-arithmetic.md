@@ -9,7 +9,7 @@ specified for each call.
 | Call | Result |
 |---|---|
 | `(h3-book-arithmetic-normal-form lib term)` | Step for the associative and commutative normalization of `term`, or `nil` if unchanged. |
-| `(h3-book-arithmetic-associative-equal lib a b)` | Step equating terms `a` and `b` when their normal forms agree. Otherwise returns `Unproved`. |
+| `(h3-book-arithmetic-associative-equal lib a b)` | Step equating terms `a` and `b` when their normal forms agree. Otherwise returns `unproved`. |
 | `(h3-book-arithmetic-typed-number lib expr)` | Step that term `expr` is an ACL2 number. |
 | `(h3-book-arithmetic-fix-value lib value evidence)` | Step reducing `(FIX value)` using the given Step for or against its numeric type. |
 | `(h3-book-arithmetic-inverse lib value numeric nonzero)` | Inverse law for term `value`, using its numeric and nonzero Steps. |
@@ -18,9 +18,7 @@ specified for each call.
 | `(h3-book-arithmetic-multiply-fix lib value other)` | Step removing `FIX` on the left factor `value` of a product with `other`. |
 | `(h3-book-arithmetic-cancel-product lib a b value factor-inverse equality)` | Step canceling the right factor `value` from the product equality Step `equality`, using the inverse-law Step `factor-inverse`. The remaining terms are `(FIX a)` and `(FIX b)`. |
 | `(h3-book-arithmetic-zero-test lib term proof)` | Step showing the reciprocal of `term` is zero, using the Step `proof` that `term` is zero or nonnumeric. |
-| `(h3-book-arithmetic-scalar-cases lib value use)` | Step joining the three cases of term `value`. `use` is the list of three callback results in the order described below. |
 | `(h3-book-arithmetic-truth-value lib evidence)` | Step equating the equality in Step `evidence` to quoted `T`. |
-| `(h3-book-arithmetic-equivalent-equalities lib p q forward backward)` | Step equating propositions `p` and `q`. `forward` is the callback result on an assumption of `p`, and `backward` the result on an assumption of `q`. |
 | `(h3-book-arithmetic-inverse-nonzero lib term law)` | Step showing that the reciprocal of `term` is nonzero, using its inverse-law Step `law`. |
 | `(h3-book-arithmetic-no-zero-product lib a b an bn nz-a nz-b)` | Step showing the product of `a` and `b` is nonzero. `an` and `bn` are numeric Steps, and `nz-a` and `nz-b` are nonzero Steps for those terms in the same order. |
 | `(h3-book-arithmetic-zero-product lib a b factor evidence)` | Step showing the product of `a` and `b` is zero. `factor` is the zero or nonnumeric term, and `evidence` is its Step. |

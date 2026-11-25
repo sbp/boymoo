@@ -57,7 +57,6 @@
 (defun t3-book-indexed-calls-interval-end (interval) (nth 4 interval))
 (defun t3-book-indexed-calls-interval-tests (interval) (nth 5 interval))
 (defun t3-book-indexed-calls-interval-before (interval) (nth 6 interval))
-(defun t3-book-indexed-calls-interval-next-index (interval) (nth 7 interval))
 (defun t3-book-indexed-calls-interval-remaining (interval) (nth 8 interval))
 (defun t3-book-indexed-calls-interval-measure (interval) (nth 9 interval))
 (defun t3-book-indexed-calls-interval-pairs (interval) (nth 10 interval))
@@ -245,7 +244,7 @@
           bounds signed lib interval (cadr prove) (caddr prove) (cadddr prove)))
         (otherwise
          (let ((reply (assoc-equal (list bounds signed) (cdr prove))))
-           (if reply (cdr reply) '(:failure "Unproved" ""))))))))
+           (if reply (cdr reply) '(:failure "unproved" ""))))))))
 
 (defun t3-book-indexed-calls-interval-cases (interval prove)
   (let* ((lib (t3-book-indexed-calls-interval-lib interval))

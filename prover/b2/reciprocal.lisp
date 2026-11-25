@@ -155,67 +155,6 @@
           (b2-reciprocal-return lib (b2-reciprocal-symmetric lib same)))))
     (car result)))
 
-(defun b2-reciprocal-numeric-nonzero-reply (lib active evidence replies)
-  (if (endp replies)
-      (cons (list :call :numeric-nonzero lib active evidence) lib)
-    (let ((reply (car replies)))
-      (if (failure-p (car reply))
-          (car reply)
-        reply))))
-
-(defun b2-reciprocal-numeric-nonzero-cases-numeric (yes evidence lib value replies)
-  (if (not yes)
-      (proof-with-checked-results
-          ((reply (b2-reciprocal-numeric-nonzero-reply lib nil evidence replies)))
-        (if (eq (caar reply) :call)
-            reply
-          (cons (list (car reply) (cdr replies)) (cdr reply))))
-    (let ((test (proof-eq value *proof-zero*)))
-      (proof-with-checked-results
-          ((initial (b2-tactics-choose lib test evidence nil))
-           (first (b2-reciprocal-numeric-nonzero-reply
-                   (cdr initial) (not (nth 3 (car initial)))
-                   (nth 4 (car initial)) replies)))
-        (if (eq (caar first) :call)
-            first
-          (proof-with-checked-results
-              ((next (b2-tactics-choose lib test evidence (list first))))
-            (if (not (eq (caar next) :call))
-                (cons (list (car next) (cdr replies)) (cdr next))
-              (proof-with-checked-results
-                  ((second (b2-reciprocal-numeric-nonzero-reply
-                            (cdr next) (not (nth 3 (car next)))
-                            (nth 4 (car next)) (cdr replies))))
-                (if (eq (caar second) :call)
-                    second
-                  (proof-with-checked-results
-                      ((done (b2-tactics-choose lib test evidence (list first second))))
-                    (cons (list (car done) (cddr replies)) (cdr done))))))))))))
-
-(defun b2-reciprocal-numeric-nonzero-cases (lib value evidence prove)
-  (let ((test (list *library-numberp* value)))
-    (proof-with-checked-results
-        ((initial (b2-tactics-choose lib test evidence nil))
-         (first (b2-reciprocal-numeric-nonzero-cases-numeric
-                 (nth 3 (car initial)) (nth 4 (car initial)) (cdr initial)
-                 value prove)))
-      (if (eq (caar first) :call)
-          first
-        (let ((first-reply (cons (caar first) (cdr first))))
-          (proof-with-checked-results
-              ((next (b2-tactics-choose lib test evidence (list first-reply))))
-            (if (not (eq (caar next) :call))
-                next
-              (proof-with-checked-results
-                  ((second (b2-reciprocal-numeric-nonzero-cases-numeric
-                            (nth 3 (car next)) (nth 4 (car next)) (cdr next)
-                            value (cadar first))))
-                (if (eq (caar second) :call)
-                    second
-                  (b2-tactics-choose lib test evidence
-                                     (list first-reply
-                                           (cons (caar second) (cdr second)))))))))))))
-
 (defmacro b2-reciprocal-nonzero-cases (lib value evidence active facts branch)
   `(b2-reciprocal-choose ,lib (list *library-numberp* ,value)
                          ,evidence b2-reciprocal-numeric ,facts

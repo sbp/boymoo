@@ -26,7 +26,7 @@
 (defun h1-propositions-beta-value-loop (n proof equation)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h1-propositions-beta-value-loop")
+      '(:failure "fuel" "h1-propositions-beta-value-loop")
     (proof-with-checked-results ((next (h1-propositions-beta-value-next proof equation)))
       (if next
           (h1-propositions-beta-value-loop (1- n) proof next)

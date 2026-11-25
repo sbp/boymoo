@@ -17,11 +17,9 @@ for a false test. Omitted sequence arguments are `nil`.
 | `(t3-logic-libraryproofs-normalize lib term evidence definitions)` | The simplification Step, or `nil`, unfolding wrapper symbols as well as the given definitions. | A failure from proof construction. |
 | `(t3-logic-libraryproofs-by-value-leaves lib value tests)` | The list of `(value tests)` requests in true-branch-first traversal order, opening wrappers and lambda applications. | A failure from proof construction. |
 | `(t3-logic-libraryproofs-by-value lib value template leaf tests)` | A Step proving the template instantiated at the given value. `leaf` is an alist of `((value tests) . result)` entries, with a Step or a failure for each request. | A construction failure or the failure from a leaf when visited. |
-| `(t3-logic-libraryproofs-prove-formula lib term definitions evidence)` | The Step proving the formula using the evidence and definitions. | `Unsupported` if no formula proof can be found, or a construction failure. |
+| `(t3-logic-libraryproofs-prove-formula lib term definitions evidence)` | The Step proving the formula using the evidence and definitions. | `unsupported` if no formula proof can be found, or a construction failure. |
 | `(t3-logic-libraryproofs-required-entries lib source)` | Auxiliary entry records needed by the source string, in Library entry order. | A failure from writing an entry name. |
 | `(t3-logic-libraryproofs-discard-entries lib start)` | The Library with the entries in the slice starting at integer `start` removed, together with their facts and definitions. | A failure for missing facts or definitions. |
-| `(t3-logic-rational-value datum)` | The ACL2 rational for an integer or tagged ratio, or `nil` for an unrecognized datum. | A failure for malformed ratio data. |
-| `(t3-logic-rational-result head values)` | The prover datum for the operation named by symbol `head` on the rational list `values`. An integral result is an integer, other rational results use the ratio tag, and a comparison returns the symbol `T` or `NIL`. | A failure on missing operands. |
 
 The symbol constants are `*t3-logic-atom*`, `*t3-logic-consp*`,
 `*t3-logic-endp*`, `*t3-logic-length*`, `*t3-logic-the-check*`,
@@ -48,16 +46,15 @@ Use the constructor and accessors to work with Evidence.
 | `(t3-logic-evidence-with-facts evidence facts)` | Evidence with the supplied fact alist. | None. |
 | `(t3-logic-evidence-with-lib evidence lib)` | Evidence with the supplied Library. | None. |
 | `(t3-logic-evidence-find evidence term)` | `(cons step evidence)` with the Step proving the term, or `nil` in its place, and the resulting Evidence. | A failure from proof construction. |
-| `(t3-logic-evidence-require evidence term)` | `(cons step evidence)` with the Step proving the term and the resulting Evidence. | `Unsupported` if the fact is missing, or a construction failure. |
+| `(t3-logic-evidence-require evidence term)` | `(cons step evidence)` with the Step proving the term and the resulting Evidence. | `unsupported` if the fact is missing, or a construction failure. |
 | `(t3-logic-evidence-expand evidence)` | Evidence after processing all signed tests in order. | A failure from proof construction. |
 | `(t3-logic-evidence-record evidence term holds proof)` | Evidence with the established fact and facts derived from it. `proof` is a Step. | A failure from proof construction. |
-| `(t3-logic-evidence-conditional evidence term holds proof)` | `(cons handled evidence)`, where `handled` is true when the conditional test supplies a fact. | A failure from proof construction. |
 | `(t3-logic-evidence-positive-consp evidence term)` | A Step proving that the term is a cons, or `nil`. | A failure from proof construction. |
 | `(t3-logic-evidence-integer evidence term)` | `(cons step evidence)` with the integrality Step and the resulting Evidence. | A failure from proof construction. |
 | `(t3-logic-evidence-nonnegative evidence term)` | `(cons step evidence)` with the nonnegativity Step and the resulting Evidence. | A failure from proof construction. |
 
 Each failure is returned as the entire result. The formula solver uses
-the kind `Unsupported` when it cannot establish a result.
+the kind `unsupported` when it cannot establish a result.
 
 ## Simplification and type proofs
 

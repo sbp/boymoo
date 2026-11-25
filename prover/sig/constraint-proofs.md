@@ -10,7 +10,7 @@
 | `(constraint-proofs-example-options lib index function formulas formals)` | The definition options from indexed example facts, in order. |
 | `(constraint-proofs-options lib index function arity formulas forbidden)` | The definition options in search order, including the constant choices. |
 | `(constraint-proofs-witness-candidate lib index functions formulas names definitions)` | `(cons entry lib)` for one combination of definitions. On ordinary search failure the entry is `nil`, and the candidate entries and facts are removed. `definitions` is a list of definition options. |
-| `(constraint-proofs-construct-witnesses lib index data)` | `(cons entry lib)` for the first successful witness and its Library. The entry is `Unproved` if the search exhausts its candidates. `data` contains `(functions named-formulas)`, with `(symbol arity)` entries in `functions` and `(name formula)` entries in `named-formulas`. |
+| `(constraint-proofs-construct-witnesses lib index data)` | `(cons entry lib)` for the first successful witness and its Library. The entry is `unproved` if the search exhausts its candidates. `data` contains `(functions named-formulas)`, with `(symbol arity)` entries in `functions` and `(name formula)` entries in `named-formulas`. |
 
 Each function can return a failure. The equivalence symbol is `*constraint-proofs-iff*`.
 

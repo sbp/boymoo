@@ -4,7 +4,8 @@
 #
 #     sh runner/size.sh
 
-for f in runner/run.h runner/sys.c runner/heap.c runner/num.c runner/data.c runner/eval.c; do
+for f in runner/run.h runner/prelude.h runner/sys.c runner/heap.c runner/num.c runner/data.c runner/eval.c \
+         runner/prelude.c; do
     awk -v f=$f '
         { line = $0; code = ""
           while (line != "") {

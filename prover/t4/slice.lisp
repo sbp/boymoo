@@ -2,53 +2,7 @@
 
 (set-verify-guards-eagerness 0)
 
-(defconst *t4-slice-missing-term-field* '(:failure "MalformedCandidate" ""))
-
-(defun t4-slice-admit-definitions (definitions proof)
-  (if (endp definitions)
-      proof
-    (proof-with-checked-results
-     ((definition (proof-list-of-length (car definitions) 3)))
-     (t4-slice-admit-definitions
-      (cdr definitions)
-      (proof-proof-add-definition proof (car definition) (cadr definition)
-                                  (caddr definition))))))
-
-(defun t4-slice-admit-formulas (formulas facts)
-  (if (endp formulas)
-      facts
-    (proof-with-checked-results
-     ((formula (proof-list-of-length (car formulas) 2)))
-     (t4-slice-admit-formulas
-      (cdr formulas) (table-put facts (car formula) (list (cadr formula)))))))
-
-(defun t4-slice-admit-proof (proof kind data)
-  (cond
-   ((equal kind "define")
-    (t4-slice-admit-definitions (cdr data) proof))
-   ((member-equal kind '("theorem" "axiom"))
-    (proof-with-checked-results
-     ((fields (proof-list-of-length data 2)))
-     (proof-proof-with-facts
-      proof (table-put (proof-proof-facts proof) (car fields) (list (cadr fields))))))
-   ((equal kind "constrain")
-    (proof-with-checked-results
-     ((formulas (proof-term-at data 1)))
-     (if (proof-compound formulas)
-         (proof-with-checked-results
-          ((facts (t4-slice-admit-formulas formulas (proof-proof-facts proof))))
-          (proof-proof-with-facts proof facts))
-       proof)))
-   (t proof)))
-
-(defun t4-slice-admitted-facts (proof kind data choices)
-  (proof-with-checked-results
-   ((admitted (t4-slice-admit-proof proof kind data)))
-   (if (eq choices :none)
-       (list admitted choices)
-     (proof-with-checked-results
-      ((found (t4-witness-available-choice admitted kind data)))
-      (list (cdr found) (if (car found) (append choices (list (car found))) choices))))))
+(defconst *t4-slice-missing-term-field* '(:failure "malformed-candidate" ""))
 
 (defun t4-slice-local-name-delimiter (char)
   (member-equal (char-code char) '(9 10 11 12 13 32 40 41)))
@@ -409,7 +363,7 @@
         (pending (cadr cursor)))
     (cond
      ((failure-p cursor) cursor)
-     ((zp n) '(:failure "Fuel" "t4-slice-next-candidate"))
+     ((zp n) '(:failure "fuel" "t4-slice-next-candidate"))
      ((consp pending)
       (cons (car pending) (list* stage (cdr pending) (cddr cursor))))
      ((eq stage :done) nil)
@@ -417,25 +371,10 @@
       (t4-slice-next-candidate (1- n) definitions calls stored
                               (t4-slice-candidate-stage definitions calls stored cursor))))))
 
-(defun t4-slice-collect-candidates (n definitions calls stored cursor)
-  (declare (xargs :measure (nfix n)))
-  (if (zp n)
-      '(:failure "Fuel" "t4-slice-collect-candidates")
-    (proof-with-checked-results
-     ((next (t4-slice-next-candidate 1000000 definitions calls stored cursor)))
-     (if next
-         (proof-with-checked-results
-          ((later (t4-slice-collect-candidates (1- n) definitions calls stored (cdr next))))
-          (cons (car next) later))
-       nil))))
-
-(defun t4-slice-measure-candidates (definitions calls stored)
-  (t4-slice-collect-candidates 1000000 definitions calls stored '(:phase nil nil)))
-
-(defconst *t4-slice-unproved* '(:failure "Unproved" ""))
+(defconst *t4-slice-unproved* '(:failure "unproved" ""))
 
 (defun t4-slice-unproved-p (value)
-  (and (failure-p value) (equal (cadr value) "Unproved")))
+  (and (failure-p value) (equal (cadr value) "unproved")))
 
 (defun t4-slice-phase-mode-p (mode)
   (member-equal mode '("application" "unification")))
@@ -527,13 +466,13 @@
         ((work-library (t4-slice-measure-work-library prefix library mode)))
         (let ((result (t4-slice-measure-case work-library clause call mode formals)))
           (if (and (failure-p result)
-                   (member-equal (cadr result) '("SearchMiss" "value" "Unproved")))
+                   (member-equal (cadr result) '("search-miss" "value" "unproved")))
               *t4-slice-unproved*
             result)))))))
 
 (defun t4-slice-required-value (dictionary key)
   (let ((entry (assoc-equal key dictionary)))
-    (if entry (cdr entry) '(:failure "MissingProofInput" ""))))
+    (if entry (cdr entry) '(:failure "missing-proof-input" ""))))
 
 (defun t4-slice-definition-formals (definitions formals)
   (if (endp definitions)
@@ -621,7 +560,7 @@
 (defun t4-slice-try-measures (n prefix definitions calls stored cursor attempts)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t4-slice-try-measures")
+      '(:failure "fuel" "t4-slice-try-measures")
     (proof-with-checked-results
      ((next (t4-slice-next-candidate 1000000 definitions calls stored cursor)))
      (if (not next)
@@ -638,7 +577,7 @@
               (let ((result (t4-slice-measure-proofs prefix definitions calls measures mode)))
                 (if (and (failure-p result)
                          (member-equal (cadr result)
-                                       '("Unproved" "SearchMiss" "InferenceMismatch" "MissingProofInput"
+                                       '("unproved" "search-miss" "inference-mismatch" "missing-proof-input"
                                          "value" "assertion" "key" "recursion")))
                     (t4-slice-try-measures
                      (1- n) prefix definitions calls stored cursor (cons attempt attempts))
@@ -646,7 +585,7 @@
 
 (defun t4-slice-measure-entry (prefix data stored)
   (cond
-   ((null data) '(:failure "SearchMiss" ""))
+   ((null data) '(:failure "search-miss" ""))
    ((endp data) (proof-list-of-length data 1))
    (t
     (proof-with-checked-results
@@ -717,7 +656,7 @@
 (defun t4-slice-simple-witness-requests (n library tactic name data suffix replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t4-slice-simple-witness-requests")
+      '(:failure "fuel" "t4-slice-simple-witness-requests")
     (let ((next (t4-slice-simple-witness-step library tactic name data suffix replies)))
       (if (eq (car next) :continue)
           (t4-slice-simple-witness-requests (1- n) library (cadr next) name data suffix (caddr next))
@@ -773,20 +712,3 @@
    ((result (t4-slice-book-entry-with-tactic proof tactic choices raw kind data name stored hints)))
    (cons (car result) (cadr result))))
 
-(defun t4-slice-quoted-bytes-escape (char)
-  (let ((code (char-code char)))
-    (if (and (<= 32 code) (<= code 126) (/= code 34) (/= code 92))
-        (list char)
-      (list #\\ (char "0123456789ABCDEF" (floor code 16))
-            (char "0123456789ABCDEF" (mod code 16))))))
-
-(defun t4-slice-quoted-bytes-chars (chars)
-  (if (endp chars)
-      nil
-    (append (t4-slice-quoted-bytes-escape (car chars))
-            (t4-slice-quoted-bytes-chars (cdr chars)))))
-
-(defun t4-slice-quoted-bytes (source)
-  (concatenate 'string "(COMMON-LISP::QUOTE \""
-               (coerce (t4-slice-quoted-bytes-chars (coerce source 'list)) 'string)
-               "\")"))

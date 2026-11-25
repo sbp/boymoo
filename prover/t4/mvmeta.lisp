@@ -72,12 +72,6 @@
               (cons (proof-proof-rewrite-first (library-library-proof lib) equation axiom) lib))
           (cons equation lib))))))
 
-(defun t4-mvmeta-index-selector-with-library (lib term shape index-test)
-  (t4-mvmeta-index-selector-with-replies lib term shape index-test :ordinals))
-
-(defun t4-mvmeta-index-selector (lib term shape index-test)
-  (car (t4-mvmeta-index-selector-with-library lib term shape index-test)))
-
 (defun t4-mvmeta-index-equivalence-case (sign positive lib shape stop left right hypothesis replies)
   (let ((proof (library-library-proof lib)))
     (t4-mvmeta-with-library
@@ -133,9 +127,6 @@
              (updated (library-library-lemma lib name claim induction nil)))
           (cons (library-library-cite updated name (list value index) nil) updated))))))
 
-(defun t4-mvmeta-index-equivalence (lib index value)
-  (t4-mvmeta-index-equivalence-with-replies lib index value :ordinals))
-
 (defund t4-mvmeta-evaluate-pair (lib equation pair)
   (if (proof-is-call pair *proof-cons*)
       (let ((proof (library-library-proof lib)))
@@ -159,7 +150,7 @@
       ((answer (t4-mvmeta-request :evaluate lib (list call evidence) replies) :library)
        (equation (car answer)))
     (if (not equation)
-        (cons '(:failure "SearchMiss" "") lib)
+        (cons '(:failure "search-miss" "") lib)
       (t4-mvmeta-with-library
           ((datum (proof-term-at call 1))
            (pairs (if (proof-is-call datum *proof-cons*)
@@ -216,7 +207,7 @@
                 :library)
          (pair (car known)))
       (if (not pair)
-          (cons '(:failure "SearchMiss" "") lib)
+          (cons '(:failure "search-miss" "") lib)
         (t4-mvmeta-with-library
             ((branch (t4-mvmeta-index-selector-with-replies lib new-index pair zp replies)
                      :library)
@@ -239,7 +230,7 @@
            (t (t4-mvmeta-with-library ((selected-value (t4-mvmeta-right selected)))
                 (cons (if (equal selected-value (list evaluator value env))
                           (proof-proof-symmetric proof selected)
-                        '(:failure "SearchMiss" ""))
+                        '(:failure "search-miss" ""))
                       lib)))))))))
 
 (defun t4-mvmeta-recursive-transformer-branch (value tests lib context replies)
@@ -298,13 +289,13 @@
      ((equal value original)
       (cons (proof-proof-reflexive (library-library-proof lib) left) lib))
      ((not (proof-is-call value *t4-mvmeta-transform-step*))
-      (cons '(:failure "SearchMiss" "") lib))
+      (cons '(:failure "search-miss" "") lib))
      (t
       (t4-mvmeta-with-library ((parts (proof-list-of-length value 4)))
         (let ((n (cadr parts))
               (term (caddr parts)))
           (if (not (equal (cadddr parts) original))
-              (cons '(:failure "SearchMiss" "") lib)
+              (cons '(:failure "search-miss" "") lib)
             (t4-mvmeta-with-library
                 ((evidence (t4-structural-evidence-init lib tests nil))
                  (first (t4-mvmeta-evaluate lib left evidence replies) :library)
@@ -327,7 +318,7 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((not (o< (nfix (1- n)) (nfix n)))
-    (cons '(:failure "Fuel" "t4-mvmeta-by-value") lib))
+    (cons '(:failure "fuel" "t4-mvmeta-by-value") lib))
    ((proof-is-call value *proof-if*)
     (t4-mvmeta-with-library
         ((branches (proof-list-of-length (cdr value) 3))
@@ -365,7 +356,7 @@
                :library)
          (literal (proof-step-first step))
          (expected (proof-subst template (list (cons *proof-result* value)))))
-      (cons (if (equal literal expected) step '(:failure "InferenceMismatch" "")) lib)))))
+      (cons (if (equal literal expected) step '(:failure "inference-mismatch" "")) lib)))))
 
 (defun t4-mvmeta-recursive-transformer-with-replies (lib formula replies)
   (t4-mvmeta-with-library ((input (t4-mvmeta-recursive-input formula)))
@@ -407,9 +398,6 @@
                                     (list bindings))
                 lib))))))
 
-(defun t4-mvmeta-recursive-transformer (lib formula)
-  (t4-mvmeta-recursive-transformer-with-replies lib formula nil))
-
 (defun t4-mvmeta-projection-input (lib formula)
   (if (not (proof-is-call formula *proof-equal*))
       nil
@@ -446,5 +434,3 @@
              (reversed (proof-proof-symmetric proof root)))
           (cons (proof-proof-rewrite-result proof step reversed template *proof-result*) lib))))))
 
-(defun t4-mvmeta-projection-transformer (lib formula)
-  (t4-mvmeta-projection-transformer-with-replies lib formula nil))

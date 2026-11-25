@@ -150,7 +150,7 @@
      (if (car match)
          (proof-proof-instantiate proof fact (table-items (cdr match)))
        (proof-with-checked-results ((printed (proof-write claim)))
-         '(:failure "Unproved" ""))))))
+         '(:failure "unproved" ""))))))
 
 (defun b1-logic-bookproof-rewrite-rule (lib name)
   (proof-with-checked-results
@@ -182,7 +182,7 @@
      ((formula (proof-list-of-length formula 3))
       (first (b1-logic-step-first consequence)))
      (if (not (equal first (caddr formula)))
-         '(:failure "RuleInapplicable" "")
+         '(:failure "rule-inapplicable" "")
        (proof-with-checked-results
         ((opened (proof-proof-unfold proof formula))
          (body (b1-logic-step-at opened 2))
@@ -221,7 +221,7 @@
 (defun b1-logic-bookproof-split-conjuncts-visit (n proof step)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b1-logic-bookproof-split-conjuncts-visit")
+      '(:failure "fuel" "b1-logic-bookproof-split-conjuncts-visit")
     (proof-with-checked-results
      ((conjunction (b1-logic-bookproof-conjunction-p step)))
      (if conjunction
@@ -378,9 +378,6 @@
 
 (defun b1-logic-call-p (result)
   (eq (car result) :b1-logic-call))
-
-(defun b1-logic-call-kind (request)
-  (cadr request))
 
 (defun b1-logic-call-id (request)
   (caddr request))
@@ -555,7 +552,7 @@
   (car (cddddr context)))
 
 (defun b1-logic-normalize-fuel (lib replies)
-  (list '(:failure "Fuel" "b1-logic-normalize-operations") lib replies))
+  (list '(:failure "fuel" "b1-logic-normalize-operations") lib replies))
 
 ; The pending operations keep the order of reductions and proof construction.
 (defun b1-logic-normalize-start-chain (steps last openings lib replies pending)
@@ -695,7 +692,7 @@
                          (car args) (cadr args) value (caddr args) lib context replies pending))
       (:inspected (b1-logic-normalize-finish-inspection
                    value (car args) (cadr args) lib replies pending))
-      (otherwise (list '(:failure "RuleInapplicable" "") lib replies)))))
+      (otherwise (list '(:failure "rule-inapplicable" "") lib replies)))))
 
 (defun b1-logic-normalize-operations (n context work)
   (declare (xargs :measure (nfix n)))
@@ -748,7 +745,7 @@
             (if premise
                 (list (proof-proof-transport proof premise equality) lib replies)
               (b1-logic-with-proof lib replies ((printed (proof-write result)))
-                (list '(:failure "Unproved" "")
+                (list '(:failure "unproved" "")
                       lib replies)))))))))
 
 (defun b1-logic-normalize-proof-conjunct (goal evidence)
@@ -761,7 +758,7 @@
 (defun b1-logic-normalize-proof-run (n lib goal evidence unfold rules split replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (list '(:failure "Fuel" "b1-logic-normalize-proof-run") lib replies)
+      (list '(:failure "fuel" "b1-logic-normalize-proof-run") lib replies)
     (b1-logic-with-proof lib replies ((premise (b1-logic-find-evidence goal evidence)))
       (if premise
           (list premise lib replies)
@@ -791,7 +788,7 @@
          (replies (caddr result)))
     (cond
      ((not (b1-logic-branch-p value)) (list value lib replies pending))
-     ((equal depth 0) (list '(:failure "Unproved" "")
+     ((equal depth 0) (list '(:failure "unproved" "")
                             lib replies))
      (t
       (let ((test (b1-logic-branch-test value)))
@@ -825,7 +822,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((value (car work)) (lib (cadr work)) (replies (caddr work)) (pending (cadddr work)))
     (cond ((or (b1-logic-interrupted-p value) (endp pending)) (list value lib replies))
-          ((zp n) (list '(:failure "Fuel" "b1-logic-case-proof-operations") lib replies))
+          ((zp n) (list '(:failure "fuel" "b1-logic-case-proof-operations") lib replies))
           (t (b1-logic-case-proof-operations
               (1- n) goal unfold rules
               (b1-logic-case-proof-advance value lib goal unfold rules replies pending))))))
@@ -851,7 +848,7 @@
                               rules nil nil nil replies)
       (b1-logic-with-proof lib replies ((right (b1-logic-step-at reduction 2)))
         (if (not (equal right *proof-false*))
-            (list '(:failure "Unproved" "") lib replies)
+            (list '(:failure "unproved" "") lib replies)
           (let ((proof (library-library-proof lib)))
             (b1-logic-with-proof lib replies
               ((not-nil (b1-logic-proof-not-nil proof))

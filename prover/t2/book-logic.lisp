@@ -167,7 +167,7 @@
 (defun t2-book-logic-arithmetic-constant (datum)
   (cond ((integerp datum) datum)
         ((eq datum t) 1)
-        ((null datum) '(:failure "MissingTermPart" ""))
+        ((null datum) '(:failure "missing-term-part" ""))
         ((and (consp datum) (equal (car datum) "ratio"))
          (proof-with-checked-results ((num (proof-term-at datum 1)) (den (proof-term-at datum 2)))
            (cond ((not (and (rationalp num) (rationalp den)))
@@ -186,7 +186,7 @@
   (if (and (proof-compound datum) (consp datum))
       (let ((rest (cdr datum)))
         (cond ((endp rest) (list (car datum) *proof-nil*))
-              ((and (endp (cdr rest)) (null (car rest))) '(:failure "MissingTermPart" ""))
+              ((and (endp (cdr rest)) (null (car rest))) '(:failure "missing-term-part" ""))
               ((and (endp (cdr rest)) (consp (car rest)) (equal (caar rest) "dot"))
                (proof-with-checked-results ((tail (proof-term-at (car rest) 1)))
                  (list (car datum) tail)))
@@ -262,7 +262,7 @@
                                                          (car split) (cadr split)))))
                   ((equal operator (proof-cl "SYMBOLP"))
                    (proof-with-checked-results ((arg (proof-term-at args 0)))
-                     (cond ((null arg) '(:failure "MissingTermPart" ""))
+                     (cond ((null arg) '(:failure "missing-term-part" ""))
                            ((and (consp arg) (equal (car arg) "sym"))
                             (proof-proof-compute proof term *proof-t*))
                            (t (proof-proof-compute proof term *proof-nil*)))))
@@ -273,7 +273,7 @@
   (declare (xargs :measure (acl2-count term)))
   (if (proof-is-call term operator)
       (if (endp (cddr term))
-          '(:failure "MissingTermPart" "")
+          '(:failure "missing-term-part" "")
         (proof-with-checked-results ((left (t2-book-logic-flattened operator (cadr term)))
                                      (right (t2-book-logic-flattened operator (caddr term))))
           (append left right)))
@@ -348,7 +348,7 @@
 
 (defun t2-book-logic-ac-associate (n lib position operator assoc-name)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "t2-book-logic-ac-associate"))
+  (cond ((zp n) '(:failure "fuel" "t2-book-logic-ac-associate"))
         ((eq (car position) :t2-ac-associate)
          (t2-book-logic-ac-associate (1- n) lib
                                     (t2-book-logic-ac-associate-next
@@ -463,10 +463,10 @@
             (t2-book-logic-rules-equations rules) (t2-book-logic-rules-indexed rules))))
       (cond ((proof-is-call formula *library-implies*)
              (if (endp (cddr formula))
-                 '(:failure "MissingTermPart" "")
+                 '(:failure "missing-term-part" "")
                (t2-book-logic-rules-add with-goal name (caddr formula) (append path '("consequent")))))
             ((proof-is-call formula *proof-if*)
-             (cond ((endp (cdddr formula)) '(:failure "MissingTermPart" ""))
+             (cond ((endp (cdddr formula)) '(:failure "missing-term-part" ""))
                    ((equal (cadddr formula) *proof-false*)
                     (proof-with-checked-results
                         ((first (t2-book-logic-rules-add with-goal name (cadr formula)
@@ -647,7 +647,6 @@
 (defun t2-book-logic-search-request-method (request) (nth 1 request))
 (defun t2-book-logic-search-request-term (request) (nth 2 request))
 (defun t2-book-logic-search-request-context (request) (nth 3 request))
-(defun t2-book-logic-search-request-depth (request) (nth 4 request))
 (defun t2-book-logic-search-request-opened (request) (nth 5 request))
 (defun t2-book-logic-search-request-lib (request) (nth 6 request))
 
@@ -695,7 +694,7 @@
 (defund t2-book-logic-search-tick (search)
   (let* ((budget (1- (t2-book-logic-search-budget search)))
          (next (update-nth 4 budget search)))
-    (cons (and (< budget 0) '(:failure "Unproved" "")) next)))
+    (cons (and (< budget 0) '(:failure "unproved" "")) next)))
 
 (defun t2-book-logic-search-proof-object (search)
   (library-library-proof (t2-book-logic-search-lib search)))
@@ -717,7 +716,7 @@
 
 (defun t2-book-logic-search-context-open (n lib position negated)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "t2-book-logic-search-context-open"))
+  (cond ((zp n) '(:failure "fuel" "t2-book-logic-search-context-open"))
         ((eq (car position) :t2-wrapper)
          (t2-book-logic-search-context-open
           (1- n) lib (t2-book-logic-search-context-open-next lib (nth 1 position) (nth 2 position)
@@ -796,7 +795,7 @@
 (defun t2-book-logic-consequence (term)
   (declare (xargs :measure (acl2-count term)))
   (cond ((not (proof-is-call term *library-implies*)) term)
-        ((endp (cddr term)) '(:failure "MissingTermPart" ""))
+        ((endp (cddr term)) '(:failure "missing-term-part" ""))
         (t (t2-book-logic-consequence (caddr term)))))
 
 (defun t2-book-logic-seed-direction (seed term equations)
@@ -819,7 +818,7 @@
    (cond ((or (not (proof-compound term)) (proof-is-call term *proof-quote*)) nil)
          ((proof-is-call term *proof-if*)
           (if (endp (cdr term))
-              '(:failure "MissingTermPart" "")
+              '(:failure "missing-term-part" "")
             (proof-with-checked-results ((test (t2-book-logic-first-test (cadr term))))
               (if (t2-book-logic-term-true-p test) test (cadr term)))))
          (t (t2-book-logic-argument-test (cdr term)))))
@@ -878,7 +877,7 @@
                (if entry
                    (proof-with-checked-results ((body (proof-term-at (cdr entry) 1)))
                      (<= (t2-book-logic-size body) 23))
-                 '(:failure "MissingBinding" "")))))))
+                 '(:failure "missing-binding" "")))))))
 
 (defund t2-book-logic-reflexive-goal (proof goal)
   (and (proof-is-call goal *proof-equal*)
@@ -998,11 +997,11 @@
  (defun t2-book-logic-search-use-rule (n search rule bindings tests depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t2-book-logic-search-use-rule") search)
+       (cons '(:failure "fuel" "t2-book-logic-search-use-rule") search)
      (let* ((proof (t2-book-logic-search-proof-object search))
             (name (t2-book-logic-rule-name rule))
             (entry (assoc-equal name (proof-proof-facts proof))))
-       (cond ((not entry) (cons '(:failure "MissingBinding" "") search))
+       (cond ((not entry) (cons '(:failure "missing-binding" "") search))
              ((not (t2-book-logic-rule-bound-p (cdr entry) (table-keys bindings))) (cons nil search))
              (t (t2-book-logic-search-check ((step (proof-proof-fact proof name (table-items bindings))))
                   (t2-book-logic-search-rule-sides (1- n) search step (cdr (proof-step-clause step))
@@ -1010,7 +1009,7 @@
 
  (defun t2-book-logic-search-rule-sides (n search step sides rule tests depth)
    (declare (xargs :measure (nfix n)))
-   (cond ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "Fuel" "t2-book-logic-search-rule-sides") search))
+   (cond ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "fuel" "t2-book-logic-search-rule-sides") search))
          ((endp sides)
           (t2-book-logic-search-rule-path (1- n) search step (t2-book-logic-rule-path rule)
                                          (t2-book-logic-rule-reverse rule) tests depth))
@@ -1024,7 +1023,7 @@
 
  (defun t2-book-logic-search-rule-path (n search step path reverse-p tests depth)
    (declare (xargs :measure (nfix n)))
-   (cond ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "Fuel" "t2-book-logic-search-rule-path") search))
+   (cond ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "fuel" "t2-book-logic-search-rule-path") search))
          ((endp path) (cons (if reverse-p (proof-proof-symmetric (t2-book-logic-search-proof-object search) step) step)
                             search))
          ((equal (car path) "consequent")
@@ -1042,7 +1041,7 @@
  (defun t2-book-logic-search-seed (n search step direction tests depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t2-book-logic-search-seed") search)
+       (cons '(:failure "fuel" "t2-book-logic-search-seed") search)
      (t2-book-logic-search-check ((literal (proof-step-first step)))
        (if (not (proof-is-call literal *library-implies*))
            (cons (if (eq direction :reverse) (proof-proof-symmetric (t2-book-logic-search-proof-object search) step) step)
@@ -1057,7 +1056,7 @@
 
  (defun t2-book-logic-search-instance (n search term tests depth equations seeds)
    (declare (xargs :measure (nfix n)))
-   (cond ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "Fuel" "t2-book-logic-search-instance") search))
+   (cond ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "fuel" "t2-book-logic-search-instance") search))
          ((endp seeds)
           (let ((rules (t2-book-logic-search-rules search)))
             (if (not rules)
@@ -1076,7 +1075,7 @@
 
  (defun t2-book-logic-search-instance-rules (n search term tests depth rules)
    (declare (xargs :measure (nfix n)))
-   (cond ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "Fuel" "t2-book-logic-search-instance-rules") search))
+   (cond ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "fuel" "t2-book-logic-search-instance-rules") search))
          ((endp rules) (cons nil search))
          (t (t2-book-logic-search-check ((matched (t2-book-logic-match (t2-book-logic-rule-pattern (car rules)) term nil)))
               (t2-book-logic-search-let
@@ -1091,7 +1090,7 @@
  (defun t2-book-logic-search-premise (n search goal tests depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t2-book-logic-search-premise") search)
+       (cons '(:failure "fuel" "t2-book-logic-search-premise") search)
      (t2-book-logic-search-let ((tick (t2-book-logic-search-tick search))
                                 (known (t2-book-logic-search-find search tests goal)))
        (cond (known (cons known search))
@@ -1113,7 +1112,7 @@
  (defun t2-book-logic-search-premise-body (n search goal tests depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t2-book-logic-search-premise-body") search)
+       (cons '(:failure "fuel" "t2-book-logic-search-premise-body") search)
      (t2-book-logic-search-check ((conjunction (t2-book-logic-condition-p goal)))
        (cond (conjunction
               (t2-book-logic-search-let
@@ -1137,7 +1136,7 @@
 
 (defund t2-book-logic-search-replacement-unproved (n search term tests depth opened)
   (if (zp n)
-      (cons '(:failure "Fuel" "t2-book-logic-search-replacement-unproved") search)
+      (cons '(:failure "fuel" "t2-book-logic-search-replacement-unproved") search)
     (t2-book-logic-search-let ((known (t2-book-logic-search-assumed-equality search term tests)))
       (if known
           (cons known search)
@@ -1155,7 +1154,7 @@
 
 (defund t2-book-logic-search-replacement-run (n search term tests depth opened)
   (if (zp n)
-      (cons '(:failure "Fuel" "t2-book-logic-search-replacement-run") search)
+      (cons '(:failure "fuel" "t2-book-logic-search-replacement-run") search)
     (t2-book-logic-search-let ((reply (t2-book-logic-search-hook search :replacement term tests depth opened)))
       (if (not (eq reply :base))
           (cons reply search)
@@ -1178,7 +1177,7 @@
  (defun t2-book-logic-search-normalize-run (n search term tests depth opened)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t2-book-logic-search-normalize-run") search)
+       (cons '(:failure "fuel" "t2-book-logic-search-normalize-run") search)
      (t2-book-logic-search-let ((reply (t2-book-logic-search-hook search :normalize term tests depth opened)))
        (cond ((eq reply :base)
               (t2-book-logic-search-let ((tick (t2-book-logic-search-tick search)))
@@ -1205,14 +1204,14 @@
  (defun t2-book-logic-search-normalize-follow (n search prefix rest target tests depth opened)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t2-book-logic-search-normalize-follow") search)
+       (cons '(:failure "fuel" "t2-book-logic-search-normalize-follow") search)
      (t2-book-logic-search-let ((following (t2-book-logic-search-normalize-run (1- n) search target tests depth opened)))
        (cons (proof-proof-chain (t2-book-logic-search-proof-object search) prefix (append rest (list following))) search))))
 
  (defun t2-book-logic-search-normalize-if (n search term tests depth opened)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t2-book-logic-search-normalize-if") search)
+       (cons '(:failure "fuel" "t2-book-logic-search-normalize-if") search)
      (t2-book-logic-search-check ((test (proof-term-at term 1)))
        (t2-book-logic-search-let ((test-eq (t2-book-logic-search-normalize-run (1- n) search test tests depth opened)))
          (t2-book-logic-search-check
@@ -1230,7 +1229,7 @@
 
  (defun t2-book-logic-search-normalize-arguments (n search term args index result tests depth opened)
    (declare (xargs :measure (nfix n)))
-   (cond ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "Fuel" "t2-book-logic-search-normalize-arguments") search))
+   (cond ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "fuel" "t2-book-logic-search-normalize-arguments") search))
          ((endp args)
           (t2-book-logic-search-check ((current (if result (t2-book-logic-step-term result 2) term)))
             (t2-book-logic-search-let ((replacement (t2-book-logic-search-replacement-run (1- n) search current tests depth opened)))
@@ -1251,7 +1250,7 @@
  (defun t2-book-logic-search-try (n search goal tests depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t2-book-logic-search-try") search)
+       (cons '(:failure "fuel" "t2-book-logic-search-try") search)
      (t2-book-logic-search-let
          ((tick (t2-book-logic-search-tick search))
           (context (t2-book-logic-search-context search tests))
@@ -1280,7 +1279,7 @@
  (defun t2-book-logic-search-prove-active (n search goal tests depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t2-book-logic-search-prove-active") search)
+       (cons '(:failure "fuel" "t2-book-logic-search-prove-active") search)
      (t2-book-logic-search-check ((identity (t2-book-logic-ac-goal (t2-book-logic-search-lib search) goal)))
        (if identity
            (cons identity search)
@@ -1300,7 +1299,7 @@
  (defun t2-book-logic-search-prove-active-form (n search goal tests depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t2-book-logic-search-prove-active-form") search)
+       (cons '(:failure "fuel" "t2-book-logic-search-prove-active-form") search)
      (t2-book-logic-search-check ((conjunction (t2-book-logic-condition-p goal)))
        (t2-book-logic-search-let ((both (if conjunction (t2-book-logic-search-premise (1- n) search goal tests depth)
                                         (cons nil search))))
@@ -1324,7 +1323,7 @@
  (defun t2-book-logic-search-split (n search current equality tests depth)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t2-book-logic-search-split") search)
+       (cons '(:failure "fuel" "t2-book-logic-search-split") search)
      (t2-book-logic-search-check ((test (t2-book-logic-search-first-test search current)))
        (if (not (t2-book-logic-term-true-p test))
            (cons nil search)
@@ -1351,7 +1350,7 @@
   (let ((result (t2-book-logic-search-try-prove search goal tests depth)))
     (if (car result)
         result
-      (cons '(:failure "Unproved" "") (cdr result)))))
+      (cons '(:failure "unproved" "") (cdr result)))))
 
 (defun t2-book-logic-search-restore-context (before after tests old)
   (let ((contexts (t2-book-logic-search-contexts after)))

@@ -58,7 +58,7 @@
  (defun t3-genvar-common-lisp-name-arm-visit (n lib term path)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t3-genvar-common-lisp-name-arm-visit"))
+    ((zp n) '(:failure "fuel" "t3-genvar-common-lisp-name-arm-visit"))
     ((or (not (proof-compound term)) (proof-is-call term *proof-quote*)) nil)
     ((endp term) '(:failure "failure" ""))
     ((or (proof-compound (car term)) (member-equal (car term) *t3-logic-wrappers*))
@@ -76,7 +76,7 @@
            (t3-genvar-common-lisp-name-arm-parts (1- n) lib (cdr term) path 1))))))
  (defun t3-genvar-common-lisp-name-arm-parts (n lib parts path index)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "t3-genvar-common-lisp-name-arm-parts"))
+   (cond ((zp n) '(:failure "fuel" "t3-genvar-common-lisp-name-arm-parts"))
          ((endp parts) nil)
          (t (proof-with-checked-results
                 ((found (t3-genvar-common-lisp-name-arm-visit
@@ -103,7 +103,7 @@
          (value (proof-rewritten-term equation))
          (arm (t3-genvar-common-lisp-name-arm lib value nil)))
       (if (not arm)
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (proof-with-checked-results
             ((equation (t3-genvar-rewrite-openings proof equation (car arm)))
              (name (proof-sym "T3-COMMON-LISP-NAME-TESTS" "ACL2"))
@@ -336,7 +336,7 @@
     (proof-with-checked-results ((parts (proof-list-of-length (car tests) 2)))
       (if (cadr parts)
           (if (consp (cdr found))
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (t3-genvar-positive-tests (cdr tests) (cons (car parts) found)))
         (t3-genvar-positive-tests (cdr tests) found)))))
 

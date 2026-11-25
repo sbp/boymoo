@@ -27,13 +27,13 @@
 
 (defun h1-book-substitution-tuple-result (proof value)
   (if (not (proof-is-call value *proof-cons*))
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (proof-with-checked-results ((tail (proof-term-at value 2)))
       (if (not (proof-is-call tail *proof-cons*))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results ((end (proof-term-at tail 2)))
           (if (not (equal end *proof-false*))
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (library-library-cite (h1-tactics-prover-library proof) "TUPLE-RESULT"
                                   (list (cadr value) (cadr tail)) nil)))))))
 
@@ -49,7 +49,7 @@
         (core (h1-tactics-prover-proof proof))
         (entry (assoc-equal value known)))
     (cond
-     ((zp n) '(:failure "Fuel" "h1-book-substitution-typed-value"))
+     ((zp n) '(:failure "fuel" "h1-book-substitution-typed-value"))
      (entry (cdr entry))
      ((proof-is-call value *h1-book-substitution-kwote*)
       (library-library-cite lib "QUOTED-TERM" (cdr value) nil))
@@ -65,7 +65,7 @@
            (opened (proof-rewritten-term equation))
            (typed (h1-book-substitution-typed-value (1- n) proof opened known)))
         (h1-propositions-library-transport-argument lib typed equation 1)))
-     (t '(:failure "Unproved" "")))))
+     (t '(:failure "unproved" "")))))
 
 (defun h1-book-substitution-list-selector-type (proof label selector typed empty no test predicate)
   (let ((lib (h1-tactics-prover-library proof))
@@ -212,7 +212,7 @@
      ((member-equal (list direct nil) tests)
       (h1-arithmetic-proof-assume core direct nil))
      ((not (member-equal (list reverse nil) tests))
-      '(:failure "Unproved" ""))
+      '(:failure "unproved" ""))
      (t (proof-with-checked-results
             ((symmetry (library-library-axiom lib "H1-EQUALITY-SYMMETRIC-VALUE"
                                               (list head *h1-book-substitution-quote-name*)))
@@ -225,17 +225,13 @@
 
 (defun h1-book-substitution-substitution-proof-object (self) (nth 1 self))
 (defun h1-book-substitution-substitution-family (self) (nth 2 self))
-(defun h1-book-substitution-substitution-term (self) (nth 3 self))
-(defun h1-book-substitution-substitution-terms (self) (nth 4 self))
 (defun h1-book-substitution-substitution-projected (self) (nth 5 self))
-(defun h1-book-substitution-substitution-parameters (self) (nth 6 self))
 (defun h1-book-substitution-substitution-hypothesis (self) (nth 7 self))
 (defun h1-book-substitution-substitution-assumption (self) (nth 8 self))
 (defun h1-book-substitution-substitution-term-call (self) (nth 9 self))
 (defun h1-book-substitution-substitution-list-call (self) (nth 10 self))
 (defun h1-book-substitution-substitution-term-claim (self) (nth 11 self))
 (defun h1-book-substitution-substitution-list-claim (self) (nth 12 self))
-(defun h1-book-substitution-substitution-length (self) (nth 13 self))
 (defun h1-book-substitution-substitution-consequent (self) (nth 14 self))
 (defun h1-book-substitution-substitution-claim (self) (nth 15 self))
 
@@ -307,7 +303,7 @@
    (let ((core (h1-tactics-prover-proof proof))
          (head (car term)))
      (cond
-      ((zp n) '(:failure "Fuel" "h1-book-substitution-simplify"))
+      ((zp n) '(:failure "fuel" "h1-book-substitution-simplify"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
       ((endp term) '(:failure "failure" ""))
       ((or (proof-compound head) (member-equal head definitions))
@@ -339,7 +335,7 @@
  (defun h1-book-substitution-simplify-arguments (n proof term args index result definitions)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h1-book-substitution-simplify-arguments"))
+    ((zp n) '(:failure "fuel" "h1-book-substitution-simplify-arguments"))
     ((endp args) result)
     (t (proof-with-checked-results
            ((equality (h1-book-substitution-simplify (1- n) proof (car args) definitions))
@@ -386,12 +382,12 @@
                 ((prior (h1-tactics-prover-prior-fact proof formula))
                  (theorem (or prior (h1-book-structure-projected-association proof formula))))
               (h1-propositions-propositional-proof-modus-ponens lib theorem assumption))))
-         (t '(:failure "Unproved" ""))))))))
+         (t '(:failure "unproved" ""))))))))
 
 (defun h1-book-substitution-atomic-term-continue (n self typed-input decision)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h1-book-substitution-atomic-term-continue"))
+   ((zp n) '(:failure "fuel" "h1-book-substitution-atomic-term-continue"))
    ((eq (car decision) :simplified)
     (proof-with-checked-results
         ((typed (h1-book-substitution-atomic-term-continue
@@ -460,8 +456,8 @@
                 (if (equal head (list *library-car* *library-x*))
                     (h1-book-substitution-term-proof-application self actual tests typed-input
                                                                  cons-evidence tail)
-                  '(:failure "Unproved" ""))))
-             (t '(:failure "Unproved" "")))))
+                  '(:failure "unproved" ""))))
+             (t '(:failure "unproved" "")))))
         (if projected
             (h1-propositions-library-transport-argument lib typed projection 1)
           typed)))))
@@ -479,7 +475,7 @@
                  (library-library-cite lib "TERM-LIST-NIL" nil nil))
                 ((and head (proof-is-call actual *proof-cons*))
                  (library-library-cite lib "TERM-LIST-CONS" (cdr actual) new-types))
-                (t '(:failure "Unproved" "")))))
+                (t '(:failure "unproved" "")))))
       (if (h1-book-substitution-substitution-projected self)
           (h1-propositions-library-transport-argument lib typed projection 1)
         typed))))
@@ -519,7 +515,7 @@
               (proof-proof-chain core closed (list symmetric))))
            ((and tail (proof-is-call actual *proof-cons*))
             (h1-book-substitution-length-proof-cons self actual before tail))
-           (t '(:failure "Unproved" "")))))
+           (t '(:failure "unproved" "")))))
       (if (h1-book-substitution-substitution-projected self)
           (proof-with-checked-results
               ((symmetric (h1-propositions-proof-symmetric core projection))
@@ -550,7 +546,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((core (h1-tactics-prover-proof proof)))
     (cond
-     ((zp n) '(:failure "Fuel" "h1-book-substitution-by-value"))
+     ((zp n) '(:failure "fuel" "h1-book-substitution-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((parts (proof-list-of-length (cdr value) 3))
@@ -593,9 +589,6 @@
          (typed (h1-book-substitution-by-value 1000000 proof body template kind environment nil))
          (symmetric (h1-propositions-proof-symmetric core equation)))
       (proof-proof-rewrite-result core typed symmetric template *proof-result*))))
-
-(defun h1-book-substitution-substitution-result-cases (self application known template leaf)
-  (h1-book-substitution-substitution-result-cases-with-leaf self application known template :table leaf))
 
 (defun h1-book-substitution-substitution-term-proof (self cons-evidence tail)
   (let* ((proof (h1-book-substitution-substitution-proof-object self))
@@ -695,7 +688,7 @@
          (returned (proof-rewritten-term equation))
          (test (and (proof-is-call returned *proof-if*) (proof-term-at returned 1))))
       (if (not (and (proof-is-call returned *proof-if*) (equal test candidate)))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((typed-input (h1-arithmetic-proof-assume core (list *h1-book-substitution-term*
                                                                  *library-z*) t))
@@ -719,7 +712,7 @@
          (value (proof-rewritten-term opened))
          (candidate (proof-term-at value 1)))
       (if (not (and (proof-is-call value *proof-if*) (equal (cddr value) (list candidate old))))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((tested (h1-book-substitution-typed-value
                       1000000 proof candidate (list (cons *proof-false* empty))))
@@ -828,12 +821,12 @@
 
 (defun h1-book-substitution-proof-plan (formula)
   (if (not (proof-is-call formula *library-implies*))
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (proof-with-checked-results ((parts (proof-list-of-length formula 3)))
       (let* ((conclusion (caddr parts))
              (is-term (proof-is-call conclusion *h1-book-substitution-term*)))
         (if (not (or is-term (proof-is-call conclusion *h1-book-substitution-terms*)))
-            '(:failure "Unproved" "")
+            '(:failure "unproved" "")
           (proof-with-checked-results
               ((application (proof-term-at conclusion 1))
                (is-projection (and (proof-is-call application *h1-book-substitution-mv-nth*)
@@ -842,11 +835,11 @@
                 (if (equal is-projection *proof-one*) (proof-term-at application 2) application)))
             (let* ((head (h1-tactics-call-head application))
                    (family (h1-book-substitution-application-family head)))
-              (cond ((not family) '(:failure "Unproved" ""))
+              (cond ((not family) '(:failure "unproved" ""))
                     ((or (not (equal (equal is-projection *proof-one*)
                                      (equal family "SUBLIS-VAR1")))
                          (not (equal is-term (equal head (proof-sym family "ACL2")))))
-                     '(:failure "Unproved" ""))
+                     '(:failure "unproved" ""))
                     (t (list family (cadr parts) is-term application))))))))))
 
 (defun h1-book-substitution-install-family (proof family lemma)
@@ -872,7 +865,7 @@
          (required (proof-term-at literal 1))
          (assumption (h1-tactics-context-find context required)))
       (if (not (car assumption))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((statement (h1-propositions-propositional-proof-modus-ponens
                          lib theorem (car assumption)))
@@ -886,7 +879,7 @@
              (required (proof-term-at literal 1))
              (input-type (h1-tactics-context-find (cdr assumption) required)))
           (if (not (car input-type))
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (proof-with-checked-results
                 ((step (h1-propositions-propositional-proof-modus-ponens lib lemma (car input-type))))
               (h1-propositions-propositional-proof-implies-from lib formula step))))))))
@@ -904,6 +897,3 @@
                  updated formula lemma (cadr plan) (caddr plan) (cadddr plan))
                 updated))))))
 
-(defun h1-book-substitution-substitution-proof (proof formula)
-  (let ((result (h1-book-substitution-substitution-proof-with-proof proof formula)))
-    (if (failure-p (car result)) (car result) result)))

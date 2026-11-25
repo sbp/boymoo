@@ -57,7 +57,7 @@
  (defun t3-book-substitution-constant-folding-trial-type (n value lib)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-book-substitution-constant-folding-trial-type")
+       '(:failure "fuel" "t3-book-substitution-constant-folding-trial-type")
      (let ((proof (library-library-proof lib)))
        (cond
         ((proof-is-call value *proof-if*)
@@ -82,7 +82,7 @@
  (defun t3-book-substitution-constant-folding-trial-arms (n arms lib)
    (declare (xargs :measure (nfix n)))
    (cond ((zp n)
-          '(:failure "Fuel" "t3-book-substitution-constant-folding-trial-arms"))
+          '(:failure "fuel" "t3-book-substitution-constant-folding-trial-arms"))
          ((endp arms) nil)
          (t
           (proof-with-checked-results
@@ -326,7 +326,7 @@
          (parts (proof-proof-conjunct proof both))
          (position (if (< index 0) (+ index (len parts)) index))
          (selected (if (< position 0)
-                       '(:failure "MissingProofInput" "")
+                       '(:failure "missing-proof-input" "")
                      (proof-term-at parts position)))
          (step (proof-proof-prove-if proof selected accepted)))
       (list step current (cdr descent)))))
@@ -555,7 +555,7 @@
     (n lib value template leaf tests traversal)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-substitution-by-value-visit")
+      '(:failure "fuel" "t3-book-substitution-by-value-visit")
     (let* ((current (t3-book-substitution-by-value-lib lib traversal))
            (proof (library-library-proof current))
            (branch (t3-book-substitution-by-value-branch proof value)))
@@ -787,7 +787,7 @@
 (defun t3-book-substitution-premises (n lib step facts)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t3-book-substitution-premises")
+      '(:failure "fuel" "t3-book-substitution-premises")
     (let ((result (t3-book-substitution-premise-fields lib step facts)))
       (if (eq (car result) :rest)
           (t3-book-substitution-premises (1- n) lib (cadr result) (caddr result))
@@ -797,7 +797,7 @@
   (let ((entry (assoc-equal term facts)))
     (if entry
         (cdr entry)
-      '(:failure "MissingProofInput" ""))))
+      '(:failure "missing-proof-input" ""))))
 
 (defun t3-book-substitution-substitution-theorem (traversal name formula label fast)
   (let* ((lib (t3-book-substitution-term-traversal-lib traversal))
@@ -834,7 +834,7 @@
                  proved))
          (claim (proof-step-first step)))
       (if (not (equal claim result))
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (proof-with-checked-results
             ((transported (if beta (proof-proof-transport proof step beta) step))
              (concluded (t3-book-lemmas-implication lib formula transported))

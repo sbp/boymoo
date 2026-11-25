@@ -162,17 +162,11 @@
                  (library-library-with-proof lib (proof-proof-with-facts proof facts))))))
           (t lib))))
 
-(defun run-quoted-input (data)
-  (concatenate 'string "(COMMON-LISP::QUOTE \"" (reader-escape data 34) "\")"))
-
 (defun book-proofs-make-certificate (entries requirements reason)
   (list :certificate entries requirements reason))
 
 (defun book-proofs-certificate-entries (certificate)
   (cadr certificate))
-
-(defun book-proofs-certificate-requirements (certificate)
-  (caddr certificate))
 
 (defun book-proofs-certificate-reason (certificate)
   (cadddr certificate))
@@ -414,10 +408,6 @@
                    ((not (proof-compound actual)) (cons (list nil rulers) lib))
                    (t (book-proofs-wrapped-selector-decrease-actual lib actual parent rulers index))))))))
 
-(defun book-proofs-wrapped-selector-decrease (lib goal rulers index)
-  (let ((result (book-proofs-wrapped-selector-decrease-with-rulers lib goal rulers index)))
-    (cons (caar result) (cdr result))))
-
 (defun book-proofs-conditional-count-decrease-leaf (value tests lib rulers wrappers before cons-step)
   (let ((branch (rulers-rulers-init lib (append (rulers-rulers-tests rulers) tests) nil)))
     (if (failure-p branch)
@@ -521,10 +511,6 @@
                      (cons (list (car result) (book-proofs-rulers-with-library rulers lib (cdr result)))
                            (cdr result)))))))))))
 
-(defun book-proofs-conditional-count-decrease (lib goal rulers)
-  (let ((result (book-proofs-conditional-count-decrease-with-rulers lib goal rulers)))
-    (cons (caar result) (cdr result))))
-
 (defun book-proofs-earlier-decrease-require (term rulers search evidence derived)
   (let ((found (rulers-rulers-find rulers term)))
     (cond ((failure-p found) (list found search rulers))
@@ -538,7 +524,7 @@
 (defun book-proofs-earlier-decrease-index (n goal search rulers evidence derived replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (list '(:failure "Fuel" "book-proofs-earlier-decrease-index") search rulers)
+      (list '(:failure "fuel" "book-proofs-earlier-decrease-index") search rulers)
     (let* ((index (proof-search-search-index search))
            (step (proof-search-fact-index-prove index goal replies)))
       (if (proof-search-request-p step)
@@ -654,7 +640,7 @@
  (defun book-proofs-earlier-decrease-fuel (n lib goal rulers index)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons (list '(:failure "Fuel" "book-proofs-earlier-decrease-fuel") rulers) lib)
+       (cons (list '(:failure "fuel" "book-proofs-earlier-decrease-fuel") rulers) lib)
      (let ((prepared (book-proofs-earlier-decrease-prepare lib goal rulers index)))
        (if (eq (car prepared) :lexicographic)
            (book-proofs-earlier-decrease-lexicographic
@@ -664,7 +650,7 @@
  (defun book-proofs-earlier-decrease-lexicographic (n lib goal rulers index equation replies)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons (list '(:failure "Fuel" "book-proofs-earlier-decrease-lexicographic") rulers) lib)
+       (cons (list '(:failure "fuel" "book-proofs-earlier-decrease-lexicographic") rulers) lib)
      (let* ((result (book-proofs-earlier-decrease-lexicographic-pass lib goal rulers equation replies))
             (value (caar result)))
        (cond ((termination-proofs-callback-p value)
@@ -678,10 +664,6 @@
              (value result)
              (t (book-proofs-earlier-decrease-selector-tactics
                  (cdr result) goal (cadar result) (book-proofs-index-with-library index lib (cdr result)))))))))
-
-(defun book-proofs-earlier-decrease (lib goal rulers index)
-  (let ((result (book-proofs-earlier-decrease-fuel 1000000 lib goal rulers index)))
-    (cons (caar result) (cdr result))))
 
 (defun book-proofs-book-termination-extra (proof goal rulers index)
   (let ((result (book-proofs-earlier-decrease-fuel 1000000 proof goal rulers index)))
@@ -709,7 +691,7 @@
 (defun book-proofs-book-termination-try (n lib data measures index descents ordinalities)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "book-proofs-book-termination-try") lib)
+      (cons '(:failure "fuel" "book-proofs-book-termination-try") lib)
     (let* ((result (book-proofs-book-termination-pass lib data measures descents ordinalities))
            (value (car result)))
       (if (termination-proofs-callback-p value)
@@ -854,110 +836,3 @@
     (book-proofs-let* ((index (proof-search-fact-index-add index (car names))))
       (run-index-names index (cdr names)))))
 
-(defun book-proofs-make-book-prover (base lines measures skipped proved seen)
-  (list :book-prover base lines measures skipped proved seen))
-
-(defun book-proofs-book-prover-base (prover)
-  (cadr prover))
-
-(defun book-proofs-book-prover-library-lines (prover)
-  (caddr prover))
-
-(defun book-proofs-book-prover-library-measures (prover)
-  (cadddr prover))
-
-(defun book-proofs-book-prover-skipped-by-book (prover)
-  (car (cddddr prover)))
-
-(defun book-proofs-book-prover-distinct-proved (prover)
-  (cadr (cddddr prover)))
-
-(defun book-proofs-book-prover-distinct-seen (prover)
-  (caddr (cddddr prover)))
-
-(defun book-proofs-book-prover-statement (raw)
-  (run-parse-line (text-strip-right raw *book-proofs-newline*)))
-
-(defun book-proofs-book-prover-base-measures (lines measures)
-  (if (endp lines)
-      measures
-    (book-proofs-let* ((parsed (run-parse-line (seq-slice (car lines) 0 -1))))
-      (let ((data (cadr parsed)))
-        (if (consp data)
-            (book-proofs-book-prover-base-measures
-             (cdr lines) (table-put measures (car data) (cdr data)))
-          '(:failure "failure" ""))))))
-
-(defun book-proofs-book-prover-base-statements (lines lib)
-  (if (endp lines)
-      lib
-    (book-proofs-let* ((parsed (run-parse-line (seq-slice (car lines) 0 -1)))
-                      (lib (run-add-statement lib (car parsed) (cadr parsed))))
-      (book-proofs-book-prover-base-statements (cdr lines) lib))))
-
-(defun book-proofs-book-prover-init (statement-lines measure-lines)
-  (book-proofs-let* ((lib (book-library-book-library-build (book-library-book-library-init (proof-proof-init))))
-                    (measures (book-proofs-book-prover-base-measures measure-lines nil))
-                    (lib (book-proofs-book-prover-base-statements statement-lines lib)))
-    (book-proofs-make-book-prover lib (proof-unique statement-lines) measures nil nil nil)))
-
-(defun book-proofs-book-prover-find-certificate (lib kind data name measures index)
-  (book-proofs-book-prover-prove lib kind data name measures index))
-
-(defun book-proofs-book-prover-aid-measures (lines measures)
-  (cond ((endp lines) measures)
-        ((text-starts-with (car lines) "(measure ")
-         (book-proofs-let* ((parsed (book-proofs-book-prover-statement (car lines))))
-           (let ((data (cadr parsed)))
-             (if (consp data)
-                 (book-proofs-book-prover-aid-measures
-                  (cdr lines) (table-put measures (car data) (cdr data)))
-               '(:failure "failure" "")))))
-        (t (book-proofs-book-prover-aid-measures (cdr lines) measures))))
-
-(defun book-proofs-set-add (item members)
-  (if (member-equal item members) members (cons item members)))
-
-(defun book-proofs-book-prover-generate-lines
-    (lines number lib index measures seen rows skipped proved distinct-seen)
-  (if (endp lines)
-      (list (reverse rows) skipped proved distinct-seen)
-    (let ((raw (car lines)))
-      (if (or (not (text-starts-with raw *book-proofs-fact-kinds*)) (member-equal raw seen))
-          (book-proofs-book-prover-generate-lines
-           (cdr lines) (1+ number) lib index measures seen rows skipped proved distinct-seen)
-        (book-proofs-let* ((parsed (book-proofs-book-prover-statement raw))
-                          (name (book-proofs-obligation-name (car parsed) (cadr parsed))))
-          (let* ((kind (car parsed))
-                 (data (cadr parsed))
-                 (result (if name
-                             (book-proofs-book-prover-find-certificate lib kind data name measures index)
-                           (cons nil lib)))
-                 (certificate (car result))
-                 (failed (and certificate (not (equal (book-proofs-certificate-reason certificate) "")))))
-            (book-proofs-let* ((certificate certificate)
-                              (lib (run-add-statement (cdr result) kind data))
-                              (names (run-statement-fact-names kind data))
-                              (index (run-index-names (proof-search-fact-index-with-lib index lib) names)))
-              (book-proofs-book-prover-generate-lines
-               (cdr lines) (1+ number) lib index measures (cons raw seen)
-               (if name (cons (list number kind name certificate) rows) rows)
-               (if failed (cons raw skipped) skipped)
-               (if (and name (not failed)) (book-proofs-set-add raw proved) proved)
-               (if name (book-proofs-set-add raw distinct-seen) distinct-seen)))))))))
-
-(defun book-proofs-book-prover-generate (prover input-name raw-lines aid-lines)
-  (let ((base (book-proofs-book-prover-base prover))
-        (lines (book-proofs-book-prover-library-lines prover))
-        (base-measures (book-proofs-book-prover-library-measures prover)))
-    (book-proofs-let* ((measures (book-proofs-book-prover-aid-measures aid-lines base-measures))
-                      (index (proof-search-fact-index-init base))
-                      (generated (book-proofs-book-prover-generate-lines
-                                  raw-lines 1 base index measures lines nil nil
-                                  (book-proofs-book-prover-distinct-proved prover)
-                                  (book-proofs-book-prover-distinct-seen prover))))
-      (cons (car generated)
-            (book-proofs-make-book-prover
-             base lines base-measures
-             (table-put (book-proofs-book-prover-skipped-by-book prover) input-name (cadr generated))
-             (caddr generated) (cadddr generated))))))

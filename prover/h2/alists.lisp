@@ -202,13 +202,10 @@
                                     opened nil nil nil 80)))
       (h2-alists-derivation-result (list tail-fact pair symbol-fact bound) p replies))))
 
-(defun h2-alists-ordered-projections (p replies)
-  (h2-alists-finish-derivations (h2-alists-ordered-projection-derivations p replies)))
-
 (mutual-recursion
  (defun h2-alists-remove-wrappers (n proof term)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "h2-alists-remove-wrappers"))
+   (cond ((zp n) '(:failure "fuel" "h2-alists-remove-wrappers"))
          ((or (not (proof-compound term)) (proof-is-call term *proof-quote*)) nil)
          (t (proof-with-checked-results ((head (proof-term-at term 0)))
               (if (or (proof-compound head) (equal head (proof-sym "RETURN-LAST" "ACL2")))
@@ -224,7 +221,7 @@
  (defun h2-alists-remove-wrapper-arguments (n proof term args index first)
    (declare (xargs :measure (nfix n)))
    (cond ((endp args) first)
-         ((zp n) '(:failure "Fuel" "h2-alists-remove-wrapper-arguments"))
+         ((zp n) '(:failure "fuel" "h2-alists-remove-wrapper-arguments"))
          (t (proof-with-checked-results
                  ((direct (h2-alists-remove-wrappers (1- n) proof (car args)))
                   (next (if direct

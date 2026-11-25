@@ -86,10 +86,6 @@
      (proof-with-checked-results ((test (witnesses-conditional-test-option (car arguments))))
        (or test (witnesses-conditional-test-arguments (cdr arguments)))))))
 
-(defun witnesses-conditional-test (term)
-  (proof-with-checked-results ((test (witnesses-conditional-test-option term)))
-    (car test)))
-
 (defun witnesses-rational-negation (lib term evidence)
   (if (not (proof-is-call term *library-rationalp*))
       nil
@@ -162,7 +158,7 @@
 (defun witnesses-prove-formula (n lib term definitions evidence)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "witnesses-prove-formula")
+      '(:failure "fuel" "witnesses-prove-formula")
     (let ((reduction (witnesses-formula-reduction lib term definitions evidence))
           (proof (library-library-proof lib)))
       (case (car reduction)

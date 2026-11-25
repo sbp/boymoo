@@ -13,7 +13,7 @@
 # ACL2's library, run from its exported program text; and calls of the
 # arithmetic primitives.  runner/test/gen.py writes the last three sets
 # and ACL2 computes their values (runner/test/expect.lsp), as it does
-# those of calls of the two functions of the prelude (the option -j),
+# those of calls of the five functions of the prelude (the option -j),
 # which are also given the calls on large integers whose values
 # runner-fast/test/expected/large.txt records.  It then runs
 # cases that concern the runner alone: deep recursion, deep nesting,
@@ -103,11 +103,19 @@ fi
 sh export/book.sh build/runner/test/book
 B=build/export/books/build/runner/test/book
 python3 runner/test/gen.py $T || exit 1
-# The calls of the two functions of the prelude (README.md, "The
-# prelude"): on integers at the edges of the runner's representations
-# (2^29, 10^9, 2^32, 10^18, 2^64 and 2^128), on fractions and complex
-# rationals, and on data that are not numbers; ash by up to 200 bits
-# and, for an integer, by more bits than it has.
+# The calls of the five functions of the prelude (README.md, "The
+# prelude").  Of ash and binary-logxor: on integers at the edges of the
+# runner's representations (2^29, 10^9, 2^32, 10^18, 2^64 and 2^128), on
+# fractions and complex rationals, and on data that are not numbers; ash
+# by up to 200 bits and, for an integer, by more bits than it has.  Of
+# length, char and subseq: on strings, lists, an improper list and data
+# that are neither, with indices that are integers within and beyond the
+# data, negative, above 2^64, fractions, complex rationals and data that
+# are not numbers, and with ends that run past the data.  A start above
+# 2^64 is given only with a string or a list that ends in nil: on any
+# other datum ACL2 runs nthcdr by its definition, one step for each unit
+# of the start, and does not finish (README.md, "Where it and ACL2
+# part").
 awk 'BEGIN {
     ni = split("0 1 -1 7 -7 536870911 -536870912 536870912 -536870913 999999999 1000000000 -1000000000 " \
                "4294967295 4294967296 -4294967296 999999999999999999 1000000000000000000 " \
@@ -135,6 +143,20 @@ awk 'BEGIN {
         }
     }
     print "(ash 0 536870911)"
+    nq = split("\"\"|\"a\"|\"abc\"|\"a b(c)\"|(1 2 3)|(1 . 2)|nil|7|x|#\\a|3/2", seq, "|")
+    nx = split("0|1|2|3|4|-1|1/2|3/2|#c(1 2)|nil|x|18446744073709551614|18446744073709551616", at, "|")
+    na = split("0|1|2|-1|1/2|3/2|#c(1 2)|nil|x|18446744073709551614", from, "|")
+    ne = split("nil|0|1|3|5|5/2|-1|#c(3 2)|x", upto, "|")
+    for (i = 1; i <= nq; i++) {
+        proper = seq[i] ~ /^"/ || seq[i] == "(1 2 3)" || seq[i] == "nil"
+        print "(length " seq[i] ")"
+        for (j = 1; j <= nx; j++) print "(char " seq[i] " " at[j] ")"
+        for (j = 1; j <= na; j++)
+            for (k = 1; k <= ne; k++)
+                if (proper || from[j] != "18446744073709551614")
+                    print "(subseq " seq[i] " " from[j] " " upto[k] ")"
+        if (proper) print "(subseq " seq[i] " 18446744073709551614 18446744073709551616)"
+    }
 }' > $T/prelude.calls
 {
     echo '(in-package "ACL2")'
@@ -159,23 +181,25 @@ check book $LIB -p $B.statements $PROG $B.program
 check lib $LIB $PROG
 check arith $LIB $PROG
 
-# The prelude.  A define line is in force in the place of a function of
-# the prelude, so the prelude computes ash and binary-logxor only for
-# program text that does not define them: the library's, less two lines.
-# It is given the calls above, and then the calls of
-# runner-fast/test/gen.awk on integers of up to 200 bits that are of
-# those two functions, with the values that ACL2 gave for them.
-grep -v -e '^(define COMMON-LISP::NIL (COMMON-LISP::ASH ' \
-     -e '^(define COMMON-LISP::NIL (ACL2::BINARY-LOGXOR ' $PROG > $T/library.program
-[ $(($(grep -c . < $PROG) - $(grep -c . < $T/library.program))) -eq 2 ]
+# The prelude.  With -j the runner computes the five functions of the
+# prelude itself, and a define line for one of them is read and not used;
+# so the prelude is given the library's program text, which defines all
+# five.  It is given the calls above, and then the calls of
+# runner-fast/test/gen.awk on integers of up to 200 bits that are of ash
+# and binary-logxor, with the values that ACL2 gave for them.
+[ $(grep -c -e '^(define COMMON-LISP::NIL (COMMON-LISP::ASH ' \
+         -e '^(define COMMON-LISP::NIL (ACL2::BINARY-LOGXOR ' \
+         -e '^(define COMMON-LISP::NIL (COMMON-LISP::LENGTH ' \
+         -e '^(define COMMON-LISP::NIL (COMMON-LISP::CHAR ' \
+         -e '^(define COMMON-LISP::NIL (COMMON-LISP::SUBSEQ ' $PROG) -eq 5 ]
 report $? "the library's program text has one define line for each function of the prelude"
-check prelude -j $LIB $T/library.program
+check prelude -j $LIB $PROG
 : > $T/large.none
 awk -v set=large -f runner-fast/test/gen.awk | paste - runner-fast/test/expected/large.txt |
     awk -F '	' -v t=$T/large '
         $1 ~ /^\((COMMON-LISP::ASH|ACL2::BINARY-LOGXOR) / {
             print $1 > (t ".terms"); print $2 > (t ".expected") }'
-check large -j $LIB $T/library.program
+check large -j $LIB $PROG
 
 # 3. Cases that concern the runner alone.  Each line names the case, the
 #    status the runner must end with, and what it must print.
@@ -254,18 +278,19 @@ printf '(define COMMON-LISP::NIL (COMMON-LISP::CAR (ACL2::X) ACL2::X))\n' > $T/c
 s3=$(run $T/case.in $LIB $T/case.program)
 [ $bad -eq 0 ] && [ "$s1" -eq 2 ] && [ "$s2" -eq 2 ] && [ "$s3" -eq 2 ]
 report $? "text that is not in the format, and terms that are not terms, stop with status 2"
-# The functions of the prelude are functions like any other.  Without -j
-# they have no definition.  With it they are called from a term and from
-# a definition, in the last position and not; a define line for one of
-# them is in force in its place and the other stays; and a call with one
-# argument is not a term.
+# Without -j the functions of the prelude have no definition.  With it
+# they are called from a term and from a definition, in the last position
+# and not; a define line for one of them is read and not used; and a call
+# with one argument is not a term.
 printf '(define COMMON-LISP::NIL (ACL2::F (ACL2::X) (ACL2::BINARY-+ (COMMON-LISP::ASH ACL2::X (%s 2)) (ACL2::BINARY-LOGXOR ACL2::X (%s 1)))))\n' $Q $Q > $T/case.program
+printf '(define COMMON-LISP::NIL (ACL2::G (ACL2::S) (COMMON-LISP::CONS (COMMON-LISP::CHAR ACL2::S (%s 1)) (COMMON-LISP::CONS (COMMON-LISP::LENGTH ACL2::S) (COMMON-LISP::SUBSEQ ACL2::S (%s 1) (%s COMMON-LISP::NIL))))))\n' $Q $Q $Q >> $T/case.program
 {
     echo "(COMMON-LISP::ASH ($Q 1) ($Q 3))"
     echo "(ACL2::F ($Q 5))"
+    echo "(ACL2::G ($Q \"abc\"))"
 } > $T/case.in
 case_ok "without -j the functions of the prelude have no definition" "$(run $T/case.in $LIB $T/case.program)" 1
-printf '8\n24\n' > $T/case.want
+printf '8\n24\n(#\\62 3 . "bc")\n' > $T/case.want
 case_ok "with -j they are called from a term and from a definition" "$(run $T/case.in -j $LIB $T/case.program)" 0 $T/case.want
 # By its definition (ash 0 c) is 0 for every c.  The Lisp under ACL2 does
 # not shift by a count this large, and ACL2 aborts on the call.
@@ -273,8 +298,9 @@ echo "(COMMON-LISP::ASH ($Q 0) ($Q 100000000000000000000))" > $T/case0.in
 echo 0 > $T/case.want
 case_ok "with -j, ash of 0 by a count that ACL2 does not compute is 0" "$(run $T/case0.in -j $LIB $T/case.program)" 0 $T/case.want
 printf '(define COMMON-LISP::NIL (COMMON-LISP::ASH (ACL2::I ACL2::C) (%s 77)))\n' $Q >> $T/case.program
-printf '77\n81\n' > $T/case.want
-case_ok "a define line is in force in the place of a function of the prelude" "$(run $T/case.in -j $LIB $T/case.program)" 0 $T/case.want
+printf '(define COMMON-LISP::NIL (COMMON-LISP::CHAR (ACL2::S ACL2::N) (%s 77)))\n' $Q >> $T/case.program
+printf '8\n24\n(#\\62 3 . "bc")\n' > $T/case.want
+case_ok "with -j a define line for a function of the prelude is read and not used" "$(run $T/case.in -j $LIB $T/case.program)" 0 $T/case.want
 echo "(ACL2::BINARY-LOGXOR ($Q 1))" > $T/case.in
 case_ok "a call of a function of the prelude with one argument stops" "$(run $T/case.in -j $LIB $T/case.program)" 2
 

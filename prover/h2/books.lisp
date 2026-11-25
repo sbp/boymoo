@@ -297,12 +297,10 @@
   (list :h2-certificate entries reason))
 
 (defun h2-books-certificate-entries (certificate) (cadr certificate))
-(defun h2-books-certificate-reason (certificate) (caddr certificate))
-
 (defun h2-books-unproved-p (value)
-  (and (failure-p value) (equal (cadr value) "Unproved")))
+  (and (failure-p value) (equal (cadr value) "unproved")))
 
-(defconst *h2-books-unproved* '(:failure "Unproved" ""))
+(defconst *h2-books-unproved* '(:failure "unproved" ""))
 
 (mutual-recursion
  (defun h2-books-calls-in (term)
@@ -450,7 +448,7 @@
 (defun h2-books-appropriate-descent (variable term)
   (declare (xargs :measure (acl2-count term)))
   (cond ((or (proof-is-call term *library-car*) (proof-is-call term *library-cdr*))
-         (cond ((endp (cdr term)) '(:failure "TacticInapplicable" ""))
+         (cond ((endp (cdr term)) '(:failure "tactic-inapplicable" ""))
                ((equal (cadr term) variable) t)
                (t (h2-books-appropriate-descent variable (cadr term)))))
         ((and (proof-is-call term *proof-plus*) (member-equal variable (cdr term)))
@@ -579,51 +577,11 @@
   (let ((fuel (h2-books-book-proof-fuel proof)))
     (and fuel (< fuel 0))))
 
-(defun h2-books-book-proof-spend (proof)
-  (let ((spent (h2-books-book-proof-spent proof)))
-    (if (h2-books-budget-exhausted-p spent)
-        *h2-books-unproved*
-      spent)))
-
-(defun h2-books-certificate-own-names (entries)
-  (if (endp entries)
-      nil
-    (proof-with-checked-results ((name (proof-term-at (car entries) 1))
-                                 (written (proof-write name))
-                                 (rest (h2-books-certificate-own-names (cdr entries))))
-      (cons written rest))))
-
-(defun h2-books-certificate-facts-available (lines own known)
-  (if (endp lines)
-      t
-    (let* ((line (car lines))
-           (reference (and (text-starts-with line "(fact ")
-                           (text-ends-with line ")")
-                           (seq-slice line 6 -1))))
-      (and (or (not reference)
-               (text-starts-with reference "\"")
-               (member-equal reference own)
-               (member-equal reference known))
-           (h2-books-certificate-facts-available (cdr lines) own known)))))
-
-(defun h2-books-certificate-entries-available (entries own known)
-  (if (endp entries)
-      t
-    (proof-with-checked-results ((entry (proof-list-of-length (car entries) 4)))
-      (and (h2-books-certificate-facts-available (text-split (cadddr entry) (coerce '(#\Newline) 'string))
-                                                own known)
-           (h2-books-certificate-entries-available (cdr entries) own known)))))
-
-(defun h2-books-certificate-available (certificate proof)
-  (let ((entries (h2-books-certificate-entries certificate)))
-    (proof-with-checked-results ((own (h2-books-certificate-own-names entries)))
-      (h2-books-certificate-entries-available entries own (h2-books-book-proof-names-as-written proof)))))
-
 (defun h2-books-book-proof-boolean-value (proof term evidence)
   (proof-with-checked-results ((head (proof-term-at term 0)))
     (let ((fact (assoc-equal head *h2-books-boolean-facts*)))
       (if (not fact)
-          '(:failure "TacticInapplicable" "")
+          '(:failure "tactic-inapplicable" "")
         (proof-with-checked-results
             ((typed (proof-proof-fact (h2-books-book-proof-core proof) (cdr fact)
                                       (seq-zip (list *library-x* *library-y*) (cdr term)))))
@@ -638,9 +596,6 @@
 (defun h2-books-context-evidence-find (evidence term)
   (h2-books-book-proof-lookup (h2-books-context-evidence-proof evidence) term
                               (h2-books-context-evidence-context evidence)))
-
-(defun h2-books-context-evidence-require (evidence term)
-  (or (h2-books-context-evidence-find evidence term) '(:failure "failure" "")))
 
 (defun h2-books-quoted-arguments-p (args)
   (or (endp args)
@@ -684,7 +639,7 @@
 (defun h2-books-descent-query (n recipe args hypotheses evidence replies)
   (declare (xargs :measure (nfix n)))
   (if (h2-books-out-of-fuel-p n)
-      '(:failure "Fuel" "h2-books-descent-query")
+      '(:failure "fuel" "h2-books-descent-query")
     (let* ((proof (h2-books-context-evidence-proof evidence))
            (result (descent-query-recipe recipe (h2-books-book-proof-library proof) args hypotheses replies)))
       (cond ((failure-p result) result)
@@ -825,11 +780,6 @@
          (library (library-library-lemma library "H2-EMPTY-COUNT-LESS" claim result (list (proof-neg cons-term)))))
       (h2-books-book-proof-with-library proof library))))
 
-(defun h2-books-book-proof-can-open (proof term opened)
-  (and (not (member-equal term (h2-books-book-proof-fixed-calls proof)))
-       (h2-search-search-can-open
-        (h2-search-search-with-hooks (h2-books-book-proof-search proof) nil) term opened)))
-
 (defconst *h2-books-search-hooks*
   '(:reduce :can-open :cons-lookup :learn-selectors :primitive
     :set-fuel :keep-folded :restore-fixed-calls))
@@ -914,7 +864,7 @@
  (defun h2-books-run-search (n proof operation args)
    (declare (xargs :measure (nfix n)))
    (if (h2-books-out-of-fuel-p n)
-       (cons '(:failure "Fuel" "h2-books-run-search") proof)
+       (cons '(:failure "fuel" "h2-books-run-search") proof)
      (let* ((rule-hook (if (or (h2-books-book-proof-dynamic proof) (h2-books-book-proof-arithmetic proof))
                            :apply-rules :book-ordinal-rules))
             (hooks (cons rule-hook *h2-books-search-hooks*))
@@ -930,7 +880,7 @@
  (defun h2-books-replay-search (n search proof operation args replies)
    (declare (xargs :measure (nfix n)))
    (if (h2-books-out-of-fuel-p n)
-       (cons '(:failure "Fuel" "h2-books-replay-search") proof)
+       (cons '(:failure "fuel" "h2-books-replay-search") proof)
      (let* ((result (h2-books-search-call operation (h2-search-search-with-replies search replies) args))
             (request (cond ((h2-search-request-p result) result)
                            ((h2-search-request-p (car result)) (car result))
@@ -947,7 +897,7 @@
  (defun h2-books-search-answer (n proof request)
    (declare (xargs :measure (nfix n)))
    (if (h2-books-out-of-fuel-p n)
-       (cons '(:return (:failure "Fuel" "h2-books-search-answer")) proof)
+       (cons '(:return (:failure "fuel" "h2-books-search-answer")) proof)
      (let ((method (h2-search-request-method request))
            (args (h2-search-request-args request))
            (result (h2-search-request-result request)))
@@ -977,7 +927,7 @@
  (defun h2-books-learn-after (n proof step context opened seen)
    (declare (xargs :measure (nfix n)))
    (if (h2-books-out-of-fuel-p n)
-       (cons '(:failure "Fuel" "h2-books-learn-after") proof)
+       (cons '(:failure "fuel" "h2-books-learn-after") proof)
      (let ((literal (proof-step-first step)))
        (cond ((failure-p literal) (cons literal proof))
              ((proof-is-call literal *proof-equal*)
@@ -987,7 +937,7 @@
  (defun h2-books-learn-selectors (n proof args index step changed context opened seen)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((h2-books-out-of-fuel-p n) (cons '(:failure "Fuel" "h2-books-learn-selectors") proof))
+    ((h2-books-out-of-fuel-p n) (cons '(:failure "fuel" "h2-books-learn-selectors") proof))
     ((endp args)
      (if (not changed)
          (cons (cons context seen) proof)
@@ -1010,7 +960,7 @@
 
  (defun h2-books-apply-rules-after (n proof term context active rewrite result)
    (declare (xargs :measure (nfix n)))
-   (cond ((h2-books-out-of-fuel-p n) (h2-books-rules-result '(:failure "Fuel" "h2-books-apply-rules-after") proof context))
+   (cond ((h2-books-out-of-fuel-p n) (h2-books-rules-result '(:failure "fuel" "h2-books-apply-rules-after") proof context))
          ((or result (equal term *proof-false*) (<= 4 (len active)))
           (h2-books-rules-result result proof context))
          (t
@@ -1024,7 +974,7 @@
  (defun h2-books-apply-finite-rule (n proof term context active rewrite ordinal)
    (declare (xargs :measure (nfix n)))
    (if (h2-books-out-of-fuel-p n)
-       (h2-books-rules-result '(:failure "Fuel" "h2-books-apply-finite-rule") proof context)
+       (h2-books-rules-result '(:failure "fuel" "h2-books-apply-finite-rule") proof context)
      (let ((order (and ordinal (h2-books-finite-rule proof term context active))))
        (cond ((failure-p order) (h2-books-rules-result order proof context))
              (order
@@ -1043,7 +993,7 @@
  (defun h2-books-apply-calculation (n proof term context active rewrite)
    (declare (xargs :measure (nfix n)))
    (if (h2-books-out-of-fuel-p n)
-       (h2-books-rules-result '(:failure "Fuel" "h2-books-apply-calculation") proof context)
+       (h2-books-rules-result '(:failure "fuel" "h2-books-apply-calculation") proof context)
      (let ((eligible (and (not rewrite) (h2-books-book-proof-arithmetic proof)
                           (h2-books-arithmetic-goal-p term))))
        (cond ((failure-p eligible) (h2-books-rules-result eligible proof context))
@@ -1061,7 +1011,7 @@
  (defun h2-books-run-calculation (n proof search term context replies)
    (declare (xargs :measure (nfix n)))
    (if (h2-books-out-of-fuel-p n)
-       (h2-books-rules-result '(:failure "Fuel" "h2-books-run-calculation") proof context)
+       (h2-books-rules-result '(:failure "fuel" "h2-books-run-calculation") proof context)
      (let ((result (h2-calculation-calculate-with-replies search term context replies)))
        (cond
         ((failure-p result) (h2-books-rules-result result proof context))
@@ -1084,7 +1034,7 @@
           (operation (h2-calculation-request-operation request))
           (proof (h2-books-book-proof-with-search proof search)))
      (cond
-      ((h2-books-out-of-fuel-p n) (h2-books-rules-result '(:failure "Fuel" "h2-books-answer-calculation") proof context))
+      ((h2-books-out-of-fuel-p n) (h2-books-rules-result '(:failure "fuel" "h2-books-answer-calculation") proof context))
       ((eq operation :spend)
        (let ((proof (h2-books-book-proof-spent proof)))
          (h2-books-rules-result (and (h2-books-budget-exhausted-p proof)
@@ -1103,7 +1053,7 @@
  (defun h2-books-apply-dynamic-rules (n proof term context active rewrite)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((h2-books-out-of-fuel-p n) (h2-books-rules-result '(:failure "Fuel" "h2-books-apply-dynamic-rules") proof context))
+    ((h2-books-out-of-fuel-p n) (h2-books-rules-result '(:failure "fuel" "h2-books-apply-dynamic-rules") proof context))
     ((not (h2-books-book-proof-dynamic proof)) (h2-books-rules-result nil proof context))
     (t
      (let* ((indexes (list (h2-books-book-proof-book-rules proof) (h2-books-book-proof-library-rules proof)))
@@ -1127,7 +1077,7 @@
 
  (defun h2-books-dynamic-indexes (n proof term context active rewrite indexes)
    (declare (xargs :measure (nfix n)))
-   (cond ((h2-books-out-of-fuel-p n) (h2-books-rules-result '(:failure "Fuel" "h2-books-dynamic-indexes") proof context))
+   (cond ((h2-books-out-of-fuel-p n) (h2-books-rules-result '(:failure "fuel" "h2-books-dynamic-indexes") proof context))
          ((endp indexes) (h2-books-rules-result nil proof context))
          (t (let ((rules (h2-books-rule-index-candidates (car indexes) term rewrite)))
               (if (failure-p rules)
@@ -1140,7 +1090,7 @@
  (defun h2-books-dynamic-candidates (n proof term context active rewrite rules)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((h2-books-out-of-fuel-p n) (h2-books-rules-result '(:failure "Fuel" "h2-books-dynamic-candidates") proof context))
+    ((h2-books-out-of-fuel-p n) (h2-books-rules-result '(:failure "fuel" "h2-books-dynamic-candidates") proof context))
     ((endp rules) (h2-books-rules-result nil proof context))
     (t
      (let ((proof (h2-books-book-proof-spent proof)))
@@ -1160,26 +1110,6 @@
                      ((and step (or (not rewrite) (not (equal right term))))
                       (h2-books-rules-result step proof context))
                      (t (h2-books-dynamic-candidates (1- n) proof term context active rewrite (cdr rules)))))))))))))
-
-(defun h2-books-book-proof-reduce (proof term context opened active)
-  (let* ((result (h2-books-run-search 1000000 proof :reduce (list term context opened active)))
-         (value (car result)))
-    (if (failure-p value) value (h2-books-rules-result (car value) (cdr result) (cdr value)))))
-
-(defun h2-books-book-proof-primitive (proof term context)
-  (let* ((result (h2-books-run-search 1000000 proof :primitive (list term context)))
-         (value (car result)))
-    (if (failure-p value) value (h2-books-rules-result value (cdr result) context))))
-
-(defun h2-books-book-proof-learn (proof step context opened seen)
-  (let* ((result (h2-books-run-search 1000000 proof :learn (list step context opened seen)))
-         (value (car result)))
-    (if (failure-p value) value (list (cdr result) (car value) (cdr value)))))
-
-(defun h2-books-book-proof-apply-rules (proof term context active rewrite)
-  (let* ((result (h2-books-run-search 1000000 proof :apply-rules (list term context active rewrite)))
-         (value (car result)))
-    (if (failure-p value) value (h2-books-rules-result (car value) (cdr result) (cdr value)))))
 
 (defun h2-books-run-indexed-search (n proof operation args)
   (let ((search (h2-books-book-proof-search proof)))
@@ -1234,7 +1164,7 @@
 (defun h2-books-run-index-lemmas (n proof replies)
   (declare (xargs :measure (nfix n)))
   (if (h2-books-out-of-fuel-p n)
-      '(:failure "Fuel" "h2-books-run-index-lemmas")
+      '(:failure "fuel" "h2-books-run-index-lemmas")
     (let ((result (h2-arithmetic-index-lemmas (h2-books-book-proof-library proof) replies)))
       (cond ((failure-p result) result)
             ((h2-alists-request-p (car result))
@@ -1361,10 +1291,6 @@
              (result (h2-books-run-indexed-search 1000000 folded :list-induction (list formula variable nil 1))))
         (cons (car result) (h2-books-book-proof-with-fixed-calls (cdr result) saved))))))
 
-(defun h2-books-book-proof-induct-with-folded-calls (proof formula variable definitions)
-  (let ((result (h2-books-induct-folded proof formula variable definitions)))
-    (if (failure-p (car result)) (car result) result)))
-
 (defun h2-books-book-proof-calls-of (proof function)
   (let ((definition (assoc-equal function (h2-books-book-proof-definitions proof))))
     (if definition
@@ -1428,7 +1354,7 @@
 (defun h2-books-next-induction-plan (n proof pending seen)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((h2-books-out-of-fuel-p n) '(:failure "Fuel" "h2-books-next-induction-plan"))
+   ((h2-books-out-of-fuel-p n) '(:failure "fuel" "h2-books-next-induction-plan"))
    ((endp pending) nil)
    (t
     (let* ((item (car pending))
@@ -1466,21 +1392,6 @@
               (if (and candidate (not (member-equal candidate seen)))
                   (list candidate rest (cons candidate seen))
                 (h2-books-next-induction-plan (1- n) proof rest seen)))))))))))
-
-(defun h2-books-all-induction-plans (n proof pending seen)
-  (declare (xargs :measure (nfix n)))
-  (if (h2-books-out-of-fuel-p n)
-      '(:failure "Fuel" "h2-books-all-induction-plans")
-    (proof-with-checked-results ((next (h2-books-next-induction-plan 1000000 proof pending seen)))
-      (if (not next)
-          nil
-        (proof-with-checked-results
-            ((rest (h2-books-all-induction-plans (1- n) proof (cadr next) (caddr next))))
-          (cons (car next) rest))))))
-
-(defun h2-books-book-proof-induction-plans (proof formula)
-  (proof-with-checked-results ((calls (h2-books-calls-in formula)))
-    (h2-books-all-induction-plans 1000000 proof (list (list :terms calls)) nil)))
 
 (defun h2-books-statement-assumptions (clause core)
   (if (endp clause)
@@ -1542,10 +1453,6 @@
       (cond ((failure-p head) (cons head proof))
             ((equal head *proof-ordinalp*) (h2-books-termination-ordinality proof goal clause))
             (t (h2-books-termination-decrease proof goal clause))))))
-
-(defun h2-books-book-proof-termination-clause (proof clause)
-  (let ((result (h2-books-termination-clause proof clause)))
-    (if (failure-p (car result)) (car result) result)))
 
 (defun h2-books-mentions-mod-p (terms)
   (if (endp terms)
@@ -1703,10 +1610,6 @@
                 (cons plans proof)
               (h2-books-try-definition-plans plans proof facts definitions names recorded))))))))
 
-(defun h2-books-book-proof-prove-definition (proof data measures)
-  (let ((result (h2-books-prove-definition proof data measures)))
-    (if (failure-p (car result)) (car result) result)))
-
 (defun h2-books-focused-updated (proof updated)
   (if (failure-p updated) (cons updated proof) (cons nil updated)))
 
@@ -1714,7 +1617,7 @@
  (defun h2-books-answer-operation (n proof operation args)
    (declare (xargs :measure (nfix n)))
    (if (h2-books-out-of-fuel-p n)
-       (cons '(:failure "Fuel" "h2-books-answer-operation") proof)
+       (cons '(:failure "fuel" "h2-books-answer-operation") proof)
      (case operation
        (:library (cons (h2-books-book-proof-library proof) proof))
        (:with-library (cons nil (h2-books-book-proof-with-library proof (car args))))
@@ -1748,7 +1651,7 @@
  (defun h2-books-run-compression (n proof operation args replies)
    (declare (xargs :measure (nfix n)))
    (if (h2-books-out-of-fuel-p n)
-       (cons '(:failure "Fuel" "h2-books-run-compression") proof)
+       (cons '(:failure "fuel" "h2-books-run-compression") proof)
      (let ((result (h2-compression-lookup-call-with-replies proof operation args replies)))
        (cond ((failure-p result) (cons result proof))
              ((h2-compression-lookup-request-p result)
@@ -1766,7 +1669,7 @@
 (defun h2-books-run-focused (n proof name formula replies)
   (declare (xargs :measure (nfix n)))
   (if (h2-books-out-of-fuel-p n)
-      (cons '(:failure "Fuel" "h2-books-run-focused") proof)
+      (cons '(:failure "fuel" "h2-books-run-focused") proof)
     (let ((result (h2-book-recipes-focused-proof-with-replies proof name formula replies)))
       (cond ((failure-p result) (cons result proof))
             ((h2-book-recipes-request-p result)
@@ -1821,7 +1724,7 @@
 (defun h2-books-run-signed-identity (n proof search formula replies)
   (declare (xargs :measure (nfix n)))
   (if (h2-books-out-of-fuel-p n)
-      (cons '(:failure "Fuel" "h2-books-run-signed-identity") proof)
+      (cons '(:failure "fuel" "h2-books-run-signed-identity") proof)
     (let ((result (h2-calculation-signed-identity-with-replies search formula replies)))
       (cond ((failure-p result) (cons result proof))
             ((h2-alist-recognizers-request-p (car result))
@@ -1973,7 +1876,7 @@
 (defun h2-books-try-nfix-induction (n proof target wrappers pending seen)
   (declare (xargs :measure (nfix n)))
   (if (h2-books-out-of-fuel-p n)
-      (cons '(:failure "Fuel" "h2-books-try-nfix-induction") proof)
+      (cons '(:failure "fuel" "h2-books-try-nfix-induction") proof)
     (let ((next (h2-books-next-induction-plan 1000000 proof pending seen)))
       (cond ((failure-p next) (cons next proof))
             ((not next) (cons nil proof))
@@ -2033,10 +1936,6 @@
                 result
               (h2-books-search-theorem (cdr result) formula hints))))))))
 
-(defun h2-books-book-proof-prove-book-theorem (proof name formula hints)
-  (let ((result (h2-books-prove-book-theorem proof name formula hints)))
-    (if (failure-p (car result)) (car result) result)))
-
 (defun h2-books-answer-witness (proof request)
   (let* ((proof (h2-books-book-proof-with-search proof (h2-witnesses-request-proof request)))
          (args (h2-witnesses-request-args request)))
@@ -2070,7 +1969,7 @@
 (defun h2-books-run-witness (n proof search work count replies)
   (declare (xargs :measure (nfix n)))
   (if (h2-books-out-of-fuel-p n)
-      (cons '(:failure "Fuel" "h2-books-run-witness") proof)
+      (cons '(:failure "fuel" "h2-books-run-witness") proof)
     (let* ((witnesses (cadr work))
            (result (h2-witnesses-prove-assignments search (cadddr work) (caddr work)
                                                     (car work) witnesses count replies)))
@@ -2116,89 +2015,4 @@
            (cons (h2-books-make-certificate nil (caddr entries)) proof))
           ((failure-p entries) entries)
           (t (cons (h2-books-make-certificate entries "") proof)))))
-
-(defun h2-books-certificate-rejection (certificate proof)
-  (let ((reason (h2-books-certificate-reason certificate)))
-    (if (not (equal reason ""))
-        reason
-      (proof-with-checked-results ((available (h2-books-certificate-available certificate proof)))
-        (if available "" "certificate cites a fact absent from this prefix")))))
-
-(defun h2-books-source-header (source)
-  (let ((end (text-find source (coerce '(#\Newline) 'string))))
-    (if (minusp end) source (seq-slice source 0 end))))
-
-(defun h2-books-entry-step-count (counts)
-  (if (endp counts)
-      0
-    (+ (car counts) (h2-books-entry-step-count (cdr counts)))))
-
-(defun h2-books-emit-entries (entries emitted sources steps)
-  (if (endp entries)
-      (list (reverse sources) steps emitted)
-    (proof-with-checked-results ((entry (proof-list-of-length (car entries) 4)))
-      (let* ((kind (car entry))
-             (name (cadr entry))
-             (counts (caddr entry))
-             (source (cadddr entry))
-             (previous (and (member-equal kind '("lemma" "define")) (assoc-equal name emitted))))
-        (cond ((not previous)
-               (h2-books-emit-entries (cdr entries) (table-put emitted name source)
-                                       (cons source sources) (+ steps (h2-books-entry-step-count counts))))
-              ((equal (h2-books-source-header (cdr previous)) (h2-books-source-header source))
-               (h2-books-emit-entries (cdr entries) emitted sources steps))
-              (t '(:failure "failure" "")))))))
-
-(defun h2-books-emit-certificate (certificate reason name emitted)
-  (if (equal reason "")
-      (h2-books-emit-entries (h2-books-certificate-entries certificate) emitted nil 0)
-    (proof-with-checked-results ((source (proof-line "skip" (list name))))
-      (list (list source) 0 emitted))))
-
-(defun h2-books-generate-row (raw kind data name proof measures hints cached emitted)
-  (let* ((cached-certificate (table-get cached raw nil))
-         (result (if cached-certificate (cons cached-certificate proof)
-                   (h2-books-find-certificate proof kind data name measures hints))))
-    (proof-with-checked-results
-        ((result result)
-         (reason (h2-books-certificate-rejection (car result) (cdr result)))
-         (output (h2-books-emit-certificate (car result) reason name emitted))
-         (written (proof-write name)))
-      (let* ((source (text-join "" (car output)))
-             (status (if (equal reason "") "proved" "skipped"))
-             (row (list written status (decimal-text (cadr output)) (decimal-text (length source)) reason))
-             (cached (if cached-certificate cached (table-put cached raw (car result)))))
-        (list (cdr result) cached (caddr output) row source)))))
-
-(defun h2-books-library-lines (library)
-  (if (endp library)
-      nil
-    (proof-with-checked-results ((row (proof-list-of-length (car library) 3))
-                                 (rest (h2-books-library-lines (cdr library))))
-      (cons (car row) rest))))
-
-(defun h2-books-generate-statements (statements proof seen measures hints planned cached emitted rows output)
-  (if (endp statements)
-      (if (car planned)
-          '(:failure "failure" "")
-        (cons (list (text-join "" (reverse output)) (reverse rows)) cached))
-    (proof-with-checked-results ((row (proof-list-of-length (car statements) 3)))
-      (let ((raw (car row)) (kind (cadr row)) (data (caddr row)))
-        (if (member-equal raw seen)
-            (h2-books-generate-statements (cdr statements) proof seen measures hints planned cached emitted rows output)
-          (proof-with-checked-results
-              ((name (and (car planned) (h2-books-statement-name kind data)))
-               (generated (and (car planned) (equal name (car planned))
-                               (h2-books-generate-row raw kind data name proof measures hints cached emitted)))
-               (proof (h2-books-book-proof-add-statement (if generated (car generated) proof) kind data)))
-            (h2-books-generate-statements (cdr statements) proof (cons raw seen) measures hints
-                                           (if generated (cdr planned) planned)
-                                           (if generated (cadr generated) cached)
-                                           (if generated (caddr generated) emitted)
-                                           (if generated (cons (cadddr generated) rows) rows)
-                                           (if generated (cons (nth 4 generated) output) output))))))))
-
-(defun h2-books-generate-book (base library statements measures hints planned cached)
-  (proof-with-checked-results ((seen (h2-books-library-lines library)))
-    (h2-books-generate-statements statements (h2-books-book-proof-fork base) seen measures hints planned cached nil nil nil)))
 

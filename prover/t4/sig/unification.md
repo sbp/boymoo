@@ -10,7 +10,6 @@ Evidence as specified in `prover/t4/sig/structural.md`.
 |---|---|---|
 | `(t4-unification-measures definitions)` | The dictionary from function names to their pattern-size measures, as an association list with entries `(name . measure)` in the order of first occurrence of the names. | A failure from reading a definition or its formals. |
 | `(t4-unification-descent lib goal call)` | `(cons step lib)` with the measure comparison Step for `goal` and the Library with any lemmas added by the comparison. | A failure from reading a term or constructing a proof. |
-| `(t4-unification-boolean-count lib test obj evidence)` | Library, equality test term, parent term and Evidence. Returns `(cons step lib)` proving the test result smaller than the parent. | A failure from reading a term or constructing a proof. |
 | `(t4-unification-subproblem-bound lib field parent evidence)` | Library, projection term for field zero or two, pattern term and Evidence. Returns `(cons step lib)` with the strict bound for that field. | A failure from reading a term or constructing a proof. |
 
 A failure is the entire result. The function names are also available as

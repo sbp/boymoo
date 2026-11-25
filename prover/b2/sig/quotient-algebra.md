@@ -14,7 +14,7 @@ including any auxiliary lemmas. A failure is the entire result of a call.
 | `(b2-quotient-algebra-exact-quotient lib quotient ratio)` | Library, floor or truncate call, and ratio term. Returns `(cons step library)` with the equivalence between the quotient equaling the ratio and the ratio being integer. | Failure from proof construction. |
 | `(b2-quotient-algebra-reciprocal-of-pair lib a b c d unit-a unit-b)` | Library, four terms, and Steps proving that `a*c` and `b*d` equal one. Returns a Step proving the reciprocal of `a*b` equals `c*d`. | Failure from proof construction. |
 | `(b2-quotient-algebra-cancel-to-value lib value factor known)` | Library, value and factor terms, and evidence table. Returns a Step canceling the factor with its reciprocal. | Failure from evidence lookup or proof construction. |
-| `(b2-quotient-algebra-completed-product lib term evidence)` | Library, term, and ordered list of evidence Steps. Returns an equality Step reducing a product or reciprocal, or normalizing the term when it has another form. | Failure from proof construction or `Fuel` on exhaustion. |
+| `(b2-quotient-algebra-completed-product lib term evidence)` | Library, term, and ordered list of evidence Steps. Returns an equality Step reducing a product or reciprocal, or normalizing the term when it has another form. | Failure from proof construction or `fuel` on exhaustion. |
 | `(b2-quotient-algebra-quotient-identity lib name formula)` | Library, theorem name symbol, and formula term. Returns `(cons step library)` proving the formula. | Failure from evidence lookup or proof construction. |
 
 The external symbol constants are `*b2-quotient-algebra-exact-floor*`,

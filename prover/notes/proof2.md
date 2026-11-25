@@ -16,7 +16,7 @@ A rule of this book returns a Step whose first literal is its conclusion and who
 
 ## Counters
 
-The walk of a value, the simplifier and the prover each take a counter that begins at 1,000,000 and return a failure of the kind `"Fuel"` at 0. The failure names the function that ran out.
+The walk of a value, the simplifier and the prover each take a counter that begins at 1,000,000 and return a failure of the kind `"fuel"` at 0. The failure names the function that ran out.
 
 ## Shared with later books
 

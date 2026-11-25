@@ -26,7 +26,7 @@ names. `output` is the list of renamed entries in emission order. `active` is
 the set of entries being visited, with the most recently added first.
 Functions that update `Entries` return `(cons value object)`.
 The first argument `n` is a natural-number recursion counter. Pass `1000000`
-at the initial call. Zero fuel returns a `Fuel` failure.
+at the initial call. Zero fuel returns a `fuel` failure.
 
 | Call | Arguments and result | Failure |
 |---|---|---|
@@ -36,7 +36,6 @@ at the initial call. Zero fuel returns a `Fuel` failure.
 | `(h3-api-library lines)` | The ground Library extended by the given list of library lines. | A failure from admission. |
 | `(h3-api-world library earlier)` | The ground Library extended by the library lines and then the earlier lines. Its local entry list is empty. | A failure from admission. |
 | `(h3-api-measures aids)` | The parsed measure records from the lines of `aids`, in their input order. | A reader failure. |
-| `(h3-api-entries-init lib)` | An `Entries` object for the Library's local entries and reserved fact names. | A failure from writing a token. |
 | `(h3-api-entries-name n object symbol)` | The renamed `symbol` and the resulting object. An external symbol keeps its name. A newly cited local entry is emitted after its dependencies. | A failure from the entry text, a cycle, a reserved name collision or fuel exhaustion. |
 | `(h3-api-entries-term n object term)` | The term with local function names rewritten, and the resulting object. | A failure from traversal, renaming or fuel exhaustion. |
 | `(h3-api-entries-substitution n object bindings)` | The rewritten bindings and the resulting object. `bindings` is the list of `(variable term)` pairs, or the prover datum for `NIL`. | A failure from unpacking bindings, rewriting or fuel exhaustion. |

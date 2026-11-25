@@ -129,9 +129,6 @@
 (defun h4-book-compression-singleton-sum-tail-exponent (single)
   (nth 4 single))
 
-(defun h4-book-compression-singleton-sum-raw (single)
-  (nth 5 single))
-
 (defun h4-book-compression-singleton-sum-shapes (single)
   (nth 6 single))
 

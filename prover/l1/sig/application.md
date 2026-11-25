@@ -16,7 +16,7 @@ book are in the order of their serialized member text.
 |---|---|---|
 | `(l1-application-elements term)` | Return the elements of an explicit cons list, or `:none` if the tail is other than quoted NIL. An empty explicit list returns `nil`. | Malformed cons. |
 | `(l1-application-consp-cons proof test)` | Return a Step for a `CONSP` test on a cons constructor, or `nil`. | Malformed test or proof construction. |
-| `(l1-application-value-functions term)` | Return the set of function names outside quoted code in the translated term. | `UnsupportedApplication` for a lambda head, or a failure from reading a malformed term. |
+| `(l1-application-value-functions term)` | Return the set of function names outside quoted code in the translated term. | `unsupported-application` for a lambda head, or a failure from reading a malformed term. |
 | `(l1-application-application-init proof function badges extra-definitions definitions)` | Construct an Application from the Proof, the unquoted function symbol, badges and two sets of definition names. Pass `nil` for no extra names and `:default` for the standard evaluator definitions. | None on those arguments. |
 | `(l1-application-application-proof application)` | Return the Proof. | None. |
 | `(l1-application-application-function application)` | Return the quoted function symbol. | None. |
@@ -28,7 +28,7 @@ book are in the order of their serialized member text.
 | `(l1-application-application-choose-branch application term)` | Return the equality Step for a selected conditional branch, or `nil`. | Malformed conditional or proof construction. |
 | `(l1-application-application-reduce application term)` | Return the reduction equality Step for the term, or `nil`. | Malformed term, proof construction or fuel. |
 | `(l1-application-application-arguments application term positions)` | Reduce the term's arguments at the ordered zero-based positions and return the equality Step, or `nil`. | Malformed term, proof construction or fuel. |
-| `(l1-application-quoted-application proof function args recursive-badge expected code)` | Return `(quoted-function quoted-lambda left-step right-step)` for the unquoted function symbol and explicit argument-list term. Pass `nil` or `:none` for an absent recursive badge, expected result, or code term. | `UnsupportedApplication`, malformed definition, missing evidence, failed assertion, proof construction or fuel. |
+| `(l1-application-quoted-application proof function args recursive-badge expected code)` | Return `(quoted-function quoted-lambda left-step right-step)` for the unquoted function symbol and explicit argument-list term. Pass `nil` or `:none` for an absent recursive badge, expected result, or code term. | `unsupported-application`, malformed definition, missing evidence, failed assertion, proof construction or fuel. |
 | `(l1-application-select-args args size)` | Return `size` terms projecting successive arguments from the argument-list term. | None for integer `size`. |
 | `(l1-application-component data index)` | Return the zero-based projection term from the list term `data`. | An index outside the range from 0 through 2^63 − 1. |
 | `(l1-application-select-component proof data index)` | Return the proof reducing the projection at zero-based `index` from the cons-list term. | Malformed data, bad index or proof construction. |
@@ -43,6 +43,6 @@ Steps and definitions is the list of names to unfold. Both default to
 |---|---|---|
 | `(l1-application-proof-constant proof term)` | The equality Step for a supported constant computation, or `nil`. | Malformed term or proof construction. |
 | `(l1-application-proof-simplify proof term evidence definitions)` | The simplification equality Step, or `nil`. | Malformed term, proof construction or fuel. |
-| `(l1-application-proof-prove proof term evidence definitions)` | The Step proving the term. | `Unproved` when warrant simplification finds no proof, or a failure from proof construction. |
+| `(l1-application-proof-prove proof term evidence definitions)` | The Step proving the term. | `unproved` when warrant simplification finds no proof, or a failure from proof construction. |
 
 `l1-application-component` constructs one projection. `l1-application-select-args` constructs the projections for the first `size` arguments.

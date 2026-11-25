@@ -11,7 +11,7 @@ a failure as its entire result.
 | Call | Result |
 |---|---|
 | `(t3-book-lambdas-inspect lib call evidence)` | The equation for the unfolded recognizer `call`, simplified using `evidence`. |
-| `(t3-book-lambdas-required lib formula facts)` | A Step establishing `formula` from `facts`, or `Unsupported` for a missing condition. |
+| `(t3-book-lambdas-required lib formula facts)` | A Step establishing `formula` from `facts`, or `unsupported` for a missing condition. |
 | `(t3-book-lambdas-not-symbol lib cons)` | A negative `SYMBOLP` Step from the positive `CONSP` Step `cons`. |
 | `(t3-book-lambdas-present-operator lib operator facts)` | A positive `CONSP` Step for `operator` from its length condition in `facts`. |
 | `(t3-book-lambdas-extract-lambda lib name formula)` | The theorem entry extracting a pseudo-lambda recognizer from a pseudo-term recognizer. |
@@ -22,7 +22,7 @@ a failure as its entire result.
 | `(t3-book-lambdas-conditions lib proof)` | The Steps from recursively opening the conjunction in `proof`, visiting left before right. |
 | `(t3-book-lambdas-proper-length lib)` | The Library with the proper-list length lemma appended. |
 | `(t3-book-lambdas-term-list-proper lib proof)` | A proper-list Step from a Step for the real term-list recognizer. |
-| `(t3-book-lambdas-arglist-proper lib typed)` | A proper-list Step from an `ARGLISTP` Step, or `Unsupported` when the recognizer does not supply the proof. |
+| `(t3-book-lambdas-arglist-proper lib typed)` | A proper-list Step from an `ARGLISTP` Step, or `unsupported` when the recognizer does not supply the proof. |
 | `(t3-book-lambdas-extract-real-lambda lib name formula)` | `(cons entry lib)` with the real lambda extraction theorem entry and the Library with the length lemma. |
 | `(t3-book-lambdas-construct-real-lambda lib name formula)` | `(cons entry lib)` with the real lambda construction theorem entry and the Library with the length lemma. |
 | `(t3-book-lambdas-application-with-lambda lib typed arguments arity target)` | A Step for `target` from the lambda recognizer, argument-list recognizer and arity Steps. |

@@ -12,6 +12,6 @@
 | `h1-book-expt-order-install-power-order` | `proof` | Updated prover with the rational power rule and the three lemmas. |
 | `h1-book-expt-order-power-monotonicity` | `proof`, implication or strict comparison term | Step for the formula. |
 
-Every function can return a failure as its entire result. `power-monotonicity` can return `Unproved` when the formula does not match or lacks the necessary evidence.
+Every function can return a failure as its entire result. `power-monotonicity` can return `unproved` when the formula does not match or lacks the necessary evidence.
 
 `(h1-book-expt-order-step-term step index)` reads a zero-based index of the first literal of a Step. `(h1-book-expt-order-bindings pairs bindings)` extends the given dictionary with the two-element binding pairs in order. Either helper can return a failure when reading its input.

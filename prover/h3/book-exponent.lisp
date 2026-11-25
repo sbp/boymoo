@@ -84,7 +84,7 @@
                            ((and (failure-p typed)
                                  (or (equal (cadr typed) "value")
                                      (h3-rewrite-unproved-p typed)))
-                            '(:failure "Unproved" ""))
+                            '(:failure "unproved" ""))
                            ((failure-p typed) typed)
                            (t (list typed nil)))
                           lib)))
@@ -192,10 +192,6 @@
   (h3-book-exponent-nonzero-base-in-context
    term (h3-book-order-bounds-with-library context lib)))
 
-(defun h3-book-exponent-nonzero-base (lib term context)
-  (h3-book-exponent-library-result
-   (h3-book-exponent-nonzero-base-with-context lib term context)))
-
 (defun h3-book-exponent-power-factor-value-in-context (factor context)
   (let ((reciprocal (proof-is-call factor *h3-book-arithmetic-divide*)))
     (h3-book-exponent-bind context
@@ -221,11 +217,6 @@
           ((reflexive (proof-proof-reflexive
                        (library-library-proof (h3-book-order-bounds-lib context)) term)))
           (cons (list index reflexive) context))))))
-
-(defun h3-book-exponent-power-factor-value (lib factor context)
-  (h3-book-exponent-library-result
-   (h3-book-exponent-power-factor-value-in-context
-    factor (h3-book-order-bounds-with-library context lib))))
 
 (defun h3-book-exponent-combine-power-factors-in-context (first second target context)
   (h3-book-exponent-bind context
@@ -259,11 +250,6 @@
      (addition (proof-proof-rewrite proof addition alignment '(1 1 2)))
      (symmetric (proof-proof-symmetric proof addition)))
     (cons (proof-proof-chain proof result (list symmetric)) context)))
-
-(defun h3-book-exponent-combine-power-factors (lib first second target context)
-  (h3-book-exponent-library-result
-   (h3-book-exponent-combine-power-factors-in-context
-    first second target (h3-book-order-bounds-with-library context lib))))
 
 (defun h3-book-exponent-factor-as-power (term)
   (proof-with-checked-results
@@ -355,11 +341,6 @@
           (h3-book-exponent-try-product target source t context)))
     (cons nil context)))
 
-(defun h3-book-exponent-power-product-equality (lib goal context)
-  (h3-book-exponent-library-result
-   (h3-book-exponent-power-product-equality-in-context
-    goal (h3-book-order-bounds-with-library context lib))))
-
 (defun h3-book-exponent-find-factor (factors head reciprocal)
   (declare (xargs :measure (acl2-count factors)))
   (if (endp factors)
@@ -436,11 +417,6 @@
            (library-library-proof (h3-book-order-bounds-lib context))
            paired (list shifted))
           context)))
-
-(defun h3-book-exponent-power-shift-two-factors (lib goal context)
-  (h3-book-exponent-library-result
-   (h3-book-exponent-power-shift-two-factors-in-context
-    goal (h3-book-order-bounds-with-library context lib))))
 
 (defun h3-book-exponent-expt-term (term)
   (cond ((failure-p term) term)
@@ -599,11 +575,6 @@
             (if integer
                 (cons proved context)
               (h3-book-exponent-noninteger-case goal term test proved context))))))))
-
-(defun h3-book-exponent-exponent-type-theorem (lib goal term context)
-  (h3-book-exponent-library-result
-   (h3-book-exponent-exponent-type-theorem-in-context
-    goal term (h3-book-order-bounds-with-library context lib))))
 
 (defun h3-book-exponent-conjuncts (goal)
   (if (proof-is-call goal *proof-if*)

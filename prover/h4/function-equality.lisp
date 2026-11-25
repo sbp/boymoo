@@ -57,10 +57,6 @@
     (equality (h4-function-equality-open-definition p definition)))
    (proof-proof-transport (library-library-proof p) checked equality)))
 
-(defun h4-function-equality-apply-equivalence (p left right checked)
-  (proof-with-checked-results ((definition (h4-function-equality-definition p left right)))
-    (h4-function-equality-apply-equivalence-finish p definition checked)))
-
 (defun h4-function-equality-unequal-functions (p equivalence unequal)
   (let ((proof (library-library-proof p)))
     (proof-with-checked-results
@@ -142,7 +138,7 @@
 (defun h4-function-equality-boolean-by-value (n p value)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h4-function-equality-boolean-by-value")
+      '(:failure "fuel" "h4-function-equality-boolean-by-value")
     (let ((proof (library-library-proof p))
           (template (list *h4-function-equality-booleanp* *proof-result*)))
       (cond
@@ -1035,16 +1031,13 @@
 (defun h4-function-equality-compare-run (n work)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h4-function-equality-compare-run"))
+   ((zp n) '(:failure "fuel" "h4-function-equality-compare-run"))
    ((eq (car work) :done) (cdr work))
    ((member-eq (car work) '(:failure :h4-function-equality-descent-request)) work)
    (t (h4-function-equality-compare-run (1- n) (h4-function-equality-comparison-next work)))))
 
 (defun h4-function-equality-caller-congruence-compare (caller left right evidence)
   (h4-function-equality-compare-run 1000000 (list :compare caller nil left right evidence)))
-
-(defun h4-function-equality-caller-congruence-conditional (caller left right evidence)
-  (h4-function-equality-compare-run 1000000 (list :conditional caller nil left right evidence)))
 
 (defun h4-function-equality-logical-arguments (args path index)
   (if (endp args)
@@ -1073,7 +1066,7 @@
 (defun h4-function-equality-logical-visit (n proof progress)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h4-function-equality-logical-visit"))
+   ((zp n) '(:failure "fuel" "h4-function-equality-logical-visit"))
    ((not (eq (car progress) :visit)) progress)
    ((endp (cddr progress)) (cadr progress))
    (t (h4-function-equality-logical-visit

@@ -142,7 +142,7 @@ static int usage(void)
           "Reads the packages of each file named by -p and the program text of each\n"
           "other file, in order; then computes the value of the term on each line of\n"
           "standard input and writes it on a line of standard output.  With -j it\n"
-          "starts with the prelude: ash and binary-logxor, defined.\n", stderr);
+          "starts with the prelude: ash, binary-logxor, length, char and subseq, defined.\n", stderr);
     return S_INPUT;
 }
 
@@ -202,6 +202,8 @@ int main(int argc, char **argv)
         term_line++;
         if (n == 0 || !printable(buf, buf + n) || read_datum(buf, buf + n) != buf + n)
             stop(S_INPUT, "not in the format: a line that is not one datum", NOV);
+        buf = xalloc(buf, cap, 0);   /* the line is read: its datum is on the stack */
+        cap = 0;
         out_len = 0;
         print_datum(run_term());
         out_put("\n", 1);

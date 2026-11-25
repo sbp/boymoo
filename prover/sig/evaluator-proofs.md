@@ -23,11 +23,10 @@ selects the use of Boolean rules.
 | ACL2 call | Result |
 |---|---|
 | `(evaluator-proofs-argument term index)` | The `CAR` of `term` after `index` applications of `CDR`, with an integer index. |
-| `(evaluator-proofs-argument-number term)` | The positional index read from a term selecting an evaluator argument, or `Unproved` for a different selector. |
-| `(evaluator-proofs-operations functions formulas)` | The ordered list of operations, or `Unproved` for an unrecognized evaluator shape. |
+| `(evaluator-proofs-argument-number term)` | The positional index read from a term selecting an evaluator argument, or `unproved` for a different selector. |
+| `(evaluator-proofs-operations functions formulas)` | The ordered list of operations, or `unproved` for an unrecognized evaluator shape. |
 | `(evaluator-proofs-operations-abstract term used eval-term)` | `(cons meaning used)` with the abstracted operation term and the sorted distinct indices. `eval-term` is the original term evaluator symbol. |
 | `(evaluator-proofs-evaluator-init lib data)` | The Evaluator with witness names and the substituted formulas. |
-| `(evaluator-proofs-evaluator-define evaluator)` | The Evaluator with its witness function definitions added to the Library. |
 | `(evaluator-proofs-evaluator-opened evaluator call evidence definitions logical)` | A Step unfolding and reducing the function call `call`. |
 | `(evaluator-proofs-evaluator-list-equation evaluator term env evidence)` | A Step unfolding and reducing list evaluation on `term` and environment `env`. |
 | `(evaluator-proofs-evaluator-projection evaluator index)` | The Evaluator with the argument projection lemma for `index` added. |

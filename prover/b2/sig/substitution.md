@@ -11,7 +11,6 @@ returned in place of the whole result.
 | `(b2-substitution-substitution-preserves-term lib name formula)` | `(cons step lib)` for the conjunct of simultaneous substitution preservation that equals `formula`. | Missing matching conjunct or unsuccessful proof construction. |
 | `(b2-substitution-second term)` | Term selecting the second value of `term`. | — |
 | `(b2-substitution-output fn expression)` | Term selecting the second result of applying the function symbol `fn` to the substitution environment and `expression`. | — |
-| `(b2-substitution-result-cases lib call template prove)` | Step for the result template on the given definition call. The leaf proof table `prove` has `((value tests) . step)` entries, with signed tests and failures as in `proof-proof-by-value`. | May return a failure from a leaf or proof construction. |
 | `(b2-substitution-pair-projection lib pair)` | `(cons step lib)` for the second projection of the constructed pair term. | May return a failure from proof construction. |
 | `(b2-substitution-size-preserved lib)` | `(cons name lib)` for the lemma that substitution preserves length, constructing it when absent. | May return a failure from proof construction. |
 | `(b2-substitution-folded-equation lib call)` | Step for unfolding the given call and applying beta reduction to its result until the head is no longer a lambda. | May return a failure from proof construction or fuel exhaustion. |

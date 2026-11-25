@@ -42,7 +42,7 @@
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results ((value (proof-rewritten-term equation)))
       (if (not (equal value *proof-false*))
-          '(:failure "RecipeMismatch" "")
+          '(:failure "recipe-mismatch" "")
         (proof-with-checked-results
             ((not-nil (proof-proof-not-nil proof))
              (reverse (proof-proof-symmetric proof equation))
@@ -59,7 +59,7 @@
       (cond ((equal index 0)
              (proof-with-checked-results ((zero (library-library-axiom lib "ZERO" nil)))
                (proof-proof-transport proof zero opened)))
-            ((not (< 0 index)) '(:failure "RecipeMismatch" ""))
+            ((not (< 0 index)) '(:failure "recipe-mismatch" ""))
             (t
              (let ((positive (library-positive value)))
                (proof-with-checked-results
@@ -117,7 +117,7 @@
   (if (not (and (consp result)
                 (o< (acl2-count (caddr result)) (acl2-count result))
                 (proof-is-call result *proof-cons*)))
-      '(:failure "RecipeMismatch" "")
+      '(:failure "recipe-mismatch" "")
     (proof-with-checked-results
         ((args (proof-list-of-length (cdr result) 2))
          (step (t2-input-fields-cons-projection-step lib selector index result args)))
@@ -136,7 +136,7 @@
  (defun t2-input-fields-bindings-visit (n lib term)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t2-input-fields-bindings"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t2-input-fields-bindings"))
     ((not (proof-compound term)) nil)
     ((endp term) '(:failure "failure" ""))
     ((or (proof-compound (car term)) (proof-is-call term *termination-return-last*))
@@ -155,7 +155,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((endp args) equation)
-    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t2-input-fields-bindings"))
+    ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t2-input-fields-bindings"))
     (t
      (proof-with-checked-results
          ((reduced (t2-input-fields-bindings-visit (1- n) lib (car args)))
@@ -345,7 +345,7 @@
   (declare (xargs :measure (nfix n))
            (ignore tests))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t2-input-fields-other-updates-leaf"))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t2-input-fields-other-updates-leaf"))
    ((proof-is-call value *t2-input-fields-put-global*)
     (proof-with-checked-results
         ((outer (library-library-cite lib "INPUT-SLOT-GLOBAL-WRITE" (cdr value) nil))
@@ -360,7 +360,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t2-input-fields-other-updates-by-value"))
+     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t2-input-fields-other-updates-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))
@@ -585,7 +585,7 @@
 (defun t2-input-fields-preserve-any-channel-by-type (n step lib written)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t2-input-fields-preserve-any-channel-by-type")
+      '(:failure "fuel" "t2-input-fields-preserve-any-channel-by-type")
     (let ((proof (library-library-proof lib)))
       (proof-with-checked-results ((term (proof-step-first step)))
         (if (proof-is-call term *t2-input-fields-open-channel*)

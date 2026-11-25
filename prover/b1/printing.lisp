@@ -67,7 +67,7 @@
 (defun b1-printing-normalize-replies (n lib term evidence unfold rules provep replies result)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "b1-printing-normalize-replies"))
+   ((zp n) '(:failure "fuel" "b1-printing-normalize-replies"))
    ((failure-p result) result)
    ((b1-logic-call-p result)
     (let* ((current (b1-logic-call-library result))
@@ -164,7 +164,7 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((failure-p cursor) cursor)
-   ((zp n) '(:failure "Fuel" "b1-printing-known-character-paths"))
+   ((zp n) '(:failure "fuel" "b1-printing-known-character-paths"))
    ((eq (car cursor) :done) (cadr cursor))
    (t
     (let ((lib (cadr cursor))
@@ -356,7 +356,7 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((failure-p cursor) cursor)
-   ((zp n) '(:failure "Fuel" "b1-printing-character-list-run"))
+   ((zp n) '(:failure "fuel" "b1-printing-character-list-run"))
    ((eq (car cursor) :done) (cadr cursor))
    (t
     (b1-printing-character-list-run
@@ -544,7 +544,7 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((failure-p cursor) cursor)
-   ((zp n) '(:failure "Fuel" "b1-printing-character-list-paths"))
+   ((zp n) '(:failure "fuel" "b1-printing-character-list-paths"))
    ((eq (car cursor) :done) (cadr cursor))
    (t
     (let ((lib (cadr cursor))
@@ -672,7 +672,7 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((failure-p cursor) cursor)
-   ((zp n) '(:failure "Fuel" "b1-printing-printable-integer-paths"))
+   ((zp n) '(:failure "fuel" "b1-printing-printable-integer-paths"))
    ((eq (car cursor) :done) (cadr cursor))
    (t
     (b1-printing-printable-integer-paths
@@ -797,7 +797,7 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((failure-p cursor) cursor)
-   ((zp n) '(:failure "Fuel" "b1-printing-pack-character-lists-paths"))
+   ((zp n) '(:failure "fuel" "b1-printing-pack-character-lists-paths"))
    ((eq (car cursor) :done) (cadr cursor))
    (t
     (b1-printing-pack-character-lists-paths

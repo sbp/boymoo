@@ -453,7 +453,7 @@
 
 (defun h1-book-expt-sum-power-addition-premises (n goal premises)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h1-book-expt-sum-power-addition-premises"))
+  (cond ((zp n) '(:failure "fuel" "h1-book-expt-sum-power-addition-premises"))
         ((proof-is-call goal *library-implies*)
          (proof-with-checked-results ((body (proof-term-at goal 2)))
            (h1-book-expt-sum-power-addition-premises (1- n) body (cons goal premises))))
@@ -495,7 +495,7 @@
        (guarded (h1-book-expt-sum-power-addition-guard-p result sum-zero))
        (multiplication (if guarded (proof-term-at result 3) result)))
     (if (not (or (equal multiplication standard) (equal multiplication reversed)))
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
           ((tests (h1-book-expt-sum-power-addition-tests (reverse premises)))
            (step (if guarded
@@ -508,11 +508,11 @@
   (proof-with-checked-results ((parts (h1-book-expt-sum-power-addition-premises 1000000 formula nil)))
     (let ((goal (cadr parts)))
       (if (not (proof-is-call goal *proof-equal*))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results ((call (proof-term-at goal 1)))
           (if (not (proof-is-call call *h1-arithmetic-expt*))
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (proof-with-checked-results ((total (proof-term-at call 2)))
               (if (not (proof-is-call total *proof-plus*))
-                  '(:failure "Unproved" "")
+                  '(:failure "unproved" "")
                 (h1-book-expt-sum-power-addition-goal proof goal call total (car parts))))))))))

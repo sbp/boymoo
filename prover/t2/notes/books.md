@@ -5,7 +5,7 @@ prover can reuse the candidate when those facts still have the same
 clauses. The proof entries keep their dependency order.
 
 The structural theorem tactic calls `t2-tree-rebalance-prove-attempt`.
-An `Unproved` response carries the resulting Library so that rule search
+An `unproved` response carries the resulting Library so that rule search
 can use any lemmas installed during the attempt. When a recipe returns a
 failure as its entire result, the caller has the Library it supplied to
 that recipe.

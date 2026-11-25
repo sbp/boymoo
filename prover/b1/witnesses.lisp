@@ -293,7 +293,7 @@
 
 (defun b1-witnesses-unproved-p (value)
   (and (failure-p value)
-       (member-equal (cadr value) '("Unproved" "SearchBudgetExhausted"))))
+       (member-equal (cadr value) '("unproved" "search-budget-exhausted"))))
 
 (defund b1-witnesses-small-witnesses-prove-formula (world formula index names)
   (let ((attempt (b1-search-attempt-init world index 90 names nil)))
@@ -416,7 +416,7 @@
 (defun b1-witnesses-small-witnesses (lib functions formulas index)
   (proof-with-checked-results ((symbols (b1-witnesses-function-symbols functions)))
     (if (< 8 (len formulas))
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
           ((formals (b1-witnesses-formals functions))
            (source (proof-write symbols))
@@ -427,4 +427,4 @@
            (translated (b1-witnesses-renamed-formulas formulas rename)))
         (or (b1-witnesses-small-witnesses-candidates lib formulas symbols formals rename
                                                    names translated index)
-            '(:failure "Unproved" ""))))))
+            '(:failure "unproved" ""))))))

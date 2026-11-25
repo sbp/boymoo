@@ -87,12 +87,6 @@ new ones in proof construction order.
 | `t4-records-records-set-view` | Key, value and object terms. Gives the public write equation in terms of update and pack. |
 | `t4-records-records-get-after-set` | Query, update key, value and object terms. Gives the public lookup equation after a public write. |
 
-`(t4-records-record-preservation lib formula)` and
-`(t4-records-record-read lib formula)` take a Library and a formula
-term. They return `(cons step-or-nil library)` with the resulting
-Library, or a failure. The first proves record validity after a public
-write and the second proves a public read after a public write.
-
 ## Simplification and arithmetic replies
 
 `unfold-side`, `nonempty-record`, `null-test`, `denied-null`,

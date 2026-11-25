@@ -122,10 +122,6 @@
                     (car items) (if first reversed (cons #\Space reversed)))))
         (h1-api-engine-write-frozen-items (cdr items) nil reversed))))))
 
-(defun h1-api-engine-write-frozen (datum)
-  (proof-with-checked-results ((written (h1-api-engine-write-frozen-into datum nil)))
-    (coerce (reverse written) 'string)))
-
 (defun h1-api-engine-hex-digit-p (char)
   (and (characterp char)
        (let ((code (char-code char)))
@@ -161,10 +157,6 @@
    (t (let ((width (h1-api-engine-escaped-token-width characters)))
         (h1-api-engine-quotation-end-chars (cdr characters) (1+ offset) depth
                                            (if (= width 0) 0 (1- width)))))))
-
-(defun h1-api-engine-quotation-end (source start)
-  (let ((start (min (nfix start) (length source))))
-    (h1-api-engine-quotation-end-chars (nthcdr start (coerce source 'list)) start 1 0)))
 
 (defun h1-api-engine-prefix-p (prefix characters)
   (or (endp prefix)
@@ -259,15 +251,6 @@
                (list (car entries)))))
           ((member-equal kind '("define" "lemma")) (list (car entries)))
           (t '(:failure "failure" "")))))
-
-(defun h1-api-engine-auxiliary-groups (entries)
-  (declare (xargs :measure (acl2-count entries)))
-  (if (endp entries)
-      nil
-    (proof-with-checked-results
-     ((group (h1-api-engine-first-auxiliary-group entries))
-      (rest (h1-api-engine-auxiliary-groups (if (consp (cdr group)) (cddr entries) (cdr entries)))))
-     (cons group rest))))
 
 (defun h1-api-engine-attempt-install (proof install)
   (let* ((extended (h1-books-book-prover-fork proof))

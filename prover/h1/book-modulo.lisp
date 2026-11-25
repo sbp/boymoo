@@ -136,7 +136,7 @@
 (defun h1-book-modulo-prove-natural (n p term)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h1-book-modulo-prove-natural")
+      '(:failure "fuel" "h1-book-modulo-prove-natural")
     (let ((result (h1-book-modulo-natural-reduction p term)))
       (if (eq (car result) :transport)
           (proof-with-checked-results

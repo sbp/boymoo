@@ -3,7 +3,7 @@
 Terms, clauses, and Steps have the forms in `prover/sig/proof.md`. `lib` is a
 Library as in `prover/sig/library.md`. A signed test is `(term holds)`, with
 `t` for true and `nil` for false. A sequence of signed tests is in path
-order. `(:failure "Unproved" "")` is the failure for a formula beyond
+order. `(:failure "unproved" "")` is the failure for a formula beyond
 the search. Other returns a failure use `prover/CONVENTIONS.md`.
 
 The symbol constants are `*t2-book-logic-car*`, `*t2-book-logic-cdr*`,
@@ -81,23 +81,6 @@ the base search. The accessors are `t2-book-logic-search-lib`,
 The Search calls returning pairs put a failure in the value position and
 return the Search with its current Library. Read that Library with
 `t2-book-logic-search-lib` before retrying a failed search.
-
-For a derived normalizer, `(t2-book-logic-search-with-hooks search hooks
-replies)` configures the overridden methods. `hooks` is a list drawn from
-`:normalize`, `:replacement`, and `:can-open`. `replies` is a list in
-invocation order. When a reply is required the value position is a request
-recognized by `t2-book-logic-search-request-p`. The request accessors are
-`t2-book-logic-search-request-method`, `t2-book-logic-search-request-term`,
-`t2-book-logic-search-request-context`, `t2-book-logic-search-request-depth`,
-`t2-book-logic-search-request-opened`, and
-`t2-book-logic-search-request-lib`. Repeat the original call with the reply
-appended to the original Search's replies. A reply of `:base` selects the
-base implementation. A normalize reply `(:chain step target opened)`
-chains `step` with the result of recursively normalizing `target` on the
-given path. A replacement or can-open reply can be the corresponding
-method's value, including `nil` or a failure. A reply of the form
-`(:with-state value lib context)` also supplies an updated Library and
-`RulerFacts`.
 
 `(t2-book-logic-search-first-test search term)` returns the first test in
 the term, `nil` if there is no test, or a failure on a malformed conditional.

@@ -60,7 +60,7 @@
 (defun t2-structural-proof-expansion-argument (term index)
   (let ((index (if (< index 0) (+ (len term) index) index)))
     (if (< index 0)
-        '(:failure "MissingTermPart" "")
+        '(:failure "missing-term-part" "")
       (proof-term-at term index))))
 
 (defun t2-structural-proof-expansion-rule (rule term operator)
@@ -229,7 +229,7 @@
 (defun t2-structural-proof-reduction-run (n reduction search method term context depth opened replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "t2-structural-proof-reduction-run")
+      '(:failure "fuel" "t2-structural-proof-reduction-run")
     (let ((result (t2-structural-proof-reduction-attempt
                    reduction search method term context depth opened replies)))
       (if (eq (car result) :reply)
@@ -244,9 +244,6 @@
 
 (defun t2-structural-proof-reduction-normalize (reduction term context depth opened)
   (t2-structural-proof-reduction-dispatch reduction :normalize term context depth opened))
-
-(defun t2-structural-proof-reduction-replacement (reduction term context depth opened)
-  (t2-structural-proof-reduction-dispatch reduction :replacement term context depth opened))
 
 (defun t2-structural-proof-reduction-form (reduction term)
   (proof-with-checked-results
@@ -306,7 +303,7 @@
 
 (defun t2-structural-proof-unproved (target)
   (proof-with-checked-results ((text (proof-write target)))
-    '(:failure "Unproved" "")))
+    '(:failure "unproved" "")))
 
 (defun t2-structural-proof-align-target (lib target)
   (let ((arity (len (cdr target))))
@@ -371,7 +368,7 @@
        ((not (or (consp pair) (null pair)))
         '(:failure "failure" ""))
        ((not (equal size 2))
-        '(:failure "RecipeMismatch" ""))
+        '(:failure "recipe-mismatch" ""))
        (t (t2-structural-proof-substitution-map
            (cdr pairs) (table-put bindings (car pair) (cadr pair))))))))
 

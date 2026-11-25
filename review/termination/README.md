@@ -6,7 +6,7 @@
 sh review/termination/run.sh
 ```
 
-Run on 2026-11-24, it printed "all compared definitions agree" (231 seconds). No definition has obligations that differ from ACL2's conjectures; the counts are under "The result".
+Run on 2026-11-25, it printed "all compared definitions agree" (231 seconds). No definition has obligations that differ from ACL2's conjectures; the counts are under "The result".
 
 ## The files
 
@@ -91,7 +91,7 @@ For each book, the command also checks that the prover's aids that the exporter 
 
 ## The result
 
-`sh review/termination/run.sh`, run on 2026-11-24 in 231 seconds with ACL2 8.7, printed the lines of `build/termination/summary.txt`; these are its counts. A definition is one define line with obligations; it has one or more functions. A book's statements hold those of the books it includes, so a definition is counted in every book whose statements hold it; the last row counts each distinct define line once.
+`sh review/termination/run.sh`, run on 2026-11-25 in 231 seconds with ACL2 8.7, printed the lines of `build/termination/summary.txt`; these are its counts. A definition is one define line with obligations; it has one or more functions. A book's statements hold those of the books it includes, so a definition is counted in every book whose statements hold it; the last row counts each distinct define line once.
 
 | Set | Definitions | Functions | Exactly | In normal form | In normal form but for ACL2's removal of repeats | Differ | Another relation | Measure `(:? ...)` |
 |---|---|---|---|---|---|---|---|---|

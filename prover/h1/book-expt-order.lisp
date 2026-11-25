@@ -400,5 +400,5 @@
             (if (equal (cadr first) (cadr second))
                 (h1-book-expt-order-monotonicity-proof
                  prover (cdr parts) first (cadr first) (caddr first) (caddr second))
-              '(:failure "Unproved" "")))
-        '(:failure "Unproved" "")))))
+              '(:failure "unproved" "")))
+        '(:failure "unproved" "")))))

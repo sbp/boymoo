@@ -11,9 +11,6 @@
 (defconst *lemmas-characterp* (proof-cl "CHARACTERP"))
 (defconst *lemmas-symbolp* (proof-cl "SYMBOLP"))
 
-(defun lemmas-slice-library-init (proof)
-  (library-library-init (proof-proof-with-kind proof :slice)))
-
 (defun lemmas-slice-proof (lib)
   (let ((proof (library-library-proof lib)))
     (if (eq (proof-proof-kind proof) :book)
@@ -31,9 +28,6 @@
 
 (defun lemmas-slice-library-reflexive (lib term)
   (proof-proof-reflexive (lemmas-slice-proof lib) term))
-
-(defun lemmas-slice-library-constant (lib term)
-  (proof-proof-constant (proof-proof-with-kind (library-library-proof lib) :slice) term))
 
 (defun lemmas-nfix-equation (lib value)
   (let ((proof (library-library-proof lib)))
@@ -153,13 +147,13 @@
  (defun lemmas-slice-library-natural-loop (n lib term)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "lemmas-slice-library-natural-loop")
+       '(:failure "fuel" "lemmas-slice-library-natural-loop")
      (lemmas-natural-run (1- n) (lemmas-natural-prepare lib term))))
 
  (defun lemmas-natural-run (n task)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "lemmas-natural-run"))
+    ((zp n) '(:failure "fuel" "lemmas-natural-run"))
     ((failure-p task) task)
     ((eq (car task) :return) (cadr task))
     ((eq (car task) :length)
@@ -177,7 +171,7 @@
 
  (defun lemmas-slice-library-naturals (n lib terms)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "lemmas-slice-library-naturals"))
+   (cond ((zp n) '(:failure "fuel" "lemmas-slice-library-naturals"))
          ((endp terms) (cons nil lib))
          (t
           (proof-with-checked-results
@@ -187,7 +181,7 @@
 
  (defun lemmas-length-natural-leaves (n lib requests)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "lemmas-length-natural-leaves"))
+   (cond ((zp n) '(:failure "fuel" "lemmas-length-natural-leaves"))
          ((endp requests) (cons nil lib))
          (t
           (proof-with-checked-results
@@ -202,7 +196,7 @@
  (defun lemmas-slice-library-type-of-loop (n lib term evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "lemmas-slice-library-type-of-loop")
+       '(:failure "fuel" "lemmas-slice-library-type-of-loop")
      (cond
       ((or (proof-is-call term *lemmas-length*)
            (and (member-equal (car term) (list *lemmas-nfix* *lemmas-min*))
@@ -236,7 +230,7 @@
 
  (defun lemmas-slice-library-types-loop (n lib terms evidence)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "lemmas-slice-library-types-loop"))
+   (cond ((zp n) '(:failure "fuel" "lemmas-slice-library-types-loop"))
          ((endp terms) (cons nil lib))
          (t
           (proof-with-checked-results

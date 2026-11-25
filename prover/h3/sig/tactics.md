@@ -20,7 +20,7 @@ are strings without the package. Hypotheses are a list of Steps.
 | `(h3-tactics-structural-shape library formula)` | `(cons step library)` with the structural proof and any auxiliary lemmas, or with a nil Step when no shape matches. |
 
 Every entry can return a failure as its entire result. The absence of a
-tactic in `h3-tactics-solve` failures `Unproved`. The dictionaries
+tactic in `h3-tactics-solve` failures `unproved`. The dictionaries
 `*h3-tactics-context-types*`, `*h3-tactics-direct*` and
 `*h3-tactics-completions*` follow the order of their declarations. The other constants
 are `*h3-tactics-atom*`, `*h3-tactics-endp*`, `*h3-tactics-numeric-equal*`,

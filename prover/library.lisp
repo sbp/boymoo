@@ -329,7 +329,7 @@
 (defun library-library-push-minus (n library term evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "library-library-push-minus")
+      '(:failure "fuel" "library-library-push-minus")
     (let ((proof (library-library-proof library)))
       (cond
        ((proof-is-call term *proof-plus*)
@@ -405,7 +405,7 @@
 (defun library-linear-reassociate (n library step place)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "library-linear-reassociate")
+      '(:failure "fuel" "library-linear-reassociate")
     (proof-with-checked-results
      ((first (proof-step-first step))
       (node (library-linear-form-get first (cdr place))))
@@ -425,7 +425,7 @@
 (defun library-linear-sort (n library step place changed)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "library-linear-sort")
+      '(:failure "fuel" "library-linear-sort")
     (proof-with-checked-results
      ((first (proof-step-first step))
       (node (library-linear-form-get first (cdr place))))
@@ -474,7 +474,7 @@
 (defun library-linear-combine (n library step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "library-linear-combine")
+      '(:failure "fuel" "library-linear-combine")
     (proof-with-checked-results
      ((first (proof-step-first step))
       (node (library-linear-form-get first (cdr place))))

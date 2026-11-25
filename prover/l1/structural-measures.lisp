@@ -236,7 +236,7 @@
 (mutual-recursion
  (defun l1-structural-measures-phase-search (n candidates formals paths positions)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "l1-structural-measures-phase-search"))
+   (cond ((zp n) '(:failure "fuel" "l1-structural-measures-phase-search"))
          ((endp candidates)
           (l1-structural-measures-phase-assignment formals paths positions))
          (t (l1-structural-measures-phase-search-positions
@@ -244,7 +244,7 @@
              formals paths positions))))
  (defun l1-structural-measures-phase-search-positions (n name indices remaining formals paths positions)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "l1-structural-measures-phase-search-positions"))
+   (cond ((zp n) '(:failure "fuel" "l1-structural-measures-phase-search-positions"))
          ((endp indices) nil)
          (t (let ((found (l1-structural-measures-phase-search
                           (1- n) remaining formals paths (acons name (car indices) positions))))

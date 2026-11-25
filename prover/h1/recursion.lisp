@@ -154,7 +154,7 @@
    (let ((head (car term))
          (base (h1-tactics-prover-proof proof)))
      (cond
-      ((zp n) '(:failure "Fuel" "h1-recursion-simplify-visit"))
+      ((zp n) '(:failure "fuel" "h1-recursion-simplify-visit"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
       ((endp term) '(:failure "failure" ""))
       ((or (proof-compound head) (member-equal head definitions))
@@ -188,7 +188,7 @@
  (defun h1-recursion-simplify-arguments (n proof term args index result evidence definitions)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h1-recursion-simplify-arguments"))
+    ((zp n) '(:failure "fuel" "h1-recursion-simplify-arguments"))
     ((endp args) result)
     (t
      (proof-with-checked-results
@@ -251,7 +251,7 @@
 (defun h1-recursion-library-prove-visit (n proof term evidence definitions)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h1-recursion-library-prove-visit"))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h1-recursion-library-prove-visit"))
    ((equal term *proof-true*) (proof-prove-step proof term evidence definitions))
    (t
     (proof-with-checked-results ((premise (proof-find-evidence evidence (list term))))
@@ -260,7 +260,7 @@
         (proof-with-checked-results
             ((equality (h1-recursion-library-simplify proof term evidence definitions))
              (right (and equality (proof-rewritten-term equality))))
-          (cond ((or (not equality) (equal right term)) '(:failure "CandidateRejected" ""))
+          (cond ((or (not equality) (equal right term)) '(:failure "candidate-rejected" ""))
                 ((equal right *proof-true*) (proof-proof-true-from-eq proof equality))
                 (t (proof-with-checked-results
                        ((step (h1-recursion-library-prove-visit (1- n) proof right evidence definitions)))
@@ -355,7 +355,7 @@
 (defun h1-recursion-library-push-minus (n library term evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h1-recursion-library-push-minus")
+      '(:failure "fuel" "h1-recursion-library-push-minus")
     (let ((proof (library-library-proof library)))
       (cond
        ((proof-is-call term *proof-plus*)
@@ -427,7 +427,7 @@
 (defun h1-recursion-library-linear-combine (n library step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h1-recursion-library-linear-combine")
+      '(:failure "fuel" "h1-recursion-library-linear-combine")
     (proof-with-checked-results
      ((first (proof-step-first step))
       (node (library-linear-form-get first (cdr place))))
@@ -485,7 +485,7 @@
        (let ((proof (library-library-proof library)))
          (proof-with-checked-results ((symmetric (h1-propositions-proof-symmetric proof b)))
            (proof-proof-chain proof a (list symmetric))))
-     '(:failure "CandidateRejected" ""))))
+     '(:failure "candidate-rejected" ""))))
 
 (defun h1-recursion-library-comparison (library a b integers)
   (proof-with-checked-results
@@ -950,7 +950,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof library)))
     (cond
-     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "h1-recursion-library-count-visit"))
+     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "h1-recursion-library-count-visit"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((parts (proof-list-of-length (cdr value) 3))
@@ -1332,7 +1332,7 @@
              (caddr result) variable (car instances) selector-openings (cadr result))))))
 
 (defun h1-recursion-unproved-p (result)
-  (and (failure-p result) (equal (cadr result) "Unproved")))
+  (and (failure-p result) (equal (cadr result) "unproved")))
 
 (defun h1-recursion-assume-premise (formula variable assume-premise)
   (if (not (eq assume-premise :none))

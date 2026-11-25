@@ -132,7 +132,7 @@
 
 (defun h4-book-alists-normalize-removal (n search literal others expand replies result)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h4-book-alists-normalize-removal"))
+  (cond ((zp n) '(:failure "fuel" "h4-book-alists-normalize-removal"))
         ((h4-tactics-request-p result)
          (let* ((term (h4-tactics-request-term result))
                 (reply (h4-book-alists-key-search-expose-removal search term))
@@ -283,20 +283,6 @@
          (updated (h4-book-alists-index-steps additional shaped)))
       (h4-book-alists-key-search-join-equalities search updated))))
 
-(defun h4-book-alists-key-search-instantiate (search rule term evidence depth rewrite)
-  (if (and rewrite (equal (h4-book-tactics-rule-source rule)
-                          *h4-book-alists-lookup-after-removal*))
-      (let* ((pattern (proof-term-at (h4-book-tactics-rule-conclusion rule) 1))
-             (matched (if (failure-p pattern)
-                          pattern
-                        (h4-tactics-match-term pattern term nil))))
-        (cond ((failure-p matched) (cons matched search))
-              ((car matched)
-               (h4-book-tactics-book-search-replay search rule (cdr matched) evidence depth))
-              (t (h4-book-tactics-book-search-instantiate
-                  search rule term evidence depth rewrite))))
-    (h4-book-tactics-book-search-instantiate search rule term evidence depth rewrite)))
-
 (defun h4-book-alists-induction-attempt (search formula plan replies)
   (let ((hooked (h4-book-tactics-book-search-with-hooks
                  search replies *h4-book-alists-lookup-after-removal*)))
@@ -306,7 +292,7 @@
 (defun h4-book-alists-induction (n search formula plan replies attempt)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "h4-book-alists-induction") search)
+      (cons '(:failure "fuel" "h4-book-alists-induction") search)
     (let ((result (car attempt)))
       (if (h4-book-tactics-hypotheses-request-p result)
           (let* ((premises (h4-book-tactics-hypotheses-request-premises result))
@@ -325,7 +311,7 @@
   (declare (xargs :measure (acl2-count plans)))
   (let ((result (car attempt)))
     (if (and (failure-p result)
-             (member-equal (cadr result) '("Unproved" "InapplicableStep" "assertion" "recursion")))
+             (member-equal (cadr result) '("unproved" "inapplicable-step" "assertion" "recursion")))
         (if (or (endp plans) (zp left))
             nil
           (h4-book-alists-try-plans formula (cdr plans) (1- left)
@@ -342,5 +328,3 @@
                 (h4-book-alists-try-plans formula (cdr plans) 2
                                         (h4-book-alists-try-plan search formula (car plans))))))))
 
-(defun h4-book-alists-keyed-removal-proof (p formula)
-  (h4-book-alists-keyed-removal-proof-with-templates p formula nil))

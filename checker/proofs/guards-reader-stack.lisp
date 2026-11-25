@@ -76,3 +76,21 @@
 (defthm cg-lines-of-character-lists
   (guard-character-lists-p (lines-of string))
   :hints (("Goal" :in-theory (disable split-lines))))
+
+; The reader of the inputs as strings (check.lisp).
+(local
+ (defthm cg-characterp-nth
+   (implies (and (character-listp x) (natp n) (< n (len x)))
+            (characterp (nth n x)))))
+
+(defthm cg-string-chars-character-list
+  (implies (and (stringp s) (character-listp acc) (natp j) (<= k j) (<= j (length s)))
+           (character-listp (string-chars s j k acc))))
+
+(verify-guards string-chars)
+
+(verify-guards string-lines)
+
+(verify-guards line-chars)
+
+(verify-guards text-lines)

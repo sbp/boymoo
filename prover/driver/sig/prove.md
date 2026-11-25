@@ -35,14 +35,12 @@ one-based statement numbers, including `nil` to select none.
 | `(prove-entry-blocks entry)` | The certificate blocks of `entry`, or `nil`. |
 | `(prove-entry-failure entry)` | The diagnostic string of `entry`. |
 | `(prove-entry-with-blocks entry blocks)` | A copy of `entry` with certificate `blocks` as above. |
-| `(prove-entry-with-failure entry failure)` | A copy of `entry` with diagnostic string `failure`. |
 | `(prove-target entry statement line aids order)` | Constructs a target from the five fields above. |
 | `(prove-target-entry target)` | The entry of `target`. |
 | `(prove-target-statement target)` | The parsed statement of `target`. |
 | `(prove-target-line target)` | The original line of `target`. |
 | `(prove-target-aids target)` | The relevant aid lines of `target`. |
 | `(prove-target-order target)` | The ordered tactic attempts of `target`, with seconds. |
-| `(prove-target-with-entry target entry)` | A copy of `target` with `entry` as its entry. |
 | `(prove-target-pending target)` | `t` if the target's entry has no certificate and its failure string is empty, or `nil`. |
 | `(prove-row line statement target)` | Constructs a row from the three fields above. |
 | `(prove-row-line row)` | The original line of `row`. |
@@ -57,7 +55,7 @@ one-based statement numbers, including `nil` to select none.
 | `(prove-aids-for-statement aids statement)` | The list of relevant aid lines in `aids` for `statement`, in original input order. A definition group uses every defined name. Other kinds use their obligation. |
 
 The aid index skips lines whose name cannot be read and propagates a
-`Fuel` failure from the reader.
+`fuel` failure from the reader.
 
 A prefix contains the statement lines preceding a target, stored in reverse
 order as `(:prefix reversed-lines)` so adding one line takes constant time.
@@ -67,8 +65,7 @@ order as `(:prefix reversed-lines)` so adding one line takes constant time.
 | `(prove-prefix)` | An empty prefix. |
 | `(prove-prefix-add prefix line statement)` | A prefix with `line` appended to `prefix`. `statement` is the parsed record for the line. |
 | `(prove-prefix-lines prefix)` | The lines of `prefix` in input order. |
-| `(prove-index-prefix lines)` | Builds a prefix from ASCII statement `lines` in input order. It propagates a failure from `worklist-statement-info`. |
-| `(prove-valid-blocks answer statement)` | `answer` is `nil` or the pair `(support entry-text)`, with `support` a list of blocks. Returns the nonempty list of valid blocks in helper order followed by the main block, or `nil`. An answer for an unknown statement kind gives the generic failure. |
+| `(prove-valid-blocks answer statement)` | `answer` is `nil` or the pair `(support entry-text)`, with `support` a list of blocks beginning with `define`, `lemma` or `choose` entries. Returns the nonempty list of valid blocks in helper order followed by the main block, or `nil`. An answer for an unknown statement kind gives the generic failure. |
 | `(prove-prover-order options statement line)` | Takes the options, parsed statement, and original line. Returns ordered `(set-name seconds)` pairs. An unknown kind with automatic order or a constraint without a witness obligation gives the generic failure. |
 | `(prove-prover-run options library statements aids selected)` | Takes options, the library and statement line lists, an aid index, and the selection above. Returns `(rows entries targets)` in input order. Byte-for-byte repeats of library or earlier statement lines are omitted. Protected obligations and obligations outside the selection have entries only. It propagates a failure from reading a statement or determining tactic order. |
 | `(prove-prover-assemble entries all-skips)` | Takes the entries in order and an `all-skips` Boolean. Returns `(text ends)`, the assembled ASCII proof file and the cumulative count of line feeds after each entry. |
@@ -84,4 +81,4 @@ the cache. `names` maps printed qualified names to declaration digests.
 `packages` maps printed package parts to lists of declaration digests. A
 digest is a string whose character codes are the encoded digest bytes.
 The function returns one such string with all distinct dependency digests
-concatenated in byte order, or a `Fuel` failure if the scan exhausts fuel.
+concatenated in byte order, or a `fuel` failure if the scan exhausts fuel.

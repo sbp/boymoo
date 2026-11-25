@@ -34,7 +34,7 @@ with that prefix and the field name to read its fields.
 | `prove` | no further arguments | `(cons step cancellation)` after installing the fold and proving the formula |
 
 Positions in the operand list are zero-based. The constructor and proof
-functions can return a failure instead of the result, including `Unproved`
+functions can return a failure instead of the result, including `unproved`
 when a required cancellation equation is unavailable.
 
 `equal-shift` carries the step and the resulting Cancellation as

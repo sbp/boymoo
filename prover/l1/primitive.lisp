@@ -32,7 +32,7 @@
 
 (defun l1-primitive-require-table-entry (items key)
   (let ((entry (assoc-equal key items)))
-    (if entry (cdr entry) '(:failure "MissingWarrantDependency" ""))))
+    (if entry (cdr entry) '(:failure "missing-warrant-dependency" ""))))
 
 (defun l1-primitive-shifted-arm-bindings (remaining index shift)
   (declare (xargs :measure (nfix remaining)))
@@ -47,7 +47,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((existing (assoc-equal length cache)))
     (cond (existing (cons (cdr existing) cache))
-          ((zp n) '(:failure "Fuel" "l1-primitive-false-prefix"))
+          ((zp n) '(:failure "fuel" "l1-primitive-false-prefix"))
           ((or (equal length 0) (equal length -1))
            '(:failure "failure" ""))
           ((equal length 1)
@@ -70,9 +70,6 @@
 
 (defun l1-primitive-false-prefix (proof length cache)
   (l1-primitive-false-prefix-rec 1000000 proof length cache))
-
-(defun l1-primitive-warrant-constant (proof term)
-  (l1-application-proof-constant (proof-proof-with-kind proof :l1-warrant) term))
 
 (defun l1-primitive-proof-simplify (proof term evidence definitions)
   (l1-application-proof-simplify proof term evidence definitions))
@@ -168,7 +165,7 @@
 (defun l1-primitive-dispatch-skip (n proof code step)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "l1-primitive-dispatch")
+      '(:failure "fuel" "l1-primitive-dispatch")
     (proof-with-checked-results ((next (l1-primitive-dispatch-next proof code step)))
       (if next (l1-primitive-dispatch-skip (1- n) proof code next) step))))
 
@@ -248,7 +245,7 @@
       facts
     (let ((name (caar entries)))
       (if (not (assoc-equal name facts))
-          '(:failure "MissingWarrantDependency" "")
+          '(:failure "missing-warrant-dependency" "")
         (l1-primitive-certificates-close-facts (cdr entries) (table-delete facts name))))))
 
 (defun l1-primitive-certificates-close (certificates)
@@ -263,9 +260,6 @@
 
 (defun l1-primitive-table-tail-rows (tail)
   (cadr tail))
-
-(defun l1-primitive-table-tail-proof-text (tail)
-  (string-append "(" (string-append (seq-slice (caddr tail) (cadddr tail) :none) ")")))
 
 (defun l1-primitive-make-badge-table (certificates rows row-text starts blocks queries)
   (list :l1-primitive-badge-table certificates rows row-text starts blocks queries))
@@ -470,7 +464,7 @@
 (defun l1-primitive-badge-table-lookup-steps (n table step code)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "l1-primitive-badge-table-lookup-steps")
+      '(:failure "fuel" "l1-primitive-badge-table-lookup-steps")
     (proof-with-checked-results ((next (l1-primitive-badge-table-lookup-next table step code)))
       (if (car next)
           (l1-primitive-badge-table-lookup-steps (1- n) (cddr next) (cadr next) code)

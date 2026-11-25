@@ -24,7 +24,7 @@
     (n lib test evidence goal mv-call nth-call induction replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-mv-evaluation-index-equivalence-step-choose")
+      '(:failure "fuel" "b2-mv-evaluation-index-equivalence-step-choose")
     (proof-with-checked-results
         ((choice (b2-tactics-choose lib test evidence replies))
          (result (car choice)))
@@ -176,7 +176,7 @@
                            '(:failure "failure" ""))))
                 (cons step lib)))
              ((not (proof-is-call value *b2-mv-evaluation-rec*))
-              '(:failure "Unproved" ""))
+              '(:failure "unproved" ""))
              (t (b2-mv-evaluation-recursive-evaluation-establish-leaf-rec
                  lib index facts formula measure binding premise equation)))))))))
 
@@ -210,7 +210,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "b2-mv-evaluation-by-value"))
+     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "b2-mv-evaluation-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))

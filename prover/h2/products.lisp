@@ -161,7 +161,7 @@
 (defun h2-products-zero-factor-visit (n proof value position evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-products-zero-factor-visit")
+      '(:failure "fuel" "h2-products-zero-factor-visit")
     (let* ((library (h2-search-search-library proof))
            (core (library-library-proof library)))
       (proof-with-checked-results
@@ -406,7 +406,7 @@
 (defun h2-products-product-form (n proof term context replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h2-products-product-form")
+      '(:failure "fuel" "h2-products-product-form")
     (h2-products-with-results
         ((result (h2-calculation-product-form-with-replies proof term context replies)))
       (if (not (h2-calculation-request-p result))
@@ -452,7 +452,7 @@
          (proof (cadr result))
          (right-side (h2-products-first-at unit 2)))
       (if (not (equal right-side *proof-one*))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (h2-products-with-results
             ((library (h2-search-search-library proof))
              (core (library-library-proof library))

@@ -7,10 +7,8 @@ name map is an insertion-ordered alist with `(name . replacement)` entries.
 | Function | Arguments in order | Result | Failure |
 |---|---|---|---|
 | `h2-witnesses-rename-functions` | Term, function name map | Term with function heads renamed, including the bodies of applied lambdas | Failure for a missing compound term field. |
-| `h2-witnesses-definitions-in` | Formula | List of oriented equation pairs in traversal order | Failure for a missing formula field. |
 | `h2-witnesses-possible-bodies` | Function name, arity, `formulas`, map of unknown names to their witnesses | Distinct `(formals body)` pairs in first-insertion order, followed by the fallback candidates in order when new | A failure from reading or renaming a formula. |
 | `h2-witnesses-witness-formals` | Integer arity | List of `H2-ARG-i` symbols with indices from 1 through the arity | None. |
-| `h2-witnesses-prove-witness` | H2 proof search object, `(functions formulas)` constraint data, reply list described below | `(cons entry proof)` with the witness proof entry and the resulting proof object, or a request for a caller operation | `Unproved` if no candidate closes the constraint, or a failure from proof construction. |
 
 `functions` is a list of `(name arity)` pairs. The proof checks the all-false
 and all-true assignments, then the product of the candidate lists. The
@@ -39,14 +37,6 @@ Use the default empty repeat and fact lists. The `:solve` argument list is
 between requests and use the Search from the current request as its inherited
 Search. When an assignment fails, the witness book truncates entries and
 deletes witness facts and definitions before the next request.
-
-`h2-witnesses-prepare` takes constraint data and returns an ordered witness
-plan or a failure from reading it. It computes the witness name digest.
-`h2-witnesses-plan-names` returns the ordered witness symbols from a plan.
-`h2-witnesses-prove-prepared` takes the original Search, a prepared plan and
-the ordered replies. Its result has the same form as `prove-witness`. The
-same plan supplies all requests for one witness search, so the digest and
-candidate lists are computed once for that search.
 
 | Supporting call | Arguments in order | Result and failures |
 |---|---|---|

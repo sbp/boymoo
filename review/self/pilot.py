@@ -14,6 +14,7 @@ from termination import logical_body, obligation_cases, obligations, recursive_c
 
 DECREMENTS = {
     b"NTH-ELEM": 0, b"REPLACE-NTH": 0, b"BUMP": 0, b"MV-NTH-TERMS": 1,
+    b"STRING-CHARS": 2, b"STRING-LINES": 3,
 }
 INCREMENTS = {b"DIGIT-COUNT": (2, 9), b"SIXTEENS": (1, 15)}
 

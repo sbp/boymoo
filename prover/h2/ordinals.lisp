@@ -16,7 +16,7 @@
 (defun h2-ordinals-folded-search (n search formula seeds fixed inherited-hooks replies pending)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h2-ordinals-folded-search")
+      '(:failure "fuel" "h2-ordinals-folded-search")
     (let ((result (h2-search-search-call-with-remainder
                    (h2-search-search-with-replies search replies) :solve (list formula seeds nil))))
       (cond
@@ -579,7 +579,7 @@
 (defun h2-ordinals-measure-argument (n argument)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h2-ordinals-measure-argument")
+      '(:failure "fuel" "h2-ordinals-measure-argument")
     (h2-recipes-with-results ((head (proof-term-at argument 0)))
       (if (equal head *h2-ordinals-list*)
           (proof-term-at argument 1)

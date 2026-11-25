@@ -139,17 +139,17 @@
 
 (defun l1-recursive-list-wrapper (proof function formals body)
   (if (or (not (equal (len formals) 1)) (not (proof-is-call body *proof-if*)))
-      '(:failure "UnsupportedApplication" "")
+      '(:failure "unsupported-application" "")
     (proof-with-checked-results ((test (proof-term-at body 1)))
       (let ((x (car formals)))
         (if (not (equal test (list *l1-recursive-atom* x)))
-            '(:failure "UnsupportedApplication" "")
+            '(:failure "unsupported-application" "")
           (proof-with-checked-results ((parts (proof-list-of-length body 4)))
             (let ((helper (cadddr parts))
                   (base (caddr parts))
                   (tail (list *library-cdr* x)))
               (if (not (and (proof-compound helper) (equal (cdr helper) (list x))))
-                  '(:failure "UnsupportedApplication" "")
+                  '(:failure "unsupported-application" "")
                 (proof-with-checked-results
                     ((opened (proof-proof-unfold proof helper))
                      (value (proof-rewritten-term opened))
@@ -157,7 +157,7 @@
                   (if valid
                       (l1-recursive-list-wrapper-equation
                        proof function x base (car helper) tail opened value)
-                    '(:failure "UnsupportedApplication" "")))))))))))
+                    '(:failure "unsupported-application" "")))))))))))
 
 (defun l1-recursive-assumptions (proof tests)
   (if (endp tests)
@@ -185,7 +185,7 @@
     (if (and (proof-is-call value *proof-cons*)
              (equal child (list name (list *library-cdr* arg) other)))
         step
-      '(:failure "UnsupportedApplication" ""))))
+      '(:failure "unsupported-application" ""))))
 
 (defun l1-recursive-scalar-wrapper-head-of (step cons proof)
   (proof-with-checked-results
@@ -265,7 +265,7 @@
 
 (defun l1-recursive-scalar-wrapper (proof function formals body)
   (if (or (not (equal (len formals) 2)) (not (proof-is-call body *proof-if*)))
-      '(:failure "UnsupportedApplication" "")
+      '(:failure "unsupported-application" "")
     (let* ((x (car formals))
            (other (cadr formals))
            (tail (list *library-cdr* x))
@@ -275,14 +275,13 @@
            (valid (l1-recursive-scalar-wrapper-p body helper formals test tail)))
         (if valid
             (l1-recursive-scalar-wrapper-equation proof function (car helper) x other tail test)
-          '(:failure "UnsupportedApplication" ""))))))
+          '(:failure "unsupported-application" ""))))))
 
 (defun l1-recursive-recurrence-proof (recurrence) (nth 1 recurrence))
 (defun l1-recursive-recurrence-comparison (recurrence) (nth 2 recurrence))
 (defun l1-recursive-recurrence-argument (recurrence) (nth 3 recurrence))
 (defun l1-recursive-recurrence-badge (recurrence) (nth 4 recurrence))
 (defun l1-recursive-recurrence-agreement (recurrence) (nth 5 recurrence))
-(defun l1-recursive-recurrence-oracle (recurrence) (nth 6 recurrence))
 (defun l1-recursive-recurrence-logical (recurrence) (nth 7 recurrence))
 (defun l1-recursive-recurrence-function (recurrence) (nth 8 recurrence))
 (defun l1-recursive-recurrence-open-logic (recurrence) (nth 9 recurrence))
@@ -294,7 +293,6 @@
 (defun l1-recursive-recurrence-parent (recurrence) (nth 15 recurrence))
 (defun l1-recursive-recurrence-measure (recurrence) (nth 16 recurrence))
 (defun l1-recursive-recurrence-smaller (recurrence) (nth 17 recurrence))
-(defun l1-recursive-recurrence-agreement-child (recurrence) (nth 18 recurrence))
 (defun l1-recursive-recurrence-child-requirement (recurrence) (nth 19 recurrence))
 
 (defun l1-recursive-recurrence-with-proof (recurrence proof)
@@ -326,11 +324,6 @@
          ((term (l1-recursive-replace-call (car terms) function oracle variable))
           (rest (l1-recursive-replace-arguments (cdr terms) function oracle variable)))
        (cons term rest)))))
-
-(defun l1-recursive-recurrence-replace-recursive-call (recurrence term)
-  (l1-recursive-replace-call term (l1-recursive-recurrence-function recurrence)
-                             (l1-recursive-recurrence-oracle recurrence)
-                             (l1-recursive-recurrence-argument recurrence)))
 
 (defun l1-recursive-pairs-to-map (pairs bindings)
   (if (endp pairs)
@@ -365,7 +358,7 @@
     (let ((equation (l1-lexicographic-length-wrapper proof function formals body)))
       (proof-with-checked-results
           ((equation (if (and (failure-p equation)
-                              (equal (cadr equation) "UnsupportedApplication"))
+                              (equal (cadr equation) "unsupported-application"))
                          (if (equal (len formals) 1)
                              (l1-recursive-list-wrapper proof function formals body)
                            (l1-recursive-scalar-wrapper proof function formals body))
@@ -408,12 +401,12 @@
                    proof function formals body bindings open-logic calls))
        (actuals (proof-unique (l1-recursive-actual-lists (caddr recursion)))))
     (if (not (equal (len actuals) 1))
-        '(:failure "UnsupportedApplication" "")
+        '(:failure "unsupported-application" "")
       (proof-with-checked-results
           ((call (car actuals))
            (descent (l1-recursive-descent-position formals call 0)))
         (if (eq descent :none)
-            '(:failure "UnsupportedApplication" "")
+            '(:failure "unsupported-application" "")
           (list (car recursion) (cadr recursion) call descent bindings))))))
 
 (defun l1-recursive-finish-recurrence (proof comparison argument badge agreement oracle logical function)
@@ -491,7 +484,7 @@
         ((test-step (l1-recursive-positive-cons-test tests proof cons-test))
          (test-step (or test-step (l1-recursive-negative-cons-tests tests proof cons-test))))
       (if (not test-step)
-          '(:failure "UnsupportedApplication" "")
+          '(:failure "unsupported-application" "")
         (proof-with-checked-results
             ((smaller (proof-proof-fact proof "built-in-clause-3"
                                         (list (list *library-x* parent))))
@@ -563,7 +556,7 @@
 (defun l1-recursive-local-visit (n recurrence logical oracle tests)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "l1-recursive-local-visit")
+      '(:failure "fuel" "l1-recursive-local-visit")
     (let ((result (l1-recursive-local-case recurrence logical oracle tests)))
       (if (not (eq (car result) :conditional))
           result
@@ -776,45 +769,6 @@
          (necessary (l1-recursive-introduce-implication proof failure cases)))
       (list chosen necessary))))
 
-(defun l1-recursive-certificate-totals (entries source)
-  (if (endp entries)
-      (list 0 (length source) (list source))
-    (let* ((entry (car entries))
-           (text (caddr entry))
-           (rest (l1-recursive-certificate-totals (cdr entries) source)))
-      (list (+ (cadr entry) (car rest))
-            (+ (length text) (cadr rest))
-            (cons text (caddr rest))))))
-
-(defun l1-recursive-collect-source (length)
-  (if (> length 10000000)
-      #+sbcl (gc$ :full t)
-      #-sbcl (gc$)
-    nil))
-
-(defun l1-recursive-append-source (left right)
-  (prog2$ (l1-recursive-collect-source (+ (length left) (length right)))
-          (string-append left right)))
-
-(defun l1-recursive-join-pairs (sources)
-  (if (and (consp sources) (consp (cdr sources)))
-      (cons (l1-recursive-append-source (car sources) (cadr sources))
-            (l1-recursive-join-pairs (cddr sources)))
-    sources))
-
-(defun l1-recursive-join-sources (n sources)
-  (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "l1-recursive-join-sources"))
-        ((endp sources) "")
-        ((endp (cdr sources)) (car sources))
-        (t (l1-recursive-join-sources (1- n) (l1-recursive-join-pairs sources)))))
-
-(defun l1-recursive-witness-totals (entries count source)
-  (let ((totals (l1-recursive-certificate-totals entries source)))
-    (prog2$ (l1-recursive-collect-source (cadr totals))
-            (proof-with-checked-results ((text (l1-recursive-join-sources 1000000 (caddr totals))))
-              (list (+ count (car totals)) text)))))
-
 (defund l1-recursive-witness-parts (proof comparison test selector bad-argument bad-failure)
   (proof-with-checked-results
       ((recurrence (l1-recursive-recurrence-init proof comparison test))
@@ -848,7 +802,3 @@
         (cons (l1-primitive-certificates-entries certificates) witness)
       '(:failure "failure" ""))))
 
-(defun l1-recursive-recursive-witness (proof comparison test selector bad-argument bad-failure)
-  (proof-with-checked-results
-      ((parts (l1-recursive-witness-parts proof comparison test selector bad-argument bad-failure)))
-    (l1-recursive-witness-totals (car parts) (cadr parts) (caddr parts))))

@@ -23,7 +23,7 @@
 
 (defun t4-ordered-retry-comparison-p (value)
   (and (failure-p value)
-       (member-equal (cadr value) '("SearchMiss" "value" "Unproved" "MissingProof"))))
+       (member-equal (cadr value) '("search-miss" "value" "unproved" "MissingProof"))))
 
 (defmacro t4-ordered-with-library (bindings result)
   (if (endp bindings)
@@ -78,7 +78,7 @@
       (t4-ordered-with-library
           ((evidence (t4-structural-evidence-init lib nil premises))
            (known (t4-ordered-request :fact-proof lib (list target evidence) replies) :library))
-        (cons (or known '(:failure "SearchMiss" "")) lib)))))
+        (cons (or known '(:failure "search-miss" "")) lib)))))
 
 (mutual-recursion
  (defun t4-ordered-rational-with-replies (lib value premises replies)
@@ -113,15 +113,9 @@
           (rest (t4-ordered-rational-arguments lib (cdr values) premises replies) :library))
        (cons (cons first rest) lib)))))
 
-(defun t4-ordered-rational (lib value premises)
-  (t4-ordered-rational-with-replies lib value premises nil))
-
 (defun t4-ordered-identity-with-replies (lib left right premises replies)
   (t4-ordered-with-library ((step (t4-ordered-infer proof-proof-reflexive lib left)))
     (t4-algebra-orient-normalized-with-replies lib step (proof-eq left right) premises replies)))
-
-(defun t4-ordered-identity (lib left right premises)
-  (t4-ordered-identity-with-replies lib left right premises nil))
 
 (defun t4-ordered-positive (term)
   (list *proof-less* *proof-zero* term))
@@ -178,23 +172,6 @@
             :library))
      (t4-ordered-signed-cases-join lib ,value yes same no)))
 
-(defun t4-ordered-signed-cases-leaf (lib sign leaf)
-  (let ((replies (case (t4-ordered-sign-order sign)
-                   (1 leaf)
-                   (0 (cdr leaf))
-                   (otherwise (cddr leaf)))))
-    (if (endp replies)
-        (cons (list :call :leaf lib sign) lib)
-      (let ((reply (car replies)))
-        (if (failure-p reply) (cons reply lib) reply)))))
-
-(defun t4-ordered-signed-cases-with-replies (lib value typed leaf replies)
-  (t4-ordered-with-signs sign value typed replies
-    (t4-ordered-signed-cases-leaf lib sign leaf)))
-
-(defun t4-ordered-signed-cases (lib value typed leaf)
-  (t4-ordered-signed-cases-with-replies lib value typed leaf nil))
-
 (defun t4-ordered-no-negative-with-replies (lib value above replies)
   (t4-ordered-with-library
       ((axiom (library-library-axiom lib "TRICHOTOMY" (list value)))
@@ -211,9 +188,6 @@
                  :library)
        (rewritten (t4-ordered-infer proof-proof-rewrite lib excluded equation '(1 1))))
     (cons (t4-ordered-infer proof-proof-tidy lib rewritten) lib)))
-
-(defun t4-ordered-no-negative (lib value above)
-  (t4-ordered-no-negative-with-replies lib value above nil))
 
 (defund t4-ordered-nonzero-sign (lib sign)
   (let ((test (proof-eq (t4-ordered-sign-obj sign) *proof-zero*)))
@@ -271,9 +245,6 @@
             (cons denied lib)))))
      (t (cons nil lib)))))
 
-(defun t4-ordered-sign-test (lib sign term)
-  (t4-ordered-sign-test-with-replies lib sign term nil))
-
 (defun t4-ordered-as-boolean (lib test premise)
   (if (proof-is-call test *proof-equal*)
       (cons (t4-algebra-value-of test lib premise) lib)
@@ -289,7 +260,7 @@
                                         (seq-zip (list *library-x* *library-y*) (cdr test))))
              (truth (t4-ordinals-ordinals-true-boolean lib boolean premise) :library))
           (cons truth lib)))
-       (t (cons '(:failure "SearchMiss" "") lib))))))
+       (t (cons '(:failure "search-miss" "") lib))))))
 
 (defun t4-ordered-product-sign-magnitude (sign lib premises replies)
   (let ((obj (t4-ordered-sign-obj sign))
@@ -373,12 +344,9 @@
            (proof (t4-ordered-infer proof-proof-rewrite lib moved conversion '(1))))
         (cons (t4-ordered-sign product order proof) lib))))))
 
-(defun t4-ordered-product-sign (lib x y premises)
-  (t4-ordered-product-sign-with-replies lib x y premises nil))
-
 (defun t4-ordered-sign-formula-test (lib term signs replies)
   (if (endp signs)
-      (cons '(:failure "SearchMiss" "") lib)
+      (cons '(:failure "search-miss" "") lib)
     (t4-ordered-with-library
         ((premise (t4-ordered-sign-test-with-replies lib (car signs) term replies) :library))
       (if premise
@@ -389,7 +357,7 @@
   (declare (xargs :measure (nfix n)))
   (cond
    ((not (o< (nfix (1- n)) (nfix n)))
-    (cons '(:failure "Fuel" "t4-ordered-sign-formula-visit") lib))
+    (cons '(:failure "fuel" "t4-ordered-sign-formula-visit") lib))
    ((or (equal term *proof-true*) (equal term *proof-false*))
     (cons (t4-ordered-infer proof-proof-reflexive lib term) lib))
    ((proof-is-call term *proof-if*)
@@ -416,9 +384,6 @@
 
 (defun t4-ordered-sign-formula-with-replies (lib term signs replies)
   (t4-ordered-sign-formula-visit 1000000 lib term signs replies))
-
-(defun t4-ordered-sign-formula (lib term signs)
-  (t4-ordered-sign-formula-with-replies lib term signs nil))
 
 (defun t4-ordered-product-sign-theorem-compare (sa sb lib premises left right replies)
   (t4-ordered-with-library
@@ -476,9 +441,6 @@
                       lib sa b tb premises left right replies))
                    :library))
           (cons (t4-ordinals-ordinals-imply lib guard step) lib))))))
-
-(defun t4-ordered-product-sign-theorem (lib formula)
-  (t4-ordered-product-sign-theorem-with-replies lib formula nil))
 
 (defun t4-ordered-scaled-order-lemma-compare (scale base lib premises typed-delta
                                                    value mark right delta replies)
@@ -564,10 +526,6 @@
              (updated (library-library-lemma lib name formula proof nil)))
           (cons nil updated))))))
 
-(defun t4-ordered-scaled-order-lemma (lib)
-  (let ((result (t4-ordered-scaled-order-lemma-with-replies lib nil)))
-    (or (car result) (cdr result))))
-
 (defun t4-ordered-scaled-order-with-replies (lib a b factor premises replies)
   (t4-ordered-with-library
       ((lemma (t4-ordered-scaled-order-lemma-with-replies lib replies) :library)
@@ -575,9 +533,6 @@
        (supported (t4-division-combine lib proofs))
        (rule (library-library-cite lib "RATIONAL-SCALE-ORDER" (list a b factor) nil)))
     (cons (t4-ordered-infer proof-proof-modus-ponens lib rule supported) lib)))
-
-(defun t4-ordered-scaled-order (lib a b factor premises)
-  (t4-ordered-scaled-order-with-replies lib a b factor premises nil))
 
 (defund t4-ordered-scale-for-unscaled-with-replies (lib term factor premises replies)
   (cond
@@ -599,9 +554,6 @@
       (cons (list *proof-one* reversed) lib)))
    (t (cons (list nil nil) lib))))
 
-(defun t4-ordered-scale-for-unscaled (lib term factor premises)
-  (t4-ordered-scale-for-unscaled-with-replies lib term factor premises nil))
-
 (defund t4-ordered-choose-sign-branch (lib equation sign replies)
   (t4-ordered-with-library ((rhs (t4-ordered-side equation 2)))
     (if (not (proof-is-call rhs *proof-if*))
@@ -614,7 +566,7 @@
 (defun t4-ordered-choose-sign-visit (n lib equation sign replies)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      (cons '(:failure "Fuel" "t4-ordered-choose-sign-visit") lib)
+      (cons '(:failure "fuel" "t4-ordered-choose-sign-visit") lib)
     (t4-ordered-with-library
         ((chosen (t4-ordered-choose-sign-branch lib equation sign replies) :library))
       (if chosen
@@ -623,9 +575,6 @@
 
 (defun t4-ordered-choose-sign-with-replies (lib equation sign replies)
   (t4-ordered-choose-sign-visit 1000000 lib equation sign replies))
-
-(defun t4-ordered-choose-sign (lib equation sign)
-  (t4-ordered-choose-sign-with-replies lib equation sign nil))
 
 (defun t4-ordered-scaled-comparison-compare (sign lib comparison right premises replies)
   (t4-ordered-with-library
@@ -722,9 +671,6 @@
                 (t4-ordered-scaled-comparison-candidates
                  lib factors guard left right a b premises replies)))))))))
 
-(defun t4-ordered-scaled-comparison (lib formula)
-  (t4-ordered-scaled-comparison-with-replies lib formula nil))
-
 (defun t4-ordered-has-reciprocal (terms)
   (if (endp terms)
       nil
@@ -801,5 +747,3 @@
             (t4-ordered-divided-comparison-candidates
              lib premises guard left right premises replies)))))))
 
-(defun t4-ordered-divided-comparison (lib formula)
-  (t4-ordered-divided-comparison-with-replies lib formula nil))

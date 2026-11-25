@@ -39,7 +39,7 @@
          (middle (car upper-ends))
          (c (cadr upper-ends)))
      (if (not (equal b middle))
-         '(:failure "ProofMismatch" "")
+         '(:failure "proof-mismatch" "")
        (let* ((lower-strict (proof-is-call (proof-step-first lower) *proof-less*))
               (upper-strict (proof-is-call (proof-step-first upper) *proof-less*))
               (name (cond (lower-strict (if upper-strict "LESS-TRANSITIVE" "LESS-THEN-WEAK"))
@@ -95,12 +95,12 @@
   (declare (xargs :measure (acl2-count child)))
   (cond
    ((and (proof-compound child) (endp child))
-    '(:failure "MissingProofInput" ""))
+    '(:failure "missing-proof-input" ""))
    ((equal child parent) nil)
    ((and (consp child) (proof-compound child)
          (member-equal (car child) (list *library-car* *library-cdr*)))
     (if (endp (cdr child))
-        '(:failure "MissingProofInput" "")
+        '(:failure "missing-proof-input" "")
       (proof-with-checked-results ((rest (t3-size-selector-path (cadr child) parent)))
         (if (eq rest :none) :none (cons child rest)))))
    (t :none)))
@@ -149,7 +149,7 @@
 
 (defun t3-size-direct-builtin (lib clause evidence)
   (if (endp clause)
-      '(:failure "MissingProofInput" "")
+      '(:failure "missing-proof-input" "")
     (let ((proof (library-library-proof lib)))
       (proof-with-checked-results
        ((matches (descent-builtin-matches (seq-range 1 24 1) proof clause (car (last clause)) nil)))
@@ -184,7 +184,7 @@
 (defun t3-size-count-bound (lib child parent evidence)
   (proof-with-checked-results ((edges (t3-size-selector-path child parent)))
     (cond
-     ((eq edges :none) '(:failure "Unsupported" ""))
+     ((eq edges :none) '(:failure "unsupported" ""))
      ((endp edges)
       (let ((size (list *library-count* child)))
         (proof-with-checked-results
@@ -203,7 +203,7 @@
              ((strict (t3-size-count-bound lib tail parent evidence))
               (literal (proof-step-first (car strict))))
              (if (not (proof-is-call literal *proof-less*))
-                 '(:failure "Unsupported" "")
+                 '(:failure "unsupported" "")
                (proof-with-checked-results
                 ((natural (t3-logic-libraryproofs-natural lib middle))
                  (nonnegative (library-library-cite lib "NATURAL-NONNEGATIVE"
@@ -218,7 +218,7 @@
          ((result (t3-size-count-bound lib argument parent evidence))
           (literal (proof-step-first (car result))))
          (if (not (proof-is-call literal *proof-less*))
-             '(:failure "Unsupported" "")
+             '(:failure "unsupported" "")
            (proof-with-checked-results
             ((order (t3-size-ordinal-comparison lib smaller larger))
              (step (proof-proof-transport proof (car result) order)))
@@ -265,7 +265,7 @@
  (defun t3-size-count-descent-run (n lib smaller larger evidence)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t3-size-count-descent-run"))
+    ((zp n) '(:failure "fuel" "t3-size-count-descent-run"))
     ((failure-p evidence) evidence)
     (t
      (let* ((plan (t3-size-count-descent-plan lib smaller))
@@ -291,7 +291,7 @@
  (defun t3-size-count-descent-by-value (n value template tests lib larger evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-size-count-descent-by-value")
+       '(:failure "fuel" "t3-size-count-descent-by-value")
      (let* ((proof (library-library-proof lib))
             (plan (t3-size-count-descent-value-plan proof value)))
        (case (car plan)
@@ -317,13 +317,13 @@
            ((step (t3-size-count-descent-branch (1- n) value tests lib larger evidence))
             (literal (proof-step-first step))
             (expected (proof-subst template (list (cons *proof-result* value)))))
-           (if (equal literal expected) step '(:failure "ProofMismatch" ""))))
+           (if (equal literal expected) step '(:failure "proof-mismatch" ""))))
          (otherwise plan)))))
 
  (defun t3-size-count-descent-branch (n value tests lib larger evidence)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "t3-size-count-descent-branch")
+       '(:failure "fuel" "t3-size-count-descent-branch")
      (proof-with-checked-results
       ((result
         (t3-size-count-descent-run
@@ -410,7 +410,7 @@
    ((before (t3-size-phase-count larger))
     (after (t3-size-phase-count smaller)))
    (cond
-    ((not (and before after)) '(:failure "Unsupported" ""))
+    ((not (and before after)) '(:failure "unsupported" ""))
     ((equal before after) (t3-size-doubled-descent-compare lib smaller larger evidence))
     (t
      (proof-with-checked-results
@@ -420,7 +420,7 @@
         (cond
          ((not (failure-p bound))
           (t3-size-doubled-descent-from-bound lib smaller larger (cdr bound) (car bound)))
-         ((and transformed (equal (cadr bound) "Unsupported"))
+         ((and transformed (equal (cadr bound) "unsupported"))
           (list :t3-size-transformed child parent evidence))
          (t bound))))))))
 
@@ -570,7 +570,7 @@
          (step (proof-proof-tidy proof step)))
         (list step lib (cdr second))))
       ((not (equal part (list *t3-size-evens* term)))
-       '(:failure "Unsupported" ""))
+       '(:failure "unsupported" ""))
       (t
        (let ((not-end (proof-neg (list *t3-logic-endp* term))))
          (proof-with-checked-results
@@ -695,10 +695,10 @@
           (rest (cadddr parts)))
       (if (or (not (equal exponent *proof-one*))
               (not (proof-is-call coefficient *proof-plus*)))
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (proof-with-checked-results ((args (proof-list-of-length coefficient 3)))
           (if (not (equal (cadr args) *proof-one*))
-              '(:failure "Unsupported" "")
+              '(:failure "unsupported" "")
             (let ((total (caddr args)))
               (proof-with-checked-results
                ((nat (t3-logic-libraryproofs-natural lib total))
@@ -780,7 +780,7 @@
 
 (defun t3-size-sum-count (lib after before evidence)
   (if (not (and (proof-is-call after *proof-plus*) (proof-is-call before *proof-plus*)))
-      '(:failure "Unsupported" "")
+      '(:failure "unsupported" "")
     (proof-with-checked-results
      ((parts (proof-list-of-length (cdr after) 2))
       (before-left (proof-term-at before 1))
@@ -794,7 +794,7 @@
         ((matched (t3-size-sum-count-matches right left before-left before-right)))
         (if matched
             (t3-size-sum-count-ordered lib right left before-left before-right after evidence)
-          '(:failure "Unsupported" "")))))))
+          '(:failure "unsupported" "")))))))
 
 (defun t3-size-ordinal-descent (lib smaller larger evidence)
   (proof-with-checked-results
@@ -818,7 +818,7 @@
            (sum (t3-size-sum-count lib after before evidence))
            (bound (t3-size-shift lib (car sum) *proof-one* t nil)))
           (if (not (proof-is-call (proof-step-first bound) *proof-less*))
-              '(:failure "Unsupported" "")
+              '(:failure "unsupported" "")
             (proof-with-checked-results ((result (t3-size-coefficient-descent lib smaller larger bound)))
               (list (car result) (cdr result)
                     (t3-size-evidence-after-library (cdr sum) lib (cdr result)))))))))))

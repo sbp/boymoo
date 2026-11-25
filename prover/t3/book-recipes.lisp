@@ -29,7 +29,7 @@
             ((parts (proof-list-of-length operator 3)))
           (let ((formals (cadr parts)))
             (if (integerp formals)
-                '(:failure "MalformedLambdaFormals" "")
+                '(:failure "malformed-lambda-formals" "")
               (proof-subst (caddr parts)
                            (proof-bindings-table
                             (seq-zip (if (equal formals *proof-nil*) nil formals)
@@ -404,7 +404,7 @@
      (t3-book-counterexamples-counterexample lib name formula))
     (t3-book-counterexamples-convert
      (t3-book-counterexamples-convert lib name formula))
-    (otherwise '(:failure "Unsupported" ""))))
+    (otherwise '(:failure "unsupported" ""))))
 
 (defun t3-book-recipes-apply-in-book (tactic lib name formula)
   (case (car tactic)

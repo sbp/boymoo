@@ -31,7 +31,7 @@
  (defun b1-measures-normalize-member (n lib term evidence unfold rules replies)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-measures-normalize-member")
+       '(:failure "fuel" "b1-measures-normalize-member")
      (let ((result (b1-measures-normalization lib term evidence unfold rules replies)))
        (cond
         ((failure-p result) result)
@@ -46,7 +46,7 @@
  (defun b1-measures-constant-member-fueled (n lib term)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "b1-measures-constant-member-fueled")
+       '(:failure "fuel" "b1-measures-constant-member-fueled")
      (proof-with-checked-results ((opened (b1-measures-open-constant-member lib term)))
        (if (not opened)
            nil
@@ -56,9 +56,6 @@
                      (list *b1-logic-atom* *b1-logic-endp* *proof-not*)
                      '((:callback :constant-member)) nil)))
            (proof-proof-chain (library-library-proof lib) (car opened) (list body))))))))
-
-(defun b1-measures-constant-member (lib term)
-  (b1-measures-constant-member-fueled 1000000 lib term))
 
 (defun b1-measures-rulers-from-hypotheses (hypotheses)
   (list :b1-measures-rulers hypotheses))
@@ -75,10 +72,6 @@
 
 (defun b1-measures-rulers-tests (rulers)
   (descent-hypotheses-tests (b1-measures-rulers-hypotheses rulers)))
-
-(defun b1-measures-rulers-with-proof (rulers lib)
-  (b1-measures-rulers-from-hypotheses
-   (descent-hypotheses-with-proof (b1-measures-rulers-hypotheses rulers) lib)))
 
 (defun b1-measures-rulers-remember (hypotheses term step)
   (cons step (descent-hypotheses-remember hypotheses term step)))
@@ -240,7 +233,7 @@
            (head (proof-term-at first 0)))
         (if (equal head *proof-less*)
             step
-          '(:failure "RuleInapplicable" "")))
+          '(:failure "rule-inapplicable" "")))
     (let* ((edge (car edges))
            (head (car edge))
            (base (cadr edge)))
@@ -255,7 +248,7 @@
     (if edges
         (b1-measures-selector-steps edges lib rulers nil)
       (proof-with-checked-results ((text (proof-write parent)))
-        '(:failure "RuleInapplicable" "")))))
+        '(:failure "rule-inapplicable" "")))))
 
 (defun b1-measures-selector-root (term)
   (if (or (proof-is-call term *library-car*) (proof-is-call term *library-cdr*))
@@ -267,11 +260,11 @@
 (defun b1-measures-count-descent-strict (lib value base context)
   (proof-with-checked-results ((subtree (b1-measures-selector-root value)))
     (if (or (not (equal subtree base)) (equal value base))
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (proof-with-checked-results
           ((cons-proof (b1-measures-rulers-find context (list *proof-consp* base))))
         (if (not (car cons-proof))
-            '(:failure "Unproved" "")
+            '(:failure "unproved" "")
           (b1-measures-selector-chain lib value base (cdr cons-proof)))))))
 
 (defun b1-measures-count-descent-zero (lib context child-size parent base)
@@ -328,7 +321,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((zp n) '(:failure "Fuel" "b1-measures-count-value"))
+     ((zp n) '(:failure "fuel" "b1-measures-count-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))
@@ -352,14 +345,14 @@
           ((step (b1-measures-count-descent-branch value tests lib hypotheses parent template))
            (first (proof-step-first step))
            (target (proof-subst template (list (cons *proof-result* value)))))
-        (if (equal first target) step '(:failure "RuleInapplicable" "")))))))
+        (if (equal first target) step '(:failure "rule-inapplicable" "")))))))
 
 (defun b1-measures-count-descent (lib goal hypotheses)
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results ((parts (proof-list-of-length goal 3)))
       (let ((child (cadr parts)) (parent (caddr parts)))
         (if (not (and (proof-is-call child *library-count*) (proof-is-call parent *library-count*)))
-            '(:failure "Unproved" "")
+            '(:failure "unproved" "")
           (proof-with-checked-results
               ((actual (proof-term-at child 1))
                (base (proof-term-at parent 1))
@@ -454,7 +447,7 @@
     (proof-with-checked-results
         ((cons-proof (b1-measures-rulers-find hypotheses (list *proof-consp* base))))
       (if (not (car cons-proof))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results
             ((decrease (library-library-cite lib "LEN-CDR-LESS" (list base) (list (car cons-proof))))
              (equation (library-library-ordinal-comparison lib child parent)))
@@ -542,7 +535,7 @@
       (if entry
           (proof-with-checked-results ((rest (b1-measures-measure-values (cdr definitions) measures)))
             (cons (cdr entry) rest))
-        '(:failure "RuleInapplicable" "")))))
+        '(:failure "rule-inapplicable" "")))))
 
 (defun b1-measures-proof-for-measures-attempt (lib definitions calls measures)
   (let ((formals (termination-formals definitions nil nil)))
@@ -579,31 +572,6 @@
     (cons (cons (caar selectors) (list *library-count* (cdar selectors)))
           (b1-measures-selector-measures (cdr selectors)))))
 
-(defun b1-measures-formal-plans (name formals)
-  (if (endp formals)
-      nil
-    (cons (list (cons name (list *library-count* (car formals))))
-          (b1-measures-formal-plans name (cdr formals)))))
-
-(defun b1-measures-singleton-plans (definitions)
-  (if (not (equal (len definitions) 1))
-      nil
-    (proof-with-checked-results ((definition (proof-list-of-length (car definitions) 3)))
-      (if (proof-compound (cadr definition))
-          (b1-measures-formal-plans (car definition) (cadr definition))
-        nil))))
-
-(defun b1-measures-measure-plans (definitions calls aids)
-  (proof-with-checked-results
-      ((aided-p (b1-measures-have-aids definitions aids))
-       (aided (if aided-p (list (b1-measures-aided-plan definitions aids nil)) nil))
-       (selectors (termination-selector-plan definitions calls))
-       (selected (if (equal (len selectors) (len definitions))
-                     (list (b1-measures-selector-measures selectors))
-                   nil))
-       (singletons (b1-measures-singleton-plans definitions)))
-    (append aided selected singletons)))
-
 (defund b1-measures-try-plan (lib definitions calls plan seen)
   (let ((key (table-values plan)))
     (if (member-equal key seen)
@@ -613,14 +581,14 @@
              (lib (cdr attempt))
              (kind (cadr result)))
         (if (and (failure-p result)
-                 (member-equal kind '("Unproved" "RuleInapplicable" "value" "assertion" "key")))
+                 (member-equal kind '("unproved" "rule-inapplicable" "value" "assertion" "key")))
             (list nil lib (cons key seen))
           (list (cons result lib) lib seen))))))
 
 (defun b1-measures-try-formals (lib definitions calls name formals seen)
   (declare (xargs :measure (acl2-count formals)))
   (if (endp formals)
-      (cons '(:failure "Unproved" "") lib)
+      (cons '(:failure "unproved" "") lib)
     (let* ((plan (list (cons name (list *library-count* (car formals)))))
            (attempt (b1-measures-try-plan lib definitions calls plan seen)))
       (or (car attempt)
@@ -638,7 +606,7 @@
              (lib (cadr attempt)))
         (or (car attempt)
             (if (not (equal (len definitions) 1))
-                (cons '(:failure "Unproved" "") lib)
+                (cons '(:failure "unproved" "") lib)
               (let ((definition (proof-list-of-length (car definitions) 3)))
                 (if (failure-p definition)
                     (cons definition lib)
@@ -657,6 +625,3 @@
         (or (car attempt)
             (b1-measures-try-selectors (cadr attempt) definitions calls (caddr attempt)))))))
 
-(defun b1-measures-termination (lib definitions calls aids)
-  (let ((result (b1-measures-termination-with-library lib definitions calls aids)))
-    (if (failure-p (car result)) (car result) result)))

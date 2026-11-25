@@ -345,12 +345,12 @@
 (defun b1-fixtypes-normalize-with-rule-resume (n lib term evidence unfold rule prove computation)
   (declare (xargs :measure (nfix n)))
   (let ((result (car computation)))
-    (cond ((zp n) '(:failure "Fuel" "b1-fixtypes-normalize-with-rule-resume"))
+    (cond ((zp n) '(:failure "fuel" "b1-fixtypes-normalize-with-rule-resume"))
           ((failure-p result) result)
           ((b1-logic-call-p result)
            (if (equal n 1)
                (proof-with-checked-results ((answer (b1-fixtypes-normalize-with-rule-answer result)))
-                 '(:failure "Fuel" "b1-fixtypes-normalize-with-rule-resume"))
+                 '(:failure "fuel" "b1-fixtypes-normalize-with-rule-resume"))
              (b1-fixtypes-normalize-with-rule-resume
               (1- n) lib term evidence unfold rule prove
               (b1-fixtypes-normalize-with-rule-next
@@ -388,7 +388,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((zp n) '(:failure "Fuel" "b1-fixtypes-lookup-result-type-by-value"))
+     ((zp n) '(:failure "fuel" "b1-fixtypes-lookup-result-type-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))

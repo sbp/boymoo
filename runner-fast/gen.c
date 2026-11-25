@@ -137,7 +137,8 @@ static void ref(char *b, size_t bn, long k, size_t pc, int depth, int calls)
 static int inlinable(long k2, int depth)
 {
     int i;
-    if (k2 == host || !fns[k2].built || fns[k2].arity < 0 || fns[k2].code.n > INL_MAX_OPS ||
+    if (k2 == host || !fns[k2].built || fns[k2].line == NULL || fns[k2].arity < 0 ||
+        fns[k2].code.n > INL_MAX_OPS ||
         depth >= INL_MAX_DEPTH || native_named(k2) || getenv("BOYMOO_FAST_NOINLINE"))
         return 0;
     for (i = 0; i < depth; i++)

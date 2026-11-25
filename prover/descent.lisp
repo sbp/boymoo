@@ -333,12 +333,12 @@
  (defun descent-slice-natural (n lib term)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "descent-library-natural")
+       '(:failure "fuel" "descent-library-natural")
      (descent-natural-task (1- n) (descent-natural-prepare lib term))))
  (defun descent-natural-task (n task)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "descent-library-natural"))
+    ((zp n) '(:failure "fuel" "descent-library-natural"))
     ((failure-p task) task)
     ((eq (car task) :value) (cadr task))
     ((eq (car task) :length)
@@ -354,7 +354,7 @@
  (defun descent-natural-arguments (n lib args)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "descent-library-natural"))
+    ((zp n) '(:failure "fuel" "descent-library-natural"))
     ((endp args) (cons nil lib))
     (t
      (descent-let* ((first (descent-slice-natural (1- n) lib (car args)))
@@ -363,7 +363,7 @@
  (defun descent-natural-leaves (n lib requests)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "descent-library-natural"))
+    ((zp n) '(:failure "fuel" "descent-library-natural"))
     ((endp requests) (cons nil lib))
     (t
      (descent-let* ((first (descent-slice-natural (1- n) lib (caar requests)))
@@ -600,9 +600,6 @@
        (descent-gap-integer-bound lib bound old new hypotheses replies))
       (t (descent-gap-other-bound lib bound old new hypotheses replies))))))
 
-(defun descent-gap-decrease (lib goal hypotheses)
-  (descent-gap-decrease-query lib goal hypotheses :plain))
-
 (defun descent-shift-left (lib step a b offset)
   (let ((proof (descent-proof lib)))
     (descent-let*
@@ -688,9 +685,6 @@
          (order (descent-ordinal-comparison extended child parent))
          (transported (proof-proof-transport (descent-proof (cdr order)) step (car order))))
         (cons transported (descent-hypotheses-after-library (cadr result) lib (cdr order))))))))
-
-(defun descent-walk-decrease (lib goal hypotheses)
-  (descent-walk-decrease-query lib goal hypotheses :plain))
 
 (defun descent-run-unchanged (lib child parent old changed unchanged hypotheses replies)
   (descent-let*

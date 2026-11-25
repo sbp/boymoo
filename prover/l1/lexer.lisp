@@ -44,7 +44,7 @@
 (defun lexer-lexer-proofs-cite (lexer call suffix)
   (let ((proof (library-library-proof (lexer-lexer-proofs-lib lexer))))
     (if (endp call)
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (let* ((name (car call))
              (definition (assoc-equal name (proof-proof-definitions proof))))
         (if (not definition)
@@ -61,7 +61,7 @@
 (defun lexer-lexer-proofs-selectors-visit (n lib term)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "lexer-lexer-proofs-selectors-visit")
+      '(:failure "fuel" "lexer-lexer-proofs-selectors-visit")
     (proof-with-checked-results ((head (proof-term-at term 0)))
       (if (not (member-equal head (list *library-car* *library-cdr*)))
           nil
@@ -258,7 +258,7 @@
                                          (list (car cons-proof)))))
           (list step parent lexer (cdr cons-proof))))
        (t (proof-with-checked-results ((written (proof-write rest)))
-            '(:failure "Unproved" "")))))))
+            '(:failure "unproved" "")))))))
 
 (defund lexer-lexer-proofs-link-edge (lexer current hypotheses step)
   (proof-with-checked-results
@@ -282,10 +282,10 @@
                       (library-library-cite lib "WEAK-REFLEXIVE" (list length-term)
                                             (list integer-step))))))
         (list bound lexer hypotheses)))
-     ((zp n) '(:failure "Fuel" "lexer-lexer-proofs-relation-walk"))
+     ((zp n) '(:failure "fuel" "lexer-lexer-proofs-relation-walk"))
      ((member-equal current seen)
       (proof-with-checked-results ((written (proof-write source)))
-        '(:failure "Unproved" "")))
+        '(:failure "unproved" "")))
      (t (proof-with-checked-results
             ((edge (lexer-lexer-proofs-link-edge lexer current hypotheses step)))
           (lexer-lexer-proofs-relation-walk (1- n) (caddr edge) (cadr edge) source
@@ -356,7 +356,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof (lexer-lexer-proofs-lib lexer))))
     (cond
-     ((zp n) '(:failure "Fuel" "lexer-lexer-proofs-prove-result-by-value"))
+     ((zp n) '(:failure "fuel" "lexer-lexer-proofs-prove-result-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))

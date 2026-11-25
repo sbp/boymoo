@@ -54,9 +54,6 @@
 (defun h3-book-sums-book-sums-lib (sums)
   (cadr sums))
 
-(defun h3-book-sums-book-sums-types (sums)
-  (caddr sums))
-
 (defun h3-book-sums-book-sums-search (sums)
   (cadddr sums))
 
@@ -94,7 +91,7 @@
  (defun h3-book-sums-book-sums-push-minus (n sums term evidence)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "h3-book-sums-book-sums-push-minus")
+       '(:failure "fuel" "h3-book-sums-book-sums-push-minus")
      (let* ((library (h3-book-sums-book-sums-lib sums))
             (proof (library-library-proof library)))
        (cond
@@ -130,7 +127,7 @@
    (cond
     ((endp args) step)
     ((not (o< (nfix (1- n)) (nfix n)))
-     '(:failure "Fuel" "h3-book-sums-push-minus-children"))
+     '(:failure "fuel" "h3-book-sums-push-minus-children"))
     (t
      (proof-with-checked-results
       ((reduced (h3-book-sums-book-sums-push-minus (1- n) sums (car args) evidence))
@@ -225,7 +222,7 @@
 (defun h3-book-sums-linear-combine (n sums step place evidence)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "h3-book-sums-linear-combine")
+      '(:failure "fuel" "h3-book-sums-linear-combine")
     (let* ((library (h3-book-sums-book-sums-lib sums))
            (proof (library-library-proof library)))
       (proof-with-checked-results
@@ -275,18 +272,6 @@
       (step (library-linear-reassociate 1000000 library step '(1 2)))
       (step (library-linear-sort 1000000 library step '(1 2) nil)))
      (h3-book-sums-linear-combine 1000000 sums step '(1 2) evidence))))
-
-(defun h3-book-sums-book-sums-linear-equal (sums left right evidence)
-  (let ((proof (library-library-proof (h3-book-sums-book-sums-lib sums))))
-    (proof-with-checked-results
-     ((a (h3-book-sums-book-sums-linear-form sums left evidence))
-      (b (h3-book-sums-book-sums-linear-form sums right evidence))
-      (a-normal (h3-book-sums-step-argument a 2))
-      (b-normal (h3-book-sums-step-argument b 2)))
-     (if (equal a-normal b-normal)
-         (proof-with-checked-results ((symmetric (proof-proof-symmetric proof b)))
-           (proof-proof-chain proof a (list symmetric)))
-       '(:failure "failure" "")))))
 
 (defun h3-book-sums-book-sums-sum-form (sums term evidence)
   (let ((proof (library-library-proof (h3-book-sums-book-sums-lib sums))))
@@ -414,12 +399,6 @@
                (other (cadr assumptions)))
            (h3-book-sums-extend-library library (h3-numeric-order-add-zero library numeric)
              (h3-book-sums-lemmas-with-fixed-arguments library test numeric other))))))))
-
-(defun h3-book-sums-lemmas (library)
-  (let ((result (h3-book-sums-lemmas-with-library library)))
-    (if (failure-p (car result))
-        (car result)
-      (cdr result))))
 
 (defun h3-book-sums-cancel-comparison (library sums p q evidence)
   (let ((proof (library-library-proof library)))
@@ -655,8 +634,3 @@
           (cons (h3-book-sums-additive-proof library (car parts) (cadr parts) (caddr parts))
                 library)))))))
 
-(defun h3-book-sums-additive-theorem (library formula)
-  (let ((result (h3-book-sums-additive-theorem-with-library library formula)))
-    (if (failure-p (car result))
-        (car result)
-      result)))

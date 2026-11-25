@@ -163,7 +163,7 @@
 
 (defund t4-structural-evidence-record-run (n evidence step)
   (declare (xargs :measure (nfix n)))
-  (if (zp n) '(:failure "Fuel" "t4-structural-evidence-record-run")
+  (if (zp n) '(:failure "fuel" "t4-structural-evidence-record-run")
     (proof-with-checked-results ((literal (proof-step-first step)))
       (if (member-equal literal (t4-structural-evidence-recorded evidence))
           evidence
@@ -246,7 +246,7 @@
         (t4-structural-discharge-builtin-matches (cdr steps) proof clause (cdr result))))))
 
 (defun t4-structural-direct-builtin (lib clause evidence)
-  (if (endp clause) '(:failure "MalformedCandidate" "")
+  (if (endp clause) '(:failure "malformed-candidate" "")
     (let ((proof (descent-proof lib)))
       (proof-with-checked-results
           ((matches (descent-builtin-matches (seq-range 1 24 1) proof clause (car (last clause)) nil)))
@@ -303,7 +303,7 @@
           ((p (t4-structural-weak-comparison-parts p))
            (q (t4-structural-weak-comparison-parts q)))
         (let ((a (caddr p)) (b (cadr p)) (c (cadr q)))
-          (if (not (equal b (caddr q))) '(:failure "InferenceMismatch" "")
+          (if (not (equal b (caddr q))) '(:failure "inference-mismatch" "")
             (proof-with-checked-results
                 ((lib (if (t4-structural-has-lemma lib "WEAK-TRANSITIVE") lib
                         (t4-structural-weak-transitive-lemma lib)))
@@ -356,7 +356,7 @@
   (proof-with-checked-results
       ((literal (proof-step-first step))
        (claim (t4-structural-branch-claim template node)))
-    (if (equal literal claim) step '(:failure "InferenceMismatch" ""))))
+    (if (equal literal claim) step '(:failure "inference-mismatch" ""))))
 
 (defund t4-structural-branch-lambda-result (lib step opened template)
   (let ((proof (library-library-proof lib)))
@@ -377,14 +377,14 @@
  (defund t4-structural-structural-branch-results-visit (n node lib template lemma frames)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t4-structural-structural-branch-results-visit"))
+    ((zp n) '(:failure "fuel" "t4-structural-structural-branch-results-visit"))
     ((proof-is-call node *proof-if*)
-     (if (endp (cddr node)) '(:failure "SearchMiss" "")
+     (if (endp (cddr node)) '(:failure "search-miss" "")
        (t4-structural-structural-branch-results-visit
         (1- n) (caddr node) lib template lemma (cons (list :if-left node) frames))))
     ((not (proof-compound node))
      (cons (list :t4-structural-branch-request node template lemma frames n) lib))
-    ((endp node) '(:failure "MalformedCandidate" ""))
+    ((endp node) '(:failure "malformed-candidate" ""))
     ((proof-compound (car node))
      (proof-with-checked-results ((opened (t4-structural-branch-open lib node)))
        (t4-structural-structural-branch-results-visit
@@ -393,7 +393,7 @@
  (defund t4-structural-branch-results-return (n step lib template lemma frames)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t4-structural-branch-results-return"))
+    ((zp n) '(:failure "fuel" "t4-structural-branch-results-return"))
     ((endp frames) (cons step lib))
     (t
      (let* ((frame (car frames))
@@ -401,7 +401,7 @@
             (rest (cdr frames)))
        (case (car frame)
          (:if-left
-          (if (endp (cdddr node)) '(:failure "SearchMiss" "")
+          (if (endp (cdddr node)) '(:failure "search-miss" "")
             (t4-structural-structural-branch-results-visit
              (1- n) (cadddr node) lib template lemma (cons (list :if-right node step) rest))))
          (:if-right
@@ -411,7 +411,7 @@
             (proof-with-checked-results
                 ((joined (t4-structural-branch-if-result lib lemma node (caddr frame) step)))
               (t4-structural-branch-results-return (1- n) joined lib template lemma rest))))
-         (:if-extra '(:failure "SearchMiss" ""))
+         (:if-extra '(:failure "search-miss" ""))
          (otherwise
           (proof-with-checked-results ((joined (t4-structural-branch-lambda-result lib step node template)))
             (t4-structural-branch-results-return (1- n) joined lib template lemma rest)))))))))
@@ -428,19 +428,6 @@
        (step (t4-structural-branch-leaf-check step (t4-structural-branch-request-node request) template)))
     (t4-structural-branch-results-return (cadr (cddddr request)) step (cdr reply) template
                                          (cadddr request) (car (cddddr request)))))
-
-(defun t4-structural-branch-results-replies (replies result)
-  (cond
-   ((failure-p result) result)
-   ((not (t4-structural-branch-request-p (car result))) result)
-   ((endp replies)
-    (cons (list :t4-structural-branch-results (t4-structural-branch-request-node (car result)))
-          (cdr result)))
-   (t (t4-structural-branch-results-replies
-       (cdr replies) (t4-structural-branch-results-resume (car result) (car replies))))))
-
-(defun t4-structural-structural-branch-results (lib name value template replies)
-  (t4-structural-branch-results-replies replies (t4-structural-branch-results-start lib name value template)))
 
 (defun t4-structural-structural-cons-count (lib obj cons)
   (let ((proof (library-library-proof lib)))
@@ -503,7 +490,7 @@
    lib))
 
 (defun t4-structural-slice-from-one (term)
-  (if (integerp term) '(:failure "MalformedCandidate" "") (cdr term)))
+  (if (integerp term) '(:failure "malformed-candidate" "") (cdr term)))
 
 (defun t4-structural-structural-zero-bound (lib parent cons)
   (let ((size (t4-structural-count parent)))
@@ -624,7 +611,7 @@
       (if (not (t4-structural-path-head-p head)) (cons child heads)
         (if (and (consp (cdr child)) (equal (len child) 2))
             (t4-structural-count-path (cadr child) parent (cons head heads))
-          '(:failure "SearchMiss" ""))))))
+          '(:failure "search-miss" ""))))))
 
 (defun t4-structural-path-names (heads)
   (if (endp heads) nil
@@ -684,7 +671,7 @@
 (mutual-recursion
  (defund t4-structural-count-bound-run (n lib child parent evidence strict)
    (declare (xargs :measure (nfix n)))
-   (if (zp n) '(:failure "Fuel" "t4-structural-count-bound-run")
+   (if (zp n) '(:failure "fuel" "t4-structural-count-bound-run")
      (proof-with-checked-results
          ((cons (if strict (t4-structural-evidence-find evidence (list *proof-consp* parent))
                   (cons nil evidence)))
@@ -699,7 +686,7 @@
            (t4-structural-count-bound-edges (1- n) lib child parent evidence strict))))))
  (defund t4-structural-path-bound-run (n lib path parent cons)
    (declare (xargs :measure (nfix n)))
-   (if (zp n) '(:failure "Fuel" "t4-structural-path-bound-run")
+   (if (zp n) '(:failure "fuel" "t4-structural-path-bound-run")
      (let ((heads (reverse path)))
        (proof-with-checked-results
            ((names (t4-structural-path-names heads))
@@ -718,14 +705,14 @@
  (defund t4-structural-count-bound-edges (n lib child parent evidence strict)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t4-structural-count-bound-edges"))
+    ((zp n) '(:failure "fuel" "t4-structural-count-bound-edges"))
     ((and (not strict) (equal child parent))
      (t4-structural-step-with-evidence (t4-structural-weak-reflexive-count lib parent) lib evidence))
     (t
      (proof-with-checked-results ((quoted-symbol (t4-structural-count-quoted-symbol-p child)))
        (cond
         (quoted-symbol (t4-structural-count-quoted-bound lib child parent evidence strict))
-        ((not (proof-compound child)) '(:failure "SearchMiss" ""))
+        ((not (proof-compound child)) '(:failure "search-miss" ""))
         (t
          (proof-with-checked-results
              ((parts (proof-list-of-length child 2))
@@ -740,13 +727,13 @@
                      ((member-equal head (list *t4-structural-accessor* *t4-structural-last*
                                                *t4-structural-evens* *t4-structural-odds*))
                       (t4-structural-transform-bound-run (1- n) lib head base))
-                     (t '(:failure "SearchMiss" "")))))
+                     (t '(:failure "search-miss" "")))))
            (t4-structural-count-bound-finish
             (1- n) (cdr edge) (car edge) head base parent
             (t4-structural-evidence-after-library (cdr cons) lib (cdr edge)) strict))))))))
  (defund t4-structural-count-bound-finish (n lib edge head base parent evidence strict)
    (declare (xargs :measure (nfix n)))
-   (if (zp n) '(:failure "Fuel" "t4-structural-count-bound-finish")
+   (if (zp n) '(:failure "fuel" "t4-structural-count-bound-finish")
      (proof-with-checked-results ((edge-head (if strict (t4-structural-step-term edge 0) nil)))
        (let ((need-strict (and strict (not (equal edge-head *proof-less*)))))
          (cond
@@ -757,7 +744,7 @@
              (list (car chained) (cdr chained)
                    (t4-structural-evidence-after-library (caddr rest) (cadr rest) (cdr chained)))))
           ((not need-strict) (list edge lib evidence))
-          ((not (equal head *t4-structural-accessor*)) '(:failure "SearchMiss" ""))
+          ((not (equal head *t4-structural-accessor*)) '(:failure "search-miss" ""))
           (t
            (proof-with-checked-results
                ((cons (t4-structural-evidence-require evidence (list *proof-consp* base)))
@@ -767,13 +754,13 @@
  (defund t4-structural-transform-bound-run (n lib head base)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t4-structural-transform-bound-run"))
+    ((zp n) '(:failure "fuel" "t4-structural-transform-bound-run"))
     ((equal head *t4-structural-accessor*) (t4-structural-accessor-bound-run (1- n) lib base nil))
     ((equal head *t4-structural-last*) (t4-structural-structural-last-bound lib base))
     (t (t4-structural-split-bound-run (1- n) lib head base nil))))
  (defund t4-structural-accessor-bound-run (n lib obj cons)
    (declare (xargs :measure (nfix n)))
-   (if (zp n) '(:failure "Fuel" "t4-structural-accessor-bound-run")
+   (if (zp n) '(:failure "fuel" "t4-structural-accessor-bound-run")
      (let ((name (if cons "LAMBDA-BODY-LESS" "LAMBDA-BODY-WEAK"))
            (proof (library-library-proof lib)))
        (if (t4-structural-has-lemma lib name)
@@ -797,7 +784,7 @@
  (defund t4-structural-accessor-visit (n result assumption cons)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t4-structural-accessor-visit"))
+    ((zp n) '(:failure "fuel" "t4-structural-accessor-visit"))
     ((not (t4-structural-branch-request-p (car result))) result)
     (t
      (proof-with-checked-results
@@ -807,14 +794,14 @@
        (t4-structural-accessor-visit (1- n) result assumption cons)))))
  (defund t4-structural-structural-accessor-bound-leaf (n value lib assumption cons)
    (declare (xargs :measure (nfix n)))
-   (if (zp n) '(:failure "Fuel" "t4-structural-structural-accessor-bound-leaf")
+   (if (zp n) '(:failure "fuel" "t4-structural-structural-accessor-bound-leaf")
      (proof-with-checked-results
          ((evidence (t4-structural-evidence-init lib nil assumption))
           (bound (t4-structural-count-bound-run (1- n) lib value *library-x* evidence (if cons t nil))))
        (cons (car bound) (cadr bound)))))
  (defund t4-structural-split-bound-run (n lib head obj tail-cons)
    (declare (xargs :measure (nfix n)))
-   (if (zp n) '(:failure "Fuel" "t4-structural-split-bound-run")
+   (if (zp n) '(:failure "fuel" "t4-structural-split-bound-run")
      (proof-with-checked-results
          ((lib (if (t4-structural-has-lemma lib "EVENS-WEAK") lib
                  (t4-structural-evens-weak-lemma-run (1- n) lib))))
@@ -841,7 +828,7 @@
             (library-library-cite lib "EVENS-LESS" (list obj) (list tail-cons)) lib)))))))
  (defund t4-structural-evens-less-lemma-run (n lib)
    (declare (xargs :measure (nfix n)))
-   (if (zp n) '(:failure "Fuel" "t4-structural-evens-less-lemma-run")
+   (if (zp n) '(:failure "fuel" "t4-structural-evens-less-lemma-run")
      (let* ((x *library-x*)
             (tail (list *library-cdr* x))
             (twice (list *library-cdr* tail)))
@@ -866,7 +853,7 @@
                                 (car step) (list (proof-neg literal)))))))
  (defund t4-structural-evens-weak-lemma-run (n lib)
    (declare (xargs :measure (nfix n)))
-   (if (zp n) '(:failure "Fuel" "t4-structural-evens-weak-lemma-run")
+   (if (zp n) '(:failure "fuel" "t4-structural-evens-weak-lemma-run")
      (let* ((x *library-x*)
             (test (list *t4-structural-endp* x))
             (term (list *t4-structural-evens* x))
@@ -898,23 +885,8 @@
 (defun t4-structural-structural-count-bound (lib child parent evidence strict)
   (t4-structural-count-bound-run 1000000 lib child parent evidence strict))
 
-(defun t4-structural-structural-path-bound (lib path parent cons)
-  (t4-structural-path-bound-run 1000000 lib path parent cons))
-
-(defun t4-structural-structural--count-bound (lib child parent evidence strict)
-  (t4-structural-count-bound-edges 1000000 lib child parent evidence strict))
-
-(defun t4-structural-structural-transform-bound (lib head base)
-  (t4-structural-transform-bound-run 1000000 lib head base))
-
-(defun t4-structural-structural-accessor-bound (lib obj cons)
-  (t4-structural-accessor-bound-run 1000000 lib obj cons))
-
 (defun t4-structural-structural-split-bound (lib head obj tail-cons)
   (t4-structural-split-bound-run 1000000 lib head obj tail-cons))
-
-(defun t4-structural-structural-evens-weak-lemma (lib)
-  (t4-structural-evens-weak-lemma-run 1000000 lib))
 
 (defun t4-structural-tuple-descent-tail (lib after obj evidence nonempty has-head)
   (let ((proof (library-library-proof lib))
@@ -971,7 +943,7 @@
 (defun t4-structural-count-descent-bound (lib child parent evidence)
   (if (or (proof-is-call child *t4-structural-evens*) (proof-is-call child *t4-structural-odds*))
       (proof-with-checked-results ((obj (proof-term-at child 1)))
-        (if (not (equal obj parent)) '(:failure "InferenceMismatch" "")
+        (if (not (equal obj parent)) '(:failure "inference-mismatch" "")
           (proof-with-checked-results
               ((cons (t4-structural-evidence-require evidence (list *proof-consp* (list *library-cdr* parent))))
                (step (t4-structural-structural-split-bound lib (car child) parent (car cons))))
@@ -1040,7 +1012,7 @@
 (mutual-recursion
  (defund t4-structural-count-descent-run (n lib goal evidence)
    (declare (xargs :measure (nfix n)))
-   (if (zp n) '(:failure "Fuel" "t4-structural-count-descent-run")
+   (if (zp n) '(:failure "fuel" "t4-structural-count-descent-run")
      (proof-with-checked-results ((parts (t4-structural-count-descent-arguments goal)))
        (let ((child (car parts)) (parent (cadr parts)) (larger (caddr parts)))
          (if (proof-is-call child *proof-if*)
@@ -1062,7 +1034,7 @@
  (defund t4-structural-count-descent-visit (n node template lib evidence larger tests)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "t4-structural-count-descent-visit"))
+    ((zp n) '(:failure "fuel" "t4-structural-count-descent-visit"))
     ((proof-is-call node *proof-if*)
      (proof-with-checked-results
          ((branches (t4-structural-count-descent-branches node))
@@ -1073,7 +1045,7 @@
                                                  (append tests (list (list test nil))))))
        (t4-structural-step-with-library
         (library-inherited proof-by-value-join (cdr no) node template (car yes) (car no)) (cdr no))))
-    ((and (proof-compound node) (endp node)) '(:failure "MalformedCandidate" ""))
+    ((and (proof-compound node) (endp node)) '(:failure "malformed-candidate" ""))
     ((and (proof-compound node) (proof-compound (car node)))
      (proof-with-checked-results
          ((opened (t4-structural-branch-open lib node))
@@ -1086,7 +1058,7 @@
        (t4-structural-step-with-library (t4-structural-branch-leaf-check (car leaf) node template) (cdr leaf))))))
  (defund t4-structural-structural-count-descent-leaf (n value tests lib evidence larger)
    (declare (xargs :measure (nfix n)))
-   (if (zp n) '(:failure "Fuel" "t4-structural-structural-count-descent-leaf")
+   (if (zp n) '(:failure "fuel" "t4-structural-structural-count-descent-leaf")
      (proof-with-checked-results
          ((branch (t4-structural-count-descent-leaf-evidence lib evidence tests))
           (step (t4-structural-count-descent-run
@@ -1110,8 +1082,8 @@
             (proof-with-checked-results ((cons (t4-structural-evidence-require evidence (list *proof-consp* obj))))
               (t4-structural-step-with-evidence
                (library-library-cite lib "LEN-CDR-LESS" (list obj) (list (car cons))) lib (cdr cons)))
-          '(:failure "SearchMiss" ""))))
-     (t '(:failure "SearchMiss" "")))))
+          '(:failure "search-miss" ""))))
+     (t '(:failure "search-miss" "")))))
 
 (defun t4-structural-numeric-descent-shift (bound offset left-offset)
   (proof-with-checked-results
@@ -1122,9 +1094,9 @@
 (defund t4-structural-structural-numeric-descent (lib child parent evidence)
   (declare (xargs :measure (acl2-count child)))
   (if (and (consp child) (proof-is-call child *proof-plus*) (proof-is-call parent *proof-plus*))
-      (if (endp (cdr child)) '(:failure "MalformedCandidate" "")
+      (if (endp (cdr child)) '(:failure "malformed-candidate" "")
         (proof-with-checked-results ((left-parent (proof-term-at parent 1)))
-          (if (endp (cddr child)) '(:failure "MalformedCandidate" "")
+          (if (endp (cddr child)) '(:failure "malformed-candidate" "")
             (proof-with-checked-results ((right-parent (proof-term-at parent 2)))
               (cond
                ((equal (cadr child) left-parent)
@@ -1133,7 +1105,7 @@
                ((equal (caddr child) right-parent)
                 (t4-structural-numeric-descent-shift
                  (t4-structural-structural-numeric-descent lib (cadr child) left-parent evidence) right-parent nil))
-               (t '(:failure "SearchMiss" "")))))))
+               (t '(:failure "search-miss" "")))))))
     (t4-structural-numeric-descent-bottom lib child parent evidence)))
 
 (defun t4-structural-structural-sum-descent (lib goal evidence)

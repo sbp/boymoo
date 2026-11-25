@@ -155,7 +155,7 @@
 (defun t4-relations-shape (shapes arg)
   (let ((entry (assoc-equal arg shapes)))
     (if entry (cdr entry)
-      '(:failure "MissingProofInput" ""))))
+      '(:failure "missing-proof-input" ""))))
 
 (defun t4-relations-infer-shape (lib premise equation left b)
   (let* ((proof (library-library-proof lib))
@@ -220,7 +220,7 @@
            (context (cdr answer))
            (proof (library-library-proof (car context))))
       (if (not head)
-          '(:failure "SearchMiss" "")
+          '(:failure "search-miss" "")
         (proof-with-checked-results
             ((head-proof
               (if (endp heads)
@@ -308,16 +308,13 @@
                                                  (t4-structural-count obj) (list bindings))))
                     (cons step lib)))))))))))
 
-(defun t4-relations-list-equivalence (lib formula)
-  (t4-relations-list-equivalence-query lib formula nil))
-
 (mutual-recursion
  (defun t4-relations-paired-boolean-by-value
      (n value tests lib template x tail guarded decrease)
    (declare (xargs :measure (nfix n)))
    (let ((proof (library-library-proof lib)))
      (cond
-      ((zp n) '(:failure "Fuel" "t4-relations-paired-boolean-by-value"))
+      ((zp n) '(:failure "fuel" "t4-relations-paired-boolean-by-value"))
       ((proof-is-call value *proof-if*)
        (proof-with-checked-results
            ((parts (proof-list-of-length (cdr value) 3))
@@ -342,14 +339,14 @@
                      (1- n) value tests lib template x tail guarded decrease))
               (literal (proof-step-first step))
               (expected (proof-subst template (list (cons *proof-result* value)))))
-           (if (equal literal expected) step '(:failure "InferenceMismatch" "")))))))
+           (if (equal literal expected) step '(:failure "inference-mismatch" "")))))))
 
  (defun t4-relations-paired-boolean-leaf
      (n value tests lib template x tail guarded decrease)
    (declare (xargs :measure (nfix n)))
    (let ((proof (library-library-proof lib)))
      (cond
-      ((zp n) '(:failure "Fuel" "t4-relations-paired-boolean-leaf"))
+      ((zp n) '(:failure "fuel" "t4-relations-paired-boolean-leaf"))
       ((or (equal value *proof-true*) (equal value *proof-false*))
        (proof-proof-prove proof (list *t4-relations-booleanp* value) nil
                           (list *t4-relations-booleanp* (proof-cl "EQ"))))
@@ -368,7 +365,7 @@
             (smaller (if (car known) (proof-proof-discharge proof decrease (car known))
                        '(:failure "failure" ""))))
          (proof-proof-prove-if proof hypothesis smaller)))
-      (t '(:failure "SearchMiss" ""))))))
+      (t '(:failure "search-miss" ""))))))
 
 (defun t4-relations-paired-boolean (lib formula opening)
   (let ((proof (library-library-proof lib)))
@@ -394,7 +391,7 @@
 (defun t4-relations-equivalence-conjunction-combine (n claim context)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "t4-relations-equivalence-conjunction-combine"))
+   ((zp n) '(:failure "fuel" "t4-relations-equivalence-conjunction-combine"))
    (t
     (t4-relations-with-results
         ((otherwise (and (proof-is-call claim *proof-if*) (proof-term-at claim 3))))
@@ -410,7 +407,7 @@
              (fact (t4-relations-recipe-request context :fact-proof (list claim evidence))))
           (if (caar fact)
               (cons (caar fact) (cdr fact))
-            '(:failure "SearchMiss" ""))))))))
+            '(:failure "search-miss" ""))))))))
 
 (defun t4-relations-equivalence-conjunction-query (lib formula replies)
   (t4-relations-with-results
@@ -433,11 +430,8 @@
                                             formula (list boolean (car laws)) nil)))
                 (cons step lib)))))))))
 
-(defun t4-relations-equivalence-conjunction (lib formula)
-  (t4-relations-equivalence-conjunction-query lib formula nil))
-
 (defun t4-relations-query (recipe lib formula replies)
   (case recipe
     (:list-equivalence (t4-relations-list-equivalence-query lib formula replies))
     (:equivalence-conjunction (t4-relations-equivalence-conjunction-query lib formula replies))
-    (otherwise '(:failure "SearchMiss" ""))))
+    (otherwise '(:failure "search-miss" ""))))

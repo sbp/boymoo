@@ -54,7 +54,6 @@ objects. `evens-weak-lemma` returns the resulting Library directly.
 | Call | Step or effect |
 |---|---|
 | `(t4-structural-structural-comparison-chain lib left right)` | The composition of the two integer comparison Steps in their given order. It can add `WEAK-TRANSITIVE`. |
-| `(t4-structural-structural-branch-results lib name value template replies)` | The property `template` at `value`, with the lemma named by the string `name`. The slot in the template is `*proof-result*`. See the callback protocol below. |
 | `(t4-structural-structural-cons-count lib obj cons)` | The count equation for `obj` under the cons proof `cons`. |
 | `(t4-structural-structural-constructor-count lib a b)` | The count equation for `(CONS a b)`. |
 | `(t4-structural-structural-replace-endpoints lib step left right)` | The comparison `step` rewritten using the two endpoint equality Steps `left` and `right`. |
@@ -62,14 +61,9 @@ objects. `evens-weak-lemma` returns the resulting Library directly.
 | `(t4-structural-structural-count-of-nil lib)` | The simplification equality for the count of quoted nil, or `nil` if unchanged. |
 | `(t4-structural-structural-zero-bound lib parent cons)` | A weak lower bound of zero on the count of `parent`, or a strict bound with the cons Step. |
 | `(t4-structural-structural-count-bound lib child parent evidence strict)` | The strict or weak comparison of the counts of `child` and `parent`. The proof may add a path or transformation lemma. |
-| `(t4-structural-structural-path-bound lib path parent cons)` | The strict comparison along `path`, a list of selector heads, outermost first. |
-| `(t4-structural-structural--count-bound lib child parent evidence strict)` | The comparison of counts obtained by walking the operations from `child` towards `parent`. |
-| `(t4-structural-structural-transform-bound lib head base)` | The count bound for applying the operation symbol `head` to `base`. |
-| `(t4-structural-structural-accessor-bound lib obj cons)` | The weak or strict count bound for `LAMBDA-OBJECT-BODY` on `obj`. |
 | `(t4-structural-structural-last-bound lib obj)` | The weak count bound for `LAST` on `obj`. |
 | `(t4-structural-structural-split-bound lib head obj tail-cons)` | The weak or strict count bound for the `EVENS` or `ODDS` operation on `obj`. |
 | `(t4-structural-structural-evens-nonempty lib smaller cons nonempty)` | The count comparison from the recursive bound `smaller`, a cons Step, and an `ENDP` falsity Step. |
-| `(t4-structural-structural-evens-weak-lemma lib)` | Adds the weak `EVENS` count lemma. |
 | `(t4-structural-structural-tuple-descent lib goal evidence)` | The ordinal comparison for a descent through a tuple tail. |
 | `(t4-structural-structural-count-descent lib goal evidence)` | The ordinal comparison for a decrease in counts. |
 | `(t4-structural-structural-sum-descent lib goal evidence)` | The ordinal comparison for a decrease in sums. |

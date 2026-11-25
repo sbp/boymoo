@@ -24,9 +24,9 @@ choose it explicitly.
 | `(h1-recursion-selector-bound proof selector variable)` | The built-in decrease Step for the selector symbol and root term. | A proof failure. |
 | `(h1-recursion-structural-descent proof variable actual tests selector-openings)` | `(cons step-or-nil proof)` with the structural decrease Step if applicable and the resulting Prover. | A failure from inspecting the path or proving the decrease. |
 | `(h1-recursion-descent-for proof variable actual tests selector-openings)` | `(cons step-or-nil proof)` with the additive or structural decrease Step if applicable and the resulting Prover. | A proof failure. |
-| `(h1-recursion-prove-with-projections proof formula variable instances openings selector-openings preserve)` | Step proving `formula` by strengthened induction, or `nil` when there are no suitable projections. | A proof failure, including `Unproved`. |
-| `(h1-recursion-prove-from-calls proof formula openings selector-openings assume-premise preserve)` | `(cons step proof)` with the proof of `formula` and the resulting Prover. | A proof failure, including the last `Unproved` if the induction attempts fail. |
-| `(h1-recursion-prove-automatically proof formula)` | `(cons step proof)` with the proof by simplification or induction and the resulting Prover. | A proof failure, including `Unproved`. |
+| `(h1-recursion-prove-with-projections proof formula variable instances openings selector-openings preserve)` | Step proving `formula` by strengthened induction, or `nil` when there are no suitable projections. | A proof failure, including `unproved`. |
+| `(h1-recursion-prove-from-calls proof formula openings selector-openings assume-premise preserve)` | `(cons step proof)` with the proof of `formula` and the resulting Prover. | A proof failure, including the last `unproved` if the induction attempts fail. |
+| `(h1-recursion-prove-automatically proof formula)` | `(cons step proof)` with the proof by simplification or induction and the resulting Prover. | A proof failure, including `unproved`. |
 
 In calls returning a pair, a failure occupies the value position so that
 callers can retain any supporting entries added to the Prover. The constant

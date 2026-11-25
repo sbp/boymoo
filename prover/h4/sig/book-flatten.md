@@ -16,7 +16,7 @@ unchanged. A failed proof operation returns the failure as its entire result.
 | `(h4-book-flatten-map-accumulator p mapper executable sequence accumulator)` | Step relating the accumulator implementation and the unary list map. `mapper` and `executable` are function names. | Yes. |
 | `(h4-book-flatten-map-after-list-fix p mapper)` | Step showing that a unary `mapper` is invariant under list fixing. | Yes. |
 | `(h4-book-flatten-append-map-shape formula)` | Matching shape `("concatenation" mapper first second)`, `("accumulator" mapper executable sequence accumulator)`, `("equivalence" mapper first second)`, or `nil`. | A malformed application can return a failure. |
-| `(h4-book-flatten-append-map-proof p formula)` | Step for a supported list-map formula, or `nil`. | An `InapplicableStep` leaves the goal open. Other failures can propagate. |
+| `(h4-book-flatten-append-map-proof p formula)` | Step for a supported list-map formula, or `nil`. | An `inapplicable-step` leaves the goal open. Other failures can propagate. |
 
 To supply induction cases, build the positive assumption using
 `proof-proof-assume` on `(CONSP sequence)`. Use it with
@@ -44,7 +44,6 @@ the proof operations used by the list and measure recipes.
 | `(h4-book-flatten-conjunct p step)` | Pair of Steps in a two-element list, first for the test and then for the true branch of the conjunction. |
 | `(h4-book-flatten-modus-ponens p step evidence)` | Step for the consequent of the implication Step using its premise Step. |
 | `(h4-book-flatten-nil-value p negative)` | Equality to quoted NIL, from a Step establishing negation. |
-| `(h4-book-flatten-non-nil p equality)` | Step proving the left-hand term from an equality to a non-NIL quoted value. |
 | `(h4-book-flatten-fact-instance p term evidence names rewrite)` | First applicable fact Step, or `nil`. Pass `:none` to search facts in insertion order, or a list of names to search in list order. `rewrite` selects matching on the equation's left-hand term. |
 | `(h4-book-flatten-step-right step)` | The right term in the first equality literal of `step`. An absent literal or term can return a failure. |
 | `(h4-book-flatten-binding-map bindings result)` | The alist `result` updated with the two-element binding lists in `bindings`. The first occurrence of each key fixes its position, and the last supplies its value.  |

@@ -31,12 +31,7 @@
     (proof-with-checked-results ((direct (t3-printing-direct-builtin lib (list goal) evidence)))
       (if (car direct)
           direct
-        '(:failure "Unsupported" "")))))
-
-(defun t3-printing-index-decrease (lib new old evidence)
-  (proof-with-checked-results
-      ((decrease (t3-printing-index-decrease-with-evidence lib new old evidence)))
-    (car decrease)))
+        '(:failure "unsupported" "")))))
 
 (defun t3-printing-by-value-rewrite (lib step equality template)
   (let ((proof (library-library-proof lib)))
@@ -229,11 +224,11 @@
   (cond
    ((equal value parent) (t3-printing-reflexive-bound lib tail))
    ((not (proof-is-call value *t3-printing-nthcdr*))
-    '(:failure "Unsupported" ""))
+    '(:failure "unsupported" ""))
    (t
     (proof-with-checked-results ((source (proof-term-at value 2)))
       (if (not (equal source parent))
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (library-library-cite lib "T3-NTHCDR-TAIL-COUNT" (list parent (cadr value)) nil))))))
 
 (defun t3-printing-prefix-leaf (value tests lib prefix take)
@@ -261,7 +256,7 @@
 
 (defun t3-printing-by-value-walk (n cursor template context)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "t3-printing-by-value"))
+  (cond ((zp n) '(:failure "fuel" "t3-printing-by-value"))
         ((failure-p cursor) cursor)
         ((eq (car cursor) :done) (cadr cursor))
         (t (t3-printing-by-value-walk
@@ -332,7 +327,7 @@
        ((car known) (car known))
        ((equal index *proof-false*) (t3-printing-zero-index lib length (cdr known)))
        ((not (proof-is-call index *proof-if*))
-        '(:failure "Unsupported" ""))
+        '(:failure "unsupported" ""))
        ((and (consp index) (consp (cdr index)) (consp (cddr index))
              (consp (cdddr index)) (endp (cddddr index)))
         (let ((proof (library-library-proof lib))
@@ -413,7 +408,7 @@
     (let ((index (car actuals))
           (source (cadr actuals)))
       (if (not (equal source tail))
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (proof-with-checked-results
             ((within (t3-printing-bounded-index updated index (list *library-len* source) nil))
              (claim (library-library-cite updated "T3-TAKE-COUNT" (list source index) nil))
@@ -439,9 +434,5 @@
             (proof-with-checked-results ((prefix (t3-printing-prefix child)))
               (if prefix
                   (t3-printing-printing-count-prefix lib child prefix parent tail evidence)
-                '(:failure "Unsupported" "")))))))))
+                '(:failure "unsupported" "")))))))))
 
-(defun t3-printing-printing-count (lib child parent evidence)
-  (proof-with-checked-results
-      ((result (t3-printing-printing-count-with-evidence lib child parent evidence)))
-    (cons (caar result) (cdr result))))

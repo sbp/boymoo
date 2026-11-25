@@ -59,7 +59,7 @@
 (defun h3-sorting-reverse-induction (n lib rev names claim replacements replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h3-sorting-reverse-induction")
+      '(:failure "fuel" "h3-sorting-reverse-induction")
     (let ((step (h3-sorting-structural-induction-result lib claim replacements replies)))
       (if (h3-induction-request-p step)
           (proof-with-checked-results
@@ -102,7 +102,7 @@
 (defun h3-sorting-evens-type-induction (n lib call names claim replacements replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h3-sorting-evens-type-induction")
+      '(:failure "fuel" "h3-sorting-evens-type-induction")
     (let ((step (h3-sorting-structural-induction-result lib claim replacements replies)))
       (if (h3-induction-request-p step)
           (proof-with-checked-results
@@ -183,7 +183,7 @@
     (n lib tail second left-cons right-cons evens length rule claim replacements replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h3-sorting-evens-bound-induction")
+      '(:failure "fuel" "h3-sorting-evens-bound-induction")
     (let ((step (h3-sorting-structural-induction-result lib claim replacements replies)))
       (if (h3-induction-request-p step)
           (proof-with-checked-results
@@ -285,7 +285,7 @@
 (defun h3-sorting-sort-induction (n lib formula measure ordinal replacements names merge-name replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h3-sorting-sort-induction")
+      '(:failure "fuel" "h3-sorting-sort-induction")
     (let ((step (h3-sorting-well-founded-result lib formula measure ordinal replacements replies)))
       (if (h3-induction-request-p step)
           (proof-with-checked-results
@@ -329,7 +329,7 @@
     (lib (cdr evens-rule))
     (names (append names (list (car reverse-rule) (car evens-rule))))
     (entry (or (assoc-equal *h3-sorting-merge* (proof-proof-definitions (library-library-proof lib)))
-               '(:failure "MissingProofData" "")))
+               '(:failure "missing-proof-data" "")))
     (merge (cons *h3-sorting-merge* (cadr entry)))
     (claim (list *library-implies* (h3-sorting-sort-hypothesis (cdr merge))
                  (list *h3-lists-symbol-listp* merge)))
@@ -341,4 +341,4 @@
    (if (equal variable *library-x*)
        (h3-sorting-sort-final
         (cdr bound) formula names (car registered) (caar bound) (cadar bound) variable)
-     '(:failure "ProofMismatch" ""))))
+     '(:failure "proof-mismatch" ""))))

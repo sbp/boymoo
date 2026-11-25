@@ -179,16 +179,16 @@
           ((step (t3-quotient-quotient-induction-zero
                   tests lib interval (car known) (cadr known) (caddr known) (fifth known) claim)))
         (cons step nil)))
-     ((not (proof-is-call value *proof-plus*)) '(:failure "ProofMismatch" ""))
+     ((not (proof-is-call value *proof-plus*)) '(:failure "proof-mismatch" ""))
      (t
       (proof-with-checked-results ((one (proof-term-at value 1)))
         (if (not (equal one *proof-one*))
-            '(:failure "ProofMismatch" "")
+            '(:failure "proof-mismatch" "")
           (proof-with-checked-results ((child-call (proof-term-at value 2)))
             (if (proof-is-call child-call *t3-quotient-niq*)
                 (t3-quotient-quotient-induction-recursive
                  child-call tests lib formula interval typed known claim ifix)
-              '(:failure "ProofMismatch" "")))))))))
+              '(:failure "proof-mismatch" "")))))))))
 
 (defun t3-quotient-quotient-induction-leaves (requests lib formula interval typed known ifix)
   (if (endp requests)
@@ -282,7 +282,7 @@
                                             *t3-logic-endp* *t3-logic-atom* *proof-not*)))
          (value (t3-quotient-right-side no-base)))
       (if (not (equal value *proof-false*))
-          '(:failure "ProofMismatch" "")
+          '(:failure "proof-mismatch" "")
         (proof-with-checked-results
             ((reduced (proof-proof-rewrite proof base-success no-base '(1)))
              (no-base (proof-proof-tidy proof reduced))
@@ -397,7 +397,7 @@
 
 (defun t3-quotient-rounded-niq (rounded lib numerator denominator ind pos-d nat-n lemma upper)
   (if (not (equal rounded (list *t3-quotient-niq* numerator denominator)))
-      '(:failure "ProofMismatch" "")
+      '(:failure "proof-mismatch" "")
     (let ((proof (library-library-proof lib))
           (sums (t3-rational-order-rational-sums-init lib)))
       (proof-with-checked-results
@@ -617,7 +617,7 @@
                     lib new (list sign) (list (proof-cl "ABS") (proof-cl "MINUSP"))))
        (actual (if normalized (t3-quotient-right-side normalized) new)))
     (if (not (equal actual (library-minus old)))
-        '(:failure "Unsupported" "")
+        '(:failure "unsupported" "")
       (proof-with-checked-results
           ((proof (library-library-proof lib))
            (new-type (t3-logic-evidence-integer evidence actual))
@@ -638,7 +638,7 @@
       ((sign (t3-logic-evidence-require evidence (proof-neg (library-lt old *proof-zero*)))))
     (if (not (or (proof-is-call new (proof-cl "FLOOR"))
                  (proof-is-call new (proof-cl "TRUNCATE"))))
-        '(:failure "Unsupported" "")
+        '(:failure "unsupported" "")
       (proof-with-checked-results
           ((rounded (t3-quotient-rounded-bounds lib new (cdr sign) nil nil))
            (lib (cdr rounded))

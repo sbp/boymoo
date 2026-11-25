@@ -46,7 +46,7 @@ in the value position. A failure is the whole result.
 | `(h2-recipes-recipes-nth-index-fact recipes)` | Return the NTH index equality fact name string with the Recipes containing that fact. | A failure from proof construction |
 | `(h2-recipes-recipes-length-update recipes formula)` | Return the length update Step with the resulting Recipes. | A failure from reading the formula or proof construction |
 | `(h2-recipes-recipes-nth-update recipes formula)` | Return the NTH update Step with the resulting Recipes. | A failure from reading the formula or proof construction |
-| `(h2-recipes-recipes-read-state recipes formula)` | Return the state read Step with the resulting Recipes. | A failure from reading the formula or proof construction, or `Fuel` |
+| `(h2-recipes-recipes-read-state recipes formula)` | Return the state read Step with the resulting Recipes. | A failure from reading the formula or proof construction, or `fuel` |
 | `(h2-recipes-recipes-symbol-equality recipes formula)` | Return the symbol equality Step with the resulting Recipes. | A failure from reading the formula or proof construction |
 | `(h2-recipes-recipes-prove-shape recipes formula)` | Return a Step selected by formula shape or `nil`, with the resulting Recipes. | A failure from reading the formula or proof construction |
 | `(h2-recipes-recipes-prove-theorem recipes theorem formula)` | Return a Step selected by formula shape or theorem name string, or `nil`, with the resulting Recipes. | A failure from reading the formula or proof construction |

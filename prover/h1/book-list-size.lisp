@@ -23,7 +23,7 @@
    (let ((core (h1-tactics-prover-proof proof))
          (head (car term)))
      (cond
-      ((zp n) '(:failure "Fuel" "h1-book-list-size-simplify-visit"))
+      ((zp n) '(:failure "fuel" "h1-book-list-size-simplify-visit"))
       ((or (not (proof-compound term)) (equal head *proof-quote*)) nil)
       ((endp term) '(:failure "failure" ""))
       ((or (proof-compound head) (member-equal head definitions))
@@ -57,7 +57,7 @@
  (defun h1-book-list-size-simplify-arguments (n proof term args index result evidence definitions)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h1-book-list-size-simplify-arguments"))
+    ((zp n) '(:failure "fuel" "h1-book-list-size-simplify-arguments"))
     ((endp args) result)
     (t
      (let ((core (h1-tactics-prover-proof proof)))

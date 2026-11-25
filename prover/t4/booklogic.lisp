@@ -90,7 +90,7 @@
 
 (defund t4-booklogic-constructor-result-search (n term)
   (declare (xargs :measure (nfix n)))
-  (cond ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-booklogic-constructor-result-search"))
+  (cond ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-booklogic-constructor-result-search"))
         ((proof-is-call term *termination-return-last*)
          (t4-booklogic-constructor-result-search (1- n) (car (last term))))
         ((not (proof-compound term)) nil)
@@ -275,7 +275,7 @@
 (defund t4-booklogic-lookup-tree-from-sorted (n entries count)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "t4-booklogic-lookup-tree-from-sorted"))
+   ((zp n) '(:failure "fuel" "t4-booklogic-lookup-tree-from-sorted"))
    ((zp count) (cons nil entries))
    (t
     (let ((left-count (floor count 2)))
@@ -530,15 +530,11 @@
              (book (t4-booklogic-booklogic-with-total-remaining
                     (t4-booklogic-booklogic-with-remaining book remaining) total)))
         (cons (and (or (< remaining 0) (and (not (eq total :none)) (< total 0)))
-                   '(:failure "SearchMiss" ""))
+                   '(:failure "search-miss" ""))
               book)))))
 
-(defun t4-booklogic-booklogic-step-limit (book)
-  (let ((result (t4-booklogic-step-limit-result book)))
-    (or (car result) (cdr result))))
-
 (defund t4-booklogic-search-miss-p (value)
-  (and (failure-p value) (member-equal (cadr value) '("SearchMiss" "value"))))
+  (and (failure-p value) (member-equal (cadr value) '("search-miss" "value"))))
 
 (defund t4-booklogic-step-at (step index)
   (proof-with-checked-results ((term (proof-step-first step)))
@@ -609,7 +605,7 @@
       (if (equal (len values) 2)
           (proof-proof-compute proof term
                                (proof-constant-cons-value (car values) (cadr values)))
-        '(:failure "SearchMiss" "")))
+        '(:failure "search-miss" "")))
      ((member-equal head (list (proof-cl "CHARACTERP") (proof-cl "SYMBOLP")
                                (proof-cl "SYMBOL-NAME")
                                (proof-sym "SYMBOL-PACKAGE-NAME" "ACL2")))
@@ -694,11 +690,6 @@
         ((first (t4-booklogic-adapt-argument book term (car args) index))
          (rest (t4-booklogic-adapt-arguments book term (cdr args) (1+ index))))
       (if first (cons first rest) rest))))
-
-(defun t4-booklogic-booklogic-adapt-arguments (book term)
-  (proof-with-checked-results
-      ((pairs (t4-booklogic-adapt-arguments book term (cdr term) 1)))
-    (cons pairs book)))
 
 (defund t4-booklogic-step-map (steps map)
   (if (endp steps)
@@ -842,7 +833,7 @@
 (defund t4-booklogic-open-conjunct (n book step path)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-booklogic-open-conjunct"))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-booklogic-open-conjunct"))
    ((endp path) step)
    (t (proof-with-checked-results
           ((conjuncts (t4-booklogic-proof proof-proof-conjunct step))
@@ -866,7 +857,7 @@
     (t4-booklogic-proof proof-proof-cut positive denied)))
 
 (defund t4-booklogic-fuel (name book evidence)
-  (list (list :failure "Fuel" name) book evidence))
+  (list (list :failure "fuel" name) book evidence))
 
 ; The simplifier uses the current BookLogic to evaluate constant terms.
 (mutual-recursion
@@ -1320,21 +1311,6 @@
                     (1- n) book term (cdr term) 1 evidence :adapt-equation))))))))))
  )
 
-(defun t4-booklogic-booklogic-known (book term evidence)
-  (t4-booklogic-return-result (t4-booklogic-known 1000000 book term evidence)))
-
-(defun t4-booklogic-booklogic-count-comparison (book term evidence)
-  (t4-booklogic-return-result (t4-booklogic-count-comparison 1000000 book term evidence)))
-
-(defun t4-booklogic-booklogic-discharge-known (book step evidence)
-  (t4-booklogic-return-result (t4-booklogic-discharge-known 1000000 book step evidence nil)))
-
-(defun t4-booklogic-booklogic-fact-proof (book term evidence)
-  (t4-booklogic-return-result (t4-booklogic-fact-proof 1000000 book term evidence)))
-
-(defun t4-booklogic-booklogic-equation (book term evidence)
-  (t4-booklogic-return-result (t4-booklogic-equation 1000000 book term evidence)))
-
 (defund t4-booklogic-fresh-evidence (book tests extra)
   (t4-booklogic-library t4-structural-evidence-init tests extra))
 
@@ -1346,7 +1322,7 @@
       (:reapply
        (t4-evaluation-evaluation-rules-reapply rules library (car args) (cadr args)
                                                (caddr args) (cadddr args) replies))
-      (otherwise '(:failure "SearchMiss" "")))))
+      (otherwise '(:failure "search-miss" "")))))
 
 (defund t4-booklogic-evaluation-reply (book request)
   (let* ((library (t4-evaluation-request-library request))
@@ -1357,7 +1333,7 @@
       (:known (t4-booklogic-known 1000000 book (car args) evidence))
       (:find (t4-booklogic-find book evidence (car args)))
       (:prove (t4-booklogic-prove 1000000 book (car args) (cadr args) (caddr args) nil))
-      (otherwise (list '(:failure "SearchMiss" "") book nil)))))
+      (otherwise (list '(:failure "search-miss" "") book nil)))))
 
 (defund t4-booklogic-evaluation-reply-value (operation result)
   (let ((value (car result))
@@ -1545,9 +1521,6 @@
                   (if evaluated (t4-booklogic-return evaluated)
                     (t4-booklogic-local-special book term evidence opened)))))))))))
 
-(defun t4-booklogic-booklogic-local-equation (book term evidence opened)
-  (t4-booklogic-return-result (t4-booklogic-local-equation book term evidence opened)))
-
 (defund t4-booklogic-limit-context (book evidence)
   (let ((limit (t4-booklogic-step-limit-result book)))
     (list (car limit) (cdr limit) evidence)))
@@ -1703,10 +1676,6 @@
                                            (1+ index) first))))))
  )
 
-(defun t4-booklogic-booklogic-normalize (book term evidence opened force-open)
-  (t4-booklogic-return-result
-   (t4-booklogic-normalize 1000000 book term evidence opened force-open)))
-
 (defund t4-booklogic-arithmetic-types (n book vars evidence types)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
@@ -1728,7 +1697,7 @@
 (defund t4-booklogic-arithmetic-validate (n book terms types)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-booklogic-arithmetic-validate")
+      '(:failure "fuel" "t4-booklogic-arithmetic-validate")
     (if (endp terms)
         nil
       (let ((integer (t4-booklogic-library t4-ordinals-ordinals-type-of (car terms) types)))
@@ -1758,9 +1727,6 @@
                                            (car sides) (cadr sides) types)))))
             (t4-booklogic-return
              (if (t4-booklogic-search-miss-p value) nil value))))))))
-
-(defun t4-booklogic-booklogic-arithmetic-equation (book formula evidence)
-  (t4-booklogic-return-result (t4-booklogic-arithmetic-equation book formula evidence)))
 
 (defund t4-booklogic-premise-add (book premise)
   (proof-with-checked-results ((literal (proof-step-first premise)))
@@ -1815,10 +1781,6 @@
                            (1- n) book tests (append (cdr pending) parts)
                            (if (assoc-equal value literals) known (append known (list premise)))
                            (cons literal visited))))))))))))))))))
-
-(defun t4-booklogic-booklogic-normalize-premise (book step tests known)
-  (t4-booklogic-return-result
-   (t4-booklogic-normalize-premise 1000000 book tests (list step) known nil)))
 
 (defund t4-booklogic-solve-premises (n book tests earlier known)
   (declare (xargs :measure (nfix n)))
@@ -1886,7 +1848,7 @@
            (t4-booklogic-bind proved (t4-booklogic-solve-fact book formula evidence)
              (cond
               (proved (t4-booklogic-return proved))
-              ((>= depth 7) (t4-booklogic-return '(:failure "SearchMiss" "")))
+              ((>= depth 7) (t4-booklogic-return '(:failure "search-miss" "")))
               ((proof-is-call formula *library-implies*)
                (t4-booklogic-check ((parts (proof-list-of-length (cdr formula) 2)))
                  (let ((antecedent (car parts)))
@@ -1977,7 +1939,7 @@
          (t4-booklogic-fuel "t4-booklogic-solve-branches" book evidence)
        (t4-booklogic-check ((test (t4-booklogic-booklogic-branch-test book goal)))
          (if (or (not test) (t4-booklogic-solve-test-seen-p test tests))
-             (t4-booklogic-return '(:failure "SearchMiss" ""))
+             (t4-booklogic-return '(:failure "search-miss" ""))
            (t4-booklogic-bind yes
                (t4-booklogic-solve (1- n) book goal (append tests (list (list test t)))
                                    extra (1+ depth))
@@ -2031,12 +1993,6 @@
   (let ((result (t4-booklogic-solve 1000000 book formula tests extra depth)))
     (cons (car result) (cadr result))))
 
-(defun t4-booklogic-booklogic-solve (book formula tests extra depth)
-  (t4-booklogic-return-pair (t4-booklogic-solve 1000000 book formula tests extra depth)))
-
-(defun t4-booklogic-booklogic-congruence (book formula tests extra depth)
-  (t4-booklogic-return-pair (t4-booklogic-congruence 1000000 book formula tests extra depth)))
-
 (defund t4-booklogic-binding-table (bindings table)
   (if (endp bindings)
       table
@@ -2046,7 +2002,7 @@
 (defund t4-booklogic-induction-hypotheses (n book formula obj selectors countdown bindings)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-booklogic-induction-hypotheses")
+      '(:failure "fuel" "t4-booklogic-induction-hypotheses")
     (if (endp selectors)
         (list nil nil)
       (let* ((selector (car selectors))
@@ -2086,10 +2042,6 @@
             (t4-booklogic-return
              (t4-booklogic-proof proof-proof-induct ordinal cases formula
                                    measure (cadr hypotheses)))))))))
-
-(defun t4-booklogic-booklogic-induction (book formula obj selectors countdown bindings)
-  (t4-booklogic-return-pair (t4-booklogic-induction book formula obj selectors
-                                                 countdown bindings)))
 
 (defund t4-booklogic-variable-arguments-p (args)
   (or (endp args)
@@ -2138,7 +2090,7 @@
       nil
     (let ((definition (assoc-equal name (t4-booklogic-definitions book))))
       (if (not definition)
-          '(:failure "MissingProofInput" "")
+          '(:failure "missing-proof-input" "")
         (proof-with-checked-results
             ((fields (proof-list-of-length (cdr definition) 2))
              (calls (termination-recursive-calls *termination-all* (list definition))))
@@ -2149,7 +2101,7 @@
    (declare (xargs :measure (acl2-count formula)))
    (cond ((not (proof-compound formula)) nil)
          ((proof-is-call formula *proof-quote*) nil)
-         ((endp formula) '(:failure "SearchMiss" ""))
+         ((endp formula) '(:failure "search-miss" ""))
          (t (proof-with-checked-results
                 ((here (t4-booklogic-synchronized-head book (car formula) (cdr formula)))
                  (rest (t4-booklogic-synchronized-arguments book (cdr formula))))
@@ -2204,7 +2156,7 @@
 (defund t4-booklogic-mutual-select (n book formula goals proof-step)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-booklogic-mutual-select")
+      '(:failure "fuel" "t4-booklogic-mutual-select")
     (if (endp (cdr goals))
         proof-step
       (proof-with-checked-results
@@ -2228,13 +2180,10 @@
               (t4-booklogic-induction book joint obj (list *library-car* *library-cdr*) nil :none)
             (t4-booklogic-return (t4-booklogic-mutual-select 1000000 book formula goals step))))))))
 
-(defun t4-booklogic-booklogic-mutual-result (book formula)
-  (t4-booklogic-return-pair (t4-booklogic-mutual-result book formula)))
-
 (defund t4-booklogic-boolean-true (n book step)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-booklogic-boolean-true")
+      '(:failure "fuel" "t4-booklogic-boolean-true")
     (proof-with-checked-results ((formula (proof-step-first step)))
       (cond
        ((proof-is-call formula *proof-equal*)
@@ -2247,17 +2196,13 @@
        ((proof-is-call formula *proof-if*)
         (proof-with-checked-results ((otherwise-branch (proof-term-at formula 3)))
           (if (not (equal otherwise-branch *proof-false*))
-              '(:failure "SearchMiss" "")
+              '(:failure "search-miss" "")
             (proof-with-checked-results
                 ((parts (t4-booklogic-proof proof-proof-conjunct step))
                  (selected (t4-booklogic-proof proof-proof-select formula (car parts)))
                  (tail (t4-booklogic-boolean-true (1- n) book (cadr parts))))
               (t4-booklogic-proof proof-proof-chain selected (list tail))))))
-       (t '(:failure "SearchMiss" ""))))))
-
-(defun t4-booklogic-booklogic-boolean-true (book step)
-  (proof-with-checked-results ((value (t4-booklogic-boolean-true 1000000 book step)))
-    (cons value book)))
+       (t '(:failure "search-miss" ""))))))
 
 (defund t4-booklogic-constructor-fields (term)
   (declare (xargs :measure (acl2-count term)))
@@ -2311,7 +2256,7 @@
 (defund t4-booklogic-constructor-from-right (n book fields assumed step index)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-booklogic-constructor-from-right")
+      '(:failure "fuel" "t4-booklogic-constructor-from-right")
     (if (endp fields)
         step
       (proof-with-checked-results
@@ -2392,9 +2337,6 @@
                           (t4-booklogic-constructor-prove
                            book guard left right fields projections obj constructed))))))))))))))
 
-(defun t4-booklogic-booklogic-constructor-equality (book formula)
-  (t4-booklogic-return-pair (t4-booklogic-constructor-equality book formula)))
-
 (defund t4-booklogic-reconstruct-branches (book guard call obj shape source product body)
   (let ((evidence nil))
     (t4-booklogic-check
@@ -2472,9 +2414,6 @@
                         (t4-booklogic-reconstruct-definitions book guard call obj)
                       (t4-booklogic-return nil))))))))))))
 
-(defun t4-booklogic-booklogic-reconstruct-pair (book formula)
-  (t4-booklogic-return-pair (t4-booklogic-reconstruct-pair book formula)))
-
 (defund t4-booklogic-nonempty-argument-result (book premise argument impossible)
   (proof-with-checked-results
       ((assumed (t4-booklogic-proof proof-proof-assume premise t))
@@ -2527,9 +2466,6 @@
                     (t4-booklogic-return
                      (t4-booklogic-nonempty-argument-result book premise argument impossible))))))))))))
 
-(defun t4-booklogic-booklogic-nonempty-argument (book formula)
-  (t4-booklogic-return-pair (t4-booklogic-nonempty-argument book formula)))
-
 (defund t4-booklogic-implies-cons (book formula)
   (let ((evidence nil))
     (t4-booklogic-check
@@ -2553,13 +2489,10 @@
                   (t4-booklogic-return
                    (t4-booklogic-library t4-ordinals-ordinals-imply premise step)))))))))))
 
-(defun t4-booklogic-booklogic-implies-cons (book formula)
-  (t4-booklogic-return-pair (t4-booklogic-implies-cons book formula)))
-
 (defun t4-booklogic-test-steps (n book tests)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-booklogic-test-steps"))
+   ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-booklogic-test-steps"))
    ((endp tests) nil)
    (t (proof-with-checked-results
           ((parts (proof-list-of-length (car tests) 2))
@@ -2574,7 +2507,7 @@
      (cond
       ((not (o< (nfix (1- n)) (nfix n)))
        (t4-booklogic-fuel "t4-booklogic-nonempty-result-visit" book limit))
-      ((<= limit 0) (t4-booklogic-return '(:failure "SearchMiss" "")))
+      ((<= limit 0) (t4-booklogic-return '(:failure "search-miss" "")))
       (t
        (let ((limit (1- limit)))
          (t4-booklogic-check ((evidence (t4-booklogic-fresh-evidence book tests nil)))
@@ -2679,9 +2612,6 @@
                         (t4-booklogic-return
                          (t4-booklogic-library t4-ordinals-ordinals-imply guard result))))))))))))))
 
-(defun t4-booklogic-booklogic-nonempty-result (book formula)
-  (t4-booklogic-return-pair (t4-booklogic-nonempty-result book formula)))
-
 (defconst *t4-booklogic-theorem-tactics*
   '(:strict-order
     :list-equivalence :equivalence-conjunction :character-results
@@ -2744,7 +2674,7 @@
       (:record-read (t4-records-record-read-with-replies lib formula replies))
       (:record-sufficiency (t4-record-laws-record-sufficiency-with-library lib formula replies))
       (:record-update-law (t4-record-laws-record-update-law-with-library lib formula replies))
-      (otherwise '(:failure "SearchMiss" "")))))
+      (otherwise '(:failure "search-miss" "")))))
 
 (defund t4-booklogic-recipe-request (recipe result)
   (cond
@@ -2825,7 +2755,7 @@
       (:match (t4-booklogic-return (t4-booklogic-match first second nil)))
       (:boolean-true (t4-booklogic-return (t4-booklogic-boolean-true 1000000 book first)))
       (:recognizer-implication (t4-booklogic-recognizer-implication book first))
-      (otherwise (t4-booklogic-return '(:failure "SearchMiss" ""))))))
+      (otherwise (t4-booklogic-return '(:failure "search-miss" ""))))))
 
 (defund t4-booklogic-paired-failure-p (recipe)
   (member-eq recipe '(:scalar-result :tree-constructor :reordered-recognizer
@@ -2903,7 +2833,7 @@
 
 (defund t4-booklogic-search-failure-p (value recursion)
   (and (failure-p value)
-       (or (member-equal (cadr value) '("SearchMiss" "InferenceMismatch" "value" "assertion"))
+       (or (member-equal (cadr value) '("search-miss" "inference-mismatch" "value" "assertion"))
            (and recursion (equal (cadr value) "recursion")))))
 
 (defund t4-booklogic-solver-trial (book formula)
@@ -3119,14 +3049,14 @@
         ((syntax (t4-evaluation-evaluation-rules-syntax-terms
                   (t4-booklogic-booklogic-evaluators book) formula)))
       (if (endp syntax)
-          (t4-booklogic-return '(:failure "SearchMiss" ""))
+          (t4-booklogic-return '(:failure "search-miss" ""))
         (let* ((book (t4-booklogic-booklogic-with-evaluate-syntax book t))
                (book (t4-booklogic-booklogic-with-chaining book t)))
           (t4-booklogic-bind enabled (t4-booklogic-enable-syntax book syntax)
             (let ((book (t4-booklogic-proof-budget book 3800)))
               (t4-booklogic-try solved (t4-booklogic-solver-trial book formula)
                 (list (if (t4-booklogic-search-failure-p solved t)
-                          '(:failure "SearchMiss" "")
+                          '(:failure "search-miss" "")
                         solved)
                       (t4-booklogic-booklogic-with-chaining
                        (t4-booklogic-booklogic-with-evaluate-syntax book nil) nil)
@@ -3169,5 +3099,3 @@
   (let ((result (t4-booklogic-theorem book formula enabled)))
     (cons (car result) (cadr result))))
 
-(defun t4-booklogic-booklogic-theorem (book formula enabled)
-  (t4-booklogic-return-pair (t4-booklogic-theorem book formula enabled)))

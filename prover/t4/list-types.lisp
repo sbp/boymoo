@@ -13,9 +13,6 @@
 (defun t4-list-types-request-operation (request)
   (cadr request))
 
-(defun t4-list-types-request-library (request)
-  (caddr request))
-
 (defun t4-list-types-request-arguments (request)
   (cadddr request))
 
@@ -104,7 +101,7 @@
             (if (failure-p ,name) (cons ,name context) ,next)))))))
 
 (defun t4-list-types-search-miss-p (value)
-  (and (failure-p value) (member-equal (cadr value) '("SearchMiss" "value"))))
+  (and (failure-p value) (member-equal (cadr value) '("search-miss" "value"))))
 
 (defund t4-list-types-lookup (context operation term)
   (t4-list-types-ask context operation (list term (t4-list-types-evidence context))))
@@ -138,7 +135,7 @@
  (defun t4-list-types-type-value (n context predicate value mode active projection)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t4-list-types-type-value") context)
+       (cons '(:failure "fuel" "t4-list-types-type-value") context)
      (let ((expected (list predicate value)))
        (t4-list-types-let
         ((known (t4-list-types-lookup context :known expected) :result)
@@ -170,7 +167,7 @@
                                 (cons (car result) (t4-list-types-with-library context (cdr result)))))
                           (t4-list-types-lookup context :equation expected)) :result))
              (if (not equation)
-                 (cons '(:failure "SearchMiss" "")
+                 (cons '(:failure "search-miss" "")
                        context)
                (t4-list-types-let
                 ((body (proof-rewritten-term equation))
@@ -192,7 +189,7 @@
    (declare (xargs :measure (nfix n)))
    (cond
     ((not (o< (nfix (1- n)) (nfix n)))
-     (cons '(:failure "Fuel" "t4-list-types-type-of-value-prove") context))
+     (cons '(:failure "fuel" "t4-list-types-type-of-value-prove") context))
     ((and (proof-compound term) (equal (len term) 2))
      (t4-list-types-nested (1- n) (car term) (cadr term) context mode active projection))
     (t
@@ -204,7 +201,7 @@
  (defun t4-list-types-nested (n operator term context mode active projection)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t4-list-types-nested") context)
+       (cons '(:failure "fuel" "t4-list-types-nested") context)
      (case mode
        (:transform
         (t4-list-types-typed-list-transform-branch-leaf-typing (1- n) operator term context active))
@@ -218,7 +215,7 @@
  (defun t4-list-types-typed-list-transform-branch-leaf-typing (n operator term context active)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t4-list-types-typed-list-transform-branch-leaf-typing") context)
+       (cons '(:failure "fuel" "t4-list-types-typed-list-transform-branch-leaf-typing") context)
      (if (proof-is-call term *termination-return-last*)
          (t4-list-types-let
           ((reduced (proof-proof-unfold (t4-list-types-proof context) term))
@@ -228,13 +225,13 @@
           (t4-list-types-reverse-argument context step reduced))
        (let ((goal (list operator term)))
          (if (member-equal goal active)
-             (cons '(:failure "SearchMiss" "") context)
+             (cons '(:failure "search-miss" "") context)
            (t4-list-types-type-value (1- n) context operator term :transform (cons goal active) nil))))))
 
  (defun t4-list-types-projected-list-type-leaf-typing (n operator term context projection)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t4-list-types-projected-list-type-leaf-typing") context)
+       (cons '(:failure "fuel" "t4-list-types-projected-list-type-leaf-typing") context)
      (t4-list-types-let
       ((index-term (and (proof-is-call term *t4-results-mv-nth*) (proof-term-at term 1))))
       (if (not (proof-is-call index-term *proof-quote*))
@@ -299,12 +296,12 @@
           :result)
     (literal (proof-step-first step))
     (target (proof-subst template (list (cons *proof-result* value)))))
-   (cons (if (equal literal target) step '(:failure "InferenceMismatch" "")) context)))
+   (cons (if (equal literal target) step '(:failure "inference-mismatch" "")) context)))
 
 (defun t4-list-types-by-value (n context value template tests mode predicate data)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "Fuel" "t4-list-types-by-value") context))
+   ((not (o< (nfix (1- n)) (nfix n))) (cons '(:failure "fuel" "t4-list-types-by-value") context))
    ((proof-is-call value *proof-if*)
     (t4-list-types-let
      ((branches (proof-list-of-length (cdr value) 3))
@@ -366,7 +363,7 @@
          (supports (if (car fields) (list (car fields) tail-proof) (list tail-proof)))
          (tail-result (proof-step-first tail-proof)))
         (if (not (equal tail-result (list predicate deeper)))
-            (cons '(:failure "InferenceMismatch" "") context)
+            (cons '(:failure "inference-mismatch" "") context)
           (t4-list-types-let
            ((yes (t4-list-types-typed-list-transform-branch cons-proof supports context root
                                                             predicate template) :result)
@@ -485,7 +482,7 @@
            (cons nil context)
          (let ((definition (assoc-equal name (t4-list-types-definitions context))))
            (if (not definition)
-               (cons '(:failure "MissingProofInput" "") context)
+               (cons '(:failure "missing-proof-input" "") context)
              (t4-list-types-let
               ((parts (proof-list-of-length (cdr definition) 2))
                (formals (car parts))
@@ -522,11 +519,6 @@
 (defun t4-list-types-cons-recognizer-with-library (lib predicate pair)
   (t4-syntax-lists-constructed-view lib (list predicate pair) pair))
 
-(defun t4-list-types-cons-recognizer (lib predicate pair)
-  (proof-with-checked-results
-   ((result (t4-list-types-cons-recognizer-with-library lib predicate pair)))
-   (car result)))
-
 (defun t4-list-types-in-first (lib step equality)
   (let ((proof (library-library-proof lib)))
     (proof-with-checked-results
@@ -560,7 +552,7 @@
 (defun t4-list-types-first-piece (n lib step goal)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-list-types-first-piece")
+      '(:failure "fuel" "t4-list-types-first-piece")
     (proof-with-checked-results
      ((literal (proof-step-first step))
       (head (and (proof-compound literal) (proof-term-at literal 0)))
@@ -787,7 +779,7 @@
          (pair (proof-rewritten-term joined)))
         (if (not (equal pair (list *proof-cons* (list *library-car* obj)
                                    (list *t4-list-types-append* tail suffix))))
-            (cons '(:failure "InferenceMismatch" "") context)
+            (cons '(:failure "inference-mismatch" "") context)
           (t4-list-types-let
            ((proof (t4-list-types-proof context))
             (shown (proof-proof-reflexive proof call))
@@ -861,7 +853,7 @@
      (let ((context (t4-list-types-with-evidence context (caddr arguments))))
        (t4-list-types-type-value 1000000 context (car arguments) (cadr arguments)
                                  (if (eq recipe :constructor-type) :constructor :external) nil nil)))
-    (otherwise (cons '(:failure "SearchMiss" "") context))))
+    (otherwise (cons '(:failure "search-miss" "") context))))
 
 (defun t4-list-types-finish (recipe result named-requests keep-library)
   (let* ((value (car result))
@@ -877,32 +869,7 @@
            (list value lib (t4-list-types-evidence context)))
           (t (cons value lib)))))
 
-(defun t4-list-types-keyed-query (recipe lib arguments replies)
-  (t4-list-types-finish recipe (t4-list-types-query-run recipe (list lib nil :keyed replies) arguments)
-                         t nil))
-
-(defun t4-list-types-query (recipe lib arguments replies)
-  (t4-list-types-finish recipe (t4-list-types-query-run recipe (list lib nil :ordered replies) arguments)
-                         nil nil))
-
 (defun t4-list-types-query-with-library (recipe lib arguments replies)
   (t4-list-types-finish recipe (t4-list-types-query-run recipe (list lib nil :ordered replies) arguments)
                          nil t))
 
-(defun t4-list-types-type-of-value (lib predicate value evidence replies)
-  (t4-list-types-keyed-query :type-of-value lib (list predicate value evidence) replies))
-
-(defun t4-list-types-constructor-type (lib predicate value evidence replies)
-  (t4-list-types-keyed-query :constructor-type lib (list predicate value evidence) replies))
-
-(defun t4-list-types-typed-list-transform (lib formula recursive replies)
-  (t4-list-types-keyed-query :typed-list-transform lib (list formula recursive) replies))
-
-(defun t4-list-types-projected-list-type (lib formula recursive replies)
-  (t4-list-types-keyed-query :projected-list-type lib (list formula recursive) replies))
-
-(defun t4-list-types-list-selector-type (lib formula recursive replies)
-  (t4-list-types-keyed-query :list-selector-type lib (list formula recursive) replies))
-
-(defun t4-list-types-append-type (lib formula recursive replies)
-  (t4-list-types-keyed-query :append-type lib (list formula recursive) replies))

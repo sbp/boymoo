@@ -186,7 +186,7 @@
 (defun quotient-proofs-quotient-lemma-by-value (n lib value template tests induction
                                                  iy pos-y bound-x types)
   (cond
-   ((zp n) '(:failure "Fuel" "quotient-proofs-quotient-lemma-by-value"))
+   ((zp n) '(:failure "fuel" "quotient-proofs-quotient-lemma-by-value"))
    ((proof-is-call value *proof-if*)
     (let ((test (cadr value)))
       (quotient-proofs-let*
@@ -661,11 +661,6 @@
                       (proof-neg (library-lt wrapped base)) definitions derived)))
       (cons (cons proved rulers) lib)))))
 
-(defun quotient-proofs-dividend-rulers (lib value base rulers)
-  (quotient-proofs-let*
-   (((proved lib) (quotient-proofs-dividend-rulers-with-rulers lib value base rulers)))
-   (cons (car proved) lib)))
-
 (defun quotient-proofs-quotient-call (lib term value)
   (cond
    ((not (proof-compound term)) nil)
@@ -778,7 +773,7 @@
 
 (defun quotient-proofs-radix-calls-next-aux (n lib cursor)
   (if (zp n)
-      '(:failure "Fuel" "quotient-proofs-radix-calls-next-aux")
+      '(:failure "fuel" "quotient-proofs-radix-calls-next-aux")
     (let ((agenda (car cursor))
           (invocations (cadr cursor))
           (actuals (caddr cursor))
@@ -844,20 +839,6 @@
 
 (defun quotient-proofs-radix-calls-next (lib cursor)
   (quotient-proofs-radix-calls-next-aux 1000000 lib cursor))
-
-(defun quotient-proofs-radix-calls-collect (n lib cursor)
-  (if (zp n)
-      '(:failure "Fuel" "quotient-proofs-radix-calls-collect")
-    (quotient-proofs-let*
-     ((result (quotient-proofs-radix-calls-next lib cursor)))
-     (if result
-         (quotient-proofs-let*
-          ((rest (quotient-proofs-radix-calls-collect (1- n) lib (cdr result))))
-          (cons (car result) rest))
-       nil))))
-
-(defun quotient-proofs-radix-calls (lib formula)
-  (quotient-proofs-radix-calls-collect 1000000 lib (quotient-proofs-radix-calls-start formula)))
 
 (defun quotient-proofs-prove-radix-induction-base (lib candidate)
   (quotient-proofs-let*

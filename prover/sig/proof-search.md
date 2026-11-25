@@ -51,7 +51,6 @@ are `nil 2`.
 | `proof-search-key` | Term | The pair `(head first-argument-head)`. The second field is `nil` except for the operators `EQUAL`, `NOT`, and `IMPLIES`. may return a failure for a malformed application. |
 | `proof-search-conclusion` | Term | The term after opening leading lambdas and implications, or a failure. |
 | `proof-search-can-shorten` | Term and size limit | Boolean saying whether the term or an `IF` branch is smaller than the limit. May return a failure. |
-| `proof-search-conditional-test` | Term | The first conditional test in the traversal of the term, or `nil`. may return a failure for a malformed conditional. |
 | `proof-search-fact-index-init` | Library | A FactIndex of the Library's facts, or a failure. |
 | `proof-search-fact-index-add` | FactIndex, fact name | The FactIndex with that fact indexed, or a failure. The Library already contains the fact at that name. |
 | `proof-search-fact-index-candidates` | FactIndex, goal term | The candidate Rules in search order, or a failure. |
@@ -65,7 +64,6 @@ are `nil 2`.
 | `proof-search-search-premise` | Search, term, evidence, known-evidence table | `(cons value search)`, with a premise Step or a failure as the value. |
 | `proof-search-induction-plans` | FactIndex, formula | Alist from variables to alists mapping substitution lists to selector terms, all in insertion order, or a failure. Each substitution list contains two-element `(variable replacement)` pairs. |
 | `proof-search-logical-selector-goal` | Formula, variable | Boolean, or a failure from inspecting the conclusion. |
-| `proof-search-prove-selector-induction` | Library, FactIndex, formula, induction plans, logical Boolean | `(cons value lib)`, with a proof Step or a failure as the value. |
 | `proof-search-prove-theorem` | Library, FactIndex, formula | `(cons value lib)`, with a proof Step or a failure as the value. |
 
 ## Search operations
@@ -77,10 +75,7 @@ table as `proof-search-search-premise`.
 |---|---|---|
 | `proof-search-search-with-lib` | Search, new Library | Search with the new Library. If the index had the Search's Library, the index also uses the new Library. |
 | `proof-search-search-evidence` | Search, original evidence | The expanded evidence Steps in order, or a failure. |
-| `proof-search-search-prove-premise` | Search, term, evidence, known-evidence table | The premise Step or failure paired with the Search. |
 | `proof-search-search-computed-premise` | Search, term, known-evidence table | The optional computed Step or failure paired with the Search. |
 | `proof-search-search-context-premise` | Search, term, evidence, known-evidence table | A Step or a failure. |
-| `proof-search-search-search` | Search, formula, evidence, splits | The Step or failure paired with the Search. The entry itself spends no budget. Recursive calls to `proof-search-search-prove` spend budget. |
-| `proof-search-search-logical-formula` | Search, formula, evidence, known-evidence table | The optional logical proof Step or failure paired with the Search. |
 | `proof-search-search-fixed-arguments` | Search, left and right calls, argument position, before and after arguments, evidence, known-evidence table | The optional invariance Step or failure paired with the Search. |
 | `proof-search-search-invariance` | Search, call, fixed call, fixed argument, position, condition | The optional invariance Step, failure or condition request paired with the Search. |

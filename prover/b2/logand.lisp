@@ -158,7 +158,7 @@
        doubled-weak bound quotient quotient-type)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-logand-logand-bounds-branches")
+      '(:failure "fuel" "b2-logand-logand-bounds-branches")
     (proof-with-checked-results ((result (b2-removal-tests library conditions replies nil)))
       (if (b2-removal-tests-request-p result)
           (let ((current (caddr result)))
@@ -262,7 +262,7 @@
   (let ((proof (library-library-proof library)))
     (cond
      ((not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "b2-logand-logand-bounds-by-value"))
+      '(:failure "fuel" "b2-logand-logand-bounds-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((parts (proof-list-of-length (cdr value) 3))

@@ -37,8 +37,8 @@ are the corresponding prover symbols and the set of closed definitions.
 
 | ACL2 call | Result |
 |---|---|
-| `*h3-rewrite-unproved*` | `(:failure "Unproved" "")` when a tactic runs out of proof options. |
-| `(h3-rewrite-unproved-p value)` | Whether `value` is an `Unproved` failure. |
+| `*h3-rewrite-unproved*` | `(:failure "unproved" "")` when a tactic runs out of proof options. |
+| `(h3-rewrite-unproved-p value)` | Whether `value` is an `unproved` failure. |
 | `(h3-rewrite-arguments term)` | The arguments of an unquoted compound term, or `nil`. Does not produce a failure. |
 | `(h3-rewrite-match pattern term bindings)` | `(cons matched-p bindings)`, retaining bindings made before a failed match, or a failure. |
 | `(h3-rewrite-implication lib antecedent result)` | The implication Step with `antecedent` discharged in the positive case, or a failure. `result` is a Step for its conclusion. |
@@ -53,12 +53,10 @@ are the corresponding prover symbols and the set of closed definitions.
 | `(h3-rewrite-rational-value value)` | An ACL2 rational for a rational datum, `nil` for a different kind of datum, or a failure. |
 | `(h3-rewrite-primitive lib call)` | A primitive computation Step, `nil` when no computation applies, or a failure. |
 | `(h3-rewrite-rules-init lib names transparent)` | Rules indexed from fact names in order, using the given transparent definitions, or a failure. Both lists default to `nil`. |
-| `(h3-rewrite-rules-apply rules index term search evidence active)` | `(cons value search)` with the first applicable Step, `nil`, or a failure as `value`. |
 | `(h3-rewrite-search-init lib definitions calls rules budget deep)` | A Search. The defaults after `lib` are `nil nil nil 150 nil`. Does not produce a failure. |
 | `(h3-rewrite-search-add-evidence search evidence proof)` | The evidence alist with the Step and its derived evidence entered, or a failure. |
 | `(h3-rewrite-search-context search proofs)` | An evidence alist made from the ordered list of original Steps, or a failure. |
 | `(h3-rewrite-search-known search term evidence)` | The known Step, `nil`, or a failure. |
-| `(h3-rewrite-search-test-evidence search term evidence active)` | `(cons value search)` with the Step for a test or its negation, `nil`, or a failure as `value`. |
 | `(h3-rewrite-search-should-unfold search term)` | Whether the call can be opened, or a failure. |
 | `(h3-rewrite-search-evaluate search term)` | A primitive computation Step, `nil`, or a failure. |
 | `(h3-rewrite-search-visit-term search)` | `(cons value search)`; the value is `nil` or a failure. |
@@ -66,7 +64,6 @@ are the corresponding prover symbols and the set of closed definitions.
 | `(h3-rewrite-search-arguments-first search term)` | Whether to rewrite the call's arguments first. Does not produce a failure. |
 | `(h3-rewrite-search-reduce search term evidence tests active)` | `(list value search tests)` with a normalization Step, `nil`, or a failure as `value`. |
 | `(h3-rewrite-search-derive search term evidence active tests)` | `(list value search tests)` with a Step or failure as `value`. |
-| `(h3-rewrite-search-saturate search evidence tests)` | `(list value search evidence tests)`, with `nil` or a failure as `value` and the updated evidence and tests. |
 | `(h3-rewrite-search-prove search term hypotheses)` | `(cons value search)` with a Step or failure as `value`. `hypotheses` is a list of original Steps. |
 
 For a search with book options, call

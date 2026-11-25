@@ -11,15 +11,9 @@ An absent optional Step is `nil`.
 
 | Call | Value |
 |---|---|
-| `(h3-book-exponent-type-and-bound lib term context)` | `(integer bound)`, the integrality Step and any available nonnegative bound for `term`. May return `Unproved` when the integer proof is missing, or a failure from a dependency. |
-| `(h3-book-exponent-nonzero-base lib term context)` | `(numeric nonzero)`, Steps proving that `term` is numeric and nonzero. May return a failure from proof construction. |
+| `(h3-book-exponent-type-and-bound lib term context)` | `(integer bound)`, the integrality Step and any available nonnegative bound for `term`. May return `unproved` when the integer proof is missing, or a failure from a dependency. |
 | `(h3-book-exponent-exponent-theorem lib name formula)` | A Step for the given theorem, or `nil` when no recipe proves it. `name` is the theorem name string and `formula` is its term. May return a failure from inspecting the formula or constructing the proof. |
 | `(h3-book-exponent-floor-power-shift lib statement exponent value)` | Step for the floor-shift equality `statement`, using the integer Step `exponent` and the floor argument term `value`. May return a failure from term access or proof construction. |
-| `(h3-book-exponent-power-factor-value lib factor context)` | `(integer equality)`, the exponent type Step and the equality Step for `factor` expressed as a power. May return a failure from term access or proof construction. |
-| `(h3-book-exponent-combine-power-factors lib first second target context)` | Step equating the product of the factor terms `first` and `second` to the power term `target`. May return a failure from term access or proof construction. |
-| `(h3-book-exponent-power-product-equality lib goal context)` | Step for the product equality term `goal`, or `nil` when neither orientation gives a proof. May return a failure from term access or proof construction. |
-| `(h3-book-exponent-power-shift-two-factors lib goal context)` | Step for the two-factor floor-shift equality term `goal`. May return `StopIteration` if a required factor is missing, or a failure from term access or proof construction. |
-| `(h3-book-exponent-exponent-type-theorem lib goal term context)` | Step for the type or bound term `goal` about the power term `term`. May return a failure from term access or proof construction. |
 
 The following calls return their value directly, or a failure in its place.
 

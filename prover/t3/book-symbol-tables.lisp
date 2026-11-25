@@ -50,9 +50,9 @@
   (proof-with-checked-results
    ((data (if (proof-is-call value *proof-quote*)
               (proof-term-at value 1)
-            '(:failure "Unsupported" ""))))
+            '(:failure "unsupported" ""))))
    (if (not (proof-compound data))
-       '(:failure "Unsupported" "")
+       '(:failure "unsupported" "")
      (let* ((proof (library-library-proof lib))
             (cell (list *proof-consp* *library-x*))
             (typed (list *t3-book-symbol-tables-symbolp* (list *library-car* *library-x*)))
@@ -143,7 +143,7 @@
     (membership (proof-list-of-length membership 3)))
    (let ((table-form (caddr membership)))
      (if (not (proof-is-call table-form *t3-book-symbol-tables-strip*))
-         '(:failure "Unsupported" "")
+         '(:failure "unsupported" "")
        (proof-with-checked-results
         ((table (proof-term-at table-form 1))
          (literal-table (t3-book-symbol-tables-literal-table lib table)))

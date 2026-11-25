@@ -113,7 +113,7 @@
 
 (defun t4-constructors-scalar-result-open (n lib goal openings)
   (declare (xargs :measure (nfix n)))
-  (cond ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-constructors-scalar-result-open"))
+  (cond ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-constructors-scalar-result-open"))
         ((not (proof-compound goal)) (cons goal openings))
         (t
          (proof-with-checked-results ((head (t4-constructors-at goal 0)))
@@ -176,8 +176,8 @@
      (n value tests opened predicate lib budget replies)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-constructors-scalar-result-visit"))
-    ((zp budget) '(:failure "SearchMiss" ""))
+    ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-constructors-scalar-result-visit"))
+    ((zp budget) '(:failure "search-miss" ""))
     (t
      (let ((budget (1- budget))
            (expected (list predicate value))
@@ -222,7 +222,7 @@
      (n arguments tests opened predicate lib budget replies)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-constructors-scalar-result-visit-arguments"))
+    ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-constructors-scalar-result-visit-arguments"))
     ((endp arguments) (list (cons nil budget) lib replies))
     (t
      (t4-constructors-with-library
@@ -237,7 +237,7 @@
      (n value tests opened predicate lib budget replies)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-constructors-scalar-result-follow")
+       '(:failure "fuel" "t4-constructors-scalar-result-follow")
      (t4-constructors-with-library
          ((field (t4-constructors-scalar-result-field-p value))
           ((selected lib) (if field (t4-results-projection lib value) (cons nil lib))))
@@ -256,7 +256,7 @@
              (if (or (not (proof-compound call))
                      (not (t4-constructors-defined-p lib head))
                      (member-equal head opened))
-                 '(:failure "SearchMiss" "")
+                 '(:failure "search-miss" "")
                (let* ((index (and field (cadr value)))
                       (shape (if field
                                  (list predicate (list *t4-results-mv-nth* index *proof-result*))
@@ -273,7 +273,7 @@
      (n value tests template opened predicate index lib budget replies)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-constructors-scalar-result-by-value"))
+    ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-constructors-scalar-result-by-value"))
     ((proof-is-call value *proof-if*)
      (t4-constructors-with-library
          ((parts (proof-list-of-length (cdr value) 3))
@@ -308,7 +308,7 @@
               (expected (proof-subst template (list (cons *proof-result* value)))))
            (if (equal literal expected)
                (list inner lib replies)
-             '(:failure "InferenceMismatch" "")))))))))
+             '(:failure "inference-mismatch" "")))))))))
 
 (defun t4-constructors-scalar-result-attempt (lib formula replies)
   (t4-constructors-with-library
@@ -333,7 +333,7 @@
 (defun t4-constructors-collapse-identical-loop (n lib equation)
   (declare (xargs :measure (nfix n)))
   (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-constructors-collapse-identical-loop")
+      '(:failure "fuel" "t4-constructors-collapse-identical-loop")
     (t4-constructors-with ((body (t4-constructors-first equation 2)))
       (if (not (proof-is-call body *proof-if*))
           equation
@@ -366,7 +366,7 @@
                   (((step lib replies)
                     (t4-constructors-query :recognizer-implication (list implication) lib replies)))
                 (if (not step)
-                    '(:failure "SearchMiss" "")
+                    '(:failure "search-miss" "")
                   (t4-constructors-with-library
                       ((lib (library-library-lemma lib name implication step nil)))
                     (list nil lib replies)))))))
@@ -395,7 +395,7 @@
        (arranged (t4-syntax-lists-projections lib arranged tree))
        (body (t4-constructors-first arranged 2)))
     (if (not (equal (cdr body) (list true-list target *proof-false*)))
-        '(:failure "InferenceMismatch" "")
+        '(:failure "inference-mismatch" "")
       (t4-constructors-with-library
           ((known (library-inherited proof-proof-assume lib typed t))
            (evidence (t4-structural-evidence-init lib nil (list known)))
@@ -791,7 +791,7 @@
     (n lib predicate term evidence used replies)
   (declare (xargs :measure (nfix n)))
   (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t4-constructors-optional-recognizer-typing-replies")
+      '(:failure "fuel" "t4-constructors-optional-recognizer-typing-replies")
     (let ((result (t4-list-types-query-with-library
                    :constructor-type lib (list predicate term evidence) (reverse used))))
       (cond ((failure-p result) result)
@@ -812,7 +812,7 @@
      (n value tests opened lib predicate mandatory replies)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-constructors-optional-recognizer-check")
+       '(:failure "fuel" "t4-constructors-optional-recognizer-check")
      (let ((target (list predicate value)))
        (t4-constructors-with-library ((match (t4-constructors-optional-definition lib target)))
          (cond
@@ -835,7 +835,7 @@
              (if (not (and (proof-compound value)
                            (t4-constructors-defined-p lib head)
                            (not (member-equal head opened))))
-                 '(:failure "SearchMiss" "")
+                 '(:failure "search-miss" "")
                (let ((template (list predicate *proof-result*)))
                  (t4-constructors-with-library
                      ((equation (library-inherited proof-proof-unfold lib value))
@@ -849,7 +849,7 @@
      (n value tests opened lib predicate mandatory replies)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-constructors-optional-recognizer-by-value")
+       '(:failure "fuel" "t4-constructors-optional-recognizer-by-value")
      (let ((template (list predicate *proof-result*)))
        (if (proof-is-call value *proof-if*)
            (t4-constructors-with-library
@@ -881,7 +881,7 @@
                   (expected (proof-subst template (list (cons *proof-result* value)))))
                (if (equal literal expected)
                    (list step lib replies)
-                 '(:failure "InferenceMismatch" ""))))))))))
+                 '(:failure "inference-mismatch" ""))))))))))
 
 (defun t4-constructors-optional-recognizer-result (lib formula recursive replies)
   (if (not (and (proof-compound formula) (equal (len formula) 2) (proof-compound (cadr formula))))
@@ -914,27 +914,14 @@
          (t4-constructors-optional-recognizer-boolean lib formula replies))
         (t (t4-constructors-optional-recognizer-result lib formula recursive replies))))
 
-(defun t4-constructors-scalar-result (lib formula replies)
-  (t4-constructors-finish (t4-constructors-scalar-result-attempt lib formula replies) lib nil))
-
 (defun t4-constructors-scalar-result-with-library (lib formula replies)
   (t4-constructors-finish (t4-constructors-scalar-result-attempt lib formula replies) lib t))
-
-(defun t4-constructors-tree-constructor (lib formula replies)
-  (t4-constructors-finish (t4-constructors-tree-constructor-attempt lib formula replies) lib nil))
 
 (defun t4-constructors-tree-constructor-with-library (lib formula replies)
   (t4-constructors-finish (t4-constructors-tree-constructor-attempt lib formula replies) lib t))
 
-(defun t4-constructors-reordered-recognizer (lib formula replies)
-  (t4-constructors-finish (t4-constructors-reordered-recognizer-attempt lib formula replies) lib nil))
-
 (defun t4-constructors-reordered-recognizer-with-library (lib formula replies)
   (t4-constructors-finish (t4-constructors-reordered-recognizer-attempt lib formula replies) lib t))
-
-(defun t4-constructors-optional-recognizer (lib formula recursive replies)
-  (t4-constructors-finish
-   (t4-constructors-optional-recognizer-attempt lib formula recursive replies) lib nil))
 
 (defun t4-constructors-optional-recognizer-with-library (lib formula recursive replies)
   (t4-constructors-finish

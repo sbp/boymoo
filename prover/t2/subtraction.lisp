@@ -102,7 +102,7 @@
     (claim (proof-step-first unfixed)))
    (if (equal claim (library-le part whole))
        (cons (list int-whole unfixed) lib)
-     '(:failure "RecipeMismatch" ""))))
+     '(:failure "recipe-mismatch" ""))))
 
 (defun t2-subtraction-part-evidence (lib part hypotheses replies)
   (descent-let*

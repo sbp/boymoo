@@ -127,7 +127,7 @@
 (defun h1-recipes-changed-calls-next (n pending)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "h1-recipes-changed-calls-next"))
+   ((zp n) '(:failure "fuel" "h1-recipes-changed-calls-next"))
    ((endp pending) (cons nil nil))
    (t
     (let* ((current (car pending))
@@ -139,7 +139,7 @@
           (h1-recipes-changed-calls-next (1- n) rest)
         (let ((old (h1-tactics-call-head original))
               (new (h1-tactics-call-head target))
-              (different '(:failure "Unproved" "")))
+              (different '(:failure "unproved" "")))
           (cond
            ((or (member-equal old (list :none *proof-quote*))
                 (member-equal new (list :none *proof-quote*))
@@ -153,20 +153,6 @@
                (1- n)
                (h1-recipes-changed-calls-children
                 (cdr original) (cdr target) place 1 rest))))))))))
-
-(defun h1-recipes-changed-calls-collect (n pending reversed)
-  (declare (xargs :measure (nfix n)))
-  (if (zp n)
-      '(:failure "Fuel" "h1-recipes-changed-calls-collect")
-    (proof-with-checked-results
-        ((next (h1-recipes-changed-calls-next 1000000 pending)))
-      (if (not (car next))
-          (reverse reversed)
-        (h1-recipes-changed-calls-collect
-         (1- n) (cdr next) (cons (car next) reversed))))))
-
-(defun h1-recipes-changed-calls (original target place)
-  (h1-recipes-changed-calls-collect 1000000 (list (list place original target)) nil))
 
 (defun h1-recipes-definition-equation (p formula functions)
   (let ((proof (h1-tactics-prover-proof p)))
@@ -577,7 +563,7 @@
 (defun h1-recipes-transfer-step-next (n p step pending equations)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "h1-recipes-transfer-step-next") p)
+      (cons '(:failure "fuel" "h1-recipes-transfer-step-next") p)
     (let ((advance (h1-recipes-transfer-step-advance p step pending equations)))
       (if (eq (car advance) :continue)
           (h1-recipes-transfer-step-next
@@ -591,14 +577,6 @@
         (cons original p)
       (h1-recipes-transfer-step-next
        1000000 p step (list (list (list 1) original formula)) nil))))
-
-(defun h1-recipes-transfer-step (p formula step)
-  (h1-recipes-checked-pair (h1-recipes-transfer-step-result p formula step)))
-
-(defun h1-recipes-transfer-property (p formula earlier)
-  (proof-with-checked-results
-      ((step (proof-proof-fact (h1-tactics-prover-proof p) earlier nil)))
-    (h1-recipes-transfer-step p formula step)))
 
 (defun h1-recipes-arithmetic-answer (p request)
   (let* ((lib (h1-arithmetic-request-library request))
@@ -648,7 +626,7 @@
 (defun h1-recipes-arithmetic-run (n recipe p lib args replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h1-recipes-arithmetic-run")
+      '(:failure "fuel" "h1-recipes-arithmetic-run")
     (let ((advance (h1-recipes-arithmetic-advance recipe p lib args replies)))
       (if (eq (car advance) :continue)
           (h1-recipes-arithmetic-run (1- n) recipe (cadr advance) lib args (caddr advance))
@@ -770,7 +748,7 @@
         (let* ((result (h1-recipes-natural-result-transfer p formula (caar facts) (cdr match)))
                (step (car result))
                (p (cdr result)))
-          (if (and (failure-p step) (equal (cadr step) "Unproved"))
+          (if (and (failure-p step) (equal (cadr step) "unproved"))
               (if (equal (len (proof-proof-facts (h1-tactics-prover-proof p))) size)
                   (h1-recipes-natural-result-facts p formula application (cdr facts) size)
                 '(:failure "failure" ""))
@@ -973,7 +951,7 @@
           (proof-with-checked-results ((step (h1-recipes-recognizer-spine p formula)))
             (if step
                 (cons step p)
-              '(:failure "Unproved" "")))))))))
+              '(:failure "unproved" "")))))))))
 
 (defun h1-recipes-prove-by-shape (p formula)
   (proof-with-checked-results ((solved (h1-recipes-solve-templates p formula)))
@@ -982,47 +960,3 @@
       (proof-with-checked-results ((goal (h1-recipes-conclusion formula)))
         (h1-recipes-prove-other-shapes (cdr solved) formula goal)))))
 
-(defun h1-recipes-prove (p name formula)
-  (cond
-   ((equal name "COMMUTATIVITY-2-OF-+")
-    (h1-recipes-step-result p (h1-recipes-add-swap p)))
-   ((equal name "FOLD-CONSTS-IN-+")
-    (proof-with-checked-results
-        ((assoc-step (library-library-axiom (h1-tactics-prover-library p)
-                                            "ASSOCIATIVITY-OF-+"
-                                            (list *library-x* *library-y* *library-z*)))
-         (fact (h1-propositions-proof-symmetric (h1-tactics-prover-proof p) assoc-step))
-         (p (h1-recipes-add-rule p fact nil)))
-      (h1-recipes-checked-pair (h1-recursion-prove-automatically p formula))))
-   ((equal name "DISTRIBUTIVITY-OF-MINUS-OVER-+")
-    (h1-recipes-step-result p (h1-recipes-distribute-minus p)))
-   ((equal name "BOOLEAN-LISTP-CONS")
-    (h1-recipes-step-result
-     p (h1-recipes-definition-equation p formula (list *h1-tactics-booleanp*))))
-   ((equal name "BASIC-TAU-RULES") (h1-recipes-basic-types p formula))
-   ((equal name "COMPLEX-EQUAL")
-    (h1-recipes-step-result p (h1-recipes-complex-equality p formula)))
-   ((equal name "DEFAULT-PKG-IMPORTS") (h1-recipes-package-imports p formula))
-   ((equal name "SYMBOL-PACKAGE-NAME-OF-SYMBOL-IS-NOT-EMPTY-STRING")
-    (h1-recipes-step-result p (h1-recipes-nonempty-package p formula)))
-   ((equal name "O-P-IMPLIES-O<G") (h1-recipes-ordinals p formula))
-   ((equal name "CHARACTERP-NTH") (h1-recipes-character-at-index p formula))
-   ((member-equal name '("TRUE-LISTP-REVAPPEND-TYPE-PRESCRIPTION"
-                         "CHARACTER-LISTP-REVAPPEND"))
-    (h1-recipes-reverse-property p formula (equal name "CHARACTER-LISTP-REVAPPEND")))
-   ((member-equal name '("TRUE-LISTP-FIRST-N-AC-TYPE-PRESCRIPTION"
-                         "TRUE-LISTP-NTHCDR-TYPE-PRESCRIPTION"))
-    (h1-recipes-prove-true-list-call p formula))
-   ((equal name "PAIRLIS$-TAILREC-IS-PAIRLIS$") (h1-recipes-pairlis-tail p formula))
-   ((equal name "LAST-CDR-IS-NIL") (h1-recipes-last-cdr p formula))
-   ((equal name "KEYWORD-VALUE-LISTP-FORWARD-TO-TRUE-LISTP")
-    (h1-recipes-prove-keyword-value-list p formula))
-   ((equal name "NATP-POSITION-AC-EQ-EXEC") (h1-recipes-position-type p formula))
-   ((text-starts-with name "NATP-POSITION-")
-    (h1-recipes-transfer-property p formula (proof-sym "NATP-POSITION-AC-EQ-EXEC" "ACL2")))
-   ((member-equal name '("EXPT-TYPE-PRESCRIPTION-NON-ZERO-BASE"
-                         "RATIONALP-EXPT-TYPE-PRESCRIPTION"))
-    (h1-recipes-exponentiation p formula (equal name "EXPT-TYPE-PRESCRIPTION-NON-ZERO-BASE")))
-   ((equal name "TRUE-LISTP-SUBSTITUTE-TYPE-PRESCRIPTION") (h1-recipes-substitute-type p formula))
-   ((equal name "CHARACTER-LISTP-REMOVE-DUPLICATES") (h1-recipes-remove-duplicates-type p formula))
-   (t (h1-recipes-checked-pair (h1-recursion-prove-automatically p formula)))))

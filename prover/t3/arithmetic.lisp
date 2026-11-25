@@ -198,7 +198,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t3-arithmetic-push-minus"))
+     ((not (o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t3-arithmetic-push-minus"))
      ((proof-is-call term *proof-plus*)
       (proof-with-checked-results
           ((left (t3-arithmetic-minus-sum-left proof term))
@@ -268,7 +268,7 @@
 (defun t3-arithmetic-linear-combine (n lib step place integers)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t3-arithmetic-linear-combine")
+      '(:failure "fuel" "t3-arithmetic-linear-combine")
     (proof-with-checked-results ((next (t3-arithmetic-linear-next lib step place integers)))
       (if next
           (t3-arithmetic-linear-combine (1- n) lib (car next) (cdr next) integers)
@@ -294,7 +294,7 @@
             (proof-proof-chain proof a (list back)))
         (proof-with-checked-results ((a-text (proof-write a-normal))
                                      (b-text (proof-write b-normal)))
-          '(:failure "Unproved" ""))))))
+          '(:failure "unproved" ""))))))
 
 (defun t3-arithmetic-weak-from-difference (lib a b nonnegative-difference integers)
   (proof-with-checked-results
@@ -345,7 +345,7 @@
 (defun t3-arithmetic-linear-identity-reduced (n term opened lib integers)
   (declare (xargs :measure (nfix n)))
   (if (not (o< (nfix (1- n)) (nfix n)))
-      '(:failure "Fuel" "t3-arithmetic-linear-identity-reduced")
+      '(:failure "fuel" "t3-arithmetic-linear-identity-reduced")
     (let ((proof (library-library-proof lib)))
       (proof-with-checked-results
           ((step (or opened (proof-proof-reflexive proof term)))
@@ -371,7 +371,7 @@
         (if (equal a-normal b-normal)
             (proof-with-checked-results ((back (proof-proof-symmetric proof b)))
               (proof-proof-chain proof a (list back)))
-          '(:failure "Unsupported" ""))))))
+          '(:failure "unsupported" ""))))))
 
 (defun t3-arithmetic-term-keys (terms)
   (if (endp terms)
@@ -435,7 +435,7 @@
     (cons (append known (car inferred)) (cdr inferred))))
 
 (defun t3-arithmetic-recoverable-failure-p (result)
-  (and (failure-p result) (member-equal (cadr result) '("Unproved" "Unsupported" "value"))))
+  (and (failure-p result) (member-equal (cadr result) '("unproved" "unsupported" "value"))))
 
 (defmacro t3-arithmetic-with-evidence (evidence bindings result)
   (if (endp bindings)
@@ -453,7 +453,7 @@
  (defun t3-arithmetic-record-with-evidence (n evidence term holds step)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t3-arithmetic-record-with-evidence") evidence)
+       (cons '(:failure "fuel" "t3-arithmetic-record-with-evidence") evidence)
      (t3-arithmetic-with-evidence evidence
          ((updated (t3-logic-evidence-default evidence step)))
        (let ((result (if (proof-is-call term *proof-if*)
@@ -466,7 +466,7 @@
  (defun t3-arithmetic-conditional-with-evidence (n evidence term holds step)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t3-arithmetic-conditional-with-evidence") evidence)
+       (cons '(:failure "fuel" "t3-arithmetic-conditional-with-evidence") evidence)
      (t3-arithmetic-with-evidence evidence
          ((branches (proof-list-of-length (cdr term) 3)))
        (let* ((test (car branches))
@@ -482,7 +482,7 @@
  (defun t3-arithmetic-record-selected (n evidence term holds step test branch selected)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t3-arithmetic-record-selected") evidence)
+       (cons '(:failure "fuel" "t3-arithmetic-record-selected") evidence)
      (let* ((lib (t3-logic-evidence-lib evidence))
             (proof (library-library-proof lib)))
        (t3-arithmetic-with-evidence evidence
@@ -502,7 +502,7 @@
  (defun t3-arithmetic-record-normalized (n evidence term holds step)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t3-arithmetic-record-normalized") evidence)
+       (cons '(:failure "fuel" "t3-arithmetic-record-normalized") evidence)
      (let ((lib (t3-logic-evidence-lib evidence))
            (definitions (t3-logic-evidence-definitions evidence)))
        (t3-arithmetic-with-evidence evidence
@@ -518,7 +518,7 @@
  (defun t3-arithmetic-record-related (n evidence term holds step)
    (declare (xargs :measure (nfix n)))
    (if (not (o< (nfix (1- n)) (nfix n)))
-       (cons '(:failure "Fuel" "t3-arithmetic-record-related") evidence)
+       (cons '(:failure "fuel" "t3-arithmetic-record-related") evidence)
      (let ((lib (t3-logic-evidence-lib evidence)))
        (t3-arithmetic-with-evidence evidence
            ((cons-proof (t3-logic-evidence-selector-proof lib term holds step))
@@ -780,7 +780,7 @@
             (if (car attempt)
                 attempt
               (proof-with-checked-results ((text (proof-write target)))
-                '(:failure "Unsupported" "")))))))))
+                '(:failure "unsupported" "")))))))))
 
 (defun t3-arithmetic-integer-comparison (lib left right evidence)
   (let ((proof (library-library-proof lib)))
@@ -844,7 +844,7 @@
           (old (caddr larger))
           (new (caddr smaller)))
       (if (not (equal (cadr smaller) bound))
-          '(:failure "Unsupported" "")
+          '(:failure "unsupported" "")
         (proof-with-checked-results
             ((bound-type (t3-logic-evidence-integer evidence bound))
              (old-type (t3-logic-evidence-integer (cdr bound-type) old))

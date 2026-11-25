@@ -11,7 +11,7 @@
   (list *proof-times* a b))
 
 (defun h1-book-order-unproved-p (result)
-  (and (failure-p result) (equal (cadr result) "Unproved")))
+  (and (failure-p result) (equal (cadr result) "unproved")))
 
 (defun h1-book-order-positive-sum (proof left right first second)
   (let ((lib (h1-tactics-prover-library proof)))
@@ -246,21 +246,21 @@
 
 (defun h1-book-order-boolean-equality (proof formula)
   (if (not (proof-is-call formula *proof-equal*))
-      '(:failure "Unproved" "")
+      '(:failure "unproved" "")
     (proof-with-checked-results ((equality (proof-term-at formula 1)))
       (if (not (proof-is-call equality *proof-equal*))
-          '(:failure "Unproved" "")
+          '(:failure "unproved" "")
         (proof-with-checked-results ((iff (proof-term-at formula 2)))
           (let ((arguments (cdr equality)))
             (if (not (equal iff (cons *h1-book-arithmetic-iff* arguments)))
-                '(:failure "Unproved" "")
+                '(:failure "unproved" "")
               (proof-with-checked-results
                   ((algebra (h1-book-arithmetic-algebra-init proof nil nil))
                    (typed (h1-book-order-find-types (h1-book-arithmetic-algebra-context algebra)
                                                     *h1-book-order-booleanp* arguments))
                    (steps (car typed)))
                 (if (member-equal nil steps)
-                    '(:failure "Unproved" "")
+                    '(:failure "unproved" "")
                   (library-library-cite (h1-tactics-prover-library proof) "BOOLEAN-EQUALITY-IFF"
                                         arguments steps))))))))))
 
@@ -552,20 +552,6 @@
                         (h1-book-order-cite-scaled-order proof operands factor values (car pos) (car below)))
                       (cdr below)))))))))))
 
-(defun h1-book-order-scaled-orders-collect (proof source factors context steps)
-  (declare (xargs :measure (acl2-count factors)))
-  (if (endp factors)
-      (cons (reverse steps) context)
-    (let* ((next (h1-book-order-scale-with-factor proof source (car factors) context))
-           (step (car next)))
-      (if (failure-p step)
-          next
-        (h1-book-order-scaled-orders-collect proof source (cdr factors) (cdr next)
-                                            (if step (cons step steps) steps))))))
-
-(defun h1-book-order-scaled-orders (proof source factors context)
-  (h1-book-order-scaled-orders-collect proof source factors context nil))
-
 (defun h1-book-order-chain-comparison (proof equation aligned reverse)
   (let ((core (h1-tactics-prover-proof proof)))
     (proof-with-checked-results
@@ -617,7 +603,7 @@
               (let ((backward (h1-book-order-compare-orders-direction proof right left t factors (cdr forward))))
                 (if (car backward)
                     backward
-                  (cons '(:failure "Unproved" "")
+                  (cons '(:failure "unproved" "")
                         (cdr backward)))))))))))
 
 (defun h1-book-order-computed-order-finish (proof step expanded difference)
@@ -686,7 +672,7 @@
 (defun h1-book-order-compare-value-bounds (proof order value evidence normalizer)
   (declare (xargs :measure (acl2-count evidence)))
   (if (endp evidence)
-      (cons '(:failure "Unproved" "") normalizer)
+      (cons '(:failure "unproved" "") normalizer)
     (let* ((bounded (cdar evidence))
            (candidate (and bounded
                            (proof-with-checked-results ((literal (proof-step-first bounded)))

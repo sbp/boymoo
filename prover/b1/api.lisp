@@ -45,7 +45,7 @@
 
 (defun b1-api-reader-list (n result)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "b1-api-reader-list"))
+  (cond ((zp n) '(:failure "fuel" "b1-api-reader-list"))
         ((eq (car result) :next)
          (b1-api-reader-list (1- n) (b1-api-reader-next (cadr result) (caddr result))))
         ((eq (car result) :finish)
@@ -57,9 +57,6 @@
   (if (= (reader-cursor-peek cursor) 40)
       (b1-api-reader-list 1000000 (list :next (reader-cursor-advance cursor 1) (list nil)))
     (reader-cursor-datum 1000000 cursor)))
-
-(defun b1-api-reader-datum (reader)
-  (reader-at-result reader (b1-api-reader-datum-cursor (reader-cursor reader))))
 
 (defun b1-api-parse-next (cursor word reversed)
   (if (= (reader-cursor-peek cursor) 32)
@@ -73,7 +70,7 @@
 
 (defun b1-api-parse-fields (n result)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "b1-api-parse-fields"))
+  (cond ((zp n) '(:failure "fuel" "b1-api-parse-fields"))
         ((eq (car result) :more)
          (b1-api-parse-fields (1- n)
                               (b1-api-parse-next (cadr result) (caddr result) (cadddr result))))
@@ -707,9 +704,6 @@
       seen
     (b1-api-set-update (cdr items) (b1-api-set-add (car items) seen))))
 
-(defun b1-api-callproof-not-nil (world)
-  (proof-proof-not-nil (library-library-proof world)))
-
 (defun b1-api-callproof-fork (world)
   world)
 
@@ -765,7 +759,7 @@
 (defun b1-api-skip-quote (n chars position depth)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "b1-api-skip-quote"))
+   ((zp n) '(:failure "fuel" "b1-api-skip-quote"))
    ((endp chars) '(:failure "failure" ""))
    (t
     (let* ((ch (car chars))
@@ -781,7 +775,7 @@
 (defun b1-api-name-tokens (n source chars position previous reversed)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((zp n) '(:failure "Fuel" "b1-api-name-tokens"))
+   ((zp n) '(:failure "fuel" "b1-api-name-tokens"))
    ((endp chars) (reverse reversed))
    (t
     (let* ((ch (car chars))

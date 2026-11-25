@@ -142,9 +142,6 @@
                   (list *library-implies* guard tail-term) definition nil "" nil nil nil)))
           (cons (list constructor head rest) search)))))))))
 
-(defun h2-alist-recognizers-list-parts (search recognizer)
-  (h2-alist-recognizers-list-parts-with-replies search recognizer nil))
-
 (defun h2-alist-recognizers-smaller (library formula updates cons-step)
   (let ((proof (library-library-proof library)))
     (proof-with-checked-results
@@ -228,9 +225,6 @@
                         cons-step nonempty empty))
               (search (h2-alist-recognizers-lemma search (concatenate 'string "H2-" stem) formula witness)))
              (cons name search)))))))))
-
-(defun h2-alist-recognizers-lookup-singleton (search recognizer parts)
-  (h2-alist-recognizers-lookup-singleton-with-replies search recognizer parts nil))
 
 (defun h2-alist-recognizers-revappend-induction
     (search recognizer parts formula shape opening source target cons-step empty nonempty)
@@ -319,5 +313,3 @@
                                                  formula induction)))
              (h2-alist-recognizers-finish-reverse search recognizer definition predicate replies)))))))))
 
-(defun h2-alist-recognizers-reverse-preserved (search recognizer parts)
-  (h2-alist-recognizers-reverse-preserved-with-replies search recognizer parts nil))

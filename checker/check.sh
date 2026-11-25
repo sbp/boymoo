@@ -14,7 +14,9 @@
 # checker, with checker/build.sh, which needs ACL2.  Then it writes the
 # bytes of spec/ground.txt and of the four inputs as five strings in the
 # text of spec/formats.md, section 2, and has the runner compute the
-# checker's function CHECK-FOUR on them from the checker's program text.
+# checker's function CHECK-FOUR on them from the checker's program text,
+# after that of the ground theory and of the checker's library, with the
+# runner's prelude (-j), which computes length and char itself.
 #
 # With RUNNER set in the environment, it uses that runner.
 

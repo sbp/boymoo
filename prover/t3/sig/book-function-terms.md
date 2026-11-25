@@ -20,4 +20,4 @@ arguments. In that case the failure is the entire result.
 | `(t3-book-function-terms-from-function lib name formula)` | Pair of the theorem entry for constructing an application from a function and the resulting Library. |
 | `(t3-book-function-terms-finish lib name formula proof)` | Entry for `name` with the implication `formula` discharged using Step `proof`. |
 | `(t3-book-function-terms-fact-table steps facts)` | Facts dictionary after setting each first literal in `steps` to its Step in order. |
-| `(t3-book-function-terms-fact-at facts term)` | Value at the key `term` in ordered table `facts`, or `MissingProofInput`. |
+| `(t3-book-function-terms-fact-at facts term)` | Value at the key `term` in ordered table `facts`, or `missing-proof-input`. |

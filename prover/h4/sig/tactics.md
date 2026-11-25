@@ -24,7 +24,6 @@ A Tactics object uses the Library representation in `prover/sig/library.md`. A n
 | `(h4-tactics-tactics-select-literal p term)` | A Step selecting the branch of an IF term whose test is a literal. |
 | `(h4-tactics-tactics-rewrite-context p term expand initial)` | An equality Step rewriting redexes in `term`. `expand` is `:none` to open only lambdas and return-last wrappers, or the list of names to expand in closed evaluation. `initial` is a Step or `nil`. |
 | `(h4-tactics-tactics-evaluate-closed p term expand)` | The equality Step for closed evaluation with the given list of definitions. |
-| `(h4-tactics-tactics-logical-equation p function)` | The equality Step after opening lambdas and return-last wrappers in the named definition. |
 | `(h4-tactics-tactics-normalize p term evidence expand rewrites provide)` | The equality Step for normalization. `expand` is the list of definition names. `provide` is described below. |
 | `(h4-tactics-tactics-establish p formula evidence expand rewrites provide)` | A Step proving `formula` through normalization. `provide` is described below. |
 

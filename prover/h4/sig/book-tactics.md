@@ -63,18 +63,12 @@ Each method below can propagate a failure from a called proof operation.
 
 | Call | Result |
 |---|---|
-| `(h4-book-tactics-book-search-init library)` | A BookSearch, or a failure. Its budgets start at 0, and extended rules are enabled. |
 | `(h4-book-tactics-book-search-recursion search head)` | `(calls index)`, where Calls are in source order and `index` is the zero-based formal position or `nil` when no structural formal is selected. |
 | `(h4-book-tactics-book-search-known-shape search term evidence)` | Whether the term is a constructor, a quotation or is known to be a cons or an atom. |
 | `(h4-book-tactics-book-search-expandable search term evidence)` | Whether the defined call can be unfolded under the evidence. |
 | `(h4-book-tactics-book-search-hypotheses search premises)` | Evidence map from the ordered premise Steps. |
-| `(h4-book-tactics-book-search-instantiate search rule term evidence depth rewrite)` | `(cons result search)` with the Step, `nil` or a failure. `rewrite` defaults to `nil`. |
-| `(h4-book-tactics-book-search-replay search rule bindings evidence depth)` | `(cons result search)` with the Step, `nil` or a failure. |
 | `(h4-book-tactics-book-search-iff-direction search fact premise direction)` | Step for applying the IFF fact with the given premise in direction 3 or 4. |
 | `(h4-book-tactics-book-search-candidates index term)` | Rules from the exact term key and then the key with a `nil` first head. With no first head the result of the second lookup is `nil`. |
-| `(h4-book-tactics-book-search-lookup search goal evidence depth)` | `(cons result search)` with the first proof, `nil` or a failure. Depth defaults to 2. |
-| `(h4-book-tactics-book-search-lookup-rule search goal evidence depth)` | `(cons result search)` with the first proof, `nil` or a failure, searching the rules for the goal. |
-| `(h4-book-tactics-book-search-reduction search formula evidence)` | `(cons result search)` with an equality Step or a failure. |
 | `(h4-book-tactics-book-search-solve search formula premises splits)` | `(cons result search)` with a Step or a failure. `premises` defaults to `nil` and `splits` to 3. |
 | `(h4-book-tactics-book-search-induction-rule actual formal)` | `(test-head holds builtin-number)` for a supported change from the formal to the actual, or `nil`. |
 | `(h4-book-tactics-book-search-induction-options search formula)` | List of induction plans in discovery order with repeats removed, or a failure. |
@@ -111,11 +105,3 @@ Pass `:none` for an unlimited `size` count. The Booleans `nil` and `t` act as li
 A template table is an immutable map from fact names to clauses and their
 keyed rule templates. An empty map is `nil`. The map uses `lexorder` and
 compares exact keys with `equal`.
-
-| Prepared call | Result |
-|---|---|
-| `(h4-book-tactics-tree-entry key tree)` | The `(key . value)` association or `nil`. |
-| `(h4-book-tactics-tree-put key value tree)` | The map with the given key and value. |
-| `(h4-book-tactics-remember-template name clause templates)` | A template table with the given name and clause prepared. A failure to construct templates is stored for use when the fact enters a search. |
-| `(h4-book-tactics-prepare-templates facts definitions templates)` | A template table extended with the non-definition facts from the supplied alists. |
-| `(h4-book-tactics-book-search-init-with-templates library tables)` | A BookSearch, or a failure. Uses a rule template when the current fact's name and clause match a table entry. The rules and their order are the same as in `h4-book-tactics-book-search-init`. |

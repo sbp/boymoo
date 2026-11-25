@@ -28,39 +28,3 @@
        (rest (t2-rename-rename-arguments (cdr arguments) names)))
       (cons first rest)))))
 
-(defun t2-rename-fresh-definition-names (definitions names)
-  (if (endp definitions)
-      names
-    (proof-with-checked-results
-     ((definition (proof-list-of-length (car definitions) 3))
-      (stem (proof-term-at (car definition) 2)))
-     (if (stringp stem)
-         (let ((name (proof-sym (concatenate 'string "T2-RECURSION-" stem) "ACL2")))
-           (t2-rename-fresh-definition-names
-            (cdr definitions) (table-put names (car definition) name)))
-       '(:failure "failure" "")))))
-
-(defun t2-rename-fresh-definition-rulers (rulers names)
-  (if (endp rulers)
-      nil
-    (cons (table-get names (car rulers) (car rulers))
-          (t2-rename-fresh-definition-rulers (cdr rulers) names))))
-
-(defun t2-rename-fresh-definition-bodies (definitions names)
-  (if (endp definitions)
-      nil
-    (let ((definition (car definitions)))
-      (proof-with-checked-results
-       ((body (t2-rename-rename-calls (caddr definition) names))
-        (rest (t2-rename-fresh-definition-bodies (cdr definitions) names)))
-       (cons (list (table-get names (car definition) nil) (cadr definition) body)
-             rest)))))
-
-(defun t2-rename-fresh-definition (rulers definitions)
-  (proof-with-checked-results
-   ((names (t2-rename-fresh-definition-names definitions nil))
-    (rulers (if (proof-compound rulers)
-                (t2-rename-fresh-definition-rulers rulers names)
-              rulers))
-    (definitions (t2-rename-fresh-definition-bodies definitions names)))
-   (list rulers definitions names)))

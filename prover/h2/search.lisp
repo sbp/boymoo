@@ -209,7 +209,7 @@
   (declare (xargs :measure (acl2-count term)))
   (cond ((proof-is-call term *proof-if*)
          (if (endp (cdddr term))
-             '(:failure "TacticInapplicable" "")
+             '(:failure "tactic-inapplicable" "")
            (if (equal (cadddr term) *proof-false*)
                (proof-with-checked-results
                 ((yes (h2-search-antecedents (cadr term)))
@@ -249,14 +249,14 @@
   (cond
    ((proof-is-call formula *library-implies*)
     (if (endp (cddr formula))
-        '(:failure "TacticInapplicable" "")
+        '(:failure "tactic-inapplicable" "")
       (let ((test (cadr formula)))
         (proof-with-checked-results ((antecedents (h2-search-antecedents test)))
           (h2-search-rule-from-fact-descend
            (caddr formula) (append action (list (list "implies" test)))
            (append conditions antecedents) name)))))
    ((proof-is-call formula *proof-if*)
-    (cond ((endp (cdddr formula)) '(:failure "TacticInapplicable" ""))
+    (cond ((endp (cdddr formula)) '(:failure "tactic-inapplicable" ""))
           ((equal (cadddr formula) *proof-false*)
            (proof-with-checked-results
             ((first (h2-search-rule-from-fact-descend
@@ -288,9 +288,9 @@
 (defun h2-search-rule-from-fact (proof name)
   (let* ((key (if (stringp name) (list "str" name) name))
          (entry (assoc-equal key (proof-proof-facts (h2-search-proof proof)))))
-    (cond ((not entry) '(:failure "TacticInapplicable" ""))
+    (cond ((not entry) '(:failure "tactic-inapplicable" ""))
           ((endp (cdr entry))
-           '(:failure "TacticInapplicable" ""))
+           '(:failure "tactic-inapplicable" ""))
           (t (proof-with-checked-results
               ((conditions (h2-search-cut-conditions (cddr entry)))
                (rules (h2-search-rule-from-fact-descend
@@ -412,7 +412,7 @@
     (cond ((and (proof-is-call term *proof-not*) (endp (cdr term))) value)
           ((proof-is-call value *proof-if*)
            (if (endp (cdr value))
-               '(:failure "TacticInapplicable" "")
+               '(:failure "tactic-inapplicable" "")
              (h2-search-context-test context (cadr value))))
           ((or (assoc-equal value (h2-search-context-literals context))
                (assoc-equal (proof-neg value) (h2-search-context-literals context))
@@ -423,7 +423,7 @@
 (defun h2-search-completion-next (n rule literals pending)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "h2-search-completion-next")
+      '(:failure "fuel" "h2-search-completion-next")
     (if (endp pending)
         nil
       (let* ((task (car pending)) (bindings (cadr task)) (rest (cdr pending)))
@@ -455,19 +455,6 @@
                  (h2-search-completion-next
                   (1- n) rule literals
                   (if (car candidate) (cons (list :bindings (cdr candidate)) rest) rest)))))))))))
-
-(defun h2-search-rule-completions (n rule literals pending found)
-  (declare (xargs :measure (nfix n)))
-  (if (zp n)
-      '(:failure "Fuel" "h2-search-rule-completions")
-    (proof-with-checked-results ((next (h2-search-completion-next n rule literals pending)))
-      (if next
-          (h2-search-rule-completions (1- n) rule literals (cdr next) (cons (car next) found))
-        (reverse found)))))
-
-(defun h2-search-rule-complete (rule bindings context)
-  (h2-search-rule-completions 1000000 rule (h2-search-context-literals context)
-                              (list (list :bindings bindings)) nil))
 
 (defun h2-search-search-init (library)
   (list :h2-search library nil nil :none nil nil nil nil))
@@ -508,7 +495,7 @@
                (entry (h2-search-index-find key (cdr indexes))))
           (if entry
               (proof-proof-instantiate proof (proof-make-step "fact" (list key) (cdr entry)) bindings)
-            '(:failure "TacticInapplicable" "")))
+            '(:failure "tactic-inapplicable" "")))
       (proof-proof-fact proof name bindings))))
 
 (defun h2-search-search-opened (search)
@@ -715,12 +702,12 @@
 (defun h2-search-call-parts (term)
   (cond ((consp term) term)
         ((and (stringp term) (not (equal term ""))) (list term))
-        (t '(:failure "TacticInapplicable" ""))))
+        (t '(:failure "tactic-inapplicable" ""))))
 
 (defun h2-search-list-at (items index)
   (if (< index (len items))
       (nth index items)
-    '(:failure "TacticInapplicable" "")))
+    '(:failure "tactic-inapplicable" "")))
 
 (defun h2-search-all-quoted-p (args)
   (or (endp args)
@@ -845,8 +832,8 @@
 (defun h2-search-index-at (items index)
   (if (integerp index)
       (let ((index (if (< index 0) (+ (len items) index) index)))
-        (if (< index 0) '(:failure "TacticInapplicable" "") (proof-term-at items index)))
-    '(:failure "TacticInapplicable" "")))
+        (if (< index 0) '(:failure "tactic-inapplicable" "") (proof-term-at items index)))
+    '(:failure "tactic-inapplicable" "")))
 
 (defun h2-search-search-rewrite-result-in-argument (search step index context)
   (proof-with-checked-results
@@ -892,7 +879,7 @@
 
 (defun h2-search-list-child (n depth child)
   (declare (xargs :measure (nfix n)))
-  (cond ((zp n) '(:failure "Fuel" "h2-search-list-child"))
+  (cond ((zp n) '(:failure "fuel" "h2-search-list-child"))
         ((zp depth) child)
         (t (h2-search-list-child (1- n) (1- depth) (list *library-cdr* child)))))
 
@@ -971,12 +958,6 @@
 
 (defmacro h2-search-call (method &rest args)
   `(h2-search-run (1- n) search ,method (list ,@args) replies nil))
-
-(defun h2-search-search-hook-data (search)
-  (and (h2-search-object-p search) (cadr (cddddr (cddddr search)))))
-
-(defun h2-search-search-with-hook-data (search data)
-  (update-nth 9 data (if (h2-search-object-p search) search (h2-search-search-init search))))
 
 (defun h2-search-request-search (request)
   (cadr (cddddr request)))
@@ -1068,7 +1049,7 @@
  (defun h2-search-run-body (n search method args replies base)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-body")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-body")))
     ((and (not base) (h2-search-inherited-method-p search method args))
      (let ((pending (h2-search-reply-pending replies)))
        (cond ((endp pending) (h2-search-hook-request :before search method args nil replies))
@@ -1119,7 +1100,7 @@
  (defun h2-search-run-rule-apply (n search replies rule term context active rewrite)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-rule-apply"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-rule-apply"))
      (h2-search-check
       ((pattern (if rewrite
                     (proof-term-at (h2-search-rule-pattern rule) 1)
@@ -1133,7 +1114,7 @@
  (defun h2-search-run-rule-candidates (n search replies rule context active pending)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-rule-candidates"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-rule-candidates"))
      (h2-search-check
       ((next (h2-search-completion-next n rule (h2-search-context-literals context) pending)))
       (if (not next)
@@ -1146,7 +1127,7 @@
  (defun h2-search-run-rule-instance (n search replies rule context active bindings)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-rule-instance"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-rule-instance"))
      (h2-search-check
       ((step (h2-search-indexed-fact search (h2-search-rule-name rule) (table-items bindings))))
       (h2-search-run-rule-actions (1- n) search replies (h2-search-rule-action rule)
@@ -1155,7 +1136,7 @@
  (defun h2-search-run-rule-actions (n search replies actions step context active bindings)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-rule-actions")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-rule-actions")))
     ((endp actions) (h2-search-return (cons step context)))
     (t
      (let ((proof (h2-search-proof search)))
@@ -1180,7 +1161,7 @@
  (defun h2-search-run-apply-rules (n search replies term context active rewrite)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-apply-rules")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-apply-rules")))
     ((eq (h2-search-search-split-limit search) :none)
      (h2-search-return '(:failure "failure" "")))
     ((or (equal term *proof-false*) (<= 5 (len active))) (h2-search-return (cons nil context)))
@@ -1195,7 +1176,7 @@
  (defun h2-search-run-apply-bucket (n search replies rules term context active rewrite)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-apply-bucket")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-apply-bucket")))
     ((endp rules) (h2-search-return (cons nil context)))
     (t
      (h2-search-bind result (h2-search-call :rule-apply (car rules) term context active rewrite)
@@ -1208,7 +1189,7 @@
  (defun h2-search-run-truth (n search replies term context active)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-truth")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-truth")))
     ((proof-is-call term *proof-quote*)
      (h2-search-check ((step (if (equal term *proof-false*)
                                   (h2-search-search-not-nil search)
@@ -1229,7 +1210,7 @@
  (defun h2-search-run-primitive (n search replies term context)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-primitive"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-primitive"))
      (h2-search-check ((parts (h2-search-call-parts term)))
        (let ((proof (h2-search-proof search)) (fn (car parts)) (args (cdr parts)))
          (cond
@@ -1256,7 +1237,7 @@
  (defun h2-search-run-normalize (n search replies term context opened active)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-normalize"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-normalize"))
      (let* ((key (list term opened active))
             (entry (h2-search-context-cache-find context key (h2-search-context-reductions context))))
        (if entry
@@ -1269,7 +1250,7 @@
  (defun h2-search-run-reduce (n search replies term context opened active)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-reduce"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-reduce"))
      (let ((direct (cdr (assoc-equal term (h2-search-context-equalities context)))))
        (cond
         (direct (h2-search-run-normalize-chain (1- n) search replies direct context opened active nil))
@@ -1304,7 +1285,7 @@
  (defun h2-search-run-normalize-chain (n search replies equality context opened active first)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-normalize-chain"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-normalize-chain"))
      (h2-search-check ((value (h2-search-step-at equality 2)))
        (h2-search-bind next (h2-search-call :normalize value context opened active)
          (h2-search-check
@@ -1316,7 +1297,7 @@
  (defun h2-search-run-reduce-if (n search replies term context opened active)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-reduce-if"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-reduce-if"))
      (let ((proof (h2-search-proof search)))
        (h2-search-check ((test (proof-term-at term 1)))
          (h2-search-bind evidence (h2-search-call :truth test context active)
@@ -1342,7 +1323,7 @@
  (defun h2-search-run-reduce-equal-if (n search replies term args index context opened active)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-reduce-equal-if")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-reduce-equal-if")))
     ((endp args) (h2-search-run-reduce-primitive (1- n) search replies term context opened active))
     ((not (proof-is-call (car args) *proof-if*))
      (h2-search-run-reduce-equal-if (1- n) search replies term (cdr args) (1+ index) context opened active))
@@ -1362,7 +1343,7 @@
  (defun h2-search-run-reduce-primitive (n search replies term context opened active)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-reduce-primitive"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-reduce-primitive"))
      (h2-search-bind primitive (h2-search-call :primitive term context)
        (if primitive
            (h2-search-return (cons primitive context))
@@ -1371,7 +1352,7 @@
  (defun h2-search-run-reduce-arguments (n search replies term args index first context opened active)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-reduce-arguments")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-reduce-arguments")))
     ((endp args) (h2-search-run-reduce-current (1- n) search replies term first context opened active))
     (t
      (h2-search-bind equality (h2-search-call :normalize (car args) context opened active)
@@ -1395,7 +1376,7 @@
  (defun h2-search-run-reduce-current (n search replies term first context opened active)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-reduce-current"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-reduce-current"))
      (if (not first)
          (h2-search-run-reduce-open (1- n) search replies (car term) term nil context opened active)
        (h2-search-check ((current (h2-search-step-at first 2)))
@@ -1414,7 +1395,7 @@
  (defun h2-search-run-reduce-open (n search replies fn current first context opened active)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-reduce-open"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-reduce-open"))
      (h2-search-bind known (h2-search-call :lookup current context)
        (cond
         ((or known (h2-search-context-representative-p context current))
@@ -1436,7 +1417,7 @@
  (defun h2-search-run-reduce-not (n search replies fn current first context active)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-reduce-not"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-reduce-not"))
      (if (not (equal fn *proof-not*))
          (h2-search-run-reduce-denial (1- n) search replies current first context)
        (h2-search-check ((test (proof-term-at current 1)))
@@ -1455,7 +1436,7 @@
  (defun h2-search-run-reduce-denial (n search replies current first context)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-reduce-denial"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-reduce-denial"))
      (h2-search-bind evidence (h2-search-call :lookup (proof-neg current) context)
        (if (not evidence)
            (h2-search-return (cons first context))
@@ -1467,7 +1448,7 @@
  (defun h2-search-run-remove-wrappers (n search replies term)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-remove-wrappers")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-remove-wrappers")))
     ((or (not (proof-compound term)) (proof-is-call term *proof-quote*)) (h2-search-return nil))
     (t
      (let ((proof (h2-search-proof search)))
@@ -1483,7 +1464,7 @@
  (defun h2-search-run-remove-wrapper-arguments (n search replies term args index first)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-remove-wrapper-arguments")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-remove-wrapper-arguments")))
     ((endp args) (h2-search-return first))
     (t
      (h2-search-bind equality (h2-search-call :remove-wrappers (car args))
@@ -1496,7 +1477,7 @@
  (defun h2-search-run-learn (n search replies step context opened seen)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-learn"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-learn"))
      (h2-search-check ((term (proof-step-first step)))
        (if (or (h2-search-seen-p term seen) (h2-search-context-contradiction context))
            (h2-search-return (cons context seen))
@@ -1513,7 +1494,7 @@
  (defun h2-search-run-learn-equality (n search replies term step context opened seen)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-learn-equality"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-learn-equality"))
      (h2-search-bind direct (h2-search-call :remove-wrappers term)
        (h2-search-bind learned
          (if direct
@@ -1527,7 +1508,7 @@
  (defun h2-search-run-learn-form (n search replies fn term step context opened seen)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-learn-form"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-learn-form"))
      (let ((proof (h2-search-proof search)))
        (cond
         ((equal fn *library-implies*)
@@ -1552,7 +1533,7 @@
  (defun h2-search-run-learn-if (n search replies term step context opened seen)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-learn-if"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-learn-if"))
      (let ((proof (h2-search-proof search)))
        (h2-search-check ((no (proof-term-at term 3)))
          (cond
@@ -1586,7 +1567,7 @@
  (defun h2-search-run-learn-steps (n search replies steps context opened seen)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-learn-steps")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-learn-steps")))
     ((endp steps) (h2-search-return (cons context seen)))
     (t
      (h2-search-bind learned (h2-search-call :learn (car steps) context opened seen)
@@ -1595,7 +1576,7 @@
  (defun h2-search-run-learn-not (n search replies value step context opened seen)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-learn-not")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-learn-not")))
     ((proof-is-call value *proof-if*)
      (h2-search-check ((parts (proof-list-of-length (cdr value) 3)))
        (let* ((test (car parts)) (yes (cadr parts))
@@ -1617,7 +1598,7 @@
  (defun h2-search-run-learn-not-if (n search replies value step context opened seen select-yes test yes)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-learn-not-if"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-learn-not-if"))
      (let ((proof (h2-search-proof search)))
        (h2-search-check
         ((branch (proof-proof-assume proof test select-yes))
@@ -1635,7 +1616,7 @@
  (defun h2-search-run-learn-not-normalize (n search replies value step context opened seen)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-learn-not-normalize"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-learn-not-normalize"))
      (let ((proof (h2-search-proof search)))
        (h2-search-bind equality (h2-search-call :normalize value context opened nil)
          (h2-search-bind learned
@@ -1653,7 +1634,7 @@
  (defun h2-search-run-learn-arguments (n search replies fn args index step first context opened seen)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-learn-arguments")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-learn-arguments")))
     ((endp args)
      (let ((proof (h2-search-proof search)))
        (h2-search-check
@@ -1677,7 +1658,7 @@
  (defun h2-search-run-learn-open (n search replies fn current first context opened seen)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-learn-open")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-learn-open")))
     ((eq (h2-search-search-split-limit search) :none) (h2-search-return '(:failure "failure" "")))
     (t
      (let ((proof (h2-search-proof search)))
@@ -1701,7 +1682,7 @@
  (defun h2-search-run-learn-oriented-equality (n search replies step context)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-learn-oriented-equality"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-learn-oriented-equality"))
      (h2-search-check ((value (h2-search-step-at step 2)))
        (if (not (proof-is-call value *proof-if*))
            (h2-search-return context)
@@ -1727,7 +1708,7 @@
  (defun h2-search-run-deduce (n search replies term context active)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-deduce"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-deduce"))
      (let ((contradiction (h2-search-context-contradiction context)))
        (if contradiction
            (h2-search-check
@@ -1746,7 +1727,7 @@
  (defun h2-search-run-find-proof (n search replies term context active)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-find-proof")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-find-proof")))
     ((equal term *proof-false*) (h2-search-return (cons nil context)))
     ((proof-is-call term *proof-quote*) (h2-search-call :truth term context active))
     (t
@@ -1769,7 +1750,7 @@
  (defun h2-search-run-lookup-or-rules (n search replies term context active)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-lookup-or-rules"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-lookup-or-rules"))
      (h2-search-bind evidence (h2-search-call :lookup term context)
        (if evidence
            (h2-search-return (cons evidence context))
@@ -1778,7 +1759,7 @@
  (defun h2-search-run-solve (n search replies formula seeds cases)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-solve")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-solve")))
     ((eq (h2-search-search-split-limit search) :none) (h2-search-return '(:failure "failure" "")))
     ((not (proof-is-call formula *library-implies*))
      (h2-search-bind visit (h2-search-call :visit formula seeds cases (h2-search-search-split-limit search))
@@ -1793,7 +1774,7 @@
  (defun h2-search-run-visit (n search replies formula seeds cases remaining)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-visit"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-visit"))
      (h2-search-bind context (h2-search-call :visit-context seeds cases)
       (h2-search-bind context (h2-search-run-visit-learn (1- n) search replies seeds context 12)
         (h2-search-bind result (h2-search-call :deduce formula context nil)
@@ -1810,7 +1791,7 @@
  (defun h2-search-run-visit-learn (n search replies seeds context rounds)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-visit-learn")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-visit-learn")))
     ((zp rounds) (h2-search-return context))
     (t
      (let ((previous (len (h2-search-context-literals context))))
@@ -1823,7 +1804,7 @@
  (defun h2-search-run-visit-learn-seeds (n search replies seeds context)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-visit-learn-seeds")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-visit-learn-seeds")))
     ((endp seeds) (h2-search-return context))
     (t
      (let ((seen (and (h2-search-indexed-context-p context) (list :h2-indexed-seen))))
@@ -1833,7 +1814,7 @@
  (defun h2-search-run-visit-contradiction (n search replies literals context)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-visit-contradiction")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-visit-contradiction")))
     ((endp literals) (h2-search-return context))
     (t
      (let ((literal (caar literals)) (step (cdar literals)) (proof (h2-search-proof search)))
@@ -1861,7 +1842,7 @@
  (defun h2-search-run-visit-false-equality (n search replies literal step literals context)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-visit-false-equality"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-visit-false-equality"))
      (let ((symmetric (equal (cadr literal) *proof-false*)))
        (h2-search-check ((other (if symmetric (proof-term-at literal 2) (cadr literal))))
          (h2-search-bind present (h2-search-run-lookup-or-rules (1- n) search replies other context nil)
@@ -1876,10 +1857,10 @@
  (defun h2-search-run-visit-split (n search replies formula seeds cases remaining context)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-visit-split"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-visit-split"))
      (h2-search-bind best (h2-search-run-visit-choose (1- n) search replies (h2-search-context-tests context) context nil)
        (if (or (not best) (<= remaining 0))
-           (h2-search-return '(:failure "Unproved" ""))
+           (h2-search-return '(:failure "unproved" ""))
          (let ((test (cdr best)) (proof (h2-search-proof search)))
            (h2-search-check ((assumed (proof-proof-assume proof test t)))
              (h2-search-bind yes (h2-search-call :visit formula (append seeds (list assumed)) cases (1- remaining))
@@ -1891,7 +1872,7 @@
  (defun h2-search-run-visit-choose (n search replies tests context best)
    (declare (xargs :measure (* 2 (nfix n))))
    (cond
-    ((zp n) (h2-search-return '(:failure "Fuel" "h2-search-run-visit-choose")))
+    ((zp n) (h2-search-return '(:failure "fuel" "h2-search-run-visit-choose")))
     ((endp tests) (h2-search-return best))
     (t
      (let ((term (caar tests)))
@@ -1906,7 +1887,7 @@
  (defun h2-search-run-induction (n search replies formula measure substitutions ordinal cases)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-induction"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-induction"))
      (let ((proof (h2-search-proof search)))
        (h2-search-check ((hypotheses (h2-search-induction-seeds proof formula measure substitutions)))
          (h2-search-bind step (h2-search-call :solve formula hypotheses cases)
@@ -1915,7 +1896,7 @@
  (defun h2-search-run-list-induction (n search replies formula variable updated depth)
    (declare (xargs :measure (* 2 (nfix n))))
    (if (zp n)
-       (h2-search-return '(:failure "Fuel" "h2-search-run-list-induction"))
+       (h2-search-return '(:failure "fuel" "h2-search-run-list-induction"))
      (h2-search-check
       ((child (h2-search-list-child n depth variable))
        (ordinal (library-library-builtin (h2-search-search-library search) 1 variable)))
@@ -1939,9 +1920,6 @@
 (defun h2-search-rule-apply (rule search term context active rewrite)
   (h2-search-evaluate search :rule-apply (list rule term context active rewrite)))
 
-(defun h2-search-rule-prove-instance (rule search context active bindings)
-  (h2-search-evaluate search :rule-prove-instance (list rule context active bindings)))
-
 (defun h2-search-search-lookup (search term context)
   (h2-search-evaluate search :lookup (list term context)))
 
@@ -1954,14 +1932,8 @@
 (defun h2-search-search-primitive (search term context)
   (h2-search-evaluate search :primitive (list term context)))
 
-(defun h2-search-search-normalize (search term context opened active)
-  (h2-search-evaluate search :normalize (list term context opened active)))
-
 (defun h2-search-search-reduce (search term context opened active)
   (h2-search-evaluate search :reduce (list term context opened active)))
-
-(defun h2-search-search-can-open (search term opened)
-  (h2-search-evaluate search :can-open (list term opened)))
 
 (defun h2-search-search-remove-wrappers (search term)
   (h2-search-evaluate search :remove-wrappers (list term)))
@@ -1969,20 +1941,11 @@
 (defun h2-search-search-learn (search step context opened seen)
   (h2-search-evaluate search :learn (list step context opened seen)))
 
-(defun h2-search-search-learn-oriented-equality (search step context)
-  (h2-search-evaluate search :learn-oriented-equality (list step context)))
-
 (defun h2-search-search-deduce (search term context active)
   (h2-search-evaluate search :deduce (list term context active)))
 
-(defun h2-search-search-find-proof (search term context active)
-  (h2-search-evaluate search :find-proof (list term context active)))
-
 (defun h2-search-search-solve (search formula seeds cases)
   (h2-search-evaluate search :solve (list formula seeds cases)))
-
-(defun h2-search-search-solve-visit (seeds search formula cases remaining)
-  (h2-search-evaluate search :visit (list formula seeds cases remaining)))
 
 (defun h2-search-search-induction (search formula measure substitutions ordinal cases)
   (h2-search-evaluate search :induction (list formula measure substitutions ordinal cases)))

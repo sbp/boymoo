@@ -18,9 +18,10 @@
 # It needs make, cc, cksum and the POSIX tools that runner/test.sh uses,
 # and not ACL2.  It compares the two runners on: (a) the reference
 # runner's own cases, those that runner/test.sh wrote, each line of a
-# .none file run alone, and its cases of deep recursion, deep nesting,
-# large numbers, exhaustion of memory, text that is not in the format and
-# -l; (b) 20,000 calls of the arithmetic primitives; (c) the functions
+# .none file run alone, among them the calls of the five functions of the
+# prelude, under -j, and its cases of deep recursion, deep nesting, large
+# numbers, exhaustion of memory, text that is not in the format, -l and
+# the prelude; (b) 20,000 calls of the arithmetic primitives; (c) the functions
 # that the fast runner computes natively: 10,000 calls on which the
 # definitions finish, run three ways, by the native forms, with
 # BOYMOO_FAST_NATIVE=0, and on the reference runner, and 4,000 on large
@@ -29,7 +30,8 @@
 # over the native functions while memory is collected; and it requires
 # that all eleven native forms be installed for the library's program
 # text; (d) the checker, on every case of checker/cases/ and
-# checker-js/cases/; (e) a recursion ten million calls deep, which goes
+# checker-js/cases/, and its reader of the inputs on texts of every kind
+# of line; (e) a recursion ten million calls deep, which goes
 # past the fast runner's C stack and is finished by its interpreter.
 #
 # runner-fast/test/gen.awk writes the calls of (b) and (c), the same on
@@ -59,8 +61,10 @@ B=build/export/books/build/runner/test/book
 for f in build/export/library.program build/export/library.statements \
          $RT/facts.terms $RT/facts.none $RT/facts.packages $RT/edge.terms $RT/edge.none \
          $RT/book.terms $RT/book.none $RT/lib.terms $RT/lib.none $RT/arith.terms $RT/arith.none \
+         $RT/prelude.terms $RT/prelude.none $RT/large.terms $RT/large.none \
          $B.statements $B.program \
-         build/checker/checker.statements build/checker/ground.program build/checker/checker.program; do
+         build/checker/checker.statements build/checker/ground.program \
+         build/checker/library.statements build/checker/checker.program; do
     if [ ! -f $f ]; then
         echo "runner-fast/test.sh: no $f; run sh runner/test.sh and sh checker/build.sh first" >&2
         exit 1
@@ -110,6 +114,8 @@ set_ edge $LIB $PROG
 set_ book $LIB -p $B.statements $PROG $B.program
 set_ lib $LIB $PROG
 set_ arith $LIB $PROG
+set_ prelude -j $LIB $PROG
+set_ large -j $LIB $PROG
 
 # case NAME ARGS...: both runners on $T/case.in.
 case_() {
@@ -167,6 +173,18 @@ printf '(define COMMON-LISP::NIL (COMMON-LISP::CAR (ACL2::X) ACL2::X))\n' > $T/c
 case_ "a definition of a primitive" $LIB $T/case.program
 echo "($Q 1)" > $T/case.in
 case_ "-l: every definition of the library" -l $LIB $PROG
+case_ "-l -j: every definition of the library, with the prelude" -l -j $LIB $PROG
+# The prelude: called from a term and from a definition, which the fast
+# runner compiles, without -j and with it, and with define lines for two
+# of its functions, which with -j are read and not used.
+printf '(define COMMON-LISP::NIL (ACL2::F (ACL2::X) (ACL2::BINARY-+ (COMMON-LISP::ASH ACL2::X (%s 2)) (ACL2::BINARY-LOGXOR ACL2::X (%s 1)))))\n' $Q $Q > $T/case.program
+printf '(define COMMON-LISP::NIL (ACL2::G (ACL2::S) (COMMON-LISP::CONS (COMMON-LISP::CHAR ACL2::S (%s 1)) (COMMON-LISP::CONS (COMMON-LISP::LENGTH ACL2::S) (COMMON-LISP::SUBSEQ ACL2::S (%s 1) (%s COMMON-LISP::NIL))))))\n' $Q $Q $Q >> $T/case.program
+printf "(COMMON-LISP::ASH ($Q 1) ($Q 3))\n(ACL2::F ($Q 5))\n(ACL2::G ($Q \"abc\"))\n" > $T/case.in
+case_ "the functions of the prelude without -j" $LIB $T/case.program
+case_ "the functions of the prelude with -j" -j $LIB $T/case.program
+printf '(define COMMON-LISP::NIL (COMMON-LISP::ASH (ACL2::I ACL2::C) (%s 77)))\n' $Q >> $T/case.program
+printf '(define COMMON-LISP::NIL (COMMON-LISP::CHAR (ACL2::S ACL2::N) (%s 77)))\n' $Q >> $T/case.program
+case_ "the functions of the prelude with -j and define lines for two of them" -j $LIB $T/case.program
 
 # (b) The arithmetic primitives near the edges of the paths in machine
 #     words.  Every call has a value, so the status must be 0.
@@ -251,7 +269,7 @@ report $ok "the eleven native functions are installed for build/export/library.p
 # (d) The checker, on every case, as checker/check.sh runs it.
 . checker/quote.sh
 quote spec/ground.txt > $T/ground.q
-CHECK="-p spec/ground.txt -p build/checker/checker.statements build/checker/ground.program build/checker/checker.program"
+CHECK="-j -p spec/ground.txt -p build/checker/checker.statements build/checker/ground.program build/checker/library.statements build/checker/checker.program"
 input() { if [ -f "$1" ]; then echo "$1"; else echo /dev/null; fi; }
 n=0
 ok=0
@@ -273,6 +291,25 @@ for d in checker/cases/*/ checker-js/cases/*/; do
     n=$((n + 1))
 done
 report $ok "the checker on $n cases of checker/cases/ and checker-js/cases/: the same on both runners"
+
+#     The checker reads each input as the strings of its lines, by
+#     text-lines, with char from the prelude: on texts that are empty, end
+#     without a line feed, hold empty lines or a return, and hold every
+#     byte, the fast runner must give the value of the reference runner.
+mkdir -p $T/lines
+: > $T/lines/empty
+printf a > $T/lines/one
+printf 'a\n\nb\r\nc' > $T/lines/mixed
+printf '\n\n' > $T/lines/feeds
+i=0
+while [ $i -lt 256 ]; do printf "\\$(printf %03o $i)"; i=$((i + 1)); done > $T/lines/bytes
+for f in empty one mixed feeds bytes; do
+    printf '(BOYMOO::TEXT-LINES '
+    quote $T/lines/$f
+    printf ')\n'
+done > $T/lines.in
+same $T/lines.in $CHECK
+report $? "the checker's text-lines on five texts: the same on both runners"
 
 # (e) A recursion deeper than the fast runner's C stack holds.
 echo "(ACL2::RT-DEEP ($Q 10000000))" > $T/case.in

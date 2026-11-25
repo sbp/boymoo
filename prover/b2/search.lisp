@@ -252,14 +252,6 @@
               (list (list names nil))
               (and (<= (len names) 4) (list (list names t)))))))
 
-(defun b2-search-search-options (search goal)
-  (proof-with-checked-results
-   ((definitions (b2-search-options-definitions search goal))
-    (name-options (b2-search-name-options goal (cadr definitions))))
-   (if (car definitions)
-       (cons (list (car definitions) nil) name-options)
-     name-options)))
-
 (defun b2-search-rejected-step-p (value)
   (or (b2-tactics-unproved-p value)
       (and (failure-p value) (member-equal (cadr value) '("value" "inapplicable")))))
@@ -504,7 +496,7 @@
    (declare (xargs :measure (nfix n)))
    (let ((proof (library-library-proof lib))
          (operator (car term)))
-     (cond ((zp n) '(:failure "Fuel" "b2-search-natural-simplify"))
+     (cond ((zp n) '(:failure "fuel" "b2-search-natural-simplify"))
            ((or (not (proof-compound term)) (equal operator *proof-quote*)) nil)
            ((endp term) (proof-term-at term 0))
            ((or (proof-compound operator)
@@ -530,7 +522,7 @@
 
  (defun b2-search-natural-simplify-args (n lib term args index result)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "b2-search-natural-simplify-args"))
+   (cond ((zp n) '(:failure "fuel" "b2-search-natural-simplify-args"))
          ((endp args) result)
          (t
           (proof-with-checked-results
@@ -553,7 +545,7 @@
 (defun b2-search-natural-prove (n lib term)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      '(:failure "Fuel" "b2-search-natural-prove")
+      '(:failure "fuel" "b2-search-natural-prove")
     (let ((result (b2-search-natural-proof-step lib term)))
       (if (eq (car result) :transport)
           (proof-with-checked-results ((step (b2-search-natural-prove (1- n) lib (cadr result))))
@@ -641,31 +633,6 @@
 (defun b2-search-normalize (search goal evidence unfold branches)
   (b2-tactics-tactics-normalize (b2-search-search-lib search) goal evidence unfold
                                 (b2-search-search-rules search) 220 branches))
-
-(defun b2-search-reduce-options (options search goal evidence)
-  (if (endp options)
-      nil
-    (let ((equation (b2-search-normalize search goal evidence (caar options) (cadar options))))
-      (if (b2-tactics-unproved-p equation)
-          (b2-search-reduce-options (cdr options) search goal evidence)
-        (proof-with-checked-results
-         ((equation equation)
-          (rest (b2-search-reduce-options (cdr options) search goal evidence)))
-         (cons equation rest))))))
-
-(defun b2-search-search-reduce (search goal evidence)
-  (let ((base (b2-search-normalize search goal evidence nil nil)))
-    (if (b2-tactics-unproved-p base)
-        nil
-      (proof-with-checked-results
-       ((base base)
-        (definitions (b2-search-options-definitions search goal))
-        (roots (car definitions))
-        (root-results (b2-search-reduce-options (and roots (list (list roots nil)))
-                                               search goal evidence))
-        (options (b2-search-name-options goal (cadr definitions)))
-        (name-results (b2-search-reduce-options options search goal evidence)))
-       (cons base (append root-results name-results))))))
 
 (defun b2-search-substitute-one (search goal evidence subterms old new equation reversed)
   (and (member-equal old subterms)
@@ -848,7 +815,7 @@
  (defun b2-search-prove-goal (n search goal evidence depth splits)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b2-search-prove-goal") search)
+       (cons '(:failure "fuel" "b2-search-prove-goal") search)
      (let* ((fuel (1- (b2-search-search-fuel search)))
             (search (b2-search-search-with-fuel search fuel))
             (lib (b2-search-search-lib search)))
@@ -878,7 +845,7 @@
  (defun b2-search-infer-goal (n search goal evidence known depth splits)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b2-search-infer-goal") search)
+       (cons '(:failure "fuel" "b2-search-infer-goal") search)
      (let* ((attempt (b2-search-structured-goal (1- n) search goal evidence depth splits))
             (step (car attempt))
             (search (cdr attempt)))
@@ -889,7 +856,7 @@
  (defun b2-search-structured-goal (n search goal evidence depth splits)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b2-search-structured-goal") search)
+       (cons '(:failure "fuel" "b2-search-structured-goal") search)
      (let ((proof (b2-search-proof search))
            (lib (b2-search-search-lib search)))
        (cond
@@ -929,13 +896,13 @@
  (defun b2-search-fact-with-fuel (n search goal known depth splits)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b2-search-fact-with-fuel") search)
+       (cons '(:failure "fuel" "b2-search-fact-with-fuel") search)
      (b2-search-with-checked-results search ((rows (b2-search-find-facts search goal)))
        (b2-search-fact-rows (1- n) rows search goal known depth splits nil))))
 
  (defun b2-search-fact-rows (n rows search goal known depth splits tried)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) (cons '(:failure "Fuel" "b2-search-fact-rows") search))
+   (cond ((zp n) (cons '(:failure "fuel" "b2-search-fact-rows") search))
          ((endp rows) (cons nil search))
          (t
           (let ((name (caar rows))
@@ -957,7 +924,7 @@
 
  (defun b2-search-fact-variants (n variants search name goal known guard depth splits)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) (cons '(:failure "Fuel" "b2-search-fact-variants") search))
+   (cond ((zp n) (cons '(:failure "fuel" "b2-search-fact-variants") search))
          ((endp variants) (cons nil search))
          (t
           (b2-search-with-checked-results search
@@ -974,7 +941,7 @@
  (defun b2-search-try-fact (n search step known guard reversep depth splits)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b2-search-try-fact") search)
+       (cons '(:failure "fuel" "b2-search-try-fact") search)
      (let* ((proof (b2-search-proof search))
             (step (b2-search-discharge-sides proof step (cdr (proof-step-clause step)) known)))
        (cond ((or (failure-p step) (not guard))
@@ -996,7 +963,7 @@
  (defun b2-search-infer-rest (n search goal evidence known depth splits)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b2-search-infer-rest") search)
+       (cons '(:failure "fuel" "b2-search-infer-rest") search)
      (let* ((exact (b2-search-fact-with-fuel (1- n) search goal known 0 splits))
             (search (cdr exact)))
        (if (car exact)
@@ -1015,7 +982,7 @@
  (defun b2-search-infer-normalized (n search goal evidence known depth splits choices)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b2-search-infer-normalized") search)
+       (cons '(:failure "fuel" "b2-search-infer-normalized") search)
      (let* ((direct (b2-search-fact-with-fuel (1- n) search goal known depth splits))
             (search (cdr direct)))
        (if (car direct)
@@ -1033,7 +1000,7 @@
  (defun b2-search-use-choices (n choices search evidence known depth splits)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "b2-search-use-choices") search))
+    ((zp n) (cons '(:failure "fuel" "b2-search-use-choices") search))
     ((endp choices) (cons nil search))
     (t
      (let* ((current (caar choices))
@@ -1051,7 +1018,7 @@
  (defun b2-search-split-choices (n choices search evidence known depth splits)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "b2-search-split-choices") search))
+    ((zp n) (cons '(:failure "fuel" "b2-search-split-choices") search))
     ((endp choices)
      (cons (b2-tactics-unproved) search))
     (t
@@ -1071,7 +1038,7 @@
  (defun b2-search-try-split (n search current equation test evidence depth splits)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "b2-search-try-split") search)
+       (cons '(:failure "fuel" "b2-search-try-split") search)
      (let ((proof (b2-search-proof search)))
        (b2-search-with-checked-results search ((positive (proof-proof-assume proof test t)))
          (let* ((yes (b2-search-prove-goal (1- n) search current (append evidence (list positive))
@@ -1093,9 +1060,6 @@
 
 (defun b2-search-search-prove (search goal evidence depth splits)
   (b2-search-prove-goal 1000000 search goal evidence depth splits))
-
-(defun b2-search-search-infer (search goal evidence known depth splits)
-  (b2-search-infer-goal 1000000 search goal evidence known depth splits))
 
 (defun b2-search-search-theorem (lib formula)
   (proof-with-checked-results ((size (b2-search-size formula 600)))

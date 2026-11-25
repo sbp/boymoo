@@ -145,7 +145,7 @@
           (assoc-equal operator (proof-proof-definitions proof))
           (member-equal operator (proof-proof-primitives proof)))
       (cons operator args))
-     (t '(:failure "RecipeMismatch" "")))))
+     (t '(:failure "recipe-mismatch" "")))))
 
 (mutual-recursion
  (defun t2-hints-translate (lib term)
@@ -157,7 +157,7 @@
               (proof-quote term)
             term))
          ((proof-is-call term *proof-quote*) term)
-         ((endp term) '(:failure "MissingTermPart" ""))
+         ((endp term) '(:failure "missing-term-part" ""))
          (t (proof-with-checked-results ((args (t2-hints-translate-arguments lib (cdr term))))
               (t2-hints-translate-application lib (car term) args)))))
 
@@ -179,7 +179,7 @@
 
 (defun t2-hints-discard-instance-p (result)
   (and (failure-p result)
-       (member-equal (cadr result) '("RecipeMismatch" "MissingTermPart" "assertion" "value" "index"))))
+       (member-equal (cadr result) '("recipe-mismatch" "missing-term-part" "assertion" "value" "index"))))
 
 (defun t2-hints-instance (lib name pairs)
   (let ((result (proof-with-checked-results ((bindings (t2-hints-instance-bindings lib pairs)))

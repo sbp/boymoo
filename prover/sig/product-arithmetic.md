@@ -12,7 +12,7 @@ the value and the Library after any additions.
 | `product-arithmetic-conjunction` | `terms` (list of terms) | Right-nested conjunction term |
 | `product-arithmetic-conjoin` | `lib`, `proofs` (list of Steps) | Step proving their right-nested conjunction |
 | `product-arithmetic-product-form` | `lib`, `term` | Step equating a term with its right-associated product of ordered factors |
-| `product-arithmetic-product-equal` | `lib`, `left`, `right` (terms) | Step equating two products, or `DifferentNormalForms` for different normalized factors |
+| `product-arithmetic-product-equal` | `lib`, `left`, `right` (terms) | Step equating two products, or `different-normal-forms` for different normalized factors |
 | `product-arithmetic-one-product` | `lib`, `value` (term), `types` | `(cons step lib)` proving multiplication by one |
 | `product-arithmetic-positive-nonzero` | `lib`, `value` (term), `proof` (positivity Step) | Step proving nonzero value |
 | `product-arithmetic-zero-product-lemma` | `lib` | Library with the product-zero lemma |

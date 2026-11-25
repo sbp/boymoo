@@ -44,16 +44,6 @@
 (defun b2-bounds-coefficient-counts (term)
   (b2-bounds-coefficients-collect term 1 nil))
 
-(defun b2-bounds-coefficients-data (counts)
-  (if (endp counts)
-      nil
-    (cons (if (eq (caar counts) :none) (cons nil (cdar counts)) (car counts))
-          (b2-bounds-coefficients-data (cdr counts)))))
-
-(defun b2-bounds-coefficients (term)
-  (proof-with-checked-results ((counts (b2-bounds-coefficient-counts term)))
-    (b2-bounds-coefficients-data counts)))
-
 (defun b2-bounds-add-signs (lib first second evidence)
   (declare (xargs :measure (if (caddr first) 1 0)))
   (proof-with-checked-results
@@ -84,7 +74,7 @@
 
 (defun b2-bounds-unusable-bound-p (result)
   (and (failure-p result)
-       (member-equal (cadr result) '("value" "Unproved"))))
+       (member-equal (cadr result) '("value" "unproved"))))
 
 (defun b2-bounds-type-bounds (lib lower upper evidence)
   (let ((lower-type (library-library-type-of lib lower evidence)))
@@ -200,7 +190,7 @@
 (defun b2-bounds-prove-integer-bound (lib target evidence)
   (proof-with-checked-results ((decoded (b2-bounds-comparison target)))
     (if (not decoded)
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (let ((a (car decoded)) (b (cadr decoded)) (strict (caddr decoded)))
         (let ((typed (b2-bounds-type-bounds lib a b evidence)))
           (if (failure-p typed)
@@ -213,4 +203,4 @@
                    (append sources (list (list *proof-zero* zero nil)))
                    want a b strict lib evidence)
                   (b2-bounds-try-pairs sources want a b strict lib evidence)
-                  '(:failure "Unproved" "")))))))))
+                  '(:failure "unproved" "")))))))))

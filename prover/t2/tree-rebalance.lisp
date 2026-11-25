@@ -18,11 +18,8 @@
                (t (let ((,name checked-tree-value))
                     (t2-tree-rebalance-with-library ,(cdr bindings) ,result))))))))
 
-(defun t2-tree-rebalance-attempt-result (attempt)
-  (if (failure-p (car attempt)) (car attempt) attempt))
-
 (defun t2-tree-rebalance-unproved-p (result)
-  (and (failure-p result) (equal (cadr result) "Unproved")))
+  (and (failure-p result) (equal (cadr result) "unproved")))
 
 ; A structural normalization can add lemmas before reporting an unproved
 ; goal. The state-returning traversal supplies the Library for the fallback.
@@ -76,7 +73,7 @@
         ((length (t2-tree-rebalance-step-term strictly-positive 2))
          (head (proof-term-at length 0)))
       (if (not (equal head *library-len*))
-          '(:failure "RecipeMismatch" "")
+          '(:failure "recipe-mismatch" "")
         (proof-with-checked-results
             ((equation (proof-proof-unfold proof length))
              (body (t2-tree-rebalance-step-term equation 2))
@@ -133,16 +130,6 @@
   (let ((operation (list *t2-tree-rebalance-build-tree* *library-x* n)))
     (t2-tree-rebalance-reduce lib (list (list :term operation) (list :head *t2-tactics-zp*))
                              nil known nil operation)))
-
-(defun t2-tree-rebalance-simplify-build (lib n known)
-  (t2-tree-rebalance-attempt-result (t2-tree-rebalance-simplify-build-attempt lib n known)))
-
-(defun t2-tree-rebalance-expand-constructor (term)
-  (and (member-equal (t2-book-logic-head term)
-                     (list *t2-symbol-trees-treep* *t2-symbol-trees-to-alist*
-                           *t2-structural-lists-append*))
-       (proof-with-checked-results ((first (proof-term-at term 1)))
-         (t2-structural-lists-constructed first))))
 
 (defconst *t2-tree-rebalance-constructor-expansions*
   (list (list :constructed *t2-symbol-trees-treep* 1)
@@ -207,10 +194,6 @@
          (reverse (proof-proof-symmetric proof equivalence))
          (result (proof-proof-rewrite-result proof result reverse claim y)))
       (cons result lib))))
-
-(defun t2-tree-rebalance-short-prefix (lib size typed lower-bound claim)
-  (t2-tree-rebalance-attempt-result
-   (t2-tree-rebalance-short-prefix-attempt lib size typed lower-bound claim)))
 
 (defun t2-tree-rebalance-long-prefix-attempt (lib formula typed size nonnegative enough)
   (let* ((proof (library-library-proof lib))
@@ -339,10 +322,6 @@
                                                             (car recovered)))))
       (cons (list exact (list left-bindings right-bindings)) lib))))
 
-(defun t2-tree-rebalance-long-prefix (lib formula typed size nonnegative enough)
-  (t2-tree-rebalance-attempt-result
-   (t2-tree-rebalance-long-prefix-attempt lib formula typed size nonnegative enough)))
-
 (defun t2-tree-rebalance-prefix-invariant-attempt (lib)
   (let* ((proof (library-library-proof lib))
          (name "TREE-FROM-SYMBOL-ALIST-PREFIX")
@@ -381,9 +360,6 @@
            (lib (library-library-lemma lib name formula step nil)))
         (cons name lib)))))
 
-(defun t2-tree-rebalance-prefix-invariant (lib)
-  (t2-tree-rebalance-attempt-result (t2-tree-rebalance-prefix-invariant-attempt lib)))
-
 (defun t2-tree-rebalance-proper-length-attempt (lib typed)
   (let ((proof (library-library-proof lib)))
     (t2-tree-rebalance-with-library
@@ -407,15 +383,12 @@
          (no-text (proof-proof-rewrite proof no-text reverse '(1 1 1)))
          (literal (t2-tree-rebalance-first no-text)))
       (if (not (equal literal (proof-neg text)))
-          (cons '(:failure "RecipeMismatch" "") lib)
+          (cons '(:failure "recipe-mismatch" "") lib)
         (t2-tree-rebalance-with-library
             ((yes (t2-input-fields-select lib start no-string))
              (no (t2-input-fields-select lib start no-text))
              (step (proof-proof-cases proof branch yes no)))
           (cons step lib))))))
-
-(defun t2-tree-rebalance-proper-length (lib typed)
-  (t2-tree-rebalance-attempt-result (t2-tree-rebalance-proper-length-attempt lib typed)))
 
 (defun t2-tree-rebalance-rebalance-consequences-attempt (lib)
   (let* ((proof (library-library-proof lib))
@@ -432,7 +405,7 @@
            (typed-seq (t2-arithmetic-arithmetic-modus-ponens lib typed-implication typed))
            (true-list (proof-sym "TRUE-LISTP-SYMBOL-BTREE-TO-ALIST" "ACL2"))
            (fact (assoc-equal true-list (proof-proof-facts proof)))
-           (clause (if fact (cdr fact) '(:failure "MissingBinding" "")))
+           (clause (if fact (cdr fact) '(:failure "missing-binding" "")))
            (literal (proof-term-at clause 0))
            (argument (proof-term-at literal 1))
            (actual (proof-term-at argument 1))
@@ -503,9 +476,6 @@
            (lib (library-library-lemma lib name claim step nil)))
         (cons name lib)))))
 
-(defun t2-tree-rebalance-rebalance-consequences (lib)
-  (t2-tree-rebalance-attempt-result (t2-tree-rebalance-rebalance-consequences-attempt lib)))
-
 (defun t2-tree-rebalance-rebalance-lookup-attempt (lib formula)
   (let ((proof (library-library-proof lib))
         (x *library-x*))
@@ -544,9 +514,6 @@
          (equation (proof-proof-chain proof reverse (list before)))
          (step (t2-power-implication lib domain equation)))
       (cons step lib))))
-
-(defun t2-tree-rebalance-rebalance-lookup (lib formula)
-  (t2-tree-rebalance-attempt-result (t2-tree-rebalance-rebalance-lookup-attempt lib formula)))
 
 (defun t2-tree-rebalance-lookup-claim-p (domain claim)
   (and (proof-is-call domain *proof-if*)
@@ -596,5 +563,3 @@
              (t2-tree-rebalance-prove-consequence lib domain claim))
             (t (cons nil lib))))))
 
-(defun t2-tree-rebalance-prove (lib formula)
-  (t2-tree-rebalance-attempt-result (t2-tree-rebalance-prove-attempt lib formula)))

@@ -596,9 +596,6 @@
         (h4-book-tactics-index-facts-with-templates
          (cdr facts) definitions (car indexes) (cdr indexes) tables)))))
 
-(defun h4-book-tactics-index-facts (facts definitions literal-rules equations)
-  (h4-book-tactics-index-facts-with-templates facts definitions literal-rules equations nil))
-
 (defun h4-book-tactics-index-in-rule-order (index)
   (declare (xargs :measure (acl2-count index)))
   (if (endp index)
@@ -616,9 +613,6 @@
             (h4-book-tactics-index-in-rule-order (car indexes))
             (h4-book-tactics-index-in-rule-order (cdr indexes))
             0 0 nil t nil 0 :default nil))))
-
-(defun h4-book-tactics-book-search-init (library)
-  (h4-book-tactics-book-search-init-with-templates library nil))
 
 (defun h4-book-tactics-countdown-actuals (formals actuals tests)
   (declare (xargs :measure (acl2-count formals)))
@@ -900,7 +894,7 @@
  (defun h4-book-tactics-lookup-loop (n search goal evidence depth scope)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-tactics-lookup-loop") search)
+       (cons '(:failure "fuel" "h4-book-tactics-lookup-loop") search)
      (let* ((given (assoc-equal goal evidence))
             (key (list scope goal depth))
             (cached (and (not given)
@@ -918,7 +912,7 @@
  (defun h4-book-tactics-lookup-rule-loop (n search goal evidence depth scope)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-tactics-lookup-rule-loop") search)
+       (cons '(:failure "fuel" "h4-book-tactics-lookup-rule-loop") search)
      (let* ((library (h4-book-tactics-book-search-p search))
             (proof (library-library-proof library)))
        (cond
@@ -947,7 +941,7 @@
  (defun h4-book-tactics-lookup-remainder-loop (n search goal evidence depth scope)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-tactics-lookup-remainder-loop") search)
+       (cons '(:failure "fuel" "h4-book-tactics-lookup-remainder-loop") search)
      (h4-book-tactics-with-search-value (obvious (h4-book-tactics-lookup-obvious search goal) search)
        (if obvious
            (cons obvious search)
@@ -968,7 +962,7 @@
  (defun h4-book-tactics-lookup-local-loop (n search goal evidence depth scope entries)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "h4-book-tactics-lookup-local-loop") search))
+    ((zp n) (cons '(:failure "fuel" "h4-book-tactics-lookup-local-loop") search))
     ((endp entries) (cons nil search))
     (t
      (let ((step (cdar entries)))
@@ -987,7 +981,7 @@
  (defun h4-book-tactics-try-rules-loop (n search rules term evidence depth rewrite scope same-head)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "h4-book-tactics-try-rules-loop") search))
+    ((zp n) (cons '(:failure "fuel" "h4-book-tactics-try-rules-loop") search))
     ((endp rules) (cons nil search))
     (t
      (let ((rule (car rules)))
@@ -1005,7 +999,7 @@
  (defun h4-book-tactics-instantiate-loop (n search rule term evidence depth rewrite scope)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-tactics-instantiate-loop") search)
+       (cons '(:failure "fuel" "h4-book-tactics-instantiate-loop") search)
      (let ((unrestricted (h4-book-tactics-book-search-unrestricted-rewrite search)))
        (h4-book-tactics-with-search-value
            (direct (and rewrite unrestricted
@@ -1024,7 +1018,7 @@
            (let* ((matches (1- (h4-book-tactics-book-search-matches search)))
                   (search (h4-book-tactics-book-search-with-matches search matches)))
              (if (< matches 0)
-                 (cons '(:failure "Unproved" "") search)
+                 (cons '(:failure "unproved" "") search)
                (h4-book-tactics-with-search-value (match (h4-book-tactics-rule-match rule term rewrite) search)
                  (if (not (car match))
                      (cons nil search)
@@ -1038,7 +1032,7 @@
  (defun h4-book-tactics-replay-loop (n search rule bindings evidence depth scope)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-tactics-replay-loop") search)
+       (cons '(:failure "fuel" "h4-book-tactics-replay-loop") search)
      (let* ((library (h4-book-tactics-book-search-p search))
             (proof (library-library-proof library))
             (source (h4-book-tactics-rule-source rule)))
@@ -1066,7 +1060,7 @@
  (defun h4-book-tactics-replay-sides-loop (n search step sides evidence depth scope)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) (cons '(:failure "Fuel" "h4-book-tactics-replay-sides-loop") search))
+    ((zp n) (cons '(:failure "fuel" "h4-book-tactics-replay-sides-loop") search))
     ((endp sides) (cons step search))
     ((not (member-equal (car sides) (cdr (proof-step-clause step))))
      (h4-book-tactics-replay-sides-loop (1- n) search step (cdr sides) evidence depth scope))
@@ -1095,7 +1089,7 @@
  (defun h4-book-tactics-replay-path-loop (n search step path evidence depth scope)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-tactics-replay-path-loop") search)
+       (cons '(:failure "fuel" "h4-book-tactics-replay-path-loop") search)
      (if (endp path)
          (cons step search)
        (let ((library (h4-book-tactics-book-search-p search))
@@ -1126,18 +1120,6 @@
 
 (defun h4-book-tactics-book-search-replay-scoped (search rule bindings evidence depth scope)
   (h4-book-tactics-replay-loop 1000000 search rule bindings evidence depth (list :external scope)))
-
-(defun h4-book-tactics-book-search-lookup (search goal evidence depth)
-  (h4-book-tactics-book-search-lookup-scoped search goal evidence depth evidence))
-
-(defun h4-book-tactics-book-search-lookup-rule (search goal evidence depth)
-  (h4-book-tactics-lookup-rule-loop 1000000 search goal evidence depth (list :external evidence)))
-
-(defun h4-book-tactics-book-search-instantiate (search rule term evidence depth rewrite)
-  (h4-book-tactics-instantiate-loop 1000000 search rule term evidence depth rewrite (list :external evidence)))
-
-(defun h4-book-tactics-book-search-replay (search rule bindings evidence depth)
-  (h4-book-tactics-book-search-replay-scoped search rule bindings evidence depth evidence))
 
 (defun h4-book-tactics-reduction-equality (step proof)
   (proof-with-checked-results ((formula (proof-step-first step)))
@@ -1307,7 +1289,7 @@
     (n search formula evidence scope equalities local-equations protected unfolding replies)
   (declare (xargs :measure (nfix n)))
   (if (zp n)
-      (cons '(:failure "Fuel" "h4-book-tactics-reduction-loop") search)
+      (cons '(:failure "fuel" "h4-book-tactics-reduction-loop") search)
     (let* ((library (h4-book-tactics-book-search-p search))
            (equation (hide (h4-tactics-tactics-normalize
                             library formula (table-values evidence) *h4-book-tactics-logic*
@@ -1337,9 +1319,6 @@
             (local-equations (h4-book-tactics-reduction-local-equations steps nil) search)
           (h4-book-tactics-reduction-loop 1000000 search formula evidence scope equalities
                                            local-equations protected nil nil))))))
-
-(defun h4-book-tactics-book-search-reduction (search formula evidence)
-  (h4-book-tactics-reduction-in-scope search formula evidence (list :external evidence)))
 
 (defun h4-book-tactics-book-search-induction-rule (actual formal)
   (cond ((equal actual (list *library-car* formal)) (list *proof-consp* t 2))
@@ -1581,7 +1560,7 @@
                           (h4-book-tactics-book-search-p search) value integers equality)))
             (cons (if (and (failure-p attempt)
                            (member-equal (cadr attempt)
-                                         '("InapplicableTerm" "InapplicableStep" "value" "assertion")))
+                                         '("inapplicable-term" "inapplicable-step" "value" "assertion")))
                       nil
                     attempt)
                   search)))))))
@@ -1639,12 +1618,12 @@
  (defun h4-book-tactics-solve-loop (n search formula premises splits)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-tactics-solve-loop") search)
+       (cons '(:failure "fuel" "h4-book-tactics-solve-loop") search)
      (let* ((remaining (1- (h4-book-tactics-book-search-remaining search)))
             (search (h4-book-tactics-book-search-with-remaining search remaining))
             (proof (library-library-proof (h4-book-tactics-book-search-p search))))
        (if (< remaining 0)
-           (cons '(:failure "Unproved" "") search)
+           (cons '(:failure "unproved" "") search)
          (h4-book-tactics-with-search-value (evidence (h4-book-tactics-solve-hypotheses search premises) search)
            (let* ((scoped (h4-book-tactics-book-search-begin-lookup-scope search))
                   (scope (car scoped))
@@ -1663,7 +1642,7 @@
  (defun h4-book-tactics-solve-form-loop (n search formula premises splits evidence scope)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-tactics-solve-form-loop") search)
+       (cons '(:failure "fuel" "h4-book-tactics-solve-form-loop") search)
      (let* ((library (h4-book-tactics-book-search-p search))
             (proof (library-library-proof library))
             (implies (proof-is-call formula *library-implies*)))
@@ -1690,7 +1669,7 @@
  (defun h4-book-tactics-solve-reduced-loop (n search formula premises splits evidence scope)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-tactics-solve-reduced-loop") search)
+       (cons '(:failure "fuel" "h4-book-tactics-solve-reduced-loop") search)
      (let* ((library (h4-book-tactics-book-search-p search))
             (proof (library-library-proof library)))
        (h4-book-tactics-with-search-result
@@ -1698,10 +1677,10 @@
          (h4-book-tactics-with-search-value (value (h4-book-tactics-step-right equality) search)
            (h4-book-tactics-with-search-value (fits (h4-book-tactics-fits value 2500) search)
              (cond
-              ((not fits) (cons '(:failure "Unproved" "") search))
+              ((not fits) (cons '(:failure "unproved" "") search))
               ((proof-is-call value *proof-quote*)
                (if (equal value *proof-false*)
-                   (cons '(:failure "Unproved" "") search)
+                   (cons '(:failure "unproved" "") search)
                  (cons (h4-tactics-tactics-non-nil library equality) search)))
               (t
                (h4-book-tactics-with-search-result
@@ -1720,7 +1699,7 @@
  (defun h4-book-tactics-solve-open-loop (n search formula premises splits evidence scope equality value)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-tactics-solve-open-loop") search)
+       (cons '(:failure "fuel" "h4-book-tactics-solve-open-loop") search)
      (h4-book-tactics-with-search-result
          (linear search (h4-book-tactics-solve-linear search value evidence scope equality))
        (if linear
@@ -1734,7 +1713,7 @@
                 (known (h4-book-tactics-solve-loop (1- n) search formula
                                                    (append premises (list known)) splits))
                 ((or (endp tests) (equal splits 0))
-                 (cons '(:failure "Unproved" "") search))
+                 (cons '(:failure "unproved" "") search))
                 (t
                  (h4-book-tactics-with-search-value
                      (branch (h4-book-tactics-solve-branch tests nil 4) search)
@@ -1744,7 +1723,7 @@
  (defun h4-book-tactics-solve-cases-loop (n search formula test premises splits)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       (cons '(:failure "Fuel" "h4-book-tactics-solve-cases-loop") search)
+       (cons '(:failure "fuel" "h4-book-tactics-solve-cases-loop") search)
      (let* ((library (h4-book-tactics-book-search-p search))
             (proof (library-library-proof library)))
        (h4-book-tactics-with-search-value (positive (proof-proof-assume proof test t) search)
@@ -1823,7 +1802,7 @@
 
 (defun h4-book-tactics-retry-proof-p (value)
   (and (failure-p value)
-       (member-equal (cadr value) '("Unproved" "InapplicableStep" "assertion" "recursion"))))
+       (member-equal (cadr value) '("unproved" "inapplicable-step" "assertion" "recursion"))))
 
 (defun h4-book-tactics-prove-direct (search formula given)
   (h4-book-tactics-with-search-result (step search (h4-book-tactics-book-search-solve search formula given 3))
@@ -1870,7 +1849,7 @@
 (defun h4-book-tactics-prove-levels (search formula given plans levels)
   (declare (xargs :measure (acl2-count levels)))
   (if (endp levels)
-      (cons '(:failure "Unproved" "") search)
+      (cons '(:failure "unproved" "") search)
     (let* ((extended (car levels))
            (search (h4-book-tactics-book-search-with-extended search extended))
            (direct (hide (h4-book-tactics-prove-direct
@@ -1883,7 +1862,7 @@
             (h4-book-tactics-prove-levels (cadr induced) formula given (caddr induced) (cdr levels))))))))
 
 (defun h4-book-tactics-prove-large (search formula)
-  (let ((failure '(:failure "Unproved" "")))
+  (let ((failure '(:failure "unproved" "")))
     (if (not (proof-is-call formula *proof-equal*))
         failure
       (proof-with-checked-results ((right (proof-term-at formula 2)))

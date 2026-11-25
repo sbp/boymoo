@@ -94,7 +94,7 @@
             (proof-proof-chain proof first (list reverse-step)))
         (let ((residual (if (proof-is-call left *proof-if*) left right)))
           (if (or (< 4 (len evidence)) (not (proof-is-call residual *proof-if*)))
-              '(:failure "Unproved" "")
+              '(:failure "unproved" "")
             (proof-with-checked-results
               ((outer-test (proof-term-at residual 1))
                (test (h4-book-projections-spine-test outer-test)))
@@ -105,7 +105,7 @@
    (n evidence p start call case-rewrites hypothesis provide goal)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "h4-book-projections-agrees-with-list-fix-compare-under")
+       '(:failure "fuel" "h4-book-projections-agrees-with-list-fix-compare-under")
      (h4-book-projections-list-fix-compare-cases
       (1- n) (h4-book-projections-list-fix-compare-result
               evidence p start call case-rewrites hypothesis provide)
@@ -114,7 +114,7 @@
    (n result evidence p start call case-rewrites hypothesis provide goal)
    (declare (xargs :measure (nfix n)))
    (cond
-    ((zp n) '(:failure "Fuel" "h4-book-projections-list-fix-compare-cases"))
+    ((zp n) '(:failure "fuel" "h4-book-projections-list-fix-compare-cases"))
     ((not (eq (car result) :cases)) result)
     (t (let ((proof (library-library-proof p))
              (test (cadr result)))
@@ -130,7 +130,7 @@
    (n sign evidence p start call case-rewrites hypothesis provide goal)
    (declare (xargs :measure (nfix n)))
    (if (zp n)
-       '(:failure "Fuel" "h4-book-projections-agrees-with-list-fix-compare-under-branch")
+       '(:failure "fuel" "h4-book-projections-agrees-with-list-fix-compare-under-branch")
      (if (failure-p sign)
          sign
        (h4-book-projections-agrees-with-list-fix-compare-under
@@ -435,7 +435,7 @@
         (let ((result (h4-book-projections-list-equiv-proof p formula match)))
           (if (and (failure-p result)
                    (member-equal (cadr result)
-                                 '("Unproved" "InapplicableStep" "InapplicableTerm" "MissingProofInput"
+                                 '("unproved" "inapplicable-step" "inapplicable-term" "missing-proof-input"
                                    "assertion" "key" "value" "recursion")))
               (h4-book-projections-projection-equality-proof p formula)
             result))

@@ -65,7 +65,7 @@
   (declare (xargs :measure (nfix n)))
   (let ((proof (library-library-proof lib)))
     (cond
-     ((zp n) '(:failure "Fuel" "b1-predicates-boolean-definition-by-value"))
+     ((zp n) '(:failure "fuel" "b1-predicates-boolean-definition-by-value"))
      ((proof-is-call value *proof-if*)
       (proof-with-checked-results
           ((branches (proof-list-of-length (cdr value) 3))
@@ -113,7 +113,7 @@
       ((boolean (b1-predicates-boolean-definition-boolean-leaves
                  body head slot variable)))
     (if (not boolean)
-        '(:failure "Unproved" "")
+        '(:failure "unproved" "")
       (let* ((proof (library-library-proof lib))
              (formal-call (cons head formals))
              (template (list *b1-predicates-booleanp* *proof-result*))

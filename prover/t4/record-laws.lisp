@@ -293,7 +293,7 @@
        (same-literal (proof-step-first same-read)))
     (if (not (and (equal same-literal actual)
                   (equal right-read (t4-records-field key right))))
-        '(:failure "InferenceMismatch" "")
+        '(:failure "inference-mismatch" "")
       (t4-record-laws-with
           (((both records)
             (t4-record-laws-record-sufficiency-cases
@@ -336,7 +336,7 @@
 (defun t4-record-laws-record-update-law-initial (n term)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-record-laws-record-update-law-initial"))
+   ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-record-laws-record-update-law-initial"))
    ((not (proof-is-call term *t4-records-set*)) term)
    (t (t4-constructors-with ((record (t4-constructors-at term 3)))
         (t4-record-laws-record-update-law-initial (1- n) record)))))
@@ -349,7 +349,7 @@
 (defun t4-record-laws-record-update-law-writes (n term records obj base backing typed-base backing-allowed)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-record-laws-record-update-law-writes"))
+   ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-record-laws-record-update-law-writes"))
    ((equal term obj)
     (t4-record-laws-with
         (((reconstructed records) (t4-records-records-reconstruct records obj))
@@ -383,7 +383,7 @@
 (defun t4-record-laws-record-update-law-read-term (n term records base query typed-base)
   (declare (xargs :measure (nfix n)))
   (cond
-   ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "Fuel" "t4-record-laws-record-update-law-read-term"))
+   ((not (acl2::o< (nfix (1- n)) (nfix n))) '(:failure "fuel" "t4-record-laws-record-update-law-read-term"))
    ((equal term base)
     (t4-record-laws-with
         ((step (t4-record-laws-inherited proof-proof-reflexive records (t4-records-field query base))))
@@ -445,7 +445,7 @@
   (t4-constructors-with
       ((test (and (proof-is-call guard *proof-not*) (t4-constructors-at guard 1))))
     (if (not (proof-is-call test *proof-equal*))
-        '(:failure "SearchMiss" "")
+        '(:failure "search-miss" "")
       (t4-constructors-with
           ((keys (proof-list-of-length (cdr test) 2))
            (ma (table-get assumed (proof-eq query (car keys)) nil))
@@ -453,7 +453,7 @@
            (ma-first (and ma mb (proof-step-first ma)))
            (mb-first (and (proof-is-call ma-first *proof-equal*) (proof-step-first mb))))
         (if (not (proof-is-call mb-first *proof-equal*))
-            '(:failure "SearchMiss" "")
+            '(:failure "search-miss" "")
           (t4-constructors-with
               ((reverse (t4-record-laws-inherited proof-proof-symmetric records ma))
                (chained (t4-record-laws-inherited proof-proof-chain records reverse (list mb)))
@@ -493,7 +493,7 @@
  (defun t4-record-laws-record-update-law-compare (n a b assumed records obj query guard)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-record-laws-record-update-law-compare")
+       '(:failure "fuel" "t4-record-laws-record-update-law-compare")
      (t4-record-laws-with ((left (t4-constructors-first a 2))
                             (right (t4-constructors-first b 2)))
        (if (equal left right)
@@ -507,7 +507,7 @@
                  ((test (t4-constructors-at undecided 1))
                   (key (and (proof-is-call test *proof-equal*) (t4-constructors-at test 1))))
                (if (not (and (proof-is-call test *proof-equal*) (equal key query) (< (len assumed) 6)))
-                   '(:failure "SearchMiss" "")
+                   '(:failure "search-miss" "")
                  (let ((known (assoc-equal test assumed)))
                    (if known
                        (t4-record-laws-record-update-law-compare-branch
@@ -526,7 +526,7 @@
  (defun t4-record-laws-record-update-law-compare-branch (n known cases a b records obj query guard test)
    (declare (xargs :measure (nfix n)))
    (if (not (acl2::o< (nfix (1- n)) (nfix n)))
-       '(:failure "Fuel" "t4-record-laws-record-update-law-compare-branch")
+       '(:failure "fuel" "t4-record-laws-record-update-law-compare-branch")
      (t4-record-laws-with
          ((a (t4-record-laws-record-update-law-compare-branch-selected a records known test))
           (b (t4-record-laws-record-update-law-compare-branch-selected b records known test)))
@@ -598,14 +598,8 @@
                         (t4-record-laws-record-update-law-proof (t4-records-records-init lib) left right obj guard))
                     (cons nil lib)))))))))))
 
-(defun t4-record-laws-record-sufficiency (lib formula replies)
-  (t4-constructors-finish (t4-record-laws-record-sufficiency-attempt lib formula replies) lib nil))
-
 (defun t4-record-laws-record-sufficiency-with-library (lib formula replies)
   (t4-constructors-finish (t4-record-laws-record-sufficiency-attempt lib formula replies) lib t))
-
-(defun t4-record-laws-record-update-law (lib formula replies)
-  (t4-constructors-finish (t4-record-laws-record-update-law-attempt lib formula replies) lib nil))
 
 (defun t4-record-laws-record-update-law-with-library (lib formula replies)
   (t4-constructors-finish (t4-record-laws-record-update-law-attempt lib formula replies) lib t))

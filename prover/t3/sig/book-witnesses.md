@@ -11,7 +11,7 @@ returned by `proof-proof-entry`.
 | Call | Result | Failure |
 |---|---|---|
 | `(t3-book-witnesses-candidate-bodies lib function arity formulas declared)` | The candidate definitions in generation order, including repeated candidates. `function` is the symbol being defined, `arity` its integer arity, `formulas` the named constraints, and `declared` the list of symbols being witnessed. | A failure from reading a constraint or invalid arity. |
-| `(t3-book-witnesses-witness-proof lib search declarations formulas)` | `(list entry lib search)` for the first successful witness and the resulting Library and theorem search states. Equal candidates are tried once per function. The rightmost candidate list varies fastest. | `Unsupported` when no candidate works, or a construction or search failure. |
+| `(t3-book-witnesses-witness-proof lib search declarations formulas)` | `(list entry lib search)` for the first successful witness and the resulting Library and theorem search states. Equal candidates are tried once per function. The rightmost candidate list varies fastest. | `unsupported` when no candidate works, or a construction or search failure. |
 
 `*t3-book-witnesses-iff*` is the `IFF` symbol. Failures are the entire result.
 Arity accepts the Boolean bounds in

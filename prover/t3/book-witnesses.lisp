@@ -200,7 +200,7 @@
     (let* ((found (t3-book-witnesses-prove-goal search (car goals)))
            (step (car found))
            (search (cdr found)))
-      (cond ((and (failure-p step) (equal (cadr step) "Unsupported"))
+      (cond ((and (failure-p step) (equal (cadr step) "unsupported"))
              (cons :retry search))
             ((failure-p step) step)
             (t (t3-book-witnesses-prove-goals search (cdr goals) (cons step proofs)))))))
@@ -224,14 +224,14 @@
 (mutual-recursion
  (defun t3-book-witnesses-try-product (n lib search candidates reverse-definitions names goals declared)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "t3-book-witnesses-witness-proof"))
+   (cond ((zp n) '(:failure "fuel" "t3-book-witnesses-witness-proof"))
          ((endp candidates)
           (t3-book-witnesses-try-definitions lib search (reverse reverse-definitions) names goals declared))
          (t (t3-book-witnesses-try-options (1- n) lib search (car candidates) (cdr candidates)
                                            reverse-definitions names goals declared))))
  (defun t3-book-witnesses-try-options (n lib search options candidates reverse-definitions names goals declared)
    (declare (xargs :measure (nfix n)))
-   (cond ((zp n) '(:failure "Fuel" "t3-book-witnesses-witness-proof"))
+   (cond ((zp n) '(:failure "fuel" "t3-book-witnesses-witness-proof"))
          ((endp options) (list :retry lib search))
          (t (proof-with-checked-results
              ((found (t3-book-witnesses-try-product (1- n) lib search candidates
@@ -249,5 +249,5 @@
     (goals (t3-book-evaluators-witness-goals formulas names))
     (found (t3-book-witnesses-try-product 1000000 lib search candidates nil (table-values names) goals declared)))
    (if (eq (car found) :retry)
-       '(:failure "Unsupported" "")
+       '(:failure "unsupported" "")
      found)))

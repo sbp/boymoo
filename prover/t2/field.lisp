@@ -39,7 +39,7 @@
                      ((equal operator *proof-minus*) "NEGATION-NUMBER"))))
      (if name
          (library-library-cite lib name (cdr term) nil)
-       '(:failure "MissingBinding" "")))))
+       '(:failure "missing-binding" "")))))
 
 (defun t2-field-numeric-fix (lib term numeric)
   (let ((proof (library-library-proof lib)))
