@@ -188,6 +188,15 @@
                                                        (a64-signed 64 right)))
                                (t (floor left right)))))))
          (a64-write-reg (nth 0 args) 64 nil result next)))
+      (:clz
+       (a64-write-reg (nth 0 args) 64 nil
+                      (- 64 (integer-length (a64-read-reg (nth 1 args) 64 nil machine)))
+                      next))
+      (:ccmp
+       (if (a64-condition (nth 2 args) (a64-nzcv machine))
+           (a64-exec-arithmetic 3 64 31 (nth 0 args)
+                                (a64-read-reg (nth 1 args) 64 nil machine) nil next)
+         (a64-set-nzcv (nth 3 args) next)))
       (:select
        (let* ((width (nth 0 args))
               (value (if (a64-condition (nth 4 args) (a64-nzcv machine))
@@ -225,12 +234,15 @@
 
 (defun a64-run (steps start end return-pc machine)
   (declare (xargs :measure (nfix steps)
-                  :hints (("Goal" :in-theory (disable a64-step)))))
+                  :hints (("Goal" :in-theory (disable a64-step a64-decode a64-execute
+                                                      a64-load)))))
   (let ((pc (a64-pc machine)))
     (cond ((equal pc return-pc) (mv :return machine))
           ((and start end (or (< pc start) (<= end pc))) (mv :outside machine))
           ((zp steps) (mv :limit machine))
-          (t (let ((next (a64-step machine)))
+          ; A system call is told by the instruction, not by the result.
+          (t (let* ((instruction (a64-decode (a64-load 4 pc machine)))
+                    (next (a64-execute instruction machine)))
                (cond ((eq next :undefined) (mv :undefined machine))
-                     ((eq (car next) :svc) (mv next machine))
+                     ((eq (car instruction) :svc) (mv next machine))
                      (t (a64-run (1- steps) start end return-pc next))))))))

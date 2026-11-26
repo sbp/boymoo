@@ -12,12 +12,15 @@ usage() {
 
 sets=
 ranks=
+set_names=
+rank_limit=
 checked=0
 while [ "$#" -gt 0 ]; do
     case $1 in
         --sets)
             [ "$#" -ge 2 ] || usage
             case $2 in ''|,*|*,|*,,*) usage ;; esac
+            set_names=$2
             sets=KEYWORD::SETS
             seen=' '
             old_ifs=$IFS
@@ -36,7 +39,8 @@ while [ "$#" -gt 0 ]; do
             case $2 in ''|*[!0-9]*) usage ;; esac
             limit=$2
             while [ "${limit#0}" != "$limit" ]; do limit=${limit#0}; done
-            ranks="(KEYWORD::RANKS . ${limit:-0})"
+            rank_limit=${limit:-0}
+            ranks="(KEYWORD::RANKS . $rank_limit)"
             shift 2 ;;
         --checked) checked=1; shift ;;
         --) shift; break ;;
@@ -52,6 +56,47 @@ for file do
     fi
 done
 
+driver=${PROVER_DRIVER:-fast}
+case $driver in
+    fast) ;;
+    compiled)
+        if [ ! -x build/compiler/prover ]; then
+            printf '%s\n' 'Run sh compiler/build-prover.sh to build the compiled prover.' >&2
+            exit 2
+        fi ;;
+    *) printf '%s\n' 'PROVER_DRIVER must be fast or compiled.' >&2; exit 2 ;;
+esac
+
+work=build/prover/driver
+scratch=$work/prove.$$
+mkdir -p "$work"
+mkdir "$scratch"
+trap 'rm -rf "$scratch"' 0
+trap 'exit 2' HUP INT TERM
+
+if [ "$driver" = compiled ]; then
+    . compiler/frame.sh
+    frame_input() {
+        case $1 in -*) frame_field "./$1" ;; *) frame_field "$1" ;; esac
+    }
+    printf '%s' "$set_names" > "$scratch/sets"
+    printf '%s' "$rank_limit" > "$scratch/ranks"
+    {
+        if [ "$checked" -eq 1 ]; then frame_field spec/ground.txt; else printf '\000\000\000\000'; fi
+        frame_input "$1"
+        frame_input "$2"
+        if [ "$#" -eq 3 ]; then frame_input "$3"; else printf '\000\000\000\000'; fi
+        frame_field "$scratch/sets"
+        frame_field "$scratch/ranks"
+    } > "$scratch/frame"
+    if [ "${PROVER_DRIVER_VERBOSE-}" = 1 ]; then
+        time -p build/compiler/prover < "$scratch/frame"
+    else
+        build/compiler/prover < "$scratch/frame"
+    fi
+    exit 0
+fi
+
 if [ -n "$sets" ] && [ -n "$ranks" ]; then
     options="($sets $ranks)"
 elif [ -n "$sets$ranks" ]; then
@@ -65,12 +110,6 @@ quote_input() {
     case $1 in -*) quote "./$1" ;; *) quote "$1" ;; esac
 }
 
-work=build/prover/driver
-scratch=$work/prove.$$
-mkdir -p "$work"
-mkdir "$scratch"
-trap 'rm -rf "$scratch"' 0
-trap 'exit 2' HUP INT TERM
 {
     if [ "$checked" -eq 1 ]; then
         printf '(BOYMOO-PROVER::DRIVER-PROVE-CHECKED '

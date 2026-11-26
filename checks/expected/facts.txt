@@ -54,6 +54,8 @@
 (accepted "define a function named &BM")
 (refused "define a function with the formal *X*")
 (refused "define a function with the formal &X")
+(accepted "attach a function to IDENTITY")
+(refused "attach a function to IF")
 (refused "define a function with the formal PI")
 (accepted "define a function with the formal LIST")
 (refused "define a function with a formal of COMMON-LISP that ACL2 does not import")

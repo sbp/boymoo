@@ -32,11 +32,10 @@
 # counts it as given. OUT ends up holding the library's proofs, and the
 # script prints how many obligations are proved.
 #
-# What each run of the driver gave is kept under build/prover/library/, and
-# a later run of this script runs only the pieces and obligations that were
-# not run before; with -a it runs none and only joins what is there, and
-# with -f it empties build/prover/library/ first and runs them all, as it
-# must after the prover changes.
+# The cache is build/prover/library/ for the fast runner and
+# build/prover/library-compiled/ for the compiled driver. A run reuses
+# completed attempts from its cache. With -a it only joins them. With -f
+# it empties its cache first, as it must after the prover changes.
 set -u
 export LC_ALL=C
 
@@ -56,30 +55,37 @@ fail() {
 }
 
 library=build/export/library.statements
-work=build/prover/library
+case ${PROVER_DRIVER:-fast} in
+    fast) work=build/prover/library ;;
+    compiled) work=build/prover/library-compiled ;;
+    *) fail 'PROVER_DRIVER must be fast or compiled.' ;;
+esac
 measures=build/termination/library.measures
 
 # One run of the driver (the script calls itself for each).
 if [ "${1-}" = --run ]; then
-    kind=$2 first=$3 last=$4 seconds=$5
+    [ "$#" -eq 5 ] || exit 0
+    seconds=$2 kind=$3 first=$4 last=$5
     unit=$work/$kind/$first
     rm -rf "$unit"
     mkdir -p "$unit" || exit 2
     awk -v a="$first" 'NR < a' "$library" > "$unit/library"
     awk -v a="$first" -v b="$last" 'NR >= a && NR <= b' "$library" > "$unit/statements"
     start=$(date +%s)
-    timeout "$seconds" sh prover/driver/prove.sh "$unit/library" "$unit/statements" \
+    timeout -k 5 "$seconds" sh prover/driver/prove.sh "$unit/library" "$unit/statements" \
         "$work/aids" > "$unit/proofs" 2> "$unit/errors"
     status=$?
     rm -f "$unit/library" "$unit/statements"
     [ "$status" -eq 0 ] || rm -f "$unit/proofs"
-    printf '%s %s %d %d\n' "$first" "$last" "$status" "$(($(date +%s) - start))" > "$unit/status"
+    printf '%s %s %d %d\n' "$first" "$last" "$status" "$(($(date +%s) - start))" > "$unit/status.tmp"
+    mv "$unit/status.tmp" "$unit/status"
     exit 0
 fi
 
 # One obligation given to each set alone, until one proves it.
 if [ "${1-}" = --alone ]; then
-    k=$2 seconds=$3 sets=$4
+    [ "$#" -eq 4 ] || exit 0
+    seconds=$2 sets=$3 k=$4
     unit=$work/alone/$k
     skip=$(awk -F '\t' -v k="$k" '$1 == k { print $2 }' "$work/obligations")
     rm -rf "$unit"
@@ -88,7 +94,7 @@ if [ "${1-}" = --alone ]; then
     awk -v a="$k" 'NR == a' "$library" > "$unit/statements"
     for set in $(echo "$sets" | tr , ' '); do
         start=$(date +%s)
-        timeout "$seconds" sh prover/driver/prove.sh --sets "$set" "$unit/library" \
+        timeout -k 5 "$seconds" sh prover/driver/prove.sh --sets "$set" "$unit/library" \
             "$unit/statements" "$work/aids" > "$unit/proofs.$set" 2> "$unit/errors.$set"
         status=$?
         printf '%s %d %d\n' "$set" "$status" "$(($(date +%s) - start))" >> "$unit/tried"
@@ -99,7 +105,8 @@ if [ "${1-}" = --alone ]; then
         rm -f "$unit/proofs.$set"
     done
     rm -f "$unit/library" "$unit/statements"
-    echo done > "$unit/status"
+    echo done > "$unit/status.tmp"
+    mv "$unit/status.tmp" "$unit/status"
     exit 0
 fi
 
@@ -163,7 +170,7 @@ if [ "$assemble_only" -eq 0 ]; then
     while read -r first last; do
         [ -f "$work/piece/$first/status" ] || echo "piece $first $last"
     done < "$work/pieces" |
-        xargs -P "$jobs" -n 3 sh -c 'sh prover/library.sh --run "$0" "$1" "$2" '"$seconds"
+        xargs -P "$jobs" -n 3 sh prover/library.sh --run "$seconds" || exit 2
     # Second pass: each obligation of a piece that did not end, or that its
     # piece left as a skip, not already run alone.
     while read -r first last; do
@@ -176,11 +183,19 @@ if [ "$assemble_only" -eq 0 ]; then
         while read -r k; do
             [ -f "$work/single/$k/status" ] || echo "single $k $k"
         done |
-        xargs -P "$jobs" -n 3 sh -c 'sh prover/library.sh --run "$0" "$1" "$2" '"$seconds"
+        xargs -P "$jobs" -n 3 sh prover/library.sh --run "$seconds" || exit 2
     # Third pass: each obligation that neither its piece nor its own run
     # proved, not already given to the sets alone.
     while read -r first last; do
-        awk -F '\t' -v a="$first" -v b="$last" -v work="$work" '
+        proofs=$work/piece/$first/proofs
+        awk -F '\t' -v a="$first" -v b="$last" -v work="$work" -v proofs="$proofs" '
+            BEGIN {
+                while ((getline line < proofs) > 0) {
+                    piece_found = 1
+                    if (line ~ /^\(skip /) skipped[line] = 1
+                }
+                close(proofs)
+            }
             function proved(f, skip,    line, n, found) {
                 n = 0; found = 0
                 while ((getline line < f) > 0) { n++; if (line == skip) found = 1 }
@@ -188,15 +203,14 @@ if [ "$assemble_only" -eq 0 ]; then
                 return n > 0 && !found
             }
             $1 >= a && $1 <= b {
-                piece = work "/piece/" a "/proofs"
-                if (proved(piece, $2) || proved(work "/single/" $1 "/proofs", $2)) next
-                print $1
+                if ((!piece_found || ($2 in skipped)) &&
+                    !proved(work "/single/" $1 "/proofs", $2)) print $1
             }' "$work/obligations"
     done < "$work/pieces" |
         while read -r k; do
             [ -f "$work/alone/$k/status" ] || echo "$k"
         done |
-        xargs -P "$jobs" -n 1 sh -c 'sh prover/library.sh --alone "$0" '"$seconds $sets"
+        xargs -P "$jobs" -n 1 sh prover/library.sh --alone "$seconds" "$sets" || exit 2
 fi
 
 # Join: each piece's proofs with every skip replaced by the proof of that

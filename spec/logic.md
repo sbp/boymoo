@@ -4,7 +4,7 @@ This document defines what a checker checks: the facts it starts from, the eight
 
 The logic is ACL2's. Nothing here is new mathematics: each axiom is ACL2's, each rule is one that ACL2's logic allows, and each way of admitting a statement is one of ACL2's principles of extension. What is new is that every proof is written out in steps so small that a short program can check them, and that the checker takes nothing from ACL2 but the statements.
 
-Statements about ACL2 are confirmed against ACL2 8.7 by `sh checks/run.sh`, run from the root of the repository. It was last run on 2026-11-21 and printed `all checks passed`. The files `language.md`, `logic.md`, `formats.md` and `ground.txt` are in the directory `spec/`; every other path is given from the root of the repository.
+Statements about ACL2 are confirmed against ACL2 8.7 by `sh checks/run.sh`, run from the root of the repository. It was last run on 2026-11-26 and printed `all checks passed`. The files `language.md`, `logic.md`, `formats.md` and `ground.txt` are in the directory `spec/`; every other path is given from the root of the repository.
 
 ## 1. What a verdict means
 

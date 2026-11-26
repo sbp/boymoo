@@ -39,6 +39,13 @@ EOF
 cat > "$dir/duplicate-lambda-formal.program" <<'EOF'
 (define COMMON-LISP::NIL (ACL2::MAIN (ACL2::X) ((COMMON-LISP::LAMBDA (ACL2::Y ACL2::Y) ACL2::Y) ACL2::X (COMMON-LISP::QUOTE "second"))))
 EOF
+cat > "$dir/ampersand-formal.program" <<'EOF'
+(define COMMON-LISP::NIL (ACL2::MAIN (ACL2::&) ACL2::&))
+EOF
+cat > "$dir/attachment-to-if.program" <<'EOF'
+(attach ACL2::SELECT COMMON-LISP::IF)
+(define COMMON-LISP::NIL (ACL2::MAIN (ACL2::X) (ACL2::SELECT ACL2::X ACL2::X ACL2::X)))
+EOF
 
 check() {
     name=$1
@@ -108,6 +115,8 @@ check undefined-entry 1
 check imported-spelling 2 'a symbol that does not exist, since its package imports one of that name'
 check printable-escape 2 'a character escaped that is written as itself'
 check duplicate-lambda-formal 2 'not a term: ((COMMON-LISP::LAMBDA (ACL2::Y ACL2::Y)'
+check ampersand-formal 2 'not in the format: a definition'
+check attachment-to-if 2 'not in the format: an attach line'
 
 cat > "$dir/canonical-numbers.program" <<'EOF'
 (define COMMON-LISP::NIL (ACL2::MAIN (ACL2::X) (COMMON-LISP::IF (COMMON-LISP::CONSP (COMMON-LISP::QUOTE (0 5 -7 -4611686018427387904 4611686018427387904 1/2 -7/3 1/18446744073709551616 #C(0 -1/2) #C(-7/3 1/18446744073709551616)))) ACL2::X (COMMON-LISP::QUOTE "missing numbers"))))

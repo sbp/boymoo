@@ -96,7 +96,7 @@
 
 (defun elf-image-executable (image entry)
   (let ((code-size (car image)))
-    (if (and (natp entry) (< entry code-size)
+    (if (and (natp entry) (<= (+ entry 4) code-size)
              (equal entry (ash (ash entry -2) 2)))
         (let ((header (elf-prepend-header (+ *elf-load-address* *elf-code-offset* entry)
                                          (+ *elf-code-offset* code-size) nil)))

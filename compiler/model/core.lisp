@@ -36,7 +36,9 @@
         (y (cadr args)))
     (case name
       (acl2-numberp (core-value (acl2-numberp x)))
-      (acl2::bad-atom<= (core-value (acl2::bad-atom<= x y)))
+      ; ACL2 Core computes NIL on any two data (spec/language.md, section 4),
+      ; where ACL2's axioms leave the logical value open.
+      (acl2::bad-atom<= (core-value nil))
       (acl2::binary-* (core-value (acl2::binary-* x y)))
       (acl2::binary-+ (core-value (acl2::binary-+ x y)))
       (acl2::unary-- (core-value (acl2::unary-- x)))

@@ -173,7 +173,9 @@ void set_attach(void)
     V f = stk[sp - 2], g = stk[sp - 1];
     long kf, kg;
     sp -= 2;
-    if (!IS_SYM(f) || !IS_SYM(g) || syms[SYMIDX(f)].prim >= 0)
+    /* ACL2 attaches no function to IF: IF is not a function that can be
+       called with its arguments evaluated, and defattach refuses it. */
+    if (!IS_SYM(f) || !IS_SYM(g) || syms[SYMIDX(f)].prim >= 0 || g == S_IF)
         bad("not in the format: an attach line", NOV);
     kf = fn_of(f);
     kg = fn_of(g);
@@ -215,16 +217,24 @@ static long length(V x)
 }
 
 /* Whether X is a true list of distinct variables (spec/language.md,
-   section 5, in the part that matters to running: symbols other than T,
-   NIL and keywords). */
+   section 5, rules 1 to 4: symbols other than T, NIL and keywords, whose
+   names neither begin with & nor both begin and end with *).  Rule 5, on
+   the symbols of COMMON-LISP, needs the specials line of the ground
+   theory, which the runner does not read. */
 static int variables(V x)
 {
     V y, z;
     for (y = x; IS_CONS(y); y = CDR(y)) {
         V v = CAR(y);
+        const unsigned char *n;
+        size_t len;
         if (!IS_SYM(v) || v == NIL || v == T ||
             (pkgs[syms[SYMIDX(v)].pkg].len == 7 &&
              memcmp(pkgs[syms[SYMIDX(v)].pkg].name, "KEYWORD", 7) == 0))
+            return 0;
+        n = syms[SYMIDX(v)].name;
+        len = syms[SYMIDX(v)].len;
+        if (len > 0 && (n[0] == '&' || (n[0] == '*' && n[len - 1] == '*')))
             return 0;
         for (z = CDR(y); IS_CONS(z); z = CDR(z))
             if (CAR(z) == v)

@@ -464,9 +464,21 @@
              (state-data (data-bucket-add package "T" t-name 58 state-data)))
         (mv nil-name t-name state-data)))))
 
+(defun data-heap-limit (lines limit)
+  (cond ((atom lines) limit)
+        ((not (equal (caar lines) "heap-limit"))
+         (data-heap-limit (cdr lines) limit))
+        (t (let* ((text (cadar lines))
+                  (size (length text))
+                  (mib (and (<= size 4) (data-integer-value text 0 size))))
+             (if (and (not limit) (posp mib) (<= mib 4096))
+                 (data-heap-limit (cdr lines) mib)
+               (compiler-error "Expected one heap limit from 1 to 4096 MiB: ~x0." text))))))
+
 (defun data-build (lines package-lines)
   (let* ((packages (data-package-numbers package-lines 0 nil))
-         (common-lisp (index-get "COMMON-LISP" packages)))
+         (common-lisp (index-get "COMMON-LISP" packages))
+         (limit (data-heap-limit lines nil)))
     (if (not common-lisp)
         (mv (compiler-error "No COMMON-LISP package in the input: ~x0." nil) nil)
       (mv-let (nil-name t-name state-data)
@@ -478,6 +490,8 @@
                  (bucket-ref (+ (car block) 2))
                  (block (data-bucket-vector (caddr state-data) 12
                                             (data-word (+ (ash 4096 11) 6) block)))
+                 ; Bucket references are even. An odd final word holds the limit.
+                 (block (if limit (data-word (+ 1 (* 2 limit)) block) block))
                  (tagged-package (+ 1 (* 2 common-lisp)))
                  (prefix (list (car block) package-ref bucket-ref 34
                                4098 nil-name tagged-package 4098 t-name tagged-package)))

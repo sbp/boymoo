@@ -96,6 +96,10 @@
 (bm-try "define a function named &BM" (defun &bm (x) x))
 (bm-try "define a function with the formal *X*" (defun bm-f7 (*x*) *x*))
 (bm-try "define a function with the formal &X" (defun bm-f8 (&x) &x))
+(bm-try "attach a function to IDENTITY"
+        (progn (defstub bm-pick (x) t) (defattach bm-pick identity)))
+(bm-try "attach a function to IF"
+        (progn (defstub bm-select (x y z) t) (defattach bm-select if)))
 (bm-try "define a function with the formal PI" (defun bm-f9 (pi) pi))
 (bm-try "define a function with the formal LIST" (defun bm-f10 (list) list))
 (bm-try "define a function with a formal of COMMON-LISP that ACL2 does not import"

@@ -94,8 +94,10 @@
                (index-definitions (reverse-onto (cddr line) nil) defs names)
                (index-lines (cdr lines) defs names attachments sources packages entry target)))
             ((equal word "attach")
+             ; ACL2 attaches no function to IF and does not attach IF to one.
              (if (or (consp (cdddr line)) (not (stringp (caddr line))) (not (stringp name))
-                     (assoc-equal name *primitives*) (equal name *if-name*))
+                     (assoc-equal name *primitives*) (equal name *if-name*)
+                     (equal (caddr line) *if-name*))
                  (mv (compiler-error "Invalid attachment: ~x0." line) nil nil nil nil nil nil)
                (if (index-get name attachments)
                    (index-lines (cdr lines) defs names attachments sources packages entry target)
@@ -112,6 +114,8 @@
              (index-lines (cdr lines) defs names attachments sources packages name target))
             ((and (not target) (equal line '("target" "linux")))
              (index-lines (cdr lines) defs names attachments sources packages entry :linux))
+            ((and (equal word "heap-limit") (stringp name) (not (cddr line)))
+             (index-lines (cdr lines) defs names attachments sources packages entry target))
             (t (mv (compiler-error "Invalid compiler input line: ~x0." line)
                    nil nil nil nil nil nil))))))
 
@@ -138,10 +142,21 @@
       (declare (ignore target))
       (resolve-attachments (cdr sources) attachments resolved fuel))))
 
+; The name of a variable neither begins with & nor both begins and ends
+; with *. It starts after the separator and any bar; ACL2::|| is a variable.
+(defun variable-name-text-p (name start)
+  (let* ((barred (equal (char name start) #\|))
+         (first (if barred (+ start 1) start))
+         (last (if barred (- (length name) 2) (- (length name) 1))))
+    (or (< last first)
+        (and (not (equal (char name first) #\&))
+             (not (and (equal (char name first) #\*) (equal (char name last) #\*)))))))
+
 (defun variable-name-p (name)
   (let ((split (and (stringp name) (symbol-separator name))))
     (and split (not (equal name *nil-name*)) (not (equal name "COMMON-LISP::T"))
-         (not (and (equal split 7) (equal (subseq name 0 split) "KEYWORD"))))))
+         (not (and (equal split 7) (equal (subseq name 0 split) "KEYWORD")))
+         (variable-name-text-p name (+ split 2)))))
 
 (defun bind-formal (name slot scope)
   (cond ((not (variable-name-p name))

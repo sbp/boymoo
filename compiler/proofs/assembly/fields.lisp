@@ -1,0 +1,107 @@
+(in-package "BOYMOO-PROOFS")
+
+(include-book "../foundations/interfaces")
+
+(logic)
+(set-verify-guards-eagerness 0)
+
+(defun assembly-register-p (register)
+  (unsigned-byte-p 5 register))
+
+(defun assembly-condition-p (condition)
+  (member-eq condition
+             '(:eq :ne :hs :lo :mi :pl :vs :vc :hi :ls :ge :lt :gt :le :al)))
+
+(defun assembly-unsigned-scaled-p (width scale offset)
+  (and (integerp offset)
+       (unsigned-byte-p width (* offset (/ (expt 2 scale))))))
+
+(defun assembly-signed-scaled-p (width scale offset)
+  (and (integerp offset)
+       (signed-byte-p width (* offset (/ (expt 2 scale))))))
+
+(defun assembly-label-offset (label offsets)
+  (cdr (assoc-equal label offsets)))
+
+(defun assembly-branch-field-p (width label pc offsets)
+  (let ((target (assembly-label-offset label offsets)))
+    (and (natp target)
+         (assembly-signed-scaled-p width 2 (- target pc)))))
+
+(defun assembly-pair-registers-p (op rt rt2 rn)
+  (and (assembly-register-p rt)
+       (assembly-register-p rt2)
+       (assembly-register-p rn)
+       (implies (member-eq op '(:ldp :ldp-post)) (not (equal rt rt2)))
+       (implies (and (member-eq op '(:ldp-post :stp-pre)) (not (equal rn 31)))
+                (and (not (equal rn rt)) (not (equal rn rt2))))))
+
+(defun assembly-executable-item-p (item pc offsets)
+  (let ((op (car item))
+        (a (cadr item))
+        (b (caddr item))
+        (c (cadddr item))
+        (d (car (cddddr item)))
+        (arity (len (cdr item))))
+    (and (true-listp item)
+         (natp pc)
+         (equal (mod pc 4) 0)
+         (case op
+           ((:movz :movn :movk)
+            (and (equal arity 3) (assembly-register-p a)
+                 (unsigned-byte-p 16 b) (member-equal c '(0 16 32 48))))
+           ((:mov :mov-sp :cmp-reg :neg :tst-reg :mvn :clz)
+            (and (equal arity 2) (assembly-register-p a) (assembly-register-p b)))
+           ((:add :sub :adds :subs)
+            (and (equal arity 3) (assembly-register-p a)
+                 (assembly-register-p b) (unsigned-byte-p 12 c)))
+           ((:cmp :cmn)
+            (and (equal arity 2) (assembly-register-p a) (unsigned-byte-p 12 b)))
+           ((:add-reg :sub-reg :adds-reg :subs-reg)
+            (and (equal arity 4) (assembly-register-p a)
+                 (assembly-register-p b) (assembly-register-p c) (unsigned-byte-p 6 d)))
+           ((:and-reg :orr-reg :eor-reg :ands-reg :lslv :lsrv :asrv
+             :mul :smulh :sdiv :udiv :ldr-reg :str-reg :ldrb-reg :strb-reg)
+            (and (equal arity 3) (assembly-register-p a)
+                 (assembly-register-p b) (assembly-register-p c)))
+           (:and-mask
+            (and (equal arity 3) (assembly-register-p a) (assembly-register-p b)
+                 (posp c) (< c 64)))
+           (:tst-mask
+            (and (equal arity 2) (assembly-register-p a) (posp b) (< b 64)))
+           ((:lsl :lsr :asr)
+            (and (equal arity 3) (assembly-register-p a)
+                 (assembly-register-p b) (unsigned-byte-p 6 c)))
+           (:msub
+            (and (equal arity 4) (assembly-register-p a)
+                 (assembly-register-p b) (assembly-register-p c) (assembly-register-p d)))
+           (:csel
+            (and (equal arity 4) (assembly-register-p a)
+                 (assembly-register-p b) (assembly-register-p c) (assembly-condition-p d)))
+           (:cset
+            (and (equal arity 2) (assembly-register-p a) (assembly-condition-p b)))
+           ((:ldr :str :ldrb :strb)
+            (and (equal arity 3) (assembly-register-p a) (assembly-register-p b)
+                 (assembly-unsigned-scaled-p 12 (if (member-eq op '(:ldr :str)) 3 0) c)))
+           ((:ldp :stp :ldp-post :stp-pre)
+            (and (equal arity 4) (assembly-pair-registers-p op a b c)
+                 (assembly-signed-scaled-p 7 3 d)))
+           ((:b :bl)
+            (and (equal arity 1) (assembly-branch-field-p 26 a pc offsets)))
+           (:b-cond
+            (and (equal arity 2) (assembly-condition-p a)
+                 (assembly-branch-field-p 19 b pc offsets)))
+           ((:cbz :cbnz)
+            (and (equal arity 2) (assembly-register-p a)
+                 (assembly-branch-field-p 19 b pc offsets)))
+           ((:adr :adr-far)
+            (let ((target (assembly-label-offset b offsets)))
+              (and (equal arity 2) (assembly-register-p a) (natp target)
+                   (assembly-signed-scaled-p
+                    21 0 (if (eq op :adr)
+                             (- target pc)
+                           (- (floor target 4096) (floor pc 4096)))))))
+           ((:br :blr) (and (equal arity 1) (assembly-register-p a)))
+           (:ret (equal arity 0))
+           (:svc (and (equal arity 1) (unsigned-byte-p 16 a)))
+           (otherwise nil)))))

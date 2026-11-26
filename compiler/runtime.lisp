@@ -39,8 +39,15 @@
     (:label "rt:start")
     (:adr-far 19 "data:static")
     (:ldr 20 19 0)
-    (:movz 1 2 32)
-    (:adds-reg 0 20 1 0)
+    ; An odd final static word gives the space size in MiB.
+    (:sub 2 20 8)
+    (:ldr-reg 22 19 2)
+    (:movz 1 4096 0)
+    (:tst-mask 22 1)
+    (:lsr 22 22 1)
+    (:csel 22 22 1 :ne)
+    (:lsl 22 22 20)
+    (:adds-reg 0 20 22 1)
     (:b-cond :hs "rt:size")
     (:movz 1 2 16)
     (:adds-reg 0 0 1 0)
@@ -64,9 +71,8 @@
     (:add-reg 27 27 1 0)
     (:lsr 27 27 16)
     (:lsl 27 27 16)
-    (:movz 1 1 32)
-    (:add-reg 2 27 1 0)
-    (:add-reg 3 2 1 0)
+    (:add-reg 2 27 22 0)
+    (:add-reg 3 2 22 0)
     (:stp 27 2 21 0)
     (:stp 2 2 21 16)
     (:str 3 21 32)
@@ -179,6 +185,8 @@
     ; Out: x24 covers the required address or the routine stops. The
     ; stack base is fixed. Growth uses the larger of the required size
     ; and twice the current size, capped at the end of the reservation.
+    ; The doubling does not wrap: the kernel places the reservation far
+    ; below 2^63.
     ; Changes: x9 through x12 and NZCV. rt:grow also copies x0 to x8.
     ; Stack: None. Allocates: No.
     ; Callers can keep data, sizes and cursors in x0 through x7 across
@@ -322,7 +330,7 @@
     (:add-reg 4 4 5 0)
     (:ldr 0 31 0)
     (:add-reg 5 4 0 0)
-    (:movz 6 1 32)
+    (:sub-reg 6 3 2 0)
     (:cmp-reg 5 6)
     (:b-cond :hi "rt:heap-size")
     (:lsl 7 4 1)
@@ -1394,7 +1402,7 @@
     (:b-cond :ne "rt:z-xor-loop")
     (:b "rt:z-normalize")
 
-    ; In: An integer datum in x0 and a nonzero signed, untagged shift in x1.
+    ; In: A nonzero integer datum in x0 and a nonzero signed, untagged shift in x1.
     ; Out: x0 is the shifted integer, rounded down for a right shift.
     ; Changes: Volatile set and x24, x26 and x27.
     ; Stack: 64 machine bytes for saves and one integer view. Allocates: Yes.

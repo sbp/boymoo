@@ -184,7 +184,7 @@
 (defun macho-image-executable (image entry)
   (let* ((code-size (car image))
          (text-size (macho-segment-size (+ *macho-code-offset* code-size))))
-    (if (and (natp entry) (< entry code-size)
+    (if (and (natp entry) (<= (+ entry 4) code-size)
              (equal entry (ash (ash entry -2) 2))
              (< text-size #x100000000))
         (let* ((slots (ash text-size -12))

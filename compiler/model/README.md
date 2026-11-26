@@ -82,7 +82,7 @@ and attachment lines as ACL2 data. It sets guard checking to `:none`
 and uses the repository's canonical printer. The test declares the
 package used in the hidden-package cases in ACL2 so that its data can
 be read, and marks it hidden in the model and runner inputs.
-On 2026-11-25, ACL2 8.7
+On 2026-11-26, ACL2 8.7
 certified the book, 13 values and four no-value stops agreed, and the
 fuel check distinguished exhaustion from a value of `NIL`. The
 certificate, ACL2 log and comparison files are under `build/compiler/core/`.
@@ -126,10 +126,9 @@ describe the machine used by the calling convention and code image in
   system call convention.
 
 The instructions in the table below are those of the assembler's
-items in “The assembly language” of `compiler/README.md`, but for
-`:clz`, which the runtime's long division uses and which the model
-does not decode. Labels locate bytes, and `:bytes`, `:quad` and
-`:image` supply data. The reference is the *Arm Architecture
+items in “The assembly language” of `compiler/README.md`. Labels
+locate bytes, and `:bytes`, `:quad` and `:image` supply data. The
+reference is the *Arm Architecture
 Reference Manual for A-profile architecture* (ARM DDI 0487),
 sections “A64 Instruction Set Encoding,” “A64 Base Instruction
 Descriptions” and “Shared Pseudocode.”
@@ -142,8 +141,10 @@ Descriptions” and “Shared Pseudocode.”
 | AND, ANDS and ORR | Bitmask immediate, including TST. |
 | UBFM and SBFM | Bitfield, including LSL, LSR, ASR, UBFX and SBFX. |
 | LSLV, LSRV and ASRV | Variable register shifts. |
+| CLZ of X | The number of leading zero bits, from 0 to 64. |
 | MUL, SMULH, MSUB, SDIV and UDIV | 64-bit multiply and divide. Division by zero gives zero, and signed division truncates toward zero. |
 | CSEL and CSINC | Conditional select, including CSET. |
+| CCMP of X | Conditional compare of two registers, which the assembler writes as the second word of a flag-setting immediate instruction whose source is register 31. |
 | LDR and STR of W or X, LDRB and STRB | Unsigned scaled offset, signed pre-index and post-index, and register offset with optional scaling. |
 | LDP and STP of X | Signed scaled offset, pre-index and post-index. |
 | ADR and ADRP | PC-relative byte and page addresses. The assembler writes ADRP followed by ADD for `:adr-far`. |
@@ -177,6 +178,6 @@ with `sys:write`. ACL2 uses the reported code and buffer bases to
 compare those values with the model. The certificates, executable and
 logs are in `build/compiler/a64-model/`.
 
-On 2026-11-25, `sh compiler/model/a64-test.sh` certified the three
+On 2026-11-26, `sh compiler/model/a64-test.sh` certified the three
 books with ACL2 8.7, printed `A64 model checks passed.` and printed
 `A64 processor and ACL2 agree in 7 cases.`

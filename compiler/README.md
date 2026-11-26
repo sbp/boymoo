@@ -20,6 +20,7 @@ Paths below are given from the root of the repository, from which every command 
 | `compile.lisp` | `COMPILE-TEXT`, which joins the parts. |
 | `checker-entry.lisp` | The entry by which the compiled checker reads its five inputs from one string ("The compiled checker", below). |
 | `build-checker.sh`, `check.sh`, `frame.sh` | `build-checker.sh` builds the compiled checker; `check.sh` runs it on four files, as `checker/check.sh` runs the checker on the reference runner; `frame.sh` holds the shell function that writes a file as one field of its input. |
+| `prover-entry.lisp`, `build-prover.sh` | The framed entry and build command for the executable described in `prover/README.md`. |
 | `build.sh` | Has ACL2 certify the compiler's books and the exporter export them. |
 | `compile.sh`, `decode.sh` | `compile.sh` compiles an input on the reference runner; `decode.sh` holds the shell function that turns the string that the runner prints into its bytes. |
 | `bootstrap.sh` | Builds the compiler, has the reference runner compile it, has the result compile it again, and compares the two. |
@@ -51,6 +52,8 @@ compile an input on the reference runner, with its prelude, and with the compile
 
 The input is program text in the format of `spec/formats.md`: the `package` and `hidden-package` lines (section 5), and the `define` and `attach` lines of the program and of every function it calls, those of the ground theory and of ACL2's library included; then one line `(entry NAME)`, which names the function, of one argument, to which the executable gives its standard input; and, for Linux, one line `(target linux)`. As the reference runner does, the compiler takes the last definition and the last attachment of each name.
 
+An optional line `(heap-limit N)` gives the size of each of the copying collector's two spaces in mebibytes (MiB, or 2<sup>20</sup> bytes). `N` is a decimal integer from 1 through 4096. The compiler accepts one such line. The default is 4096 MiB. The static block, the two stacks, standard input and separately mapped strings each have their own storage, so peak resident memory can exceed this limit.
+
 The executable reads all of its standard input as one string, applies the entry function to it, writes the value, which must be a string, to standard output, and exits with status 0. Where it has no value to write, it writes a line to standard error and exits: with status 1 where there is no value (a call of a function with no definition and no attachment, `pkg-imports`, `pkg-witness` or `symbol-package-name` where they give none, or a value that is not a string), with status 2 where it cannot read its input or write its output, or the package `ACL2` is not declared, and with status 3 where memory is exhausted.
 
 ## What the compiler accepts
@@ -61,6 +64,8 @@ The compiler rejects, at compile time, program text that is not in the format, a
 - a symbol written with a package other than its home package, as `ACL2::CAR` for `COMMON-LISP::CAR`, which `ACL2` imports;
 - a string, or a symbol between bars, that escapes a byte that is written as itself;
 - a lambda with the same formal twice;
+- a formal whose name begins with `&`, or begins and ends with `*`, which the variable rule of `spec/language.md`, section 5, excludes;
+- a line `(attach F COMMON-LISP::IF)`, which ACL2 refuses: `IF` is not called with its arguments evaluated;
 - a number not in the text of `spec/formats.md`, section 2: an integer with a plus sign, a leading zero or a negative zero; a fraction not in lowest terms, or whose denominator is not above 1; a complex rational whose parts are not so written, or whose imaginary part is 0.
 
 `quote` is recognised only where a term is expected, so that `COMMON-LISP::QUOTE` may be a formal and a variable. An entry function with no definition and no attachment is compiled, and the executable stops when it calls it, as the runner does. A rejected text stops the compiler with status 1 and the line `no value: a call of a function that has no definition and no attachment: ACL2::HARD-ERROR` ("Building and running", above), where the runner stops with status 2 and says what is wrong.
@@ -101,6 +106,8 @@ Every number is held in one way only, so that two numbers are equal exactly when
 | 56 | the symbol `COMMON-LISP::T`, whose datum is therefore 58 |
 
 The packages are numbered from 0 in the order of their first declaration, by a `package` or a `hidden-package` line. A symbol is in the bucket of its name in its own package and in that of every package that imports it, under the key of that package: the cons of the package's number and the name. The bucket of a name in package `p`: let `h` be 0, and for each byte `b` of the name let `h` be the low 24 bits of `33h + b`; the bucket is the low 12 bits of `h + 7919p`.
+
+When the input specifies a heap limit, a word holding the limit as an immediate integer follows the symbol buckets at the end of the static block. The runtime distinguishes it by its low bit. A bucket holds an even word, either a cons reference or the datum for `NIL`.
 
 ## The calling convention
 
@@ -159,7 +166,7 @@ The length in a string's header counts its bytes and not the padding after them.
 
 **Symbols made while the program runs.** Interning looks first in the static symbol table, which also resolves imports, and then in the table at offset 24: a vector of the number of its entries and its buckets, each a list of entries that hold a symbol and the hash of its name. A table of 2<sup>k</sup> buckets uses the low `k` bits of the hash of "The data", with the package's number added as there. The table starts with 16 buckets and doubles before an insertion into a full table, placing each entry again by its hash. Through the table, the collector reaches every symbol made and its name, which are never collected.
 
-**Memory.** Each of the two spaces of the copying collector reserves 4 GiB of addresses. Objects with a header grow from one end of the active space and conses from the other, under one budget, which a collection sets to the largest of 64 KiB, twice the bytes that survived, and the bytes that survived together with the request pending, up to 4 GiB; a request beyond that stops with status 3. A collection gives back to the system the pages it used at both ends of the space it leaves, rounded out to 64 KiB. Standard input is read into a mapping of its own, and every string of 256 KiB or more is allocated in one; such strings keep their addresses, and a collection marks those it reaches, unmaps the rest, and sets a budget for further mappings. The value stack reserves 1 GiB of addresses, and the machine stack is a mapping of 64 MiB.
+**Memory.** Each of the two spaces of the copying collector reserves 4 GiB of addresses by default, or the size specified by `heap-limit`. Objects with a header grow from one end of the active space and conses from the other. They share a budget that a collection sets to the largest of 64 KiB, twice the bytes that survived, and the bytes that survived together with the pending request, up to the size of the space. An allocation that exceeds the available bytes after collection stops with status 3. A collection gives back to the system the pages it used at both ends of the space it leaves, rounded out to 64 KiB. Standard input is read into a mapping of its own, and every string of 256 KiB or more is allocated in one; such strings keep their addresses, and a collection marks those it reaches, unmaps the rest, and sets a budget for further mappings. The value stack reserves 1 GiB of addresses, and the machine stack is a mapping of 64 MiB.
 
 ## Numbers
 
@@ -187,7 +194,7 @@ The runtime uses these routines on both systems. Each that returns gives its res
 
 On macOS (`macos.lisp`, `SYSTEM-CODE`), a system call is `svc #0x80` with its number in `x16`, and the carry flag shows an error; `sys:release` maps fresh private pages over the range with `MAP_FIXED`. Dyld, the system's loader, starts the program at `os:main`.
 
-On Linux (`linux.lisp`, `LINUX-SYSTEM-CODE`), a system call is `svc #0` with its number in `x8`, and an error is a negative result. `sys:map` calls `mmap` with `MAP_PRIVATE`, `MAP_ANONYMOUS` and `MAP_NORESERVE`: the runtime reserves 8 GiB of addresses for its two spaces and touches only the pages it uses, and in its default mode of overcommitting Linux refuses a mapping larger than its memory and swap together unless it is marked so. `sys:release` calls `madvise` with `MADV_DONTNEED`, `sys:unmap` calls `munmap`, and `sys:exit` calls `exit_group`. The kernel starts the program at `os:main` with the program's arguments on the stack.
+On Linux (`linux.lisp`, `LINUX-SYSTEM-CODE`), a system call is `svc #0` with its number in `x8`, and an error is a negative result. `sys:map` calls `mmap` with `MAP_PRIVATE`, `MAP_ANONYMOUS` and `MAP_NORESERVE`: the runtime reserves 8 GiB of addresses by default for its two spaces and touches only the pages it uses, and in its default mode of overcommitting Linux refuses a mapping larger than its memory and swap together unless it is marked so. `sys:release` calls `madvise` with `MADV_DONTNEED`, `sys:unmap` calls `munmap`, and `sys:exit` calls `exit_group`. The kernel starts the program at `os:main` with the program's arguments on the stack.
 
 ## The assembly language
 
@@ -261,7 +268,30 @@ Each test compares the compiler with the reference runner, the system's tools, o
 - `sh compiler/test-targets.sh` compiles a program that gives back its input, for macOS and for Linux, checks the headers of both files with `od` and `awk` and the signature with `codesign -v --strict`, and runs the macOS executable. When `docker` reaches a running Colima, it also makes a local image that holds only the Linux executable, with `docker import` from a `tar` archive, runs it with no network and a root that cannot be written, and removes the image; otherwise it says so and skips that run.
 - `sh compiler/test-checker.sh` is described under "The compiled checker", below.
 
-Run on 2026-11-25, each test passed. `test-front.sh` found the runner and the compiler agreeing on every case: the runner rejected each of the 22 texts not in the format with status 2, and the compiler stopped on each with status 1 and wrote no executable; on the others both gave the same value, or, for the entry with no definition, the same stop. `test-a64.sh` printed `A64 assembler agrees with the system assembler on 284 bytes.`; `test-numbers.sh` printed `Numeric primitives and jets agree on 16281 bytes of results.`; `test-symbols.sh build/compiler/compiler-2` found the two programs agreeing on all five of its comparisons. `test-targets.sh` checked the seven load commands of a Mach-O file of 214,784 bytes with its entry at offset `0x1090`, and an ELF file of 205,484 bytes with its entry at `0x40106c`; `codesign` accepted the signature, and the macOS executable, and the Linux one in Colima, gave back their input and exited with status 0.
+Run on 2026-11-26, each test passed. `test-front.sh` found the runner and the compiler agreeing on every case: the runner rejected each of the 24 texts not in the format with status 2, and the compiler stopped on each with status 1 and wrote no executable; on the others both gave the same value, or, for the entry with no definition, the same stop. `test-a64.sh` printed `A64 assembler agrees with the system assembler on 284 bytes.`; `test-numbers.sh` printed `Numeric primitives and jets agree on 16281 bytes of results.`; `test-symbols.sh build/compiler/compiler-2` found the two programs agreeing on all five of its comparisons. `test-targets.sh` checked the seven load commands of a Mach-O file of 214,784 bytes with its entry at offset `0x1090`, and an ELF file of 205,504 bytes with its entry at `0x40106c`; `codesign` accepted the signature, and the macOS executable, and the Linux one in Colima, gave back their input and exited with status 0.
+
+On 2026-11-26, `sh compiler/bootstrap.sh` printed
+`The two compiler executables are byte-for-byte identical.` The following
+test, run on the same date, makes 100,000 live conses. At 1 MiB it printed
+`memory exhausted: the heap is at its largest` on standard error and
+exited with status 3. At 2 MiB it printed `ok` and exited with status 0.
+
+```sh
+cat > build/compiler/heap-limit.input <<'EOF'
+(package "COMMON-LISP" COMMON-LISP::NIL)
+(package "ACL2" COMMON-LISP::NIL)
+(define COMMON-LISP::NIL (ACL2::BUILD-LIST (ACL2::N ACL2::XS) (COMMON-LISP::IF (COMMON-LISP::< ACL2::N (COMMON-LISP::QUOTE 1)) ACL2::XS (ACL2::BUILD-LIST (ACL2::BINARY-+ ACL2::N (COMMON-LISP::QUOTE -1)) (COMMON-LISP::CONS ACL2::N ACL2::XS)))))
+(define COMMON-LISP::NIL (ACL2::MAIN (ACL2::TEXT) (COMMON-LISP::IF (COMMON-LISP::CONSP (ACL2::BUILD-LIST (COMMON-LISP::QUOTE 100000) (COMMON-LISP::QUOTE COMMON-LISP::NIL))) ACL2::TEXT (COMMON-LISP::QUOTE ""))))
+(entry ACL2::MAIN)
+EOF
+for limit in 1 2; do
+    { cat build/compiler/heap-limit.input; printf '(heap-limit %s)\n' "$limit"; } |
+        build/compiler/compiler-2 > build/compiler/heap-limit-sample
+    chmod +x build/compiler/heap-limit-sample
+    printf 'ok\n' | build/compiler/heap-limit-sample
+    printf '%s MiB executable exit %s\n' "$limit" "$?"
+done
+```
 
 ## The compiled checker
 
@@ -286,4 +316,4 @@ The input was 164,776,812 bytes, of which `build/prover/library.proofs` is 161,6
 
 `sh compiler/test-checker.sh [N]` builds the compiled checker with `build-checker.sh`, and runs it, and the checker on the reference runner, on `spec/example` and on every case of `checker/cases/` and `checker-js/cases/` whose verdict is recorded, comparing the verdicts with each other and with the record. Then it runs the compiled checker on each book of `export/books.txt` that has been exported, with proofs that skip every obligation, as `checker/books.sh` does, and the reference runner on the first `N` of them, 20 if `N` is not given. It writes each result to `build/compiler/checker-test/results.tsv`, and the books with no export to `build/compiler/checker-test/missing-books.txt`. It exits with status 1 if a book has no export, if the compiled checker stops on an input, or if, on an input with a reference run, the compiled checker's verdict, the reference runner's and the recorded one are not all the same. It needs `acl2`, `timeout` and `zsh`, whose `time` measures each run, and runs on macOS.
 
-Run on 2026-11-26 as `sh compiler/test-checker.sh 460`, it printed `Inputs run: 1233. Compiled checker matched 1233 expected verdicts and agreed with the reference runner on 1233. Compiled checker stops: 0.`: on `spec/example`, the 772 cases with recorded verdicts and all 460 books, the compiled checker and the checker on the reference runner gave the same verdict, and the recorded one where there is one. The compiled checker took 243.45 s of elapsed time in all, with at most 530,366,464 bytes resident, and the reference runner 1,031.20 s, with at most 526,712,832 bytes. Each run is stopped after 15 s; none was.
+Run on 2026-11-26 as `sh compiler/test-checker.sh 460`, it printed `Inputs run: 1233. Compiled checker matched 1233 expected verdicts and agreed with the reference runner on 1233. Compiled checker stops: 0.`: on `spec/example`, the 772 cases with recorded verdicts and all 460 books, the compiled checker and the checker on the reference runner gave the same verdict, and the recorded one where there is one. The compiled checker took 253.54 s of elapsed time in all, with at most 530,366,464 bytes resident, and the reference runner 1,052.28 s, with at most 516,472,832 bytes. Each run is stopped after 15 s; none was.
