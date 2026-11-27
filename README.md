@@ -6,7 +6,7 @@ ACL2 is a proof assistant in the [Boyer-Moore family](https://en.wikipedia.org/w
 
 Unlike many other well known proof assistants, ACL2 does not produce a [machine checkable version](https://en.wikipedia.org/wiki/De_Bruijn_criterion) of the proof. Boymoo provides a way to make proofs of ACL2 theorems checkable, and the Boymoo checker itself is written in a subset of ACL2 called ACL2 Core.
 
-The advantages of Boymoo, therefore, are that it provides an independent second opinion on whether ACL2 theorems are correct, and that it does so in a way which can be checked automatically by a machine. In addition, it has an entirely independent runtime written in just a couple of thousand lines of ISO C99 instead of Common Lisp, and a compiler written in ACL2 Core targeting aarch64.
+The advantages of Boymoo, therefore, are that it provides an independent second opinion on whether ACL2 theorems are correct, and that it does so in a way which can be checked automatically by a machine. In addition, it has an entirely independent runtime written in just a couple of thousand lines of ISO C99 instead of Common Lisp, and compilers written in ACL2 Core targeting aarch64.
 
 ## Terminology
 
@@ -26,7 +26,7 @@ Completed:
 * Checker (**ACL2 Core**): checks proofs of ACL2 Core.
 * Independent checker (**JavaScript**): checks proofs of ACL2 Core.
 * Prover (**ACL2 Core**): assists with building proofs of ACL2 Core conjectures.
-* Compiler for aarch64 (**ACL2 Core**): compiles an ACL2 Core program into machine code, supporting Linux and macOS.
+* Compiler for aarch64 (**ACL2 Core**): compiles an ACL2 Core program into machine code, supporting Linux and macOS, through many passes over intermediate languages. A single-pass compiler beside it compiles it first, and is the reference that its executables are compared with.
 
 Yet to do:
 

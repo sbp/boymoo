@@ -1,116 +1,82 @@
 #!/bin/sh
-# Run from the repository root.
+# Run from the repository root with ACL2 on PATH.
 set -eu
-export LC_ALL=C
 
-root=compiler/proofs
-work=build/compiler/proofs
-compiler_books='a64 read index data gen sha256 macos linux runtime compile'
-foundations='machine kernel loading values heap interfaces checks'
+dir=build/compiler/proofs
+sources=compiler/proofs
+compiler_books='a64 read index data resolve simplify qir rt-qir lower expand opt abi isel rega emit runtime'
+set -- values l1 l1-well-formed word-ops heap qir-semantics word-properties rt-semantics rt-length-list \
+    mir-semantics rega-check p0 p1 p2 p3 p4 p5 p5-licm p6 p6-clears p6-forward p7 p8 p9
 
-usage() {
-    printf '%s\n' 'Usage: sh compiler/proofs/certify.sh [--foundations | --books PACKAGE BOOK ...]' >&2
-    exit 2
-}
-
-name_p() {
-    case $1 in
-        ''|*[!a-z0-9_-]*) return 1 ;;
-        *) return 0 ;;
-    esac
-}
-
-certify_books() {
-    source_dir=$1
-    stage_dir=$2
-    package_set=$3
-    shift 3
-
-    mkdir -p "$stage_dir"
-    cp checks/version.lsp "$stage_dir/version.lsp"
-    case $package_set in
-        model) packages=model ;;
-        compiler) packages=compiler ;;
-        all) packages='model compiler proofs' ;;
-    esac
-    portcullis=0
-    for book_package in $packages; do
-        case $book_package in
-            model) package_file=compiler/model/package.lsp ;;
-            compiler) package_file=compiler/package.lsp ;;
-            proofs) package_file=$root/foundations/package.lsp ;;
-        esac
-        cp "$package_file" "$stage_dir/$book_package-package.lsp"
-        portcullis=$((portcullis + 1))
-    done
-    for book do
-        name_p "$book" || usage
-        cp "$source_dir/$book.lisp" "$stage_dir/$book.lisp"
-        rm -f "$stage_dir/$book.cert"
-        if ! (
-            cd "$stage_dir" || exit 1
-            {
-                printf '%s\n' '(ld "version.lsp")'
-                for book_package in $packages; do
-                    printf '(ld "%s-package.lsp")\n' "$book_package"
-                done
-                printf '(certify-book "%s" %s nil :skip-proofs-okp nil :defaxioms-okp nil :ttags nil :pcert nil)\n' "$book" "$portcullis"
-                printf '%s\n' '(good-bye)'
-            } | acl2 > "$book.out" 2>&1
-        ) || [ ! -s "$stage_dir/$book.cert" ]; then
-            printf 'ACL2 did not certify %s/%s.lisp. See %s/%s.out.\n' \
-                "$source_dir" "$book" "$stage_dir" "$book" >&2
-            return 1
-        fi
-        printf 'Certified %s/%s.lisp.\n' "$source_dir" "$book"
-    done
-}
-
-certify_foundations() {
-    rm -f "$work/foundations.ready"
-    certify_books compiler "$work/compiler" compiler $compiler_books
-    certify_books compiler/model "$work/model" model a64-state a64-decode a64 core
-    certify_books "$root/foundations" "$work/foundations" all $foundations
-    : > "$work/foundations.ready"
-    printf '%s\n' 'Compiler proof foundations certified.'
-}
-
-mkdir -p "$work/tmp"
-TMPDIR=$PWD/$work/tmp
+# The compiler build copies and certifies the compiler books in dependency order.
+sh compiler/build.sh -d "$dir" $compiler_books
+acl=$dir/acl2
+model=$dir/compiler/model
+proofs=$acl/proofs
+mkdir -p "$model" "$proofs"
+TMPDIR=$(pwd -P)/$dir/tmp
 export TMPDIR
 
-case ${1-} in
-    --foundations)
-        [ "$#" -eq 1 ] || usage
-        certify_foundations
-        ;;
-    --books)
-        [ "$#" -ge 3 ] || usage
-        package=$2
-        name_p "$package" || usage
-        case $package in compiler|foundations|model|tmp) usage ;; esac
-        shift 2
-        if [ ! -f "$work/foundations.ready" ]; then
-            printf '%s\n' 'Run sh compiler/proofs/certify.sh --foundations first.' >&2
-            exit 1
-        fi
-        certify_books "$root/$package" "$work/$package" all "$@"
-        ;;
-    '')
-        [ "$#" -eq 0 ] || usage
-        certify_foundations
-        failed=0
-        for directory in "$root"/*/; do
-            [ "$directory" = "$root/foundations/" ] && continue
-            [ -d "$directory" ] || continue
-            if [ ! -f "${directory}certify.sh" ]; then
-                printf 'Missing %scertify.sh.\n' "$directory" >&2
-                failed=1
-            elif ! sh "${directory}certify.sh"; then
-                failed=1
-            fi
+copy() {
+    if ! cmp -s "$1" "$2"; then
+        cp "$1" "$2"
+    fi
+}
+
+certify() {
+    cert_dir=$1
+    cert_book=$2
+    cert_version=$3
+    shift 3
+    if ! (cd "$cert_dir" && {
+        printf '(ld "%s")\n' "$cert_version"
+        for package_file in "$@"; do
+            printf '(ld "%s")\n' "$package_file"
         done
-        exit "$failed"
-        ;;
-    *) usage ;;
-esac
+        printf '(certify-book "%s" %s nil :skip-proofs-okp nil :defaxioms-okp nil :ttags nil)\n' \
+            "$cert_book" "$#"
+        printf '(good-bye)\n'
+    } | acl2 > "$cert_book.out" 2>&1) || [ ! -s "$cert_dir/$cert_book.cert" ] ||
+        grep -Eq 'ACL2 Error|\*\*\*\*\*\*\*\* FAILED' "$cert_dir/$cert_book.out"; then
+        printf 'ACL2 did not certify %s. See %s/%s.out.\n' "$cert_book" "$cert_dir" "$cert_book" >&2
+        exit 1
+    fi
+    printf 'Certified %s.\n' "$cert_book"
+}
+
+copy checks/version.lsp "$dir/version.lsp"
+copy compiler/model/package.lsp "$model/package.lsp"
+model_stale=0
+for book in core a64-state a64-decode a64; do
+    copy "compiler/model/$book.lisp" "$model/$book.lisp"
+    if [ "$model_stale" -eq 1 ] || [ ! -s "$model/$book.cert" ] ||
+        [ "$model/$book.lisp" -nt "$model/$book.cert" ] ||
+        [ "$model/package.lsp" -nt "$model/$book.cert" ] ||
+        [ "$dir/version.lsp" -nt "$model/$book.cert" ]; then
+        rm -f "$model/$book.cert"
+        certify "$model" "$book" ../../version.lsp package.lsp
+        model_stale=1
+    fi
+done
+
+stale=0
+for book in "$@"; do
+    case $book in
+        ''|*[!a-z0-9-]*) printf 'Invalid proof book name: %s\n' "$book" >&2; exit 2 ;;
+    esac
+    copy "$sources/$book.lisp" "$proofs/$book.lisp"
+    if [ ! -s "$proofs/$book.cert" ] || [ "$proofs/$book.lisp" -nt "$proofs/$book.cert" ] ||
+        [ "$dir/version.lsp" -nt "$proofs/$book.cert" ]; then
+        stale=1
+    fi
+    for dependency in "$acl"/*.cert "$model"/*.cert; do
+        if [ "$dependency" -nt "$proofs/$book.cert" ]; then
+            stale=1
+        fi
+    done
+    if [ "$stale" -eq 1 ]; then
+        rm -f "$proofs/$book.cert"
+        certify "$proofs" "$book" ../../version.lsp ../package.lsp ../../compiler/model/package.lsp
+    fi
+done
+printf 'ACL2 certificates are up to date in %s.\n' "$proofs"

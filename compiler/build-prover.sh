@@ -1,4 +1,18 @@
-# Build the compiled prover from the repository root after prover/build-all.sh.
+# Builds the compiled prover, build/compiler/prover. From the root of the
+# repository, after sh prover/build-all.sh:
+#
+#     sh compiler/build-prover.sh
+#     COMPILER=EXECUTABLE sh compiler/build-prover.sh
+#
+# PROVER_HEAP_LIMIT gives the executable's heap limit in MiB, an integer
+# from 1 to 4096, 1024 by default. COMPILER chooses the compiler. With
+# COMPILER unset or empty, the many-pass compiler,
+# build/compiler/compiler-2, compiles the prover, and the script first
+# runs sh compiler/bootstrap.sh when that executable is missing or older
+# than a book of the compiler. With COMPILER set to a compiled compiler,
+# such as the single-pass compiler build/compiler/single/compiler-2, which
+# sh compiler/single/bootstrap.sh writes, that executable compiles the
+# prover as it stands.
 set -eu
 export LC_ALL=C
 
@@ -6,6 +20,12 @@ fail() {
     printf 'compiler/build-prover.sh: %s\n' "$*" >&2
     exit 2
 }
+
+compiler=${COMPILER-}
+if [ -n "$compiler" ]; then
+    [ -x "$compiler" ] || fail "COMPILER names no executable: $compiler"
+    case $compiler in */*) ;; *) compiler=./$compiler ;; esac
+fi
 
 limit=${PROVER_HEAP_LIMIT:-1024}
 case $limit in ''|*[!0-9]*|0*) fail 'PROVER_HEAP_LIMIT must be an integer from 1 to 4096' ;; esac
@@ -72,14 +92,16 @@ fi
          END { exit (bad || files != 2) }' "$out.readback" ||
     fail "The entry did not pass readback. See $work/export.log."
 
-compiler=build/compiler/compiler-2
-stale=
-[ -x "$compiler" ] || stale=1
-for source in a64 read index data gen sha256 macos linux runtime compile; do
-    [ ! "compiler/$source.lisp" -nt "$compiler" ] || stale=1
-done
-[ ! compiler/package.lsp -nt "$compiler" ] || stale=1
-[ -z "$stale" ] || sh compiler/bootstrap.sh
+if [ -z "$compiler" ]; then
+    compiler=build/compiler/compiler-2
+    stale=
+    [ -x "$compiler" ] || stale=1
+    for source in compiler/*.lisp compiler/proofs/rega-check.lisp compiler/package.lsp; do
+        case $source in *checker-entry.lisp|*prover-entry.lisp) continue ;; esac
+        [ ! "$source" -nt "$compiler" ] || stale=1
+    done
+    [ -z "$stale" ] || sh compiler/bootstrap.sh
+fi
 
 library=build/export/library
 {

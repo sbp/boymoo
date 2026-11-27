@@ -2,10 +2,22 @@
 set -eu
 export LC_ALL=C
 
+# With no argument, the many-pass compiler, build/compiler/compiler-2,
+# compiles each case; with --reference, the single-pass compiler on the
+# reference runner, compiler/single/compile.sh; and with an argument that
+# names a compiled compiler, such as build/compiler/single/compiler-2,
+# that executable.
+usage() {
+    printf 'Usage: sh compiler/test-front.sh [--reference | COMPILER]\n' >&2
+    exit 2
+}
+[ "$#" -le 1 ] || usage
 case ${1-} in
     '') compiler=build/compiler/compiler-2 ;;
     --reference) compiler= ;;
-    *) printf 'Usage: sh compiler/test-front.sh [--reference]\n' >&2; exit 2 ;;
+    -*) usage ;;
+    */*) compiler=$1 ;;
+    *) compiler=./$1 ;;
 esac
 
 dir=$(mktemp -d build/compiler/front.XXXXXX)
@@ -74,7 +86,7 @@ check() {
         "$compiler" < "$dir/input" > "$dir/executable" 2> "$dir/compiler.err" ||
             compiler_status=$?
     else
-        sh compiler/compile.sh "$dir/input" > "$dir/executable" 2> "$dir/compiler.err" ||
+        sh compiler/single/compile.sh "$dir/input" > "$dir/executable" 2> "$dir/compiler.err" ||
             compiler_status=$?
     fi
     printf '%s compiler status %s\n' "$name" "$compiler_status"

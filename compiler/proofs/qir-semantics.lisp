@@ -1,0 +1,282 @@
+(in-package "BOYMOO-COMPILER")
+
+(include-book "../qir")
+(include-book "word-ops")
+(include-book "heap")
+
+(logic)
+(set-verify-guards-eagerness 0)
+
+(defund qir-operand (operand env level heap)
+  (cond ((qir-const-p operand)
+         (if (eq level :a)
+             (model-heap-datum (cdr operand) heap)
+           (boymoo-model::core-value (model-word (cdr operand)))))
+        ((qir-temp-p operand)
+         (let ((entry (assoc-equal operand env)))
+           (if entry (boymoo-model::core-value (cdr entry)) :malformed)))
+        (t :malformed)))
+
+(defund qir-operands (operands env level heap)
+  (if (endp operands)
+      (boymoo-model::core-value nil)
+    (let ((first (qir-operand (car operands) env level heap)))
+      (if (boymoo-model::core-value-p first)
+          (let ((rest (qir-operands (cdr operands) env level heap)))
+            (if (boymoo-model::core-value-p rest)
+                (boymoo-model::core-value (cons (boymoo-model::core-datum first)
+                                                (boymoo-model::core-datum rest)))
+              rest))
+        first))))
+
+; The predecessor environment stays fixed while every phi reads an operand.
+(defund qir-phi-bindings (phis predecessor env level heap)
+  (if (endp phis)
+      (boymoo-model::core-value nil)
+    (let* ((phi (car phis))
+           (first (qir-operand (qir-phi-arg phi predecessor) env level heap)))
+      (if (boymoo-model::core-value-p first)
+          (let ((rest (qir-phi-bindings (cdr phis) predecessor env level heap)))
+            (if (boymoo-model::core-value-p rest)
+                (boymoo-model::core-value
+                 (acons (qir-phi-dest phi) (boymoo-model::core-datum first)
+                        (boymoo-model::core-datum rest)))
+              rest))
+        first))))
+
+(defund qir-decode-words (words heap)
+  (if (endp words)
+      (boymoo-model::core-value nil)
+    (let ((first (model-heap-datum (car words) heap)))
+      (if (boymoo-model::core-value-p first)
+          (let ((rest (qir-decode-words (cdr words) heap)))
+            (if (boymoo-model::core-value-p rest)
+                (boymoo-model::core-value (cons (boymoo-model::core-datum first)
+                                                (boymoo-model::core-datum rest)))
+              rest))
+        first))))
+
+(defund qir-runtime (label words heap program)
+  (cond ((not (equal (qir-routine-arity label) (len words))) (mv :malformed heap))
+        ((equal label "prim:COMMON-LISP::CONS")
+         (model-heap-cons (car words) (cadr words) heap))
+        (t (let ((args (qir-decode-words words heap))
+                 (name (subseq label (if (equal (subseq label 0 5) "prim:") 5 4) nil)))
+             (if (boymoo-model::core-value-p args)
+                 (let ((result (model-routine name (boymoo-model::core-datum args) program)))
+                   (if (boymoo-model::core-value-p result)
+                       (model-encode (boymoo-model::core-datum result) heap)
+                     (mv result heap)))
+               (mv args heap))))))
+
+(defun qir-slot-p (slot nslots)
+  (and (natp slot) (natp nslots) (< slot nslots)))
+
+; A frame slot has no specified value until a spill writes it.
+(defun qir-slot-value (slot slots)
+  (let ((entry (assoc-equal slot slots)))
+    (if entry (boymoo-model::core-value (cdr entry)) :malformed)))
+
+; Given operand values, compute the result, frame slots, and heap of
+; an instruction. The evaluator handles calls to program definitions.
+(defund qir-compute (inst args slots nslots level heap program)
+  (let ((op (qir-inst-op inst))
+        (a (car args))
+        (b (cadr args)))
+    (cond
+     ((eq op :copy) (mv (boymoo-model::core-value a) slots heap))
+     ((eq level :a)
+      (if (eq op :prim)
+          (mv (model-routine (caddr inst) args program) slots heap)
+        (mv :malformed slots heap)))
+     ((qir-word-op-p op)
+      (mv (boymoo-model::core-value (model-word-op op a b)) slots heap))
+     ((eq op :sel)
+      (mv (boymoo-model::core-value (if (equal a 0) (caddr args) b)) slots heap))
+     ((or (eq op :ld) (eq op :ldb))
+      (mv (model-heap-read (if (eq op :ld) 8 1) (model-word (+ a b)) heap)
+          slots heap))
+     ((eq op :cons)
+      (mv-let (result heap)
+        (model-heap-cons a b heap)
+        (mv result slots heap)))
+     ((eq op :rt)
+      (mv-let (result heap)
+        (qir-runtime (caddr inst) args heap program)
+        (mv result slots heap)))
+     (t (let ((slot (caddr inst)))
+          (cond ((and (eq level :l) (qir-slot-p slot nslots) (eq op :spill))
+                 (mv (boymoo-model::core-value nil) (put-assoc-equal slot a slots) heap))
+                ((and (eq level :l) (qir-slot-p slot nslots) (eq op :reload))
+                 (mv (qir-slot-value slot slots) slots heap))
+                (t (mv :malformed slots heap))))))))
+
+(defund qir-branch (jump env level heap)
+  (case (car jump)
+    (:jmp (boymoo-model::core-value (cadr jump)))
+    ((:if :jnz)
+     (if (not (equal (eq (car jump) :if) (eq level :a)))
+         :malformed
+       (let ((test (qir-operand (cadr jump) env level heap)))
+         (if (boymoo-model::core-value-p test)
+             (let* ((value (boymoo-model::core-datum test))
+                    (take-yes (if (eq level :a) value (not (equal value 0)))))
+               (boymoo-model::core-value (if take-yes (caddr jump) (cadddr jump))))
+           test))))
+    (otherwise :malformed)))
+
+(defun qir-function (name fns)
+  (if (endp fns)
+      nil
+    (if (equal name (qir-fn-name (car fns)))
+        (car fns)
+      (qir-function name (cdr fns)))))
+
+(defun qir-activation (blocks label env slots nslots)
+  (list blocks label env slots nslots))
+
+(defun qir-activation-blocks (frame) (car frame))
+(defun qir-activation-label (frame) (cadr frame))
+(defun qir-activation-env (frame) (caddr frame))
+(defun qir-activation-slots (frame) (cadddr frame))
+(defun qir-activation-nslots (frame) (car (cddddr frame)))
+
+(defun qir-bind (dest value env)
+  (if dest (put-assoc-equal dest value env) env))
+
+; A call starts with a new temporary environment and frame. A jump
+; carries the current environment and records the previous block label.
+; Fuel bounds the depth of calls, branches, and instruction execution.
+(defund qir-eval-step (kind input fns level program frame heap fuel)
+  (declare (xargs :measure (nfix fuel) :ruler-extenders :all))
+  (if (zp fuel)
+      (mv :out-of-fuel heap)
+    (let* ((next (1- fuel))
+           (env (qir-activation-env frame))
+           (slots (qir-activation-slots frame))
+           (nslots (qir-activation-nslots frame)))
+      (case kind
+        (:call
+         (let* ((fn (qir-function (car input) fns))
+                (blocks (qir-fn-blocks fn))
+                (params (qir-fn-params fn))
+                (args (cdr input)))
+           (if (and (consp blocks) (equal (len params) (len args)))
+               (qir-eval-step :block (qir-block-label (car blocks)) fns level program
+                                 (qir-activation (qir-block-map blocks nil) nil
+                                                    (pairlis$ params args) nil (qir-fn-nslots fn))
+                                 heap next)
+             (mv :malformed heap))))
+        (:block
+         (let* ((blocks (qir-activation-blocks frame))
+                (predecessor (qir-activation-label frame))
+                (block (qir-get input blocks))
+                (bindings (qir-phi-bindings (qir-block-phis block) predecessor env level heap)))
+           (cond ((not block) (mv :malformed heap))
+                 ((not (boymoo-model::core-value-p bindings)) (mv bindings heap))
+                 (t (qir-eval-step :insts (cons (qir-block-insts block) (qir-block-jump block))
+                                      fns level program
+                                      (qir-activation blocks input
+                                                         (append (boymoo-model::core-datum bindings) env)
+                                                         slots nslots)
+                                      heap next)))))
+        (:insts
+         (if (endp (car input))
+             (qir-eval-step :jump (cdr input) fns level program frame heap next)
+           (let* ((inst (caar input))
+                  (args (qir-operands (qir-inst-uses inst) env level heap)))
+             (if (not (boymoo-model::core-value-p args))
+                 (mv args heap)
+               (mv-let (result slots heap)
+                 (if (or (eq (qir-inst-op inst) :call)
+                         (and (eq (qir-inst-op inst) :rt)
+                              (qir-function (caddr inst) fns)))
+                     (mv-let (result heap)
+                       (qir-eval-step :call (cons (caddr inst) (boymoo-model::core-datum args))
+                                         fns level program nil heap next)
+                       (mv result slots heap))
+                   (qir-compute inst (boymoo-model::core-datum args) slots nslots level heap program))
+                 (if (not (and (consp result) (boymoo-model::core-value-p result)))
+                     (mv result heap)
+                   (let* ((env (qir-bind (qir-inst-dest inst) (boymoo-model::core-datum result) env))
+                          (frame (qir-activation (qir-activation-blocks frame)
+                                                    (qir-activation-label frame) env slots nslots)))
+                     (qir-eval-step :insts (cons (cdar input) (cdr input)) fns level program
+                                       frame heap next))))))))
+        (:jump
+         (case (car input)
+           (:ret (mv (qir-operand (cadr input) env level heap) heap))
+           (:undef (mv :no-value heap))
+           (:tail (let ((args (qir-operands (cddr input) env level heap)))
+                    (if (boymoo-model::core-value-p args)
+                        (qir-eval-step :call (cons (cadr input) (boymoo-model::core-datum args))
+                                          fns level program nil heap next)
+                      (mv args heap))))
+           (otherwise (let ((target (qir-branch input env level heap)))
+                        (if (boymoo-model::core-value-p target)
+                            (qir-eval-step :block (boymoo-model::core-datum target)
+                                              fns level program frame heap next)
+                          (mv target heap))))))
+        (otherwise (mv :malformed heap))))))
+
+(defun qir-run (entry args fns level program heap fuel)
+  (qir-eval-step :call (cons entry args) fns level program nil heap fuel))
+
+(defun qir-observe (level result heap)
+  (if (and (not (eq level :a)) (consp result) (boymoo-model::core-value-p result))
+      (model-heap-datum (boymoo-model::core-datum result) heap)
+    result))
+
+(defthm qir-graph-entry-has-no-phis
+  (implies (qir-graph-ok blocks)
+           (not (qir-block-phis (car blocks))))
+  :hints (("Goal" :in-theory (disable qir-block-map qir-preds qir-rpo qir-labels-distinct-p
+                                     qir-targets-defined-p qir-get qir-blocks-phis-match-p))))
+
+(assert-event
+ (let ((program
+        '((:fn "ACL2::SWAP" ((:d . 0) (:d . 1) (:d . 2))
+               ((0 nil nil (:jmp 1))
+                (1 (((:d . 3) ((0 :d . 0) (2 :d . 4)))
+                    ((:d . 4) ((0 :d . 1) (2 :d . 3)))
+                    ((:d . 5) ((0 :d . 2) (2 :k . 34))))
+                   nil (:if (:d . 5) 2 3))
+                (2 nil nil (:jmp 1))
+                (3 nil nil (:ret (:d . 4))))))))
+   (mv-let (result heap)
+     (qir-run "ACL2::SWAP" '(11 22 t) program :a nil nil 40)
+     (declare (ignore heap))
+     (and (qir-a-p program) (equal result (boymoo-model::core-value 11))))))
+
+(assert-event
+ (let ((program
+        '((:fn "ACL2::FIRST" ()
+               ((0 nil (((:d . 0) :cons (:k . 7) (:k . 5))
+                        ((:d . 1) :ld (:d . 0) (:k . 0)))
+                   (:ret (:d . 1))))))))
+   (mv-let (result heap)
+     (qir-run "ACL2::FIRST" nil program :m nil (model-heap 80 nil nil nil) 30)
+     (and (qir-m-p program)
+          (equal result (boymoo-model::core-value 7))
+          (equal (qir-observe :m result heap) (boymoo-model::core-value 3))))))
+
+(assert-event
+ (let ((program
+        '((:fn "ACL2::SAVE" ((:d . 0))
+               ((0 nil ((nil :spill 0 (:d . 0))
+                        ((:d . 1) :cons (:k . 3) (:k . 34))
+                        ((:d . 0) :reload 0))
+                   (:ret (:d . 0)))) 1))))
+   (mv-let (result heap)
+     (qir-run "ACL2::SAVE" '(7) program :l nil (model-heap 80 nil nil nil) 30)
+     (declare (ignore heap))
+     (and (qir-l-p program) (equal result (boymoo-model::core-value 7))))))
+
+(assert-event
+ (let ((program
+        '((:fn "ACL2::UNWRITTEN" nil
+               ((0 nil (((:d . 0) :reload 0)) (:ret (:d . 0)))) 1))))
+   (mv-let (result heap)
+     (qir-run "ACL2::UNWRITTEN" nil program :l nil nil 10)
+     (and (equal result :malformed)
+          (equal (qir-observe :l result heap) :malformed)))))

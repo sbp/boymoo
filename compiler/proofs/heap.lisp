@@ -1,0 +1,197 @@
+(in-package "BOYMOO-COMPILER")
+
+(include-book "values")
+
+(logic)
+(set-verify-guards-eagerness 0)
+
+; Heap addresses are byte offsets. Objects associates published datum
+; words with ACL2 objects, including any supplied static constants.
+; Packages maps home-package names to the numbers in symbol records.
+(defun model-heap (next bytes objects packages)
+  (list next bytes objects packages))
+
+(defun model-heap-next (heap) (car heap))
+(defun model-heap-bytes (heap) (cadr heap))
+(defun model-heap-objects (heap) (caddr heap))
+(defun model-heap-packages (heap) (cadddr heap))
+
+(defun model-heap-datum (word heap)
+  (model-constant word (model-heap-objects heap)))
+
+(defun model-heap-byte-span-p (count address bytes)
+  (declare (xargs :measure (nfix count)))
+  (if (zp count)
+      t
+    (let ((entry (assoc-equal address bytes)))
+      (and entry (unsigned-byte-p 8 (cdr entry))
+           (model-heap-byte-span-p (1- count) (1+ address) bytes)))))
+
+(defund model-heap-read (count address heap)
+  (let ((bytes (model-heap-bytes heap)))
+    (if (and (natp address) (natp count)
+             (<= (+ address count) #x10000000000000000)
+             (model-heap-byte-span-p count address bytes))
+        (boymoo-model::core-value (boymoo-model::a64-read-bytes count address bytes))
+      :malformed)))
+
+(defun model-heap-room-p (size heap)
+  (let ((next (model-heap-next heap)))
+    (and (natp next) (<= 80 next) (equal (mod next 8) 0)
+         (natp size) (equal (mod size 8) 0)
+         (<= (+ size next) #x10000000000000000))))
+
+(defun model-write-words (words address bytes)
+  (if (endp words)
+      bytes
+    (model-write-words (cdr words) (+ address 8)
+                          (boymoo-model::a64-write-bytes 8 address (car words) bytes))))
+
+(defun model-write-characters (chars address bytes)
+  (if (endp chars)
+      bytes
+    (model-write-characters (cdr chars) (1+ address)
+                               (put-assoc-equal address (char-code (car chars)) bytes))))
+
+(defun model-publish (word size bytes datum heap)
+  (model-heap (+ (model-heap-next heap) size) bytes
+                 (acons word datum (model-heap-objects heap))
+                 (model-heap-packages heap)))
+
+(defund model-heap-cons (a b heap)
+  (let ((a-datum (model-heap-datum a heap))
+        (b-datum (model-heap-datum b heap)))
+    (if (and (boymoo-model::core-value-p a-datum)
+             (boymoo-model::core-value-p b-datum)
+             (model-heap-room-p 16 heap))
+        (let* ((word (model-heap-next heap))
+               (bytes (model-write-words (list a b) word (model-heap-bytes heap)))
+               (datum (cons (boymoo-model::core-datum a-datum)
+                            (boymoo-model::core-datum b-datum))))
+          (mv (boymoo-model::core-value word) (model-publish word 16 bytes datum heap)))
+      (mv :malformed heap))))
+
+(defun model-allocate-record (datum type fields heap)
+  (let* ((payload-size (* 8 (len fields)))
+         (size (+ 8 payload-size)))
+    (if (and (unsigned-byte-p 56 payload-size) (model-heap-room-p size heap))
+        (let* ((address (model-heap-next heap))
+               (word (+ 2 address))
+               (header (+ (ash payload-size 8) type))
+               (bytes (model-write-words (cons header fields) address
+                                           (model-heap-bytes heap))))
+          (mv (boymoo-model::core-value word) (model-publish word size bytes datum heap)))
+      (mv :malformed heap))))
+
+(defun model-allocate-string (datum heap)
+  (let* ((length (length datum))
+         (padding (mod (- length) 8))
+         (size (+ 8 length padding)))
+    (if (and (unsigned-byte-p 56 length) (model-heap-room-p size heap))
+        (let* ((address (model-heap-next heap))
+               (word (+ 2 address))
+               (bytes (boymoo-model::a64-write-bytes 8 address (+ (ash length 8) 1)
+                                                     (model-heap-bytes heap)))
+               (bytes (model-write-characters (coerce datum 'list) (+ address 8) bytes))
+               (bytes (boymoo-model::a64-write-bytes padding (+ address 8 length) 0 bytes)))
+          (mv (boymoo-model::core-value word) (model-publish word size bytes datum heap)))
+      (mv :malformed heap))))
+
+(defun model-lookup-datum (datum heap)
+  (rassoc-equal datum (model-heap-objects heap)))
+
+(defun model-integer-limbs (magnitude fuel)
+  (declare (xargs :measure (nfix fuel)))
+  (if (or (zp fuel) (zp magnitude))
+      nil
+    (cons (low-bits magnitude 32)
+          (model-integer-limbs (ash magnitude -32) (1- fuel)))))
+
+(defun model-encode-integer (datum heap)
+  (if (model-immediate-integer-p datum)
+      (mv (boymoo-model::core-value (model-integer-word datum)) heap)
+    (let ((old (model-lookup-datum datum heap)))
+      (if old
+          (mv (boymoo-model::core-value (car old)) heap)
+        (let* ((magnitude (abs datum))
+               (limbs (model-integer-limbs magnitude (integer-length magnitude))))
+          (model-allocate-record datum 3 (cons (if (< datum 0) 1 0) limbs) heap))))))
+
+(defun model-encode-rational (datum heap)
+  (if (integerp datum)
+      (model-encode-integer datum heap)
+    (let ((old (model-lookup-datum datum heap)))
+      (if old
+          (mv (boymoo-model::core-value (car old)) heap)
+        (mv-let (num heap1)
+          (model-encode-integer (numerator datum) heap)
+          (mv-let (den heap2)
+            (model-encode-integer (denominator datum) heap1)
+            (if (and (boymoo-model::core-value-p num) (boymoo-model::core-value-p den))
+                (model-allocate-record datum 4 (list (boymoo-model::core-datum num)
+                                                       (boymoo-model::core-datum den)) heap2)
+              (mv :malformed heap))))))))
+
+(defun model-encode-string (datum heap)
+  (let ((old (model-lookup-datum datum heap)))
+    (if old
+        (mv (boymoo-model::core-value (car old)) heap)
+      (model-allocate-string datum heap))))
+
+(defun model-encode-symbol (datum heap)
+  (let ((package (assoc-equal (acl2::symbol-package-name datum) (model-heap-packages heap))))
+    (if (and package (natp (cdr package)) (model-immediate-integer-p (cdr package)))
+        (mv-let (name heap1)
+          (model-encode-string (symbol-name datum) heap)
+          (if (boymoo-model::core-value-p name)
+              (model-allocate-record datum 2 (list (boymoo-model::core-datum name)
+                                                     (model-integer-word (cdr package))) heap1)
+            (mv :malformed heap)))
+      (mv :malformed heap))))
+
+(defund model-encode (datum heap)
+  (declare (xargs :measure (acl2-count datum)))
+  (cond ((null datum) (mv (boymoo-model::core-value *model-nil-word*) heap))
+        ((eq datum t) (mv (boymoo-model::core-value *model-t-word*) heap))
+        ((characterp datum) (mv (boymoo-model::core-value (model-character-word datum)) heap))
+        ((rationalp datum) (model-encode-rational datum heap))
+        (t (let ((old (model-lookup-datum datum heap)))
+             (cond
+              (old (mv (boymoo-model::core-value (car old)) heap))
+              ((stringp datum) (model-allocate-string datum heap))
+              ((symbolp datum) (model-encode-symbol datum heap))
+              ((complex-rationalp datum)
+               (mv-let (real heap1)
+                 (model-encode-rational (realpart datum) heap)
+                 (mv-let (imaginary heap2)
+                   (model-encode-rational (imagpart datum) heap1)
+                   (if (and (boymoo-model::core-value-p real) (boymoo-model::core-value-p imaginary))
+                       (model-allocate-record datum 5 (list (boymoo-model::core-datum real)
+                                                              (boymoo-model::core-datum imaginary)) heap2)
+                     (mv :malformed heap)))))
+              ((consp datum)
+               (mv-let (first heap1)
+                 (model-encode (car datum) heap)
+                 (mv-let (rest heap2)
+                   (model-encode (cdr datum) heap1)
+                   (if (and (boymoo-model::core-value-p first) (boymoo-model::core-value-p rest))
+                       (model-heap-cons (boymoo-model::core-datum first)
+                                           (boymoo-model::core-datum rest) heap2)
+                     (mv :malformed heap)))))
+              (t (mv :malformed heap)))))))
+
+(assert-event
+ (mv-let (result heap)
+   (model-heap-cons 7 5 (model-heap 80 nil nil nil))
+   (and (equal result (boymoo-model::core-value 80))
+        (equal (model-heap-datum 80 heap) (boymoo-model::core-value '(3 . 2)))
+        (equal (model-heap-read 8 80 heap) (boymoo-model::core-value 7))
+        (equal (model-heap-read 8 88 heap) (boymoo-model::core-value 5)))))
+
+(assert-event
+ (mv-let (result heap)
+   (model-encode "abc" (model-heap 80 nil nil nil))
+   (and (equal result (boymoo-model::core-value 82))
+        (equal (model-heap-datum 82 heap) (boymoo-model::core-value "abc"))
+        (equal (model-heap-read 8 80 heap) (boymoo-model::core-value #x301))
+        (equal (model-heap-read 1 90 heap) (boymoo-model::core-value 99)))))

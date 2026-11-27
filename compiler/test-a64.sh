@@ -2,7 +2,7 @@
 set -eu
 export LC_ALL=C
 
-sh compiler/build.sh --a64
+sh compiler/single/build.sh --a64
 dir=build/compiler/a64
 export TMPDIR="$PWD/$dir"
 
@@ -58,6 +58,9 @@ ldrb w0, [sp, #4095]|(KEYWORD::LDRB 0 31 4095)
 strb w0, [x11, #260]|(KEYWORD::STRB 0 11 260)
 ldrb w0, [x2, x20]|(KEYWORD::LDRB-REG 0 2 20)
 strb w0, [x2, x20]|(KEYWORD::STRB-REG 0 2 20)
+ldur x9, [x19, #-256]|(KEYWORD::LDUR 9 19 -256)
+stur x2, [sp, #255]|(KEYWORD::STUR 2 31 255)
+ldurb w0, [x11, #-1]|(KEYWORD::LDURB 0 11 -1)
 stp x29, x30, [sp, #504]|(KEYWORD::STP 29 30 31 504)
 ldp x19, x20, [sp, #-512]|(KEYWORD::LDP 19 20 31 -512)
 ldp x29, x30, [sp], #16|(KEYWORD::LDP-POST 29 30 31 16)
@@ -67,6 +70,8 @@ bl Lstart|(KEYWORD::BL "start")
 b.ne Lstart|(KEYWORD::B-COND KEYWORD::NE "start")
 cbz x0, Lend|(KEYWORD::CBZ 0 "end")
 cbnz x2, Lstart|(KEYWORD::CBNZ 2 "start")
+tbz w3, #5, Lend|(KEYWORD::TBZ 3 5 "end")
+tbnz x20, #63, Lstart|(KEYWORD::TBNZ 20 63 "start")
 adr x7, Lend|(KEYWORD::ADR 7 "end")
 adrp x9, 0; add x9, x9, #0|(KEYWORD::ADR-FAR 9 "start")
 Lend:|(KEYWORD::LABEL "end")

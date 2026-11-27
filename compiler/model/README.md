@@ -126,7 +126,10 @@ describe the machine used by the calling convention and code image in
   system call convention.
 
 The instructions in the table below are those of the assembler's
-items in “The assembly language” of `compiler/README.md`. Labels
+items in “The assembly language” of `compiler/README.md`, but for
+`:ldur`, `:stur`, `:ldurb`, `:tbz` and `:tbnz`, which only the
+many-pass compiler writes: the model does not decode LDUR, STUR, LDURB,
+TBZ and TBNZ, which therefore fall outside its scope. Labels
 locate bytes, and `:bytes`, `:quad` and `:image` supply data. The
 reference is the *Arm Architecture
 Reference Manual for A-profile architecture* (ARM DDI 0487),

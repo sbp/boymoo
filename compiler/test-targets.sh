@@ -1,9 +1,20 @@
 set -eu
 export LC_ALL=C
 
-compiler=build/compiler/compiler-2
+# The compiler is the compiled compiler named as the argument, or the
+# many-pass compiler, build/compiler/compiler-2, if none is named.
+if [ "$#" -gt 1 ]; then
+    printf '%s\n' 'Usage: sh compiler/test-targets.sh [COMPILER]' >&2
+    exit 2
+fi
+compiler=${1:-build/compiler/compiler-2}
+case $compiler in */*) ;; *) compiler=./$compiler ;; esac
 if [ ! -x "$compiler" ]; then
-    printf '%s\n' 'Run sh compiler/bootstrap.sh to build the compiled compiler.' >&2
+    if [ "$#" -eq 0 ]; then
+        printf '%s\n' 'Run sh compiler/bootstrap.sh to build the compiled compiler.' >&2
+    else
+        printf 'There is no executable %s.\n' "$compiler" >&2
+    fi
     exit 2
 fi
 dir=$(mktemp -d build/compiler/targets.XXXXXX)

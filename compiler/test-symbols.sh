@@ -22,8 +22,8 @@ awk '/^\(define /' "$source" > "$dir/program"
 if [ "$#" -eq 1 ]; then
     "$1" < "$dir/input" > "$dir/executable"
 else
-    sh compiler/build.sh
-    sh compiler/compile.sh "$dir/input" > "$dir/executable"
+    sh compiler/single/build.sh
+    sh compiler/single/compile.sh "$dir/input" > "$dir/executable"
 fi
 chmod +x "$dir/executable"
 . checker/quote.sh

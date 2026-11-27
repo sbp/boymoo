@@ -3,19 +3,30 @@
 # repository:
 #
 #     sh compiler/build-checker.sh
+#     COMPILER=EXECUTABLE sh compiler/build-checker.sh
 #
-# It has checker/build.sh build the checker and compiler/build.sh the
-# compiler; has ACL2 certify compiler/checker-entry.lisp beside the
-# checker's books, and the exporter export it; writes the compiler's input,
-# the program text of the checker and of its entry, to
-# build/compiler/checker-test/checker.input; and compiles that input on the
-# reference runner with compiler/compile.sh, printing the runner's time.
+# It has checker/build.sh build the checker; has ACL2 certify
+# compiler/checker-entry.lisp beside the checker's books, and the exporter
+# export it; writes the compiler's input, the program text of the checker
+# and of its entry, to build/compiler/checker-test/checker.input; and
+# compiles that input, printing the time of the compilation.
+#
+# COMPILER chooses the compiler. With COMPILER unset or empty, the
+# many-pass compiler, build/compiler/compiler-2, compiles the input, and
+# the script first runs sh compiler/bootstrap.sh when that executable is
+# missing or older than a book of the compiler. With COMPILER set to a
+# compiled compiler, such as the single-pass compiler
+# build/compiler/single/compiler-2, which sh compiler/single/bootstrap.sh
+# writes, that executable compiles the input as it stands.
 set -eu
 
-runner=build/runner/boymoo-run
-if [ ! -x "$runner" ]; then
-    echo "compiler/build-checker.sh requires $runner" >&2
-    exit 2
+compiler=${COMPILER-}
+if [ -n "$compiler" ]; then
+    if [ ! -x "$compiler" ]; then
+        echo "compiler/build-checker.sh: COMPILER names no executable: $compiler" >&2
+        exit 2
+    fi
+    case $compiler in */*) ;; *) compiler=./$compiler ;; esac
 fi
 
 export LC_ALL=C
@@ -27,7 +38,16 @@ mkdir -p "$work/tmp"
 export TMPDIR="$PWD/$work/tmp"
 
 sh checker/build.sh
-sh compiler/build.sh
+if [ -z "$compiler" ]; then
+    compiler=build/compiler/compiler-2
+    stale=
+    [ -x "$compiler" ] || stale=1
+    for source in compiler/*.lisp compiler/proofs/rega-check.lisp compiler/package.lsp; do
+        case $source in *checker-entry.lisp|*prover-entry.lisp) continue ;; esac
+        [ ! "$source" -nt "$compiler" ] || stale=1
+    done
+    [ -z "$stale" ] || sh compiler/bootstrap.sh
+fi
 if ! cmp -s compiler/checker-entry.lisp "$book.lisp" ||
    [ ! -f "$book.cert" ] || [ "$acl/check.cert" -nt "$book.cert" ]; then
     cp compiler/checker-entry.lisp "$book.lisp"
@@ -60,6 +80,6 @@ awk -f checker/library.awk spec/ground.txt "$exported.statements" \
     printf '(entry BOYMOO::CHECKER-ENTRY)\n'
 } > "$work/checker.input"
 
-time -p sh compiler/compile.sh -v "$work/checker.input" > "$work/checker"
+time -p "$compiler" < "$work/checker.input" > "$work/checker"
 chmod +x "$work/checker"
 mv "$work/checker" build/compiler/checker

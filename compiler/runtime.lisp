@@ -4,14 +4,21 @@
 
 ; The heap mapping begins with a page of private runtime state. The last
 ; 128 bytes of that page hold these words, at offsets from x28 minus 128:
-;   0 and 8: the floor and ceiling of the active space.
+;   0 and 8: the floor and ceiling of the allocation space.
 ;   16: the lowest address occupied by conses in that space.
 ;   24 and 32: the floor and ceiling of the other space.
 ;   40 and 48: the floor and ceiling of the value stack.
 ;   56: the first separately mapped string.
 ;   64: the end of the combined heap spaces.
 ;   72 and 80: bytes mapped for strings since collection and their budget.
-; A space has a fixed address span. Headers grow from its floor, conses
+;   88 and 96: the old generation's header and cons allocation cursors.
+;   104: the old generation's major-collection threshold in bytes.
+;   112: flags for intern-table changes. Bit 0 records a bucket write.
+;        Bit 1 records changes to entry links during rehashing.
+;   120: the nursery bytes used since the last full collection.
+; The allocation space is the nursery between collections. Both spaces
+; have fixed spans. Between collections their combined allocation fits
+; within the capacity of one space. Headers grow from its floor, conses
 ; grow down from its ceiling, and x26 limits their combined byte count.
 
 ; Contracts apply to entry labels. In lists inputs in addition to the
@@ -77,6 +84,9 @@
     (:stp 2 2 21 16)
     (:str 3 21 32)
     (:str 3 21 64)
+    (:stp 2 3 21 88)
+    (:movz 4 16 16)
+    (:str 4 21 104)
 
     ; The value stack grows within a reservation. The machine stack has
     ; a margin for calls made by a function while checking its frame.
@@ -159,7 +169,7 @@
     (:sub 0 0 6)
     (:str 0 25 0)
     (:add 25 25 8)
-    (:movz 1 1 16)
+    (:movz 1 16 16)
     (:add-reg 26 27 1 0)
     (:bl "rt:entry")
 
@@ -248,19 +258,16 @@
     (:label "rt:alloc-cells-slow")
     (:movz 1 1 0)
 
-    ; In: x0 is the pending byte count, and x1 is zero for header
-    ; allocation or one for cons allocation. x25 bounds the live roots.
-    ; Out: x0 is the pending allocation's address in the new active space.
-    ; Changes: Volatile set and x26 through x27. Rewrites every live
-    ; value-stack word and the static root at x28 + 24 through forwarding,
-    ; switches spaces, releases retired pages and sweeps string mappings.
+    ; In: The pending byte count in x0 and its kind in x1, zero for
+    ; header allocation and one for cons allocation. x25 bounds the roots.
+    ; Out: x0 is the pending allocation's address. Copy live nursery
+    ; objects into the old space and use a full copy if space is still
+    ; needed, the old space has reached its threshold, or the separate
+    ; mappings need a sweep. Both generations share a single space's
+    ; capacity, so all nursery survivors fit before the full copy.
+    ; Changes: The volatile set, x26 and x27. Rewrites roots through
+    ; forwarding and releases used pages before reusing a source space.
     ; Stack: 64 machine bytes for saves and the request. Allocates: Yes.
-    ; The collector has a scan cursor for each end of the destination
-    ; space. A cursor visits each object placed behind its allocation
-    ; cursor. It forwards the roots before visiting the copied objects.
-    ; In the destination, x8 and x20 scan and allocate header objects,
-    ; and x22 and x21 scan and allocate conses. X19 bounds old pointers
-    ; against the static block, and x17 addresses the runtime state.
     (:label "rt:collect")
     (:stp-pre 19 20 31 -16)
     (:stp-pre 21 22 31 -16)
@@ -269,11 +276,33 @@
     (:movz 2 1 32)
     (:cmp-reg 0 2)
     (:b-cond :hi "rt:datum-size")
+    (:movz 29 0 0)
     (:sub 17 28 128)
-    (:ldr 19 17 0)
-    (:ldp 20 21 17 24)
+    (:ldp 19 6 17 0)
+    (:sub-reg 5 19 28 0)
+    (:sub-reg 6 6 28 0)
+    (:ldp 20 21 17 88)
     (:mov 8 20)
     (:mov 22 21)
+    (:bl "rt:remembered-symbols")
+    (:b "rt:collect-trace")
+
+    ; The nursery is empty. Make the old space the source of a full
+    ; copy into the former nursery and retain it as the new nursery.
+    (:label "rt:collect-major")
+    (:ldp 8 9 17 0)
+    (:ldp 19 22 17 24)
+    (:ldp 27 2 17 88)
+    (:stp 19 22 17 0)
+    (:sub-reg 5 19 28 0)
+    (:sub-reg 6 22 28 0)
+    (:str 2 17 16)
+    (:stp 8 9 17 24)
+    (:movz 29 1 0)
+    (:mov 20 8)
+    (:mov 21 9)
+    (:mov 22 21)
+    (:label "rt:collect-trace")
     (:ldr 0 28 24)
     (:bl "rt:forward")
     (:str 0 28 24)
@@ -321,38 +350,57 @@
     (:str 0 22 8)
     (:b "rt:scan")
 
-    ; The next budget is twice the copied bytes, with a minimum and
-    ; enough room for the pending allocation when the request is large.
     (:label "rt:collect-finish")
+    ; Allow a small heap that retained most of its data to grow for
+    ; longer between full copies. Otherwise double its live bytes.
+    (:cbz 29 "rt:collect-save-cursors")
     (:ldp 2 3 17 24)
     (:sub-reg 4 20 2 0)
     (:sub-reg 5 3 21 0)
     (:add-reg 4 4 5 0)
-    (:ldr 0 31 0)
-    (:add-reg 5 4 0 0)
-    (:sub-reg 6 3 2 0)
-    (:cmp-reg 5 6)
-    (:b-cond :hi "rt:heap-size")
     (:lsl 7 4 1)
+    ; Limit the source space at the next full copy when a large live
+    ; heap will require a substantial destination space.
+    (:lsr 10 4 27)
+    (:cbz 10 "rt:major-small")
+    (:lsr 7 4 1)
+    (:add-reg 7 7 4 0)
+    (:b "rt:major-target")
+    (:label "rt:major-small")
+    (:lsr 10 4 23)
+    (:cbnz 10 "rt:major-target")
+    (:lsr 10 4 20)
+    (:cbz 10 "rt:major-target")
+    (:ldp 8 9 17 0)
+    (:sub-reg 8 27 8 0)
+    (:ldr 10 17 16)
+    (:sub-reg 9 9 10 0)
+    (:add-reg 8 8 9 0)
+    (:sub-reg 9 8 4 0)
+    (:lsr 10 8 3)
+    (:cmp-reg 9 10)
+    (:add-reg 8 7 4 0)
+    (:csel 7 8 7 :ls)
+    (:label "rt:major-target")
+    (:movz 5 16 16)
     (:cmp-reg 7 5)
     (:csel 7 7 5 :hs)
-    (:movz 5 1 16)
-    (:cmp-reg 7 5)
-    (:csel 7 7 5 :hs)
-    (:cmp-reg 7 6)
-    (:csel 7 7 6 :ls)
-    (:add-reg 26 20 7 0)
-    (:sub-reg 26 26 4 0)
+    (:str 7 17 104)
+    (:str 31 17 120)
+    (:label "rt:collect-save-cursors")
+    (:stp 20 21 17 88)
     (:mov 8 27)
-    (:mov 27 20)
     (:ldp 19 22 17 0)
     (:ldr 20 17 16)
-    (:stp 19 22 17 24)
-    (:stp 2 3 17 0)
-    (:str 21 17 16)
+    (:cbnz 29 "rt:collect-release")
+    (:sub-reg 2 8 19 0)
+    (:sub-reg 3 22 20 0)
+    (:ldr 4 17 120)
+    (:add-reg 2 2 3 0)
+    (:add-reg 4 4 2 0)
+    (:str 4 17 120)
 
-    ; Only the ends of the retired space have been touched. Its free
-    ; middle was already clear, as is the free middle of the new space.
+    (:label "rt:collect-release")
     (:movz 1 65535 0)
     (:add-reg 1 8 1 0)
     (:lsr 1 1 16)
@@ -363,7 +411,67 @@
     (:lsl 0 0 16)
     (:mov 1 22)
     (:bl "rt:release-range")
+    (:cbz 29 "rt:collect-choose-budget")
     (:bl "rt:sweep-strings")
+
+    (:label "rt:collect-choose-budget")
+    (:sub 17 28 128)
+    (:ldp 2 3 17 24)
+    (:ldp 4 5 17 88)
+    (:sub-reg 4 4 2 0)
+    (:sub-reg 5 3 5 0)
+    (:add-reg 4 4 5 0)
+    (:sub-reg 6 3 2 0)
+    (:sub-reg 6 6 4 0)
+    (:ldr 0 31 0)
+    (:cmp-reg 0 6)
+    (:b-cond :hi "rt:collect-need-capacity")
+    (:cbnz 29 "rt:collect-allocate")
+    (:cbz 0 "rt:collect-major")
+    ; For a large promoted heap, use only the old-size threshold that
+    ; the last full collection set. Keep the extra triggers for smaller
+    ; heaps.
+    (:lsr 8 4 27)
+    (:cbnz 8 "rt:collect-old-limit")
+    ; Sweep separate mappings ahead of a large pending allocation
+    ; when they already account for a large part of resident memory.
+    (:movz 5 16 16)
+    (:cmp-reg 0 5)
+    (:b-cond :ls "rt:collect-old-limit")
+    (:ldr 5 17 80)
+    (:lsr 5 5 25)
+    (:cbnz 5 "rt:collect-major")
+    (:label "rt:collect-old-limit")
+    (:ldr 5 17 104)
+    (:cmp-reg 4 5)
+    (:b-cond :hs "rt:collect-major")
+    (:cbnz 8 "rt:collect-allocate")
+    ; Bound nursery churn between full sweeps even with few promotions.
+    (:ldr 5 17 120)
+    (:lsr 5 5 25)
+    (:cbnz 5 "rt:collect-major")
+    (:b "rt:collect-allocate")
+    (:label "rt:collect-need-capacity")
+    (:cbnz 29 "rt:heap-size")
+    (:b "rt:collect-major")
+    (:label "rt:collect-allocate")
+    ; Keep 1 MiB for an old generation below 128 MiB. Otherwise use
+    ; one eighth of the promoted bytes, up to 32 MiB.
+    (:movz 7 16 16)
+    (:lsr 8 4 3)
+    (:lsr 9 4 27)
+    (:cmp 9 0)
+    (:csel 7 8 7 :ne)
+    (:movz 8 512 16)
+    (:cmp-reg 7 8)
+    (:csel 7 7 8 :ls)
+    (:cmp-reg 7 0)
+    (:csel 7 7 0 :hs)
+    (:cmp-reg 7 6)
+    (:csel 7 7 6 :ls)
+    (:ldp 27 22 17 0)
+    (:add-reg 26 27 7 0)
+    (:str 22 17 16)
     (:ldp-post 0 1 31 16)
     (:ldp-post 29 30 31 16)
     (:ldp-post 21 22 31 16)
@@ -371,15 +479,83 @@
     (:cbnz 1 "rt:alloc-cells")
     (:b "rt:alloc")
 
-    ; In: x0 is a datum. x17 points to runtime state, x19 is the old
+    ; In: x17 points to runtime state, x19 is the nursery floor, and
+    ; x20 and x21 are the old generation's allocation cursors.
+    ; Out: Forwards young fields of older intern-table objects before
+    ; the ordinary traversal. Interning writes bucket heads. Rehashing
+    ; also writes the next entry in each chain. Keep each original next
+    ; datum in a register to follow the chain after updating its field.
+    ; Changes: x0 through x4, x10 through x16, NZCV and the cursors.
+    ; Stack: 16 machine bytes for saves. Allocates: No.
+    (:label "rt:remembered-symbols")
+    (:ldr 12 17 112)
+    (:cbz 12 "rt:remembered-return")
+    (:str 31 17 112)
+    (:ldr 10 28 24)
+    (:cmp 10 34)
+    (:b-cond :eq "rt:remembered-return")
+    (:stp-pre 29 30 31 -16)
+    (:sub 10 10 2)
+    (:add-reg 10 28 10 0)
+    (:ldr 11 10 0)
+    (:lsr 11 11 8)
+    (:add-reg 11 10 11 0)
+    (:add 11 11 8)
+    (:add 13 10 16)
+    (:ldr 14 17 8)
+    (:cmp-reg 10 19)
+    (:cset 15 :lo)
+    (:cmp-reg 10 14)
+    (:cset 16 :hs)
+    (:orr-reg 15 15 16)
+    (:label "rt:remembered-bucket")
+    (:cmp-reg 13 11)
+    (:b-cond :hs "rt:remembered-end")
+    (:ldr 0 13 0)
+    (:mov 16 0)
+    (:cbz 15 "rt:remembered-bucket-next")
+    (:bl "rt:forward")
+    (:str 0 13 0)
+    (:label "rt:remembered-bucket-next")
+    (:add 13 13 8)
+    (:cmp 12 2)
+    (:b-cond :lo "rt:remembered-bucket")
+    (:label "rt:remembered-entry")
+    (:cmp 16 34)
+    (:b-cond :eq "rt:remembered-bucket")
+    (:sub 10 16 2)
+    (:add-reg 10 28 10 0)
+    (:ldr 16 10 24)
+    (:cmp-reg 10 19)
+    (:b-cond :lo "rt:remembered-entry-old")
+    (:cmp-reg 10 14)
+    (:b-cond :lo "rt:remembered-entry")
+    (:label "rt:remembered-entry-old")
+    (:mov 0 16)
+    (:bl "rt:forward")
+    (:str 0 10 24)
+    (:b "rt:remembered-entry")
+    (:label "rt:remembered-end")
+    (:ldp-post 29 30 31 16)
+    (:label "rt:remembered-return")
+    (:ret)
+
+
+    ; In: x0 is a datum. x17 points to runtime state, x19 is the source
     ; space floor, and x20 and x21 are the destination allocation cursors.
-    ; Out: x0 is the forwarded datum. Static and immediate data retain
-    ; their values. Separate strings retain their values and are marked.
+    ; X5 and x6 hold the source boundaries as offsets from x28. X29
+    ; is zero for a minor collection or one for a full collection.
+    ; Out: x0 is the forwarded datum. Data outside the source retain
+    ; their values. A full collection marks separate strings it reaches.
     ; Changes: x1 through x4, NZCV and the cursor x20 or x21 when copying.
     ; Stack: None. Allocates: No. Copies only within the collector's space.
     ; A copied cons leaves the unused datum tag 6 and its new datum.
     ; A copied header leaves its new datum with the high bit set.
     (:label "rt:forward")
+    (:cmp-reg 0 5)
+    (:b-cond :lo "rt:forward-return")
+    (:cmp-reg 0 6)
+    (:b-cond :hs "rt:forward-foreign")
     (:and-mask 1 0 3)
     (:cbz 1 "rt:forward-pointer")
     (:cmp 1 2)
@@ -387,9 +563,7 @@
     (:label "rt:forward-pointer")
     (:sub-reg 2 0 1 0)
     (:add-reg 2 28 2 0)
-    (:cbnz 1 "rt:forward-header")
-    (:cmp-reg 2 19)
-    (:b-cond :lo "rt:forward-return")
+    (:cbnz 1 "rt:forward-box")
     (:ldp 3 4 2 0)
     (:cmp 3 6)
     (:b-cond :eq "rt:forward-cons-seen")
@@ -402,16 +576,18 @@
     (:label "rt:forward-cons-seen")
     (:mov 0 4)
     (:ret)
-    (:label "rt:forward-header")
-    (:cmp-reg 2 19)
-    (:b-cond :lo "rt:forward-low-header")
+    (:label "rt:forward-foreign")
+    (:cbz 29 "rt:forward-return")
+    (:and-mask 1 0 3)
+    (:cmp 1 2)
+    (:b-cond :ne "rt:forward-return")
+    (:sub 2 0 2)
+    (:add-reg 2 28 2 0)
+    (:cmp-reg 2 28)
+    (:b-cond :lo "rt:forward-string")
     (:ldr 3 17 64)
     (:cmp-reg 2 3)
-    (:b-cond :lo "rt:forward-box")
-    (:b "rt:forward-string")
-    (:label "rt:forward-low-header")
-    (:cmp-reg 2 28)
-    (:b-cond :hs "rt:forward-return")
+    (:b-cond :lo "rt:forward-return")
     (:label "rt:forward-string")
     (:movz 3 1 0)
     (:sub 4 2 8)
@@ -2581,19 +2757,50 @@
     (:sub 25 25 8)
     (:ldr 0 25 0)
     (:bl "rt:string-view")
-    (:movz 3 0 0)
-    (:label "rt:subseq-string-loop")
-    (:cmp-reg 3 19)
-    (:b-cond :hs "rt:subseq-string-done")
-    (:movz 5 0 0)
-    (:add-reg 4 20 3 0)
-    (:cmp-reg 4 2)
-    (:b-cond :hs "rt:subseq-string-store")
-    (:ldrb-reg 5 1 4)
-    (:label "rt:subseq-string-store")
-    (:strb-reg 5 7 3)
-    (:add 3 3 1)
-    (:b "rt:subseq-string-loop")
+    ; Copy the intersection of the slice with the source before padding.
+    (:subs-reg 4 2 20 0)
+    (:csel 4 4 31 :hi)
+    (:cmp-reg 4 19)
+    (:csel 4 4 19 :ls)
+    (:add-reg 1 1 20 0)
+    (:lsr 3 4 4)
+    (:cbz 3 "rt:subseq-copy-tail")
+    (:label "rt:subseq-copy-blocks")
+    (:ldp-post 2 5 1 16)
+    (:stp 2 5 7 0)
+    (:add 7 7 16)
+    (:subs 3 3 1)
+    (:b-cond :ne "rt:subseq-copy-blocks")
+    (:label "rt:subseq-copy-tail")
+    (:and-mask 3 4 4)
+    (:cbz 3 "rt:subseq-pad")
+    (:label "rt:subseq-copy-bytes")
+    (:ldrb 2 1 0)
+    (:strb 2 7 0)
+    (:add 1 1 1)
+    (:add 7 7 1)
+    (:subs 3 3 1)
+    (:b-cond :ne "rt:subseq-copy-bytes")
+    (:label "rt:subseq-pad")
+    ; Large strings have a fresh mapping. Its unused bytes read as zero.
+    (:lsr 3 19 18)
+    (:cbnz 3 "rt:subseq-string-done")
+    (:sub-reg 5 19 4 0)
+    (:lsr 3 5 4)
+    (:cbz 3 "rt:subseq-pad-tail")
+    (:label "rt:subseq-pad-blocks")
+    (:stp 31 31 7 0)
+    (:add 7 7 16)
+    (:subs 3 3 1)
+    (:b-cond :ne "rt:subseq-pad-blocks")
+    (:label "rt:subseq-pad-tail")
+    (:and-mask 3 5 4)
+    (:cbz 3 "rt:subseq-string-done")
+    (:label "rt:subseq-pad-bytes")
+    (:strb 31 7 0)
+    (:add 7 7 1)
+    (:subs 3 3 1)
+    (:b-cond :ne "rt:subseq-pad-bytes")
     (:label "rt:subseq-string-done")
     (:mov 0 6)
     (:b "rt:subseq-return")
@@ -2978,6 +3185,11 @@
     (:sub-reg 3 0 28 0)
     (:add 3 3 2)
     (:str 3 4 0)
+    (:sub 6 28 128)
+    (:ldr 7 6 112)
+    (:movz 8 1 0)
+    (:orr-reg 7 7 8)
+    (:str 7 6 112)
     (:ldr 3 1 8)
     (:add 3 3 2)
     (:str 3 1 8)
@@ -3081,6 +3293,9 @@
     (:sub-reg 1 1 28 0)
     (:add 1 1 2)
     (:str 1 28 24)
+    (:sub 3 28 128)
+    (:movz 4 2 0)
+    (:str 4 3 112)
     (:ldp-post 2 30 31 16)
     (:ret)
     (:label "rt:acl2-name")

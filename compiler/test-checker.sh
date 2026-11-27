@@ -3,7 +3,10 @@ set -eu
 
 # Run from the repository root. The optional argument limits the number of
 # exported books checked on the reference runner. Both programs check every
-# case that has a verdict file.
+# case that has a verdict file. The compiled checker is built by
+# compiler/build-checker.sh, with the compiled compiler that COMPILER names
+# when it is set, and otherwise with the many-pass compiler,
+# build/compiler/compiler-2.
 book_references=${1:-20}
 case $book_references in
     *[!0-9]*) echo 'Usage: sh compiler/test-checker.sh [BOOK-REFERENCES]' >&2; exit 2 ;;

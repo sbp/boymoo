@@ -10,8 +10,16 @@ and exports the entry, then compiles it and the definitions reached by
 its calls to `build/compiler/prover`. The program uses the same tactic
 definitions as the fast runner. Set `PROVER_HEAP_LIMIT` at build time
 to choose the copying space size in MiB. The default is 1024. Each run
-has the heap limit built into its executable. See `compiler/README.md`
-for the memory accounting and exit statuses.
+has the heap limit built into its executable. By default the many-pass
+compiler, `build/compiler/compiler-2`, compiles the prover; set
+`COMPILER` to another compiled compiler, such as the single-pass
+compiler, `build/compiler/single/compiler-2`, to compile it with that
+one. The executable is `build/compiler/prover` either way. See
+`compiler/README.md` for the exit statuses and the memory of the
+executables that the many-pass compiler writes, and
+`compiler/single/README.md`, "Its runtime's memory", for those that the
+single-pass compiler writes. The results below are of the prover that
+the single-pass compiler writes.
 
 ```sh
 PROVER_DRIVER=compiled sh prover/driver/prove.sh [--sets A,B] [--ranks N] [--checked] LIBRARY STATEMENTS [AIDS]
