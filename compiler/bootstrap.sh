@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds the many-pass compiler and bootstraps it from the reference
+# Builds the compiler and bootstraps it from the reference
 # runner. From the root of the repository:
 #
 #     sh compiler/bootstrap.sh
@@ -13,22 +13,11 @@
 # each step and compares compiler-1 with compiler-2, which must be the same
 # byte for byte.
 #
-# With REF naming another compiled compiler, such as the single-pass
-# compiler build/compiler/single/compiler-2 that sh
-# compiler/single/bootstrap.sh writes, REF also compiles the input to
-# build/compiler/ref-1, ref-1 compiles it to build/compiler/ref-2, and
-# ref-2 must be compiler-2 byte for byte.
-#
 # Each executable is written under a new name and then renamed, so that a
 # copy still running from an earlier bootstrap is not changed under it.
 set -eu
 
 dir=build/compiler
-ref=${REF-}
-if [ -n "$ref" ] && [ ! -x "$ref" ]; then
-    echo "compiler/bootstrap.sh: REF names no executable: $ref" >&2
-    exit 2
-fi
 if [ ! -x build/runner/boymoo-run ]; then
     echo 'compiler/bootstrap.sh requires build/runner/boymoo-run' >&2
     exit 2
@@ -60,7 +49,7 @@ place() {
     mv "$dir/$1.tmp" "$dir/$1"
 }
 
-echo 'Reference runner compiling the many-pass compiler:' >&2
+echo 'Reference runner compiling the compiler:' >&2
 time -p sh compiler/compile.sh -v -m 1024 "$input" > "$dir/compiler-1.tmp"
 place compiler-1
 
@@ -72,17 +61,3 @@ if ! cmp "$dir/compiler-1" "$dir/compiler-2"; then
     exit 1
 fi
 echo 'The two compiler executables are byte-for-byte identical.'
-
-if [ -n "$ref" ]; then
-    echo "$ref compiling the many-pass compiler:" >&2
-    time -p "$ref" < "$input" > "$dir/ref-1.tmp"
-    place ref-1
-    echo 'ref-1 compiling the same input:' >&2
-    time -p "$dir/ref-1" < "$input" > "$dir/ref-2.tmp"
-    place ref-2
-    if cmp "$dir/ref-2" "$dir/compiler-2"; then
-        echo "The compiler compiled by $ref writes compiler-2 again, byte for byte."
-    else
-        exit 1
-    fi
-fi

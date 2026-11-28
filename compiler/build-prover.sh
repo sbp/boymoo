@@ -6,13 +6,11 @@
 #
 # PROVER_HEAP_LIMIT gives the executable's heap limit in MiB, an integer
 # from 1 to 4096, 1024 by default. COMPILER chooses the compiler. With
-# COMPILER unset or empty, the many-pass compiler,
-# build/compiler/compiler-2, compiles the prover, and the script first
-# runs sh compiler/bootstrap.sh when that executable is missing or older
-# than a book of the compiler. With COMPILER set to a compiled compiler,
-# such as the single-pass compiler build/compiler/single/compiler-2, which
-# sh compiler/single/bootstrap.sh writes, that executable compiles the
-# prover as it stands.
+# COMPILER unset or empty, the compiler build/compiler/compiler-2
+# compiles the prover, and the script first runs sh compiler/bootstrap.sh
+# when that executable is missing or older than a book of the compiler.
+# With COMPILER set to another compiled compiler, that executable
+# compiles the prover as it stands.
 set -eu
 export LC_ALL=C
 

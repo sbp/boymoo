@@ -1,8 +1,8 @@
 # A compiler of many passes
 
-This directory holds the many-pass compiler for ACL2 Core, written in ACL2 Core like the single-pass compiler of `compiler/single/`. It lowers a program through a series of small passes, each from one intermediate language to the next. Every pass up to the last few is independent of the machine, and only the last passes, from the lowest intermediate language into A64 instructions, know the target. The design follows two published compilers: QBE, a compiler back end whose intermediate language is in static single assignment (SSA) form, and Chez Scheme, whose compiler is a long series of "nanopasses" over a sequence of precisely defined languages. The single-pass compiler is the reference, both for the values that compiled programs give and for their speed and memory.
+This directory holds the compiler for ACL2 Core, written in ACL2 Core. It lowers a program through a series of small passes, each from one intermediate language to the next. Every pass up to the last few is independent of the machine, and only the last passes, from the lowest intermediate language into A64 instructions, know the target. The design follows two published compilers: QBE, a compiler back end whose intermediate language is in static single assignment (SSA) form, and Chez Scheme, whose compiler is a long series of "nanopasses" over a sequence of precisely defined languages.
 
-This compiler shares with the single-pass compiler everything around its code generator: the reader (`read.lisp`), the index (`index.lisp`), the data builder (`data.lisp`), the assembler (`a64.lisp`) and the writers of executables (`macos.lisp`, `sha256.lisp`, `linux.lisp`). In place of that compiler's `gen.lisp` and `compile.lisp` (`compiler/single/`) it has the passes below, and it has a runtime of its own, `runtime.lisp`, with the routines and contracts of the single-pass compiler's runtime and another collector (section 5). An executable it writes has the same input, output, exit statuses, data representation and static block as one written by the single-pass compiler (`compiler/README.md`).
+Around the passes below are the reader (`read.lisp`), the index (`index.lisp`), the data builder (`data.lisp`), the assembler (`a64.lisp`), the writers of executables (`macos.lisp`, `sha256.lisp`, `linux.lisp`) and the runtime (`runtime.lisp`, section 5). `compiler/README.md` gives the input, output, exit statuses, data representation and static block of the executables that the compiler writes.
 
 ## 1. What QBE and Chez Scheme do
 
@@ -16,7 +16,7 @@ This compiler shares with the single-pass compiler everything around its code ge
 
 | Pass | Book | From | To | Depends on the target |
 |---|---|---|---|---|
-| P0 | `read`, `index`, `data` (shared with the single-pass compiler) | program text | lines, definitions, constants | no |
+| P0 | `read`, `index`, `data` | program text | lines, definitions, constants | no |
 | P1 | `resolve.lisp` | L0 | L1 | no |
 | P2 | `simplify.lisp` | L1 | L1 | no |
 | P3 | `lower.lisp` | L1 | QIR-A | no |
@@ -32,7 +32,7 @@ This compiler shares with the single-pass compiler everything around its code ge
 
 ## 3. The languages
 
-All names are strings, as `read.lisp` gives them (`"ACL2::FOO"`). A **datum word** is the 64-bit encoding of `compiler/README.md`, "The data". A constant of the program is the value that `data-build` gives for its text: a natural number, the word, or a cons whose `cdr` is the integer `n` of an immediate integer, whose word is `2n + 1` modulo 2<sup>64</sup> (see `gen-load-datum` in `compiler/single/gen.lisp`). The passes below write every constant as a word.
+All names are strings, as `read.lisp` gives them (`"ACL2::FOO"`). A **datum word** is the 64-bit encoding of `compiler/README.md`, "The data". A constant of the program is the value that `data-build` gives for its text: a natural number, the word, or a cons whose `cdr` is the integer `n` of an immediate integer, whose word is `2n + 1` modulo 2<sup>64</sup>. The passes below write every constant as a word.
 
 ### L0
 
@@ -40,7 +40,7 @@ The definitions as `index-lines` gives them: `(NAME FORMALS BODY)`, where `FORMA
 
 ### L1, resolved terms
 
-P1 resolves every head through the attachments, checks arities as the single-pass compiler's `gen.lisp` does, replaces each constant by its word, takes the logical argument of `(RETURN-LAST 'MBE1-RAW EXEC LOGIC)` as `gen.lisp` does, and renames every variable to a natural number, so that each binding in a definition has a number of its own.
+P1 resolves every head through the attachments, stops the compiler at a call with the wrong number of arguments, at an `if` without three and at a lambda given too few or too many, replaces each constant by its word, takes the logical argument of `(RETURN-LAST 'MBE1-RAW EXEC LOGIC)`, and renames every variable to a natural number, so that each binding in a definition has a number of its own.
 
 ```
 e ::= (:var V)                    V a natural number, bound once in its definition
@@ -59,7 +59,7 @@ d ::= (NAME (V1 ... Vn) E)        the formals are numbered 0 to n - 1; each lamb
                                   takes the next number not yet used in the definition
 ```
 
-Arguments are evaluated from left to right. A program in L1 is the list of its definitions; the entry's definition is made by the driver as `compile-entry-definitions` does in `compiler/single/compile.lisp`.
+Arguments are evaluated from left to right. A program in L1 is the list of its definitions; the driver gives the entry its definition (`entry-definitions` in `compile.lisp`): a defined function that the entry names itself keeps its own, and otherwise the entry applies what it resolves to, through attachments or a routine of the runtime, to the input.
 
 ### QIR-A, the abstract SSA language
 
@@ -157,19 +157,19 @@ The rule of `compiler/README.md` holds without change: the only natives are the 
 
 They obey the contract of a routine (`compiler/README.md`, "The runtime"), not that of a compiled function (section 4). They take their arguments in `x0` onwards and give their result in `x0`. They keep `x19` to `x23`, `x25`, `x28`, `x29` and `sp`, change only `x0` to `x17`, `x24` and the flags, and do not allocate. The table of routines in `qir.lisp` lists them with that contract. P8 allocates their registers without `x19` to `x22` and `x29`, and P9 gives each the label of its name as well as `(:fn NAME)`. P4's entry `EXPAND-PROGRAM` calls them with `:rt` in the slow paths of `EQUAL`, `LENGTH` and `CHAR`, so P6 and P8 treat those calls as calls of routines that do not allocate. Values may then stay in `x19` to `x22` across such a call. A call from one of these functions to another, such as the comparison of two CARs in `rt-qir:EQUAL`, is a `:call`. The hand-written routines stay in `runtime.lisp`, where the runtime itself calls them.
 
-`rt-qir:EQUAL` decides the cases that need no traversal itself. It follows the CDRs of two lists in a loop and decides each pair of different CARs that are atoms. Two objects with headers go to `rt-qir:EQUAL-ATOM`, which compares strings and integers byte by byte and decides symbols, and which gives fractions, complex rationals and vectors to the hand-written routine. At the first pair of CARs that are both conses, the rest of the two lists goes to the hand-written routine, which keeps its pending comparisons on the value stack. No function among them calls itself, directly or not. P9 therefore leaves out their checks of the machine stack, and their frames, tens of bytes, use the margin below `x23` as the routines do. A comparison stops only where the routine's would. Two distinct chains of 4,300,000 nested CARs compare as they do under the single-pass compiler, and `rt-qir:EQUAL` under 4,193,277 live recursive frames succeeds and fails at the same depths as the hand-written routine.
+`rt-qir:EQUAL` decides the cases that need no traversal itself. It follows the CDRs of two lists in a loop and decides each pair of different CARs that are atoms. Two objects with headers go to `rt-qir:EQUAL-ATOM`, which compares strings and integers byte by byte and decides symbols, and which gives fractions, complex rationals and vectors to the hand-written routine. At the first pair of CARs that are both conses, the rest of the two lists goes to the hand-written routine, which keeps its pending comparisons on the value stack. No function among them calls itself, directly or not. P9 therefore leaves out their checks of the machine stack, and their frames, tens of bytes, use the margin below `x23` as the routines do. A comparison stops only where the routine's would. `rt-qir:EQUAL` under 4,193,277 live recursive frames succeeds and fails at the same depths as the hand-written routine.
 
-Measured on 2026-11-27 with `/usr/bin/time -l` (instructions retired), the checker's library check takes 106.7 G instructions, against 107.4 G when the compiler calls the hand-written routines in those slow paths. The single-pass compiler, compiled both ways and running on its own input, `build/compiler/single/compiler.input`, takes 2.850 G against 2.895 G. With the calls made by `:call` under the compiled-function convention, the two cost 8.7% and 2.9% more than with the hand-written routines. Every value live across such a call is kept in a frame slot for its whole life, even when the slow path is not taken.
+Measured on 2026-11-27 with `/usr/bin/time -l` (instructions retired), the checker's library check takes 106.7 G instructions, against 107.4 G when the compiler calls the hand-written routines in those slow paths. With the calls made by `:call` under the compiled-function convention, it costs 8.7% more than with the hand-written routines. Every value live across such a call is kept in a frame slot for its whole life, even when the slow path is not taken.
 
 ## 5. Memory
 
-The collector of the single-pass compiler's runtime (`compiler/single/runtime.lisp`) copies between two spaces, with a budget of twice the bytes that survived. The data of ACL2 Core are never changed after they are made, so an object can refer only to objects older than itself. The one exception in the runtime is the table of symbols made while the program runs (the word at offset 24 of the static block): interning writes into its vector, and doubling the table (`rt:intern-rehash-entry`) rewrites the link of every entry, so that an old entry can come to refer to a young one. This makes a generational collector cheap: a collection of a young generation needs no write barrier, only the value stack and that table, scanned whole, as roots (or a full collection after each doubling). The candidates, in order of the work they need:
+The plainest collector copies between two spaces, with a budget of twice the bytes that survived. The data of ACL2 Core are never changed after they are made, so an object can refer only to objects older than itself. The one exception in the runtime is the table of symbols made while the program runs (the word at offset 24 of the static block): interning writes into its vector, and doubling the table (`rt:intern-rehash-entry`) rewrites the link of every entry, so that an old entry can come to refer to a young one. This makes a generational collector cheap: a collection of a young generation needs no write barrier, only the value stack and that table, scanned whole, as roots (or a full collection after each doubling). The candidates, in order of the work they need:
 
 1. A tighter policy for the budget, measured against the time it costs.
 2. A nursery of fixed size, whose survivors are copied into an old space that grows by bump allocation, with a full collection of the old space when it has doubled.
 3. A full collection by sliding compaction in place, so that the old space needs no second space.
 
-Each is judged by the peak of resident memory and the time of the benchmarks of section 7. The runtime of this compiler, `runtime.lisp`, takes a form of the second, whose nursery grows with the old generation (`README.md`, "The runtime").
+Each is judged by the peak of resident memory and the time of the benchmarks of section 7. The runtime, `runtime.lisp`, takes a form of the second, whose nursery grows with the old generation (`README.md`, "The runtime").
 
 ## 6. Proofs
 
@@ -177,4 +177,4 @@ Every pass is a function in ACL2's logic, so a theorem can be stated about the c
 
 ## 7. Benchmarks
 
-`compiler/bench/` compares executables written by the single-pass compiler with those written by this compiler from the same input, for elapsed time and peak resident memory under `/usr/bin/time -l`, and requires the same output byte for byte: the single-pass compiler compiling itself, the compiled checker on the library check of `compiler/README.md`, and the programs of `runner/bench/`.
+`compiler/bench/` measures the executables that the compiler writes, for elapsed time and peak resident memory under `/usr/bin/time -l`, and checks their output: the compiler compiling itself, the compiled checker on the library check of `compiler/README.md`, four small programs, and the compiled prover on books. Given a second compiled compiler, it also requires the two compilers' executables to give the same output byte for byte (`compiler/bench/README.md`).

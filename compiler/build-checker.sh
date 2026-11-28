@@ -12,12 +12,10 @@
 # compiles that input, printing the time of the compilation.
 #
 # COMPILER chooses the compiler. With COMPILER unset or empty, the
-# many-pass compiler, build/compiler/compiler-2, compiles the input, and
-# the script first runs sh compiler/bootstrap.sh when that executable is
-# missing or older than a book of the compiler. With COMPILER set to a
-# compiled compiler, such as the single-pass compiler
-# build/compiler/single/compiler-2, which sh compiler/single/bootstrap.sh
-# writes, that executable compiles the input as it stands.
+# compiler build/compiler/compiler-2 compiles the input, and the script
+# first runs sh compiler/bootstrap.sh when that executable is missing or
+# older than a book of the compiler. With COMPILER set to another compiled
+# compiler, that executable compiles the input as it stands.
 set -eu
 
 compiler=${COMPILER-}

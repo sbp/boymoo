@@ -884,12 +884,9 @@
 (defun ex-avail-add (key dest k)
   (cons (car k) (qir-put key dest (cdr k))))
 
-; Whether a call already in AVAIL is replaced by its earlier result.
-; Measured on 2026-11-27 on the executable that the compiler writes from
-; build/compiler/single/compiler.input, run on that input (/usr/bin/time
-; -l, the median of 9 runs), replacing calls saved 5% of its processor
-; time but raised its peak of resident memory by 2.4 MB, as results lived
-; longer; so it is off.
+; Whether a call already in AVAIL is replaced by its earlier result. It
+; is off: a replaced call's result lives longer, which raises the peak of
+; resident memory.
 (defun ex-cse-calls-p () nil)
 
 ; Gives what is known after INST, the state, and whether the expansion

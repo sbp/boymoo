@@ -4,7 +4,7 @@ export LC_ALL=C
 dir=build/compiler/numbers-test
 mkdir -p "$dir"
 runner=build/runner/boymoo-run
-compiler=build/compiler/single
+compiler=build/compiler
 export TMPDIR="$PWD/$dir"
 
 # The printer uses signed binary for integers, including character codes.
@@ -123,7 +123,7 @@ awk 'NR != 1 || $0 !~ /^"[^"\\]*"$/ { exit 1 }
      { printf "%s", substr($0, 2, length($0) - 2) }
      END { if (NR != 1) exit 1 }' "$dir/reference.string" > "$dir/reference"
 
-sh compiler/single/compile.sh "$dir/input" > "$dir/executable"
+sh compiler/compile.sh "$dir/input" > "$dir/executable"
 chmod +x "$dir/executable"
 : > "$dir/empty"
 "$dir/executable" < "$dir/empty" > "$dir/compiled"

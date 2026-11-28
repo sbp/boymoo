@@ -1,5 +1,5 @@
 #!/bin/sh
-# Certifies the books of the many-pass compiler and, with -x, exports the
+# Certifies the books of the compiler and, with -x, exports the
 # last one named. From the root of the repository:
 #
 #     sh compiler/build.sh [-d DIR] [-x] BOOK ...
@@ -12,8 +12,7 @@
 # before it in the list was certified again. Name every book that a book
 # includes before it. With -x, the exporter exports the last book, and DIR
 # receives compiler.statements, compiler.program, ground.program and
-# library.statements, as compiler/single/build.sh writes them for the
-# single-pass compiler. With no BOOK, every book of the compiler is built
+# library.statements. With no BOOK, every book of the compiler is built
 # in order.
 #
 # Several builds can run at once when each has its own DIR.
@@ -89,7 +88,7 @@ grep '^(define ' spec/ground.txt > "$dir/ground.program"
 lib=$dir/library.statements
 awk -f checker/library.awk spec/ground.txt "$out.statements" \
     build/export/library.statements > "$lib.all"
-# As in compiler/single/build.sh: with no definition, a call of hard-error
+# With no definition, a call of hard-error
 # or throw-nonexec-error stops, as in ACL2.
 awk '! /^\(define COMMON-LISP::NIL \(ACL2::(HARD-ERROR|THROW-NONEXEC-ERROR) /' "$lib.all" > "$lib.tmp"
 rm -f "$lib.all"

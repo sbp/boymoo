@@ -2,11 +2,10 @@
 set -eu
 export LC_ALL=C
 
-# With no argument, the many-pass compiler, build/compiler/compiler-2,
-# compiles each case; with --reference, the single-pass compiler on the
-# reference runner, compiler/single/compile.sh; and with an argument that
-# names a compiled compiler, such as build/compiler/single/compiler-2,
-# that executable.
+# With no argument, the compiled compiler, build/compiler/compiler-2,
+# compiles each case; with --reference, the compiler on the reference
+# runner, compiler/compile.sh; and with an argument that names another
+# compiled compiler, that executable.
 usage() {
     printf 'Usage: sh compiler/test-front.sh [--reference | COMPILER]\n' >&2
     exit 2
@@ -86,7 +85,7 @@ check() {
         "$compiler" < "$dir/input" > "$dir/executable" 2> "$dir/compiler.err" ||
             compiler_status=$?
     else
-        sh compiler/single/compile.sh "$dir/input" > "$dir/executable" 2> "$dir/compiler.err" ||
+        sh compiler/compile.sh "$dir/input" > "$dir/executable" 2> "$dir/compiler.err" ||
             compiler_status=$?
     fi
     printf '%s compiler status %s\n' "$name" "$compiler_status"

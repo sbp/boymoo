@@ -2,7 +2,7 @@ set -eu
 export LC_ALL=C
 
 usage() {
-    printf '%s\n' 'Usage: sh compiler/bench/run.sh [--baseline] [--quick] [REFERENCE [CANDIDATE]]' >&2
+    printf '%s\n' 'Usage: sh compiler/bench/run.sh [--quick] [REFERENCE [CANDIDATE]]' >&2
     exit 2
 }
 
@@ -11,11 +11,9 @@ fail() {
     exit 1
 }
 
-baseline=0
 quick=0
 while [ "$#" -gt 0 ]; do
     case $1 in
-        --baseline) baseline=1; shift ;;
         --quick) quick=1; shift ;;
         --) shift; break ;;
         -*) usage ;;
@@ -23,15 +21,9 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 [ "$#" -le 2 ] || usage
-[ "$baseline" -eq 0 ] || [ "$#" -le 1 ] || usage
 
-reference=${1-build/compiler/single/compiler-2}
-candidate=${2-build/compiler/compiler-2}
-if [ "$baseline" -eq 1 ] || { [ "$#" -lt 2 ] && [ ! -x "$candidate" ]; }; then
-    candidate=
-elif [ -z "$candidate" ]; then
-    usage
-fi
+reference=${1-build/compiler/compiler-2}
+candidate=${2-}
 [ -f "$reference" ] && [ -x "$reference" ] || fail "no executable compiler $reference"
 case $reference in */*) ;; *) reference=./$reference ;; esac
 if [ -n "$candidate" ]; then
@@ -39,9 +31,9 @@ if [ -n "$candidate" ]; then
     case $candidate in */*) ;; *) candidate=./$candidate ;; esac
 fi
 
-compiler_input=build/compiler/single/compiler.input
+compiler_input=build/compiler/compiler.input
 checker_input=build/compiler/checker-test/checker.input
-[ -s "$compiler_input" ] || fail 'run sh compiler/single/bootstrap.sh first'
+[ -s "$compiler_input" ] || fail 'run sh compiler/bootstrap.sh first'
 if [ "$quick" -eq 0 ]; then
     [ -s "$checker_input" ] || fail 'run sh compiler/build-checker.sh first'
     [ -s build/export/library.statements ] || fail 'missing build/export/library.statements'

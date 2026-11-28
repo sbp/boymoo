@@ -61,13 +61,17 @@
         (program-executable entry (reverse-onto (back-end-functions fns nil) nil) data
                        (eq target :linux))))))
 
-; The definition of the entry, as compile-entry-definitions in
-; compiler/single/compile.lisp makes it.
+; DEFS without the definition of ENTRY, in their order.
 (defun remove-definition (entry defs prefix)
   (cond ((atom defs) (reverse-onto prefix nil))
         ((equal entry (caar defs)) (reverse-onto prefix (cdr defs)))
         (t (remove-definition entry (cdr defs) (cons (car defs) prefix)))))
 
+; The definitions with the entry's. The entry must name a function of one
+; argument. A defined function that the entry names itself keeps its
+; definition. Otherwise the entry gets a definition that applies what it
+; resolves to, through attachments or a routine of the runtime, to the
+; input, in place of any definition it had.
 (defun entry-definitions (entry defs context)
   (mv-let (target arity routine)
     (resolve-call-info entry context)
@@ -128,8 +132,7 @@
 (defconst *optimize-enabled* t)
 
 ; COMPILE-TEXT-WITH takes the input as a string and gives the
-; executable as a string, as COMPILE-TEXT does in
-; compiler/single/compile.lisp, with P2 and P5 run or not as SIMPLIFY and
+; executable as a string, with P2 and P5 run or not as SIMPLIFY and
 ; OPTIMIZE say.
 (defun compile-text-with (text simplify optimize)
   (let ((lines (read-program text)))

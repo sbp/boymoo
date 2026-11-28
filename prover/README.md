@@ -10,16 +10,11 @@ and exports the entry, then compiles it and the definitions reached by
 its calls to `build/compiler/prover`. The program uses the same tactic
 definitions as the fast runner. Set `PROVER_HEAP_LIMIT` at build time
 to choose the copying space size in MiB. The default is 1024. Each run
-has the heap limit built into its executable. By default the many-pass
-compiler, `build/compiler/compiler-2`, compiles the prover; set
-`COMPILER` to another compiled compiler, such as the single-pass
-compiler, `build/compiler/single/compiler-2`, to compile it with that
-one. The executable is `build/compiler/prover` either way. See
-`compiler/README.md` for the exit statuses and the memory of the
-executables that the many-pass compiler writes, and
-`compiler/single/README.md`, "Its runtime's memory", for those that the
-single-pass compiler writes. The results below are of the prover that
-the single-pass compiler writes.
+has the heap limit built into its executable. By default the compiler,
+`build/compiler/compiler-2`, compiles the prover; set `COMPILER` to
+another compiled compiler to compile it with that one. The executable is
+`build/compiler/prover` either way. See `compiler/README.md` for the exit
+statuses and the memory of the executables that the compiler writes.
 
 ```sh
 PROVER_DRIVER=compiled sh prover/driver/prove.sh [--sets A,B] [--ranks N] [--checked] LIBRARY STATEMENTS [AIDS]
@@ -42,30 +37,10 @@ comparison and any driver stops for each table. `PROVER_TEST_JOBS` sets
 the number of concurrent table tests, and `PROVER_TEST_SECONDS` bounds
 each proof attempt in comparison mode (240 seconds by default).
 
-On 2026-11-26, `PROVER_TEST_JOBS=1 sh prover/test-all.sh --compare`
-printed `All prover tests passed.` The twelve logs under
-`build/prover/compare/` recorded 52 byte-for-byte matches in 52 cases,
-each with its recorded verdict and obligation counts. The run took
-1388.23 seconds with a maximum resident memory of 903968 KiB, measured
-with the `time` of `zsh`.
-
-On 2026-11-26, the following command with each value of `PROVER_DRIVER`
-measured elapsed time and maximum resident memory. The fast runner
-used its populated cache and the executable used a 1024 MiB heap
-space. The library line inputs use the prefixes and measure aids of
-`prover/driver/test.sh`. The output files of each pair agreed under
-`cmp`.
-
-```sh
-PROVER_DRIVER=compiled zsh -fc 'TIMEFMT="%E elapsed %M KiB max resident"; time timeout -k 5 120 sh prover/driver/prove.sh "$@"' zsh LIBRARY STATEMENTS AIDS > PROOFS
-```
-
-| Input | Proof bytes | Fast runner seconds | Fast runner KiB | Executable seconds | Executable KiB |
-|---|---:|---:|---:|---:|---:|
-| `spec/example` | 339 | 3.24 | 538512 | 0.03 | 14048 |
-| Library line 7 | 402 | 3.10 | 531728 | 0.16 | 17488 |
-| Library line 1492 | 1829 | 3.65 | 550576 | 0.91 | 127216 |
-| `std/strings/strsplit` | 397324 | 9.33 | 773568 | 9.65 | 237376 |
+On 2026-11-27, with the prover that the compiler writes,
+`PROVER_TEST_JOBS=1 sh prover/test-all.sh --compare` printed
+`All prover tests passed.` `compiler/README.md`, "Results", gives the
+time and memory of the compiled prover on five books.
 
 ## Library and books
 

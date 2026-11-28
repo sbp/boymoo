@@ -11,6 +11,45 @@ empty `build/compiler/proofs` directory. The 24 proof books cover P0 through P9
 and contain 194 theorem events, including local lemmas, and 39 executable
 assertions.
 
+## The reader, the data builder, the assembler and the executables
+
+Four more directories hold proofs about the books of the compiler
+outside its passes: the reader, the index, the data builder, the
+assembler and the writers of executables. They are certified apart from
+the books above, by `certify-sets.sh`.
+
+| Directory | Books | Subject |
+|---|---|---|
+| [`foundations/`](foundations/) | 6 | What the other three share: spans and the decoding and stepping of the A64 model (`machine.lisp`); memory regions, the world of a process and the Linux system calls (`kernel.lisp`); the loader of Linux ELF files (`loading.lisp`); the words and object records that stand for ACL2 values (`values.lisp`); the layout of the heap and of the static image, and the maps of objects and constants to ACL2 values (`heap.lisp`); and linked images, runs and Core programs, with the books of the compiler that they concern (`interfaces.lisp`). |
+| [`assembly/`](assembly/README.md) | 48 | The assembler of `a64.lisp`: the layout of items, and the decoding and execution of each instruction it encodes; the reader and the indexer against checked versions of them; the writing of static data; and the ELF and Mach-O files, their loading, and the Mach-O code signature. |
+| [`data/`](data/README.md) | 63 | The data builder of `data.lisp`: the image it writes, the objects in it and the ACL2 values that the machine reads from them; and the reader's spans, the index and the resolution of attachments. |
+| [`linux/`](linux/README.md) | 5 | The ELF file of `linux.lisp`, the world that the loader builds from it, and the system call wrappers up to their SVC. |
+
+From the root of the repository, with ACL2 8.7 found as `acl2` on the
+`PATH`:
+
+```
+sh compiler/proofs/certify-sets.sh
+sh compiler/proofs/certify-sets.sh --foundations
+sh compiler/proofs/certify-sets.sh --books SET BOOK ...
+```
+
+With no argument it certifies the compiler books `a64`, `read`, `index`,
+`data`, `sha256`, `macos` and `linux`, the model books `a64-state`,
+`a64-decode`, `a64` and `core`, and the foundations, in
+`build/compiler/proofs/sets/`, and then each set by the `certify.sh` of
+its directory, which names its books in order. With `--foundations` it
+certifies the foundations alone, and with `--books` the books named, of
+one set, once the foundations are certified. Like `certify.sh`, it uses
+`:skip-proofs-okp nil`, `:defaxioms-okp nil` and `:ttags nil`.
+
+On 2026-11-28, `sh compiler/proofs/certify-sets.sh` printed `Proof
+foundations certified.` and a `Certified` line for each of the 133
+books, and took 157 seconds. The three sets are 116 books of 24,336
+lines, and the foundations 1,685 lines (`cat
+compiler/proofs/{assembly,data,linux}/*.lisp | wc -l` and `cat
+compiler/proofs/foundations/*.lisp | wc -l`, the same day).
+
 ## Semantics
 
 The L1 entry points are `l1-eval` for an expression and `l1-call`
@@ -294,6 +333,5 @@ slots, actual pass applications and A64 emission. The validator examples
 accept actual allocations and reject a conflicting destination home,
 incorrect liveness and homes clobbered by each kind of call.
 
-On 2026-11-27, `sh compiler/bootstrap.sh` produced identical second and third
-compiler executables with validation enabled, and `sh compiler/test.sh`
-reported 417 compiler and checker comparisons with zero differences.
+On 2026-11-27, `sh compiler/bootstrap.sh` produced identical compiler
+executables, `compiler-1` and `compiler-2`, with validation enabled.

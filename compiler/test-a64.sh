@@ -2,7 +2,7 @@
 set -eu
 export LC_ALL=C
 
-sh compiler/single/build.sh --a64
+sh compiler/build.sh -d build/compiler/a64 -x a64
 dir=build/compiler/a64
 export TMPDIR="$PWD/$dir"
 
